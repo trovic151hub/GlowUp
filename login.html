@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+  <style>
+    *{
+        font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+    }
+    @import url('https://fonts.googleapis.com/css2?family=Lora:wght@700&family=Montserrat:wght@500&display=swap');
+  </style>
+</head>
+<body class="bg-gray-50 flex items-center justify-center h-screen">
+
+  <!-- Notification Container -->
+  <div id="notification-container" class="fixed top-5 right-5 space-y-2 z-50"></div>
+
+  <!-- Custom Prompt Container -->
+  <div id="prompt-container" class="fixed top-5 left-1/2 transform -translate-x-1/2 bg-white p-4 rounded-lg shadow-lg hidden z-50 flex items-center space-x-2">
+    <label id="prompt-label" class="font-medium text-gray-700">Enter value:</label>
+    <input id="prompt-input" type="text" class="border border-gray-300 rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-blue-400">
+    <button id="prompt-submit" class="bg-pink-600 text-white px-3 py-1 rounded hover:bg-pink-700">Submit</button>
+  </div>
+
+  <!-- Login Form -->
+  <div class="bg-white p-6 rounded shadow-md w-full max-w-md">
+    <h2 class="text-2xl font-bold mb-4 text-center">Login</h2>
+    <form id="loginForm" class="space-y-4">
+      <input type="email" id="loginEmail" placeholder="Email" class="w-full border p-2 rounded" required />
+      <div class="relative">
+        <input type="password" id="loginPassword" placeholder="Password" class="border p-3 rounded w-full" required />
+        <i id="toggleLoginPassword" class="fa-solid fa-eye text-gray-400 absolute right-3 top-3 cursor-pointer"></i>
+      </div>
+      <button type="submit" class="w-full bg-pink-600 text-white py-2 rounded hover:bg-pink-700">Login</button>
+    </form>
+
+    <p class="mt-2 text-center text-sm">
+      <a href="#" id="forgotPassword" class="text-pink-600">Forgot Password?</a>
+    </p>
+
+    <div class="text-center my-4">
+      <p class="text-sm mb-2">OR</p>
+      <button id="googleLogin" class="w-full flex items-center justify-center border p-2 rounded hover:bg-gray-100">
+        <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" class="w-6 h-6 mr-2" />
+        Continue with Google
+      </button>
+    </div>
+
+    <p class="mt-4 text-center text-sm">
+      Don't have an account? <a href="register.html" class="text-pink-600">Register</a>
+    </p>
+  </div>
+
+  <!-- Firebase Scripts -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+
+  <script>
+  // --- Notifications ---
+  function showNotification(message, type="info", duration=3000) {
+    const container = document.getElementById("notification-container");
+    if (!container) return; // safety check
+    const notif = document.createElement("div");
+    notif.textContent = message;
+    notif.className = `px-4 py-2 rounded shadow text-white transition-transform transform opacity-0`;
+    switch(type) {
+      case "success": notif.classList.add("bg-green-500"); break;
+      case "error": notif.classList.add("bg-red-500"); break;
+      case "warning": notif.classList.add("bg-yellow-500", "text-black"); break;
+      default: notif.classList.add("bg-blue-500"); break;
+    }
+    container.appendChild(notif);
+    setTimeout(() => notif.classList.add("opacity-100"), 10);
+    setTimeout(() => { notif.classList.remove("opacity-100"); setTimeout(() => notif.remove(), 300); }, duration);
+  }
+
+  // --- Custom Prompt ---
+  function customPrompt(message, callback) {
+    const container = document.getElementById("prompt-container");
+    const label = document.getElementById("prompt-label");
+    const input = document.getElementById("prompt-input");
+    const submit = document.getElementById("prompt-submit");
+    if (!container || !label || !input || !submit) return; // safety check
+    label.textContent = message;
+    input.value = "";
+    container.classList.remove("hidden");
+    submit.onclick = () => {
+      const value = input.value.trim();
+      container.classList.add("hidden");
+      callback(value);
+    };
+  }
+
+  // --- Firebase Setup ---
+  const firebaseConfig = {
+    apiKey: "AIzaSyDdTPmpaIPWSDWOmR-fXgvAb7hoxZUawcc",
+    authDomain: "e-commerce-39c74.firebaseapp.com",
+    projectId: "e-commerce-39c74",
+    storageBucket: "e-commerce-39c74.firebasestorage.app",
+    messagingSenderId: "863375033754",
+    appId: "1:863375033754:web:7ba248c8dbb1566c83e623"
+  };
+  firebase.initializeApp(firebaseConfig);
+  const auth = firebase.auth();
+  const db = firebase.firestore();
+  const provider = new firebase.auth.GoogleAuthProvider();
+
+  // ===== Password Eye Toggle =====
+    const loginPassword = document.getElementById("loginPassword");
+    const toggleLoginPassword = document.getElementById("toggleLoginPassword");
+    toggleLoginPassword.addEventListener("click", () => {
+      if (loginPassword.type === "password") {
+        loginPassword.type = "text";
+        toggleLoginPassword.classList.replace("fa-eye", "fa-eye-slash");
+      } else {
+        loginPassword.type = "password";
+        toggleLoginPassword.classList.replace("fa-eye-slash", "fa-eye");
+      }
+    });
+
+  // --- Email/Password Login ---
+  const loginForm = document.getElementById("loginForm");
+  loginForm?.addEventListener("submit", async e => {
+    e.preventDefault();
+    const email = document.getElementById("loginEmail")?.value.trim();
+    const password = document.getElementById("loginPassword")?.value;
+    if (!email || !password) { showNotification("Please fill in all fields", "warning"); return; }
+
+    try {
+      const userCredential = await auth.signInWithEmailAndPassword(email, password);
+      const user = userCredential.user;
+      const userRef = db.collection("users").doc(user.uid);
+      const userSnap = await userRef.get();
+      if (!userSnap.exists) {
+        await userRef.set({
+          name: user.displayName || "",
+          email: user.email,
+          phone: "",
+          address: "",
+          createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+      }
+      showNotification("Welcome, " + (user.displayName || user.email), "success");
+      window.location.href = "index.html";
+    } catch(err) {
+      console.error(err);
+      showNotification(err.message, "error");
+    }
+  });
+
+  // --- Google Login ---
+  document.getElementById("googleLogin")?.addEventListener("click", async () => {
+    try {
+      const result = await auth.signInWithPopup(provider);
+      const user = result.user;
+      await db.collection("users").doc(user.uid).set({
+        name: user.displayName || "",
+        email: user.email,
+        phone: "",
+        address: ""
+      }, { merge: true });
+      showNotification("Logged in as " + (user.displayName || user.email), "success");
+      window.location.href = "index.html";
+    } catch(err) {
+      console.error(err);
+      showNotification(err.message, "error");
+    }
+  });
+
+  // --- Forgot Password ---
+  document.getElementById("forgotPassword")?.addEventListener("click", () => {
+    customPrompt("Enter your registered email:", async email => {
+      if (!email) return;
+      try {
+        await auth.sendPasswordResetEmail(email);
+        showNotification("Password reset email sent!", "success");
+      } catch(err) {
+        showNotification(err.message, "error");
+      }
+    });
+  });
+
+  // --- Reload page if back navigation ---
+  window.addEventListener("pageshow", event => {
+    if (event.persisted || (performance.navigation && performance.navigation.type === 2)) window.location.reload();
+  });
+</script>
+</body>
+</html>

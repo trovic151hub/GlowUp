@@ -1,0 +1,456 @@
+(function(){
+  // --- SINGLE Firebase App for Users + Admins ---
+  const firebaseConfig = {
+    apiKey: "AIzaSyDdTPmpaIPWSDWOmR-fXgvAb7hoxZUawcc",
+    authDomain: "e-commerce-39c74.firebaseapp.com",
+    projectId: "e-commerce-39c74",
+    storageBucket: "e-commerce-39c74.firebasestorage.app",
+    messagingSenderId: "863375033754",
+    appId: "1:863375033754:web:7ba248c8dbb1566c83e623"
+  };
+
+  if(!firebase.apps.length){
+    firebase.initializeApp(firebaseConfig);
+  }
+
+  const userAuth = firebase.auth();          // for users
+  const userDb = firebase.firestore();       // for user data & cart
+  const adminDb = firebase.firestore();      // same DB can hold products, admins collection
+
+  // --- State ---
+  let currentProducts = [];
+  let displayedCount = 0;
+  let tipIndex = 0;
+  let sliderIndex = 0;
+  const perPage = 8;
+  let cartUnsub = null;
+
+  const skinTips = [
+    "Stay hydrated — drink at least 8 glasses of water daily.",
+    "Apply sunscreen every morning, even on cloudy days.",
+    "Eat a balanced diet with vitamins for skin health.",
+    "Sleep at least 7–8 hours to allow skin repair.",
+    "Wash your face twice daily with a gentle cleanser.",
+    "Use natural products when possible to avoid irritation."
+  ];
+
+  // ---------- UI Helpers ----------
+  function showNotification(message, type="info", duration=3000){
+    const container = document.getElementById("notification-container");
+    if(!container){ alert(message); return; }
+    const div = document.createElement("div");
+    div.textContent = message;
+    div.className="px-4 py-2 rounded shadow text-white transition-transform transform opacity-0";
+    if(type==="success") div.classList.add("bg-green-500");
+    else if(type==="error") div.classList.add("bg-red-500");
+    else if(type==="warning") div.classList.add("bg-yellow-500","text-black");
+    else div.classList.add("bg-blue-500");
+    container.appendChild(div);
+    requestAnimationFrame(()=> div.style.opacity = '1');
+    setTimeout(()=> { div.style.opacity = '0'; setTimeout(()=> div.remove(), 300); }, duration);
+  }
+
+  function rotateTipsFade(){
+    const el = document.getElementById("skinTip");
+    if(!el) return;
+    el.style.opacity=0;
+    setTimeout(()=>{
+      el.textContent = skinTips[tipIndex];
+      el.style.opacity=1;
+      tipIndex = (tipIndex+1) % skinTips.length;
+    },300);
+  }
+
+  function slideImages(next = true){
+    const slider = document.getElementById("slider");
+    if(!slider) return;
+    const total = slider.children.length || 1;
+    sliderIndex = next ? (sliderIndex+1)%total : (sliderIndex-1+total)%total;
+    slider.style.marginLeft = `-${sliderIndex*100}%`;
+  }
+
+  // ---------- Header Scroll ----------
+  const header = document.getElementById("mainHeader");
+  window.addEventListener("scroll",()=>{
+    if(!header) return;
+    if(window.scrollY>50){ header.classList.remove("bg-white"); header.classList.add("bg-pink-100"); }
+    else { header.classList.remove("bg-pink-100"); header.classList.add("bg-white"); }
+  });
+
+  // ---------- PRODUCTS ----------
+  async function filterProducts(category="All"){
+    displayedCount=0;
+    const productList = document.getElementById("product-list");
+    if(!productList) return;
+
+    // skeleton loading
+    productList.innerHTML = "";
+    for(let i=0;i<perPage;i++){
+      productList.innerHTML += `<div class="animate-pulse border rounded-xl p-4 text-center shadow">
+        <div class="h-32 bg-gray-300 mb-2 rounded"></div>
+        <div class="h-5 bg-gray-300 mb-1 rounded"></div>
+        <div class="h-5 bg-gray-300 w-1/2 mx-auto rounded"></div>
+      </div>`;
+    }
+
+    try {
+      const snapshot = await adminDb.collection("products").get();
+      const allProducts = snapshot.docs.map(d=>({id:d.id,...d.data()}));
+      const filtered = category==="All" ? allProducts : allProducts.filter(p=>p.category===category);
+      currentProducts = filtered || [];
+
+      // category UI highlight
+      document.querySelectorAll(".category-btn").forEach(btn=>{
+        if(btn.dataset.category===category){
+          btn.classList.add("bg-pink-500","text-white");
+          btn.classList.remove("bg-pink-100","text-gray-800");
+        } else {
+          btn.classList.remove("bg-pink-500","text-white");
+          btn.classList.add("bg-pink-100","text-gray-800");
+        }
+      });
+
+      setTimeout(()=> renderProducts(true), 300);
+    } catch(err){
+      console.error(err);
+      showNotification("Failed to load products","error");
+      if(productList) productList.innerHTML = `<div class="text-center text-gray-500 col-span-full">Failed to load products</div>`;
+    }
+  }
+  window.filterProducts = filterProducts;
+
+  // ---------- RENDER PRODUCTS ----------
+  function renderProducts(reset=false){
+    const productList = document.getElementById("product-list");
+    if(!productList) return;
+    if(displayedCount === 0 || reset) productList.innerHTML = "";
+
+    const start = displayedCount;
+    const end = Math.min(displayedCount + perPage, currentProducts.length);
+    const chunk = currentProducts.slice(start, end);
+
+    chunk.forEach(product=>{
+        const image = product.image || 'https://via.placeholder.com/300x200?text=No+Image';
+        const card = document.createElement('div');
+        card.className = "border rounded-xl p-4 text-center shadow opacity-0 transition-opacity duration-500";
+        card.innerHTML = `
+            <img src="${image}" class="mx-auto mb-2 h-32 w-full object-cover rounded" />
+            <h4 class="font-semibold">${escapeHtml(product.name||'Untitled')}</h4>
+            <p class="text-pink-500 font-bold">₦${(Number(product.price||0)).toLocaleString()}</p>
+            <div class="mt-2 space-x-2">
+              <button data-id="${product.id}" class="view-btn text-sm px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600">View</button>
+              <button data-id="${product.id}" class="add-btn text-sm px-3 py-1 bg-pink-600 text-white rounded hover:bg-pink-700">Add to Cart</button>
+            </div>
+        `;
+        productList.appendChild(card);
+        requestAnimationFrame(()=> card.style.opacity="1");
+    });
+
+    displayedCount += chunk.length;
+
+    // Bind buttons
+    productList.querySelectorAll('.view-btn').forEach(btn=>{
+    if(!btn.dataset.bound){
+        btn.dataset.bound='1';
+        btn.addEventListener('click', async ()=>{
+            const resetLoader = showLoader(btn);      // start loader
+            await viewProduct(btn.dataset.id);        // wait for modal creation
+            resetLoader && resetLoader();             // stop loader
+        });
+    }
+});
+
+productList.querySelectorAll('.add-btn').forEach(btn=>{
+    if(!btn.dataset.bound){
+        btn.dataset.bound='1';
+        btn.addEventListener('click', async ()=>{
+            const resetLoader = showLoader(btn);      // start loader
+            await window.addToCart(btn.dataset.id);   // wait for addToCart
+            resetLoader && resetLoader();             // stop loader
+        });
+    }
+});
+
+    // Load More button
+    const existing = document.getElementById("loadMoreBtn");
+    if(displayedCount < currentProducts.length){
+        if(!existing){
+            const btn = document.createElement("button");
+            btn.id="loadMoreBtn";
+            btn.textContent="Load More";
+            btn.className="mt-4 px-6 py-2 bg-pink-500 text-white rounded hover:bg-pink-600 block mx-auto";
+            btn.onclick=()=> renderProducts();
+            productList.parentElement.appendChild(btn);
+        }
+    } else if(existing) existing.remove();
+  }
+
+  // ---------- VIEW PRODUCT MODAL ----------
+function viewProduct(productId){
+  const product = currentProducts.find(p=>p.id===productId);
+  if(!product) return showNotification("Product not found","error");
+
+  let modal = document.getElementById("productModal");
+
+if(!modal){
+    modal = document.createElement("div");
+    modal.id = "productModal";
+    modal.className = "fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden";
+    document.body.appendChild(modal);
+}
+
+/* Always update the inner HTML so new buttons show */
+modal.innerHTML = `
+  <div class="bg-white rounded-lg p-6 max-w-lg w-full relative">
+    <button id="closeProductModal" class="absolute top-2 right-2 text-gray-500 hover:text-gray-800">&times;</button>
+    <img id="modalProductImage" src="" class="w-full h-64 object-cover mb-4 rounded">
+    <h2 id="modalProductName" class="text-xl font-bold mb-2"></h2>
+    <p id="modalProductPrice" class="text-pink-500 font-semibold mb-4"></p>
+    <p id="modalProductDescription" class="text-gray-700 mb-4"></p>
+
+    <button id="modalAddToCartBtn"
+      class="w-full mb-2 px-4 py-2 bg-pink-600 text-white rounded hover:bg-pink-700">
+      Add to Cart
+    </button>
+
+    <button id="buyNowBtn"
+      class="w-full px-4 py-2 border rounded hover:bg-gray-100">
+      Buy Now
+    </button>
+  </div>
+`;
+
+/* Close button */
+modal.querySelector("#closeProductModal").onclick = () => {
+    modal.classList.add("hidden");
+};
+  // --- Populate modal content ---
+  document.getElementById("modalProductImage").src = product.image || 'https://via.placeholder.com/300x200?text=No+Image';
+  document.getElementById("modalProductName").textContent = product.name || "Untitled";
+  document.getElementById("modalProductPrice").textContent = `₦${Number(product.price||0).toLocaleString()}`;
+  document.getElementById("modalProductDescription").textContent = product.description || "No description available.";
+
+  // --- IMPORTANT: Select buttons after modal is in DOM ---
+  const addBtn = modal.querySelector("#modalAddToCartBtn");
+  const buyBtn = modal.querySelector("#buyNowBtn");
+
+  // Add to Cart Button
+  if(addBtn){
+    addBtn.onclick = async ()=>{
+      const reset = showButtonLoader(addBtn);
+      await window.addToCart(product.id);
+      reset && reset();
+    };
+  }
+
+  // Buy Now Button
+  if(buyBtn){
+    buyBtn.onclick = async ()=>{
+      const reset = showButtonLoader(buyBtn);
+
+      // Add to cart first
+      await window.addToCart(product.id);
+
+      reset && reset();
+
+      // Open cart page instantly
+      window.location.href = "cart.html";
+    };
+  }
+
+  modal.classList.remove("hidden");
+}
+
+  window.viewProduct = viewProduct;
+
+  window.closeModal = function(){ 
+  const m=document.getElementById("productModal"); 
+  if(m) m.classList.add("hidden"); 
+}
+
+  // ---------- BUTTON LOADER ----------
+  function showButtonLoader(button){
+      if(!button) return null;
+      const original = button.innerHTML;
+      button.disabled = true;
+      button.innerHTML = `<span class="animate-spin border-2 border-white border-t-transparent rounded-full w-4 h-4 inline-block mr-2"></span> Loading...`;
+      return ()=>{ button.disabled=false; button.innerHTML=original; };
+  }
+
+  // ---------- CART ----------
+  window.addToCart = async function(id){
+    if(!userAuth.currentUser) return showNotification("Login required","error");
+    const product = currentProducts.find(p=>p.id===id);
+    if(!product) return showNotification("Not found","error");
+
+    const uid = userAuth.currentUser.uid;
+    const cartDocRef = userDb.collection("carts").doc(uid);
+    const itemsRef = cartDocRef.collection("items");
+
+    try{
+      const cartSnap = await cartDocRef.get();
+      if(!cartSnap.exists) await cartDocRef.set({createdAt:firebase.firestore.FieldValue.serverTimestamp()});
+      const q = await itemsRef.where("id","==",product.id).get();
+      if(!q.empty) await q.docs[0].ref.update({quantity:firebase.firestore.FieldValue.increment(1)});
+      else await itemsRef.add({id:product.id,name:product.name,price:product.price,image:product.image||'https://via.placeholder.com/150',quantity:1,createdAt:firebase.firestore.FieldValue.serverTimestamp()});
+      showNotification("Added!","success");
+      updateCartCount();
+    } catch(err){ console.error(err); showNotification("Failed","error"); }
+  }
+
+  function updateCartCount(){
+    const el = document.getElementById("cartCount");
+    if(!el) return;
+    if(cartUnsub){ try{ cartUnsub(); } catch(e){} cartUnsub=null; }
+    if(!userAuth.currentUser){ el.textContent="0"; return; }
+
+    const itemsRef = userDb.collection("carts").doc(userAuth.currentUser.uid).collection("items");
+    cartUnsub = itemsRef.onSnapshot(snapshot=>{
+      let total=0;
+      snapshot.forEach(doc=> total+=doc.data().quantity||0);
+      el.textContent=total;
+    }, err=>{ console.error(err); el.textContent="0"; });
+  }
+
+  // ---------- USER AUTH UI ----------
+  userAuth.onAuthStateChanged(user=>{
+    const loginBtn = document.getElementById("loginBtn");
+    const logoutBtn = document.getElementById("logoutBtn");
+    const welcomeText = document.getElementById("welcomeText");
+    const welcomeTextMobile = document.getElementById("welcomeTextMobile");
+
+    if(user){
+      if(loginBtn) loginBtn.classList.add("hidden");
+      if(logoutBtn) logoutBtn.classList.remove("hidden");
+
+      userDb.collection("users").doc(user.uid).get().then(doc=>{
+        const fullName = doc.exists && doc.data().name ? doc.data().name : (user.email ? user.email.split("@")[0] : "User");
+        const firstName = fullName.split(" ")[0];
+        const firstNameCapitalized = firstName.charAt(0).toUpperCase()+firstName.slice(1).toLowerCase();
+        if(welcomeText) welcomeText.textContent=`Hi, ${firstNameCapitalized}`; welcomeText.classList.remove("hidden");
+        if(welcomeTextMobile) welcomeTextMobile.textContent=`Hi, ${firstNameCapitalized}`; welcomeTextMobile.classList.remove("hidden");
+      }).catch(console.error);
+
+      updateCartCount();
+    } else {
+      if(loginBtn) loginBtn.classList.remove("hidden");
+      if(logoutBtn) logoutBtn.classList.add("hidden");
+      if(welcomeText) welcomeText.classList.add("hidden");
+      if(welcomeTextMobile) welcomeTextMobile.classList.add("hidden");
+      if(cartUnsub){ try{ cartUnsub(); } catch(e){} cartUnsub=null; }
+      const el = document.getElementById("cartCount"); if(el) el.textContent="0";
+    }
+  });
+
+  // ---------- LOGIN MODAL ----------
+  function openLoginModal() {
+      const modal = document.getElementById("loginModal");
+      if (modal) {
+          modal.classList.remove("hidden");
+          document.body.style.overflow = "hidden";
+      }
+  }
+  function closeLoginModal() {
+      const modal = document.getElementById("loginModal");
+      if (modal) {
+          modal.classList.add("hidden");
+          document.body.style.overflow = "";
+      }
+  }
+  window.openLoginModal = openLoginModal;
+  window.closeLoginModal = closeLoginModal;
+
+  const loginBtn = document.getElementById("loginBtn");
+  if(loginBtn) loginBtn.addEventListener("click", openLoginModal);
+
+  const logoutBtn = document.getElementById("logoutBtn");
+  if(logoutBtn) logoutBtn.addEventListener("click", ()=>{
+      firebase.auth().signOut().then(()=> showNotification("Logged out","success")).catch(err=>{
+          console.error(err); showNotification("Logout failed","error");
+      });
+  });
+
+  // ---------- LOGIN SUBMIT ----------
+  const loginSubmit = document.getElementById("loginSubmit");
+  if(loginSubmit){
+      loginSubmit.addEventListener("click", async (e)=>{
+          e.preventDefault();
+          const email = document.getElementById("loginEmail").value.trim();
+          const password = document.getElementById("loginPassword").value;
+          const loginErrorEl = document.getElementById("loginError");
+          if(loginErrorEl) loginErrorEl.classList.add("hidden");
+
+          if(!email || !password){
+              if(loginErrorEl){ loginErrorEl.textContent="Fill both fields."; loginErrorEl.classList.remove("hidden"); }
+              return;
+          }
+
+          const resetLoader = showLoader(loginSubmit);
+          try{
+              await firebase.auth().signInWithEmailAndPassword(email,password);
+              closeLoginModal();
+              showNotification("Logged in","success");
+          }catch(err){
+              console.error(err);
+              if(loginErrorEl){ loginErrorEl.textContent=err.message||"Login failed"; loginErrorEl.classList.remove("hidden"); }
+          }finally{ resetLoader && resetLoader(); }
+      });
+  }
+
+  // ===== Password Eye Toggle (Homepage Login) =====
+const loginPassword = document.getElementById("loginPassword");
+const toggleLoginPassword = document.getElementById("toggleLoginPassword");
+
+toggleLoginPassword.addEventListener("click", () => {
+  if (loginPassword.type === "password") {
+    loginPassword.type = "text";
+    toggleLoginPassword.classList.replace("fa-eye", "fa-eye-slash");
+  } else {
+    loginPassword.type = "password";
+    toggleLoginPassword.classList.replace("fa-eye-slash", "fa-eye");
+  }
+});
+
+  // ---------- GOOGLE LOGIN ----------
+  const googleLogin = document.getElementById("googleLogin");
+  if(googleLogin) googleLogin.disabled = true;
+
+  // ---------- INITIAL LOAD ----------
+  rotateTipsFade();
+  setInterval(rotateTipsFade,5000);
+  setInterval(()=>slideImages(true),3000);
+  filterProducts("All");
+
+  // ---------- HELPERS ----------
+  function escapeHtml(text){ if(text==null) return ''; return String(text).replace(/[&<>"']/g, m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
+  function showLoader(el){ if(!el) return null; const original=el.innerHTML; el.disabled=true; el.innerHTML=`<span class="animate-spin border-2 border-white border-t-transparent rounded-full w-4 h-4 inline-block mr-2"></span> Loading...`; return ()=>{ el.disabled=false; el.innerHTML=original; }; }
+
+  const menuToggle = document.getElementById("menuToggle");
+const mobileMenu = document.getElementById("mobileMenu");
+const menuOverlay = document.getElementById("menuOverlay");
+const closeMenu = document.getElementById("closeMenu");
+
+function openMenu() {
+    mobileMenu.classList.remove("-translate-x-full");
+    mobileMenu.classList.add("translate-x-0");
+    menuOverlay.classList.remove("hidden");
+}
+
+function closeMenuFunc() {
+    mobileMenu.classList.remove("translate-x-0");
+    mobileMenu.classList.add("-translate-x-full");
+    menuOverlay.classList.add("hidden");
+}
+
+menuToggle.addEventListener("click", openMenu);
+closeMenu.addEventListener("click", closeMenuFunc);
+menuOverlay.addEventListener("click", closeMenuFunc);
+
+  // // ---------- MOBILE MENU ----------
+  // const menuToggle = document.getElementById("menuToggle");
+  // const mobileMenu = document.getElementById("mobileMenu");
+  // if(menuToggle && mobileMenu){
+  //     menuToggle.addEventListener("click", ()=>{ mobileMenu.classList.toggle("hidden"); });
+  // }
+
+})();

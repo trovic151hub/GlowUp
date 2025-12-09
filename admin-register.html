@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Registration</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+</head>
+
+<body class="bg-gray-100 flex items-center justify-center h-screen">
+
+  <div class="bg-white p-6 rounded shadow-md w-full max-w-md">
+    <h2 class="text-2xl font-bold mb-4 text-center text-pink-600">Admin Registration</h2>
+
+    <form id="adminRegisterForm" class="space-y-4">
+      <input type="text" id="adminName" placeholder="Full Name" class="w-full border p-2 rounded" required>
+      <input type="email" id="adminEmail" placeholder="Email" class="w-full border p-2 rounded" required>
+
+      <div class="relative">
+        <input type="password" id="adminPassword" placeholder="Password" class="w-full border p-2 rounded" required>
+        <i id="togglePassword" class="fa fa-eye absolute right-3 top-3 text-gray-500 cursor-pointer"></i>
+      </div>
+
+      <button id="registerBtn" type="submit"
+        class="w-full bg-pink-600 text-white py-2 rounded hover:bg-pink-700 flex items-center justify-center gap-2">
+        <span id="registerBtnText">Register</span>
+        <span id="registerSpinner" class="hidden"><i class="fa-solid fa-circle-notch fa-spin"></i></span>
+      </button>
+
+      <p id="registerError" class="text-red-500 text-sm hidden"></p>
+
+      <p class="mt-4 text-center text-sm">
+        Already an Admin?
+        <a href="admin-login.html" class="text-pink-600">Login</a>
+      </p>
+    </form>
+  </div>
+
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-functions-compat.js"></script>
+
+<script>
+  // ===== Firebase config =====
+  const firebaseConfig = {
+    apiKey: "AIzaSyDdTPmpaIPWSDWOmR-fXgvAb7hoxZUawcc",
+    authDomain: "e-commerce-39c74.firebaseapp.com",
+    projectId: "e-commerce-39c74",
+    storageBucket: "e-commerce-39c74.firebasestorage.app",
+    messagingSenderId: "863375033754",
+    appId: "1:863375033754:web:7ba248c8dbb1566c83e623"
+  };
+
+  // Initialize Firebase
+  const app = firebase.apps.length ? firebase.app() : firebase.initializeApp(firebaseConfig);
+  const auth = app.auth();
+  const db = app.firestore();
+
+  // ===== Elements =====
+  const form = document.getElementById("adminRegisterForm");
+  const registerError = document.getElementById("registerError");
+  const registerBtn = document.getElementById("registerBtn");
+  const registerBtnText = document.getElementById("registerBtnText");
+  const registerSpinner = document.getElementById("registerSpinner");
+
+  const passwordInput = document.getElementById("adminPassword");
+  const togglePassword = document.getElementById("togglePassword");
+
+  // ===== Password Eye Toggle =====
+  togglePassword.addEventListener("click", () => {
+    if (passwordInput.type === "password") {
+      passwordInput.type = "text";
+      togglePassword.classList.replace("fa-eye", "fa-eye-slash");
+    } else {
+      passwordInput.type = "password";
+      togglePassword.classList.replace("fa-eye-slash", "fa-eye");
+    }
+  });
+
+  // ===== Register Handler =====
+  form.addEventListener("submit", async e => {
+    e.preventDefault();
+    registerError.classList.add("hidden");
+
+    // Show loading
+    registerBtn.disabled = true;
+    registerBtn.classList.add("opacity-50", "cursor-not-allowed");
+    registerBtnText.textContent = "Registering...";
+    registerSpinner.classList.remove("hidden");
+
+    const name = document.getElementById("adminName").value.trim();
+    const email = document.getElementById("adminEmail").value.trim();
+    const password = passwordInput.value;
+
+    try {
+  // Set persistence
+  await auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
+
+  // Create admin user
+  const userCredential = await auth.createUserWithEmailAndPassword(email, password);
+  const user = userCredential.user;
+
+  // Immediately sign in the new user
+  await auth.signInWithEmailAndPassword(email, password);
+
+  // Save admin info in Firestore (admins collection)
+  await db.collection("admins").doc(user.uid).set({
+    name,
+    email,
+    role: "admin",
+    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+    lastLogin: firebase.firestore.FieldValue.serverTimestamp()
+  });
+
+  alert("Admin registered successfully!");
+  window.location.href = "admin-login.html";
+
+} catch (err) {
+  console.error("Admin registration error:", err);
+  registerError.textContent = err.message;
+  registerError.classList.remove("hidden");
+    // try {
+    //   // Check if email already exists in the admins collection
+    //   const existingAdmin = await db.collection("admins")
+    //     .where("email", "==", email)
+    //     .get();
+
+    //   if (!existingAdmin.empty) {
+    //     throw new Error("This email is already registered as an admin.");
+    //   }
+
+    //   // Set persistence
+    //   await auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
+
+    //   // Create admin user in Firebase Auth
+    //   const userCredential = await auth.createUserWithEmailAndPassword(email, password);
+    //   const user = userCredential.user;
+
+    //   // Save admin info in Firestore
+    //   await db.collection("admins").doc(user.uid).set({
+    //     name,
+    //     email,
+    //     role: "admin",
+    //     createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+    //     lastLogin: firebase.firestore.FieldValue.serverTimestamp()
+    //   });
+
+    //   alert("Admin registered successfully!");
+    //   window.location.href = "admin-login.html";
+
+    // } catch (err) {
+    //   console.error("Admin registration error:", err);
+    //   registerError.textContent = err.message;
+    //   registerError.classList.remove("hidden");
+    } finally {
+      registerBtn.disabled = false;
+      registerBtn.classList.remove("opacity-50", "cursor-not-allowed");
+      registerBtnText.textContent = "Register";
+      registerSpinner.classList.add("hidden");
+    }
+  });
+</script>
+
+<!-- <script>
+  // ===== Firebase config =====
+  const firebaseConfig = {
+  apiKey: "AIzaSyDdTPmpaIPWSDWOmR-fXgvAb7hoxZUawcc",
+  authDomain: "e-commerce-39c74.firebaseapp.com",
+  projectId: "e-commerce-39c74",
+  storageBucket: "e-commerce-39c74.firebasestorage.app",
+  messagingSenderId: "863375033754",
+  appId: "1:863375033754:web:7ba248c8dbb1566c83e623"
+};
+  // Initialize Firebase
+  const app = firebase.apps.length ? firebase.app() : firebase.initializeApp(firebaseConfig);
+  const auth = app.auth();
+  const db = app.firestore();
+  const functions = app.functions();
+
+  // ===== Elements =====
+  const form = document.getElementById("adminRegisterForm");
+  const registerError = document.getElementById("registerError");
+  const registerBtn = document.getElementById("registerBtn");
+  const registerBtnText = document.getElementById("registerBtnText");
+  const registerSpinner = document.getElementById("registerSpinner");
+
+  const passwordInput = document.getElementById("adminPassword");
+  const togglePassword = document.getElementById("togglePassword");
+
+  // ===== Password Eye Toggle =====
+  togglePassword.addEventListener("click", () => {
+    if (passwordInput.type === "password") {
+      passwordInput.type = "text";
+      togglePassword.classList.replace("fa-eye", "fa-eye-slash");
+    } else {
+      passwordInput.type = "password";
+      togglePassword.classList.replace("fa-eye-slash", "fa-eye");
+    }
+  });
+
+  // ===== Register Handler =====
+  form.addEventListener("submit", async e => {
+    e.preventDefault();
+    registerError.classList.add("hidden");
+
+    // Show loading
+    registerBtn.disabled = true;
+    registerBtn.classList.add("opacity-50", "cursor-not-allowed");
+    registerBtnText.textContent = "Registering...";
+    registerSpinner.classList.remove("hidden");
+
+    const name = document.getElementById("adminName").value.trim();
+    const email = document.getElementById("adminEmail").value.trim();
+    const password = passwordInput.value;
+
+    try {
+      // Set persistence
+      await auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
+
+      // Create admin user
+      const userCredential = await auth.createUserWithEmailAndPassword(email, password);
+      const user = userCredential.user;
+
+      // Save admin info in Firestore (shared "users" collection)
+      await db.collection("users").doc(user.uid).set({
+        name,
+        email,
+        role: "admin",          // critical: role is "admin"
+        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+        lastLogin: firebase.firestore.FieldValue.serverTimestamp()
+      });
+
+      alert("Admin registered successfully!");
+      window.location.href = "admin-login.html";
+
+    } catch (err) {
+      console.error("Admin registration error:", err);
+      registerError.textContent = err.message;
+      registerError.classList.remove("hidden");
+    } finally {
+      registerBtn.disabled = false;
+      registerBtn.classList.remove("opacity-50", "cursor-not-allowed");
+      registerBtnText.textContent = "Register";
+      registerSpinner.classList.add("hidden");
+    }
+  });
+</script> -->
+
+<!-- <script>
+  // ===== Firebase config =====
+  const firebaseConfig = {
+    apiKey: "AIzaSyCucLRzSTNEDZlpnSeIF-4FA0_5WUnB3Ew",
+    authDomain: "e-commerce-b4a61.firebaseapp.com",
+    projectId: "e-commerce-b4a61",
+    storageBucket: "e-commerce-b4a61.firebasestorage.app",
+    messagingSenderId: "886249797120",
+    appId: "1:886249797120:web:45ed77ce645da70d2e8ae5"
+  };
+
+  // Initialize Firebase
+  const app = firebase.apps.length ? firebase.app() : firebase.initializeApp(firebaseConfig);
+  const auth = app.auth();
+  const db = app.firestore();
+
+  // ===== Elements =====
+  const form = document.getElementById("adminRegisterForm");
+  const registerError = document.getElementById("registerError");
+  const registerBtn = document.getElementById("registerBtn");
+  const registerBtnText = document.getElementById("registerBtnText");
+  const registerSpinner = document.getElementById("registerSpinner");
+
+  const passwordInput = document.getElementById("adminPassword");
+  const togglePassword = document.getElementById("togglePassword");
+
+  // ===== Password Eye Toggle =====
+  togglePassword.addEventListener("click", () => {
+    if (passwordInput.type === "password") {
+      passwordInput.type = "text";
+      togglePassword.classList.replace("fa-eye", "fa-eye-slash");
+    } else {
+      passwordInput.type = "password";
+      togglePassword.classList.replace("fa-eye-slash", "fa-eye");
+    }
+  });
+
+  // ===== Register Handler =====
+  form.addEventListener("submit", async e => {
+    e.preventDefault();
+    registerError.classList.add("hidden");
+
+    // Show loading
+    registerBtn.disabled = true;
+    registerBtn.classList.add("opacity-50", "cursor-not-allowed");
+    registerBtnText.textContent = "Registering...";
+    registerSpinner.classList.remove("hidden");
+
+    const name = document.getElementById("adminName").value.trim();
+    const email = document.getElementById("adminEmail").value.trim();
+    const password = passwordInput.value;
+
+    try {
+      await auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
+
+      const userCredential = await auth.createUserWithEmailAndPassword(email, password);
+      const user = userCredential.user;
+
+      // Save admin in Firestore
+      await db.collection("admins").doc(user.uid).set({
+        name,
+        email,
+        role: "admin",
+        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+        lastLogin: firebase.firestore.FieldValue.serverTimestamp()
+      });
+
+      alert("Admin registered successfully!");
+      window.location.href = "admin-login.html";
+
+    } catch (err) {
+      registerError.textContent = err.message;
+      registerError.classList.remove("hidden");
+    } finally {
+      registerBtn.disabled = false;
+      registerBtn.classList.remove("opacity-50", "cursor-not-allowed");
+      registerBtnText.textContent = "Register";
+      registerSpinner.classList.add("hidden");
+    }
+  });
+</script> -->
+</body>
+</html>

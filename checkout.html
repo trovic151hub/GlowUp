@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Checkout</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+  <script src="https://js.paystack.co/v1/inline.js"></script>
+  <script src="https://checkout.flutterwave.com/v3.js"></script>
+  <style>
+  *{
+        font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+    }
+    @import url('https://fonts.googleapis.com/css2?family=Lora:wght@700&family=Montserrat:wght@500&display=swap');
+    /* ----------------------------------- */
+/* 📱 MOBILE FIRST: max-width 640px    */
+/* ----------------------------------- */
+@media (max-width: 640px) {
+  *{
+        font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+    }
+    @import url('https://fonts.googleapis.com/css2?family=Lora:wght@700&family=Montserrat:wght@500&display=swap');
+
+  /* Main grid stacks vertically */
+  main {
+    grid-template-columns: 1fr !important;
+    gap: 16px !important;
+    padding: 1rem !important;
+  }
+
+  header h1 {
+    font-size: 1.2rem !important;
+  }
+
+  header a {
+    font-size: 1rem !important;
+  }
+
+  /* Billing form & order summary full width */
+  .bg-white {
+    width: 100% !important;
+    padding: 1rem !important;
+  }
+
+  /* Inputs full width and slightly smaller text */
+  input {
+    width: 100% !important;
+    font-size: 0.95rem !important;
+  }
+
+  /* Payment buttons stacked vertically */
+  #checkoutForm .flex {
+    /* flex-direction: column !important; */
+    gap: 12px !important;
+  }
+
+  /* Order summary items spacing */
+  #summaryList > div {
+    flex-direction: column !important;
+    gap: 8px !important;
+  }
+
+  /* Total text smaller */
+  #checkoutTotal {
+    font-size: 1.1rem !important;
+  }
+}
+
+/* ----------------------------------- */
+/* 📲 VERY SMALL SCREEN: max-width 380px */
+/* ----------------------------------- */
+@media (max-width: 380px) {
+  header h1 {
+    font-size: 1rem !important;
+  }
+
+  header a {
+    font-size: 0.9rem !important;
+  }
+
+  input {
+    font-size: 0.9rem !important;
+    padding: 0.5rem !important;
+  }
+
+  #checkoutForm button {
+    font-size: 0.9rem !important;
+    padding: 0.6rem !important;
+  }
+
+  #checkoutTotal {
+    font-size: 1rem !important;
+  }
+}
+  </style>
+</head>
+<body class="bg-gray-50 text-gray-900">
+
+  <header class="bg-pink-100 p-4 shadow-md flex justify-between items-center">
+    <button onclick="history.back()">
+      <h1 class="text-xl font-bold">🧾 Checkout</h1>
+    </button>
+    <a href="cart.html" class="text-pink-600 font-bold">🛒 Back to Cart</a>
+  </header>
+
+  <main class="p-6 max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8 relative">
+
+    <!-- Billing Form -->
+    <div class="bg-white p-6 shadow rounded">
+      <h2 class="text-lg font-semibold mb-4">Billing Information</h2>
+      <form id="checkoutForm" class="space-y-4">
+        <input type="text" id="name" placeholder="Full Name" class="w-full border p-3 rounded-lg focus:ring-2 focus:ring-pink-300 focus:outline-none transition" required />
+        <input type="tel" id="phone" placeholder="Phone Number" class="w-full border p-3 rounded-lg focus:ring-2 focus:ring-pink-300 focus:outline-none transition" required />
+        <input type="email" id="email" placeholder="Email Address" class="w-full border p-3 rounded-lg focus:ring-2 focus:ring-pink-300 focus:outline-none transition" required />
+        <input type="text" id="address" placeholder="Home Address" class="w-full border p-3 rounded-lg focus:ring-2 focus:ring-pink-300 focus:outline-none transition" required />
+
+        <!-- State & LGA -->
+        <div class="space-y-2 relative">
+          <label for="state" class="font-semibold">State</label>
+          <input type="text" id="state" placeholder="Enter your state" class="w-full border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-pink-300 focus:outline-none transition" required />
+          <div id="stateSuggestions" class="absolute border border-gray-300 bg-white z-50 w-full max-h-60 overflow-y-auto rounded shadow" style="display:none;"></div>
+
+          <label for="lga" class="font-semibold mt-2">LGA</label>
+          <select id="lga" class="w-full border p-3 rounded-lg focus:ring-2 focus:ring-pink-300 focus:outline-none transition" style="display:none;">
+            <option value="">Select LGA</option>
+          </select>
+        </div>
+
+        <!-- Delivery Option -->
+         <div class="space-y-2">
+  <label for="deliveryOption" class="font-semibold">Delivery Option</label>
+  <select id="deliveryOption" class="w-full border p-3 rounded-lg focus:ring-2 focus:ring-pink-300 focus:outline-none transition">
+    <option value="">Delivery Option</option> <!-- placeholder -->
+    <option value="gig">GIG Delivery</option>
+    <option value="guo">GUO Delivery</option>
+  </select>
+</div>
+
+        <h2 class="text-lg font-semibold mb-2">Choose Payment Method</h2>
+        <div class="flex gap-4">
+          <button id="payWithPaystack" type="button" class="bg-pink-600 text-white px-4 py-2 rounded hover:bg-pink-700">Paystack</button>
+          <button id="payWithFlutterwave" type="button" class="bg-yellow-500 text-white px-4 py-2 rounded hover:bg-yellow-600">Flutterwave</button>
+        </div>
+      </form>
+    </div>
+
+    <div id="orderSkeleton" class="space-y-4">
+  <div class="h-20 bg-gray-200 rounded animate-pulse"></div>
+  <div class="h-20 bg-gray-200 rounded animate-pulse"></div>
+  <div class="h-20 bg-gray-200 rounded animate-pulse"></div>
+</div>
+
+    <!-- Order Summary -->
+    <div class="bg-white p-6 shadow rounded">
+      <h2 class="text-lg font-semibold mb-4">Order Summary</h2>
+      <div id="orderContainer" class="space-y-4"></div>
+      <hr class="my-4" />
+      <div class="text-right text-lg font-bold">
+        Total: ₦<span id="checkoutTotal">0</span>
+      </div>
+    </div>
+  </main>
+
+  <div id="overlaySpinner" class="hidden fixed inset-0 bg-black/30 flex items-center justify-center z-50">
+    <div class="loader border-4 border-pink-500 border-t-transparent rounded-full w-12 h-12 animate-spin"></div>
+  </div>
+
+  <script>
+document.addEventListener("DOMContentLoaded", () => {
+  // ====== Firebase Config ======
+  const firebaseConfig = {
+    apiKey: "AIzaSyDdTPmpaIPWSDWOmR-fXgvAb7hoxZUawcc",
+    authDomain: "e-commerce-39c74.firebaseapp.com",
+    projectId: "e-commerce-39c74",
+    storageBucket: "e-commerce-39c74.firebasestorage.app",
+    messagingSenderId: "863375033754",
+    appId: "1:863375033754:web:7ba248c8dbb1566c83e623"
+  };
+  firebase.initializeApp(firebaseConfig);
+  const auth = firebase.auth();
+  const db = firebase.firestore();
+
+  // ====== DOM Elements ======
+  const stateInput = document.getElementById("state");
+  const lgaInput = document.getElementById("lga");
+  const orderContainer = document.getElementById("orderContainer");
+  const totalSpan = document.getElementById("checkoutTotal");
+  const paystackBtn = document.getElementById("payWithPaystack");
+  const flutterwaveBtn = document.getElementById("payWithFlutterwave");
+  const overlaySpinner = document.getElementById("overlaySpinner");
+  const deliverySelect = document.getElementById("deliveryOption");
+  const suggestionsContainer = document.getElementById("stateSuggestions");
+  const orderSkeleton = document.getElementById("orderSkeleton");
+
+  // ====== State & Delivery Data ======
+  const lagosLGAFees = {
+    "Agege":3000,"Ajeromi-Ifelodun":3000,"Alimosho":3000,"Amuwo-Odofin":3000,
+    "Apapa":3000,"Epe":6000,"Eti-Osa":5000,"Ibeju-Lekki":5000,
+    "Lekki Phase":4000,"Sangotedo":4000,"Ajah":4000,"Ifako-Ijaiye":3000,
+    "Ikeja":3000,"Ikorodu":4000,"Kosofe":4000,"Lagos Island":4000,
+    "Lagos Mainland":4000,"Mushin":3000,"Ojo":3000,"Oshodi-Isolo":3000,
+    "Shomolu":3000,"Surulere":3000
+  };
+  const guoSupportedStates = [
+    "lagos","abuja","abia","anambra","enugu",
+    "imo","rivers","delta","edo","benue",
+    "kaduna","kano","benin", "ebonyi", "plateau", 
+    "warri", "asaba"
+  ];
+
+  const states =[
+  "Abia", "Adamawa", "Akwa Ibom", "Anambra", "Bauchi", 
+  "Bayelsa", "Benue", "Borno", "Cross River", "Delta", 
+  "Ebonyi", "Edo", "Ekiti", "Enugu", "Gombe", "Imo", 
+  "Jigawa", "Kaduna", "Kano", "Katsina", "Kebbi", "Kogi", 
+  "Kwara", "Lagos", "Nasarawa", "Niger", "Ogun", "Ondo", 
+  "Osun", "Oyo", "Plateau", "Rivers", "Sokoto", "Taraba", 
+  "Yobe", "Zamfara", "Abuja"
+];
+  const lagosLGAs = Object.keys(lagosLGAFees);
+
+  // ====== App State ======
+  let currentUser = null;
+  let cartItems = [];
+  let deliveryFee = 0;
+  let totalWeight = 0;
+
+  // ====== Utility Functions ======
+  function showOverlaySpinner(show = true) {
+    overlaySpinner?.classList.toggle("hidden", !show);
+  }
+
+  function clearElement(el) { if(el) el.innerHTML = ""; }
+
+  // ====== LGA & Delivery Management ======
+  function showLGAOrDelivery() {
+    const state = stateInput.value.trim().toLowerCase();
+
+    // Show/hide Lagos LGA dropdown
+    if (state === "lagos") {
+      lgaInput.style.display = "block";
+      lgaInput.innerHTML = '<option value="">Select LGA</option>';
+      lagosLGAs.forEach(lga => {
+        const opt = document.createElement("option");
+        opt.value = lga; opt.textContent = lga;
+        lgaInput.appendChild(opt);
+      });
+      // Disable delivery option until LGA is selected
+    deliverySelect.disabled = true;
+    } else {
+      lgaInput.style.display = "none";
+      lgaInput.value = "";
+      deliverySelect.disabled = false; // Enable delivery for non-Lagos
+    }
+
+    // Update GUO delivery availability
+    const guoOption = deliverySelect.querySelector('option[value="guo"]');
+    if (guoOption) {
+      if (guoSupportedStates.includes(state)) {
+        guoOption.disabled = false;
+        guoOption.textContent = "GUO Delivery";
+      } else {
+        if (deliverySelect.value === "guo") deliverySelect.value = "gig";
+        guoOption.disabled = true;
+        guoOption.textContent = "GUO Delivery (Not available)";
+      }
+    }
+
+    renderOrderWithDelivery();
+  }
+
+  // ===== STATE AUTOCOMPLETE =====
+  stateInput.addEventListener("input", () => {
+    const input = stateInput.value.trim().toLowerCase();
+    suggestionsContainer.innerHTML = "";
+    if (!input) { suggestionsContainer.style.display = "none"; return; }
+
+    const matched = states.filter(s => s.toLowerCase().startsWith(input));
+    matched.forEach(sName => {
+      const div = document.createElement("div");
+      div.textContent = sName;
+      div.className = "p-2 cursor-pointer hover:bg-pink-100";
+      div.addEventListener("click", () => {
+        stateInput.value = sName;
+        suggestionsContainer.style.display = "none";
+        showLGAOrDelivery();
+      });
+      suggestionsContainer.appendChild(div);
+    });
+
+    suggestionsContainer.style.display = matched.length ? "block" : "none";
+  });
+
+  document.addEventListener("click", e => {
+    if(!stateInput.contains(e.target) && !suggestionsContainer.contains(e.target)) suggestionsContainer.style.display = "none";
+  });
+
+  lgaInput.addEventListener("change", renderOrderWithDelivery);
+  deliverySelect.addEventListener("change", renderOrderWithDelivery);
+
+  // ===== Load user + cart =====
+  auth.onAuthStateChanged(user => {
+    if(!user){
+      alert("Please log in to access checkout.");
+      window.location.href = "user-login.html";
+      return;
+    }
+    currentUser = user;
+
+    db.collection("users").doc(user.uid).get().then(userDoc => {
+      const data = userDoc.exists ? userDoc.data() : {};
+      document.getElementById("name").value = data.name || "";
+      document.getElementById("email").value = data.email || user.email || "";
+      document.getElementById("address").value = data.address || "";
+      stateInput.value = data.state || "";
+
+      if(data.state?.toLowerCase() === "lagos"){
+        showLGAOrDelivery();
+        lgaInput.value = data.lga || "";
+      }
+
+      stateInput.dispatchEvent(new Event("change"));
+    });
+
+    showOverlaySpinner(true);
+    orderSkeleton?.classList.remove("hidden");
+    orderContainer?.classList.add("hidden");
+
+    db.collection("carts").doc(user.uid).collection("items").onSnapshot(snapshot => {
+      cartItems = snapshot.docs.map(doc => ({ docId: doc.id, ...doc.data() }));
+      renderOrderWithDelivery();
+    }, err => {
+      console.error("Error fetching cart:", err);
+      showOverlaySpinner(false);
+    });
+  });
+
+  // ===== Render Order =====
+  function renderOrderWithDelivery(){
+    showOverlaySpinner(false);
+    orderSkeleton?.classList.add("hidden");
+    orderContainer?.classList.remove("hidden");
+
+    orderContainer.innerHTML = "";
+    let subtotal = 0;
+    totalWeight = 0;
+
+    if(!cartItems.length){
+      orderContainer.innerHTML = "<p class='text-gray-500'>Your cart is empty.</p>";
+      totalSpan.textContent = "0";
+      return;
+    }
+
+    cartItems.forEach(item => {
+      const itemTotal = item.price * item.quantity;
+      subtotal += itemTotal;
+      totalWeight += (item.weight || 1) * item.quantity;
+
+      const div = document.createElement("div");
+      div.className = "flex justify-between bg-white p-4 rounded shadow mb-3";
+      div.innerHTML = `
+        <div class="flex items-center gap-4">
+          <img src="${item.image || 'https://via.placeholder.com/64'}" class="w-16 h-16 object-cover rounded">
+          <div>
+            <h4 class="font-semibold">${item.name}</h4>
+            <p class="text-pink-500 font-bold">₦${item.price.toLocaleString()}</p>
+            <p>Qty: ${item.quantity}</p>
+          </div>
+        </div>
+        <p class="font-semibold">₦${itemTotal.toLocaleString()}</p>
+      `;
+      orderContainer.appendChild(div);
+    });
+
+    const state = stateInput.value.trim().toLowerCase();
+    const option = deliverySelect.value;
+    deliveryFee = 0;
+
+    if(state === "lagos" && lgaInput.value){
+      deliveryFee = lagosLGAFees[lgaInput.value] || 0;
+    } else if(option === "gig"){
+      deliveryFee = 6700 + Math.max(totalWeight-1,0) * 800;
+    } else if(option === "guo" && guoSupportedStates.includes(state)){
+      deliveryFee = 3500 + Math.max(totalWeight-1,0) * 700;
+    }
+
+    if(deliveryFee){
+      const feeDiv = document.createElement("div");
+      feeDiv.className = "flex justify-between font-semibold mt-2";
+      feeDiv.innerHTML = `<span>Delivery Fee</span><span>₦${deliveryFee.toLocaleString()}</span>`;
+      orderContainer.appendChild(feeDiv);
+    }
+
+    totalSpan.textContent = (subtotal + deliveryFee).toLocaleString();
+  }
+
+  // ===== Validate Billing =====
+  function validateBilling(){
+    const name = document.getElementById("name").value.trim();
+    const phone = document.getElementById("phone").value.trim();
+    const email = document.getElementById("email").value.trim();
+    const address = document.getElementById("address").value.trim();
+    const state = stateInput.value.trim();
+    const lga = lgaInput.value;
+    const option = deliverySelect.value;
+
+    if(!name || !phone || !email || !address || !state || (state.toLowerCase() === "lagos" && !lga) || !option){
+      alert("Please fill all billing and delivery fields.");
+      return null;
+    }
+
+    return { name, phone, email, address, state, lga };
+  }
+
+  // ===== Save Order =====
+  async function saveOrder(order){
+    try{
+      await db.collection("orders").add({...order,userId:currentUser.uid,timestamp:new Date(),fulfilled:false});
+      const batch=db.batch();
+      const ref=db.collection("carts").doc(currentUser.uid).collection("items");
+      cartItems.forEach(item=>batch.delete(ref.doc(item.docId)));
+      await batch.commit();
+      window.location.href="order-success.html";
+    }catch(err){ console.error(err); alert("Something went wrong."); }
+  }
+
+  // ===== Payment Handler =====
+  function handlePayment(method){
+    const billing=validateBilling(); if(!billing||!cartItems.length) return;
+
+    let subtotal=0, totalWeight=0;
+    cartItems.forEach(i=>{ subtotal+=i.price*i.quantity; totalWeight+=(i.weight||1)*i.quantity; });
+
+    const state=billing.state.toLowerCase();
+    const option=deliverySelect.value;
+    deliveryFee=0;
+
+    if(state==="lagos" && billing.lga){ deliveryFee=lagosLGAFees[billing.lga]||0; }
+    else if(option==="gig"){ deliveryFee=6700+Math.max(totalWeight-1,0)*800; }
+    else if(option==="guo" && guoSupportedStates.includes(state)){ deliveryFee=3500+Math.max(totalWeight-1,0)*700; }
+
+    const total=subtotal+deliveryFee;
+
+    if(method==="paystack"){
+      const handler=PaystackPop.setup({
+        key:'pk_test_0ed65a8011643dd303600706cb990c9ba067f199',
+        email:billing.email,
+        amount:total*100,
+        ref:"REF_"+Date.now(),
+        metadata:{custom_fields:[{display_name:"Name",value:billing.name},{display_name:"Phone",value:billing.phone},{display_name:"Address",value:billing.address}]},
+        callback:response=>{ saveOrder({...billing,items:cartItems,total,deliveryFee,totalWeight,paymentRef:response.reference,paymentMethod:"Paystack"}); },
+        onClose:()=>alert("Payment closed.")
+      }); handler.openIframe();
+    } else if(method==="flutterwave"){
+      flutterwaveBtn.disabled=true;
+      const og=flutterwaveBtn.textContent;
+      flutterwaveBtn.innerHTML=`<span class="loader w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></span> Processing...`;
+      FlutterwaveCheckout({
+        public_key:"FLWPUBK_TEST-b2421fa441f5939350f84533d0f2d3a2-X",
+        tx_ref:"TX_"+Date.now(),
+        amount:total,
+        currency:"NGN",
+        customer:{email:billing.email,name:billing.name,phonenumber:billing.phone},
+        callback:response=>{
+          flutterwaveBtn.disabled=false; flutterwaveBtn.textContent=og;
+          if(response.status==="successful"){ saveOrder({...billing,items:cartItems,total,deliveryFee,totalWeight,paymentRef:response.transaction_id,paymentMethod:"Flutterwave"}); }
+          else alert("Payment failed.");
+        },
+        onclose:()=>{ flutterwaveBtn.disabled=false; flutterwaveBtn.textContent=og; }
+      });
+    }
+  }
+
+  flutterwaveBtn.disabled = true;
+flutterwaveBtn.classList.add("bg-gray-300", "cursor-not-allowed");
+
+  paystackBtn.addEventListener("click",()=>handlePayment("paystack"));
+  flutterwaveBtn.addEventListener("click",()=>handlePayment("flutterwave"));
+  
+});
+</script>
+</body>
+</html>

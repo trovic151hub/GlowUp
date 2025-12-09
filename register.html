@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Register</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+  <style>
+    *{
+        font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+    }
+    @import url('https://fonts.googleapis.com/css2?family=Lora:wght@700&family=Montserrat:wght@500&display=swap');
+  </style>
+</head>
+<body class="bg-gray-50 min-h-screen flex items-center justify-center p-4">
+
+  <!-- Notification Container -->
+  <div id="notification-container" class="fixed top-5 right-5 space-y-2 z-50"></div>
+
+  <div class="bg-white w-full max-w-md p-6 rounded-lg shadow-md">
+    <h2 class="text-2xl font-bold mb-4 text-center">Create Account</h2>
+
+    <form id="registerForm" class="space-y-4">
+      <input type="text" id="regName" placeholder="Full Name" class="w-full border p-3 rounded" required>
+      <input type="email" id="regEmail" placeholder="Email" class="w-full border p-3 rounded" required>
+      <!-- <input type="password" id="regPassword" placeholder="Password" class="w-full border p-3 rounded" required> -->
+       <div class="relative">
+  <input type="password" id="regPassword" placeholder="Password" class="border p-3 rounded w-full" required />
+  <i id="toggleRegPassword" class="fa-solid fa-eye text-gray-400 absolute right-3 top-2.5 cursor-pointer"></i>
+</div>
+      <input type="text" id="regPhone" placeholder="Phone Number" class="w-full border p-3 rounded">
+      <input type="text" id="regAddress" placeholder="Address" class="w-full border p-3 rounded">
+
+      <button type="submit" class="w-full bg-pink-600 text-white py-3 rounded-lg hover:bg-pink-700">
+        <span id="registerBtnText">Register</span>
+        <svg id="registerSpinner" class="animate-spin h-5 w-5 ml-2 hidden text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+  </svg>
+      </button>
+    </form>
+
+    <div class="text-center my-4">
+      <p class="text-sm mb-2">OR</p>
+      <button id="googleLogin" class="w-full flex items-center justify-center border p-3 rounded-lg hover:bg-gray-100">
+        <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" class="w-6 h-6 mr-2">
+        Continue with Google
+      </button>
+    </div>
+
+    <p class="text-center text-sm">
+      Already have an account?
+      <a href="login.html" class="text-pink-600">Login</a>
+    </p>
+  </div>
+
+</body>
+
+
+  <!-- Firebase Scripts -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+
+  <script>
+  // ===== Notification System =====
+  function showNotification(message, type="info", duration=3000){
+    const container = document.getElementById("notification-container");
+    const notif = document.createElement("div");
+    notif.textContent = message;
+    notif.className = `px-4 py-2 rounded shadow text-white transition-transform transform opacity-0`;
+    if(type==="success") notif.classList.add("bg-green-500");
+    else if(type==="error") notif.classList.add("bg-red-500");
+    else if(type==="warning") notif.classList.add("bg-yellow-500 text-black");
+    else notif.classList.add("bg-blue-500");
+    container.appendChild(notif);
+    setTimeout(()=>notif.classList.add("opacity-100"),10);
+    setTimeout(()=>{notif.classList.remove("opacity-100"); setTimeout(()=>notif.remove(),300)},duration);
+  }
+
+  // ===== Firebase Config =====
+  const firebaseConfig = {
+    apiKey: "AIzaSyDdTPmpaIPWSDWOmR-fXgvAb7hoxZUawcc",
+    authDomain: "e-commerce-39c74.firebaseapp.com",
+    projectId: "e-commerce-39c74",
+    storageBucket: "e-commerce-39c74.firebasestorage.app",
+    messagingSenderId: "863375033754",
+    appId: "1:863375033754:web:7ba248c8dbb1566c83e623"
+  };
+  firebase.initializeApp(firebaseConfig);
+  const auth = firebase.auth();
+  const db = firebase.firestore();
+  const provider = new firebase.auth.GoogleAuthProvider();
+
+  // ===== Password Eye Toggle =====
+  const regPassword = document.getElementById("regPassword");
+  const toggleRegPassword = document.getElementById("toggleRegPassword");
+
+  toggleRegPassword.addEventListener("click", () => {
+    if (regPassword.type === "password") {
+      regPassword.type = "text";
+      toggleRegPassword.classList.replace("fa-eye", "fa-eye-slash");
+    } else {
+      regPassword.type = "password";
+      toggleRegPassword.classList.replace("fa-eye-slash", "fa-eye");
+    }
+  });
+
+  // ===== Email/Password Registration =====
+  const registerForm = document.getElementById("registerForm");
+  registerForm?.addEventListener("submit", async e=>{
+    e.preventDefault();
+    const name = document.getElementById("regName").value.trim();
+    const email = document.getElementById("regEmail").value.trim();
+    const password = document.getElementById("regPassword").value;
+    const phone = document.getElementById("regPhone").value.trim();
+    const address = document.getElementById("regAddress").value.trim();
+
+    try{
+      const userCredential = await auth.createUserWithEmailAndPassword(email,password);
+      const user = userCredential.user;
+      await user.updateProfile({ displayName: name });
+
+      // ===== Create user doc =====
+      await db.collection("users").doc(user.uid).set({
+        name: name,
+        email: email,
+        phone: phone || "",
+        address: address || "",
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+
+      showNotification("Account created successfully!", "success");
+      window.location.href="login.html";
+    }catch(err){
+      console.error(err);
+      showNotification(err.message,"error");
+    }
+  });
+
+  // ===== Google Registration/Login =====
+  document.getElementById("googleLogin")?.addEventListener("click", async ()=>{
+    try{
+      const result = await auth.signInWithPopup(provider);
+      const user = result.user;
+
+      // ===== Merge with users collection =====
+      await db.collection("users").doc(user.uid).set({
+        name: user.displayName || "",
+        email: user.email,
+        phone: "",
+        address: "",
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      },{merge:true});
+
+      showNotification("Logged in as "+(user.displayName||user.email),"success");
+      window.location.href="index.html";
+    }catch(err){
+      console.error(err);
+      showNotification(err.message,"error");
+    }
+  });
+
+  // ===== Check Auth State (for pages that need user info) =====
+  firebase.auth().onAuthStateChanged(user=>{
+    if(user){
+      console.log("User logged in:", user.uid, user.displayName);
+      // You can set global state if needed:
+      window.currentUser = user;
+    }else{
+      console.log("No user logged in");
+      window.currentUser = null;
+    }
+  });
+
+  // ===== Reload page if navigating back =====
+  window.addEventListener("pageshow", event=>{
+    if(event.persisted||(performance.navigation && performance.navigation.type===2)) 
+      window.location.reload();
+  });
+
+  // ===== Optional Helper: Current User Orders =====
+  async function getUserOrders(){
+    if(!auth.currentUser) return [];
+    const snap = await db.collection("orders")
+      .where("userId","==",auth.currentUser.uid)
+      .orderBy("timestamp","desc")
+      .get();
+    return snap.docs.map(d=>({id:d.id,...d.data()}));
+  }
+
+  // ===== Optional Helper: User Cart =====
+  async function getUserCart(){
+    if(!auth.currentUser) return [];
+    const doc = await db.collection("carts").doc(auth.currentUser.uid).get();
+    return doc.exists ? doc.data().items || [] : [];
+  }
+</script>
+</body>
+</html>

@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>All Products</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+</head>
+<style>
+  *{
+        font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+    }
+
+    @import url('https://fonts.googleapis.com/css2?family=Lora:wght@700&family=Montserrat:wght@500&display=swap');
+@keyframes pulse-badge {
+  0% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.2); opacity: 0.8; }
+  100% { transform: scale(1); opacity: 1; }
+}
+.pulse {
+  animation: pulse-badge 1.5s infinite;
+}
+
+#skeletonContainer.hidden { display: none; }
+
+#notification-container div {
+  min-width: 200px;
+  max-width: 300px;
+}
+
+/* 📱 MOBILE (max-width: 640px) */
+@media (max-width: 640px) {
+  *{
+        font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+    }
+
+    @import url('https://fonts.googleapis.com/css2?family=Lora:wght@700&family=Montserrat:wght@500&display=swap');
+
+  header h1 {
+    font-size: 1.1rem !important;
+  }
+
+  header a {
+    font-size: 1.2rem;
+  }
+
+  /* Filter section stacked vertically */
+  section .flex {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 1rem !important;
+  }
+
+  /* Inputs full width */
+  select, input[type="text"] {
+    width: 100% !important;
+  }
+
+  /* Product Grid spacing */
+  #productGrid {
+    gap: 12px !important;
+  }
+
+  /* Product card adjustments */
+  #productGrid > div {
+    padding: 10px !important;
+  }
+
+  #productGrid img {
+    height: 140px !important;
+    object-fit: cover;
+  }
+
+  /* Skeleton grid spacing */
+  #skeletonContainer {
+    gap: 12px !important;
+  }
+
+  #skeletonContainer > div {
+    padding: 10px !important;
+  }
+
+  /* Load More Button full width */
+  #loadMoreBtn {
+    padding: 10px 14px !important;
+    font-size: 1rem !important;
+  }
+
+  /* Modal should resize on mobile */
+  #modalContent {
+    width: 90% !important;
+    max-height: 85vh !important;
+    overflow-y: auto !important;
+  }
+
+  .product-btn {
+    display: flex !important;
+    padding: 3px 6px;  /* smaller padding for mobile */
+    font-size: 0.75rem; /* smaller text on mobile */
+  }
+}
+
+/* 📲 VERY SMALL SCREEN (max-width: 380px)      */
+/* For iPhone SE / small Android phones        */
+@media (max-width: 380px) {
+
+  header h1 {
+    font-size: 1rem !important;
+  }
+
+  #productGrid img {
+    height: 120px !important;
+  }
+
+  #productGrid > div {
+    padding: 8px !important;
+  }
+
+  select, input[type="text"] {
+    font-size: 0.85rem !important;
+  }
+
+  #loadMoreBtn {
+    font-size: 0.9rem !important;
+  }
+}
+</style>
+<body class="bg-white text-gray-800">
+<div id="notification-container" class="fixed top-4 right-4 z-50 flex flex-col gap-2"></div>
+
+  <!-- Header -->
+  <header class="bg-pink-100 shadow-md p-4 flex justify-between items-center">
+    <div class="flex space-x-2">
+        <button onclick="history.back()">
+          <i class="fas fa-arrow-left"></i>
+        </button>
+    <h1 class="text-xl font-bold">All Products</h1>
+    </div>
+    <a href="cart.html" class="relative inline-block text-pink-600 text-2xl">
+      🛒
+      <span id="cartCount"
+        class="absolute -top-2 -right-2 bg-red-500 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center">0</span>
+    </a>
+  </header>
+
+  <!-- Filter and Sort -->
+  <section class="p-6">
+    <div class="flex flex-col md:flex-row md:justify-between gap-4">
+      <div>
+        <label class="font-semibold mr-2">Filter by Category:</label>
+        <select id="categoryFilter" class="border p-2 rounded">
+          <option value="All">All</option>
+          <option value="Brightening">Brightening</option>
+          <option value="Anti-Aging">Anti-Aging</option>
+          <option value="Hydration">Hydration</option>
+          <option value="Supplements">Supplements</option>
+        </select>
+      </div>
+      <div>
+        <label class="font-semibold mr-2">Search:</label>
+        <input type="text" id="searchInput" placeholder="Search products..." class="border p-2 rounded w-48" />
+      </div>
+      <div>
+        <label class="font-semibold mr-2">Sort by Price:</label>
+        <select id="priceSort" class="border p-2 rounded">
+          <option value="default">Default</option>
+          <option value="asc">Low to High</option>
+          <option value="desc">High to Low</option>
+        </select>
+      </div>
+    </div>
+  </section>
+
+  <div id="skeletonContainer" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mt-4">
+  <!-- 8 skeletons -->
+  <div class="animate-pulse p-4 border rounded-xl">
+    <div class="h-32 bg-gray-300 rounded mb-3"></div>
+    <div class="h-4 bg-gray-300 rounded mb-2 w-3/4"></div>
+    <div class="h-4 bg-gray-300 rounded w-1/2"></div>
+  </div>
+  <div class="animate-pulse p-4 border rounded-xl">
+    <div class="h-32 bg-gray-300 rounded mb-3"></div>
+    <div class="h-4 bg-gray-300 rounded mb-2 w-3/4"></div>
+    <div class="h-4 bg-gray-300 rounded w-1/2"></div>
+  </div>
+  <div class="animate-pulse p-4 border rounded-xl">
+    <div class="h-32 bg-gray-300 rounded mb-3"></div>
+    <div class="h-4 bg-gray-300 rounded mb-2 w-3/4"></div>
+    <div class="h-4 bg-gray-300 rounded w-1/2"></div>
+  </div>
+  <div class="animate-pulse p-4 border rounded-xl">
+    <div class="h-32 bg-gray-300 rounded mb-3"></div>
+    <div class="h-4 bg-gray-300 rounded mb-2 w-3/4"></div>
+    <div class="h-4 bg-gray-300 rounded w-1/2"></div>
+  </div>
+  <div class="animate-pulse p-4 border rounded-xl">
+    <div class="h-32 bg-gray-300 rounded mb-3"></div>
+    <div class="h-4 bg-gray-300 rounded mb-2 w-3/4"></div>
+    <div class="h-4 bg-gray-300 rounded w-1/2"></div>
+  </div>
+  <div class="animate-pulse p-4 border rounded-xl">
+    <div class="h-32 bg-gray-300 rounded mb-3"></div>
+    <div class="h-4 bg-gray-300 rounded mb-2 w-3/4"></div>
+    <div class="h-4 bg-gray-300 rounded w-1/2"></div>
+  </div>
+  <div class="animate-pulse p-4 border rounded-xl">
+    <div class="h-32 bg-gray-300 rounded mb-3"></div>
+    <div class="h-4 bg-gray-300 rounded mb-2 w-3/4"></div>
+    <div class="h-4 bg-gray-300 rounded w-1/2"></div>
+  </div>
+  <div class="animate-pulse p-4 border rounded-xl">
+    <div class="h-32 bg-gray-300 rounded mb-3"></div>
+    <div class="h-4 bg-gray-300 rounded mb-2 w-3/4"></div>
+    <div class="h-4 bg-gray-300 rounded w-1/2"></div>
+  </div>
+</div>
+
+  <!-- Product Grid -->
+  <section class="p-6">
+    <div id="productGrid" class="grid grid-cols-2 md:grid-cols-4 gap-6">
+
+    </div>
+    <div class="text-center p-6 flex justify-center">
+      <button id="loadMoreBtn"
+        class="bg-pink-500 text-white px-4 py-2 rounded-lg hover:bg-pink-600 flex items-center justify-center gap-2">
+        <span id="loadMoreText">Load More</span>
+        <i id="spinner" class="fas fa-spinner fa-spin hidden"></i>
+      </button>
+    </div>
+    </div>
+  </section>
+
+  <!-- Product Detail Modal -->
+  <div id="productModal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50">
+    <div id="modalContent"></div>
+  </div>
+
+<p id="noResults" class="text-center text-gray-500 mt-6 hidden">
+  No products match your search/filter.
+</p>
+
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+
+<script>
+(function(){
+  // ---------- CONFIGS ----------
+  const firebaseConfig = {
+    apiKey: "AIzaSyDdTPmpaIPWSDWOmR-fXgvAb7hoxZUawcc",
+    authDomain: "e-commerce-39c74.firebaseapp.com",
+    projectId: "e-commerce-39c74",
+    storageBucket: "e-commerce-39c74.firebasestorage.app",
+    messagingSenderId: "863375033754",
+    appId: "1:863375033754:web:7ba248c8dbb1566c83e623"
+  };
+
+  // ---------- INIT APPS ----------
+  let userApp;
+  if (!firebase.apps.length) {
+    userApp = firebase.initializeApp(firebaseConfig);
+  } else {
+    try { userApp = firebase.app(); } catch { userApp = firebase.initializeApp(firebaseConfig, "UserApp"); }
+  }
+  const userAuth = userApp.auth();
+  const userDb = userApp.firestore();
+
+  const adminApp = firebase.apps.find(a => a.name === "AdminApp") || firebase.initializeApp(firebaseConfig, "AdminApp");
+  const adminDb = adminApp.firestore();
+
+  // ---------- UI helper ----------
+  function showNotification(message, type = "info", duration = 3000) {
+    const container = document.getElementById("notification-container") || document.body;
+    const div = document.createElement("div");
+    div.textContent = message;
+    div.className = `px-4 py-2 rounded shadow text-white fixed top-2 right-[45%] transition-transform transform opacity-0`;
+    if(type==="success") div.classList.add("bg-green-500");
+    else if(type==="error") div.classList.add("bg-red-500");
+    else if(type==="warning") div.classList.add("bg-yellow-500","text-black");
+    else div.classList.add("bg-blue-500");
+    container.appendChild(div);
+    setTimeout(()=> div.classList.add("opacity-100"), 10);
+    setTimeout(()=> { div.classList.remove("opacity-100"); setTimeout(()=> div.remove(),300); }, duration);
+  }
+
+  function showButtonSpinner(button, show){
+    if(!button) return;
+    let spinner = button.querySelector(".btn-spinner");
+    if(!spinner){
+        spinner = document.createElement("i");
+        spinner.className = "fas fa-spinner fa-spin btn-spinner ml-2 hidden";
+        button.appendChild(spinner);
+    }
+    if(show){
+        spinner.classList.remove("hidden");
+        button.disabled = true;
+    } else {
+        spinner.classList.add("hidden");
+        button.disabled = false;
+    }
+  }
+
+  // ---------- State ----------
+  let allProducts = [], filteredProducts = [], visibleCount = 0;
+  const PAGE_SIZE = 8;
+
+  // DOM refs
+  const productGrid = document.getElementById("productGrid");
+  const loadMoreBtn = document.getElementById("loadMoreBtn");
+  const loadMoreText = document.getElementById("spinner");
+  const categoryFilter = document.getElementById("categoryFilter");
+  const searchInput = document.getElementById("searchInput");
+  const priceSort = document.getElementById("priceSort");
+  const productModal = document.getElementById("productModal");
+  const modalContent = document.getElementById("modalContent");
+  const cartCountEl = document.getElementById("cartCount");
+
+  // ---------- Fetch products ----------
+  async function fetchAllProducts(){
+    try{
+      document.getElementById("skeletonContainer")?.classList.remove("hidden");
+      const snap = await adminDb.collection("products").get();
+      allProducts = snap.docs.map(d => ({ id: d.id, ...(d.data()||{}) }));
+      document.getElementById("skeletonContainer")?.classList.add("hidden");
+      applyFilters();
+    }catch(err){ console.error(err); }
+  }
+
+  // ---------- Filtering / Sorting ----------
+  function applyFilters(){
+    const cat = categoryFilter?.value || "All";
+    const q = searchInput?.value.trim().toLowerCase() || "";
+    const sort = priceSort?.value || "default";
+
+    filteredProducts = allProducts.filter(p => {
+      const matchCat = cat==="All" || p.category===cat;
+      const matchQ = !q || p.name?.toLowerCase().includes(q) || p.description?.toLowerCase().includes(q);
+      return matchCat && matchQ;
+    });
+
+    if(filteredProducts.length===0){
+      productGrid.innerHTML="";
+      document.getElementById("noResults")?.classList.remove("hidden");
+      loadMoreBtn?.classList.add("hidden");
+      return;
+    } else document.getElementById("noResults")?.classList.add("hidden");
+
+    if(sort==="asc") filteredProducts.sort((a,b)=>a.price-b.price);
+    if(sort==="desc") filteredProducts.sort((a,b)=>b.price-a.price);
+
+    visibleCount=0;
+    productGrid.innerHTML="";
+    renderNextBatch();
+  }
+
+  // ---------- Render ----------
+  function createProductCard(product){
+    const wrapper = document.createElement("div");
+    wrapper.className="border rounded-xl p-4 text-center shadow";
+
+    const img = document.createElement("img");
+    img.src = product.image||"https://via.placeholder.com/200";
+    img.alt = product.name||"Product";
+    img.className="mx-auto mb-2 h-32 object-cover rounded";
+
+    const title = document.createElement("h4");
+    title.className="font-semibold";
+    title.textContent = product.name||"Untitled";
+
+    const price = document.createElement("p");
+    price.className="text-pink-500 font-bold";
+    price.textContent = `₦${(product.price||0).toLocaleString()}`;
+
+    const actions = document.createElement("div");
+    actions.className="mt-2 space-x-2 flex justify-center";
+
+    const viewBtn = document.createElement("button");
+    viewBtn.className="text-sm px-3 py-1 sm:px-2 sm:py-0.5 bg-blue-500 text-white rounded hover:bg-blue-600";
+    viewBtn.textContent="View";
+    viewBtn.onclick = ()=>openProductModal(product.id);
+
+    const addBtn = document.createElement("button");
+    addBtn.className="text-sm px-3 py-1 sm:px-1 sm:py-0.5 bg-pink-600 text-white rounded hover:bg-pink-700";
+    addBtn.textContent="Add to Cart";
+    addBtn.onclick = async () => {
+      showButtonSpinner(addBtn,true);
+      await addToCartFromPage(product);
+      showButtonSpinner(addBtn,false);
+    };
+
+    actions.appendChild(viewBtn);
+    actions.appendChild(addBtn);
+
+    wrapper.appendChild(img);
+    wrapper.appendChild(title);
+    wrapper.appendChild(price);
+    wrapper.appendChild(actions);
+
+    return wrapper;
+  }
+
+  function renderNextBatch(){
+    const next = filteredProducts.slice(visibleCount, visibleCount+PAGE_SIZE);
+    next.forEach(p=>productGrid.appendChild(createProductCard(p)));
+    visibleCount+=next.length;
+    if(visibleCount>=filteredProducts.length) loadMoreBtn?.classList.add("hidden");
+    else loadMoreBtn?.classList.remove("hidden");
+  }
+
+  function showLoadMoreSpinner(show){
+    if(!loadMoreText) return;
+    if(show) loadMoreText.textContent="Loading...";
+    else loadMoreText.textContent="Load More";
+  }
+
+  // ---------- Modal ----------
+  function openProductModal(id){
+    const product = filteredProducts.find(p=>p.id===id)||allProducts.find(p=>p.id===id);
+    if(!product) return;
+
+    modalContent.innerHTML=`
+      <div class="bg-white rounded-lg shadow-xl max-w-3xl w-full mx-4 md:mx-0 overflow-hidden">
+        <div class="flex justify-between items-center p-4 border-b">
+          <h3 class="text-lg font-semibold">${product.name||""}</h3>
+          <button id="closeModalBtn" class="text-gray-700 text-xl px-2">✕</button>
+        </div>
+        <div class="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div class="flex items-center justify-center">
+            <img src="${product.image||'https://via.placeholder.com/300'}" alt="${product.name||''}" class="max-h-80 object-contain"/>
+          </div>
+          <div>
+            <p class="text-pink-500 font-bold text-2xl mb-2">₦${(product.price||0).toLocaleString()}</p>
+            <p class="text-sm text-gray-700 mb-4">${product.description||''}</p>
+            <div class="space-x-2">
+              <button id="modalAddToCartBtn" class="px-4 py-2 bg-pink-600 text-white rounded">Add to Cart</button>
+              <button id="buyNowBtn" class="px-4 py-2 border rounded">Buy Now</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+    productModal.classList.remove("hidden");
+
+    document.getElementById("closeModalBtn").onclick = ()=>productModal.classList.add("hidden");
+
+    document.getElementById("modalAddToCartBtn").onclick = async ()=>{
+      showButtonSpinner(document.getElementById("modalAddToCartBtn"),true);
+      await addToCartFromPage(product);
+      showButtonSpinner(document.getElementById("modalAddToCartBtn"),false);
+      productModal.classList.add("hidden");
+    };
+
+    document.getElementById("buyNowBtn").onclick = async ()=>{
+      showButtonSpinner(document.getElementById("buyNowBtn"),true);
+      await addToCartFromPage(product);
+      showButtonSpinner(document.getElementById("buyNowBtn"),false);
+      window.location.href="cart.html";
+    };
+  }
+
+  productModal.addEventListener("click",e=>{
+    if(e.target===productModal) productModal.classList.add("hidden");
+  });
+
+  // ---------- Add to Cart ----------
+  async function addToCartFromPage(product){
+    if(!userAuth.currentUser){
+      showNotification("Please log in to add to cart.","error");
+      if(typeof window.openLoginModal==="function") window.openLoginModal();
+      return;
+    }
+
+    const uid = userAuth.currentUser.uid;
+    const cartDocRef = userDb.collection("carts").doc(uid);
+    const itemsRef = cartDocRef.collection("items");
+
+    try{
+      const cartSnap = await cartDocRef.get();
+      if(!cartSnap.exists) await cartDocRef.set({ createdAt: firebase.firestore.FieldValue.serverTimestamp() });
+
+      const q = await itemsRef.where("id","==",product.id).get();
+      if(!q.empty) await q.docs[0].ref.update({ quantity: firebase.firestore.FieldValue.increment(1) });
+      else await itemsRef.add({
+        id: product.id,
+        name: product.name,
+        price: product.price,
+        image: product.image || "https://via.placeholder.com/150",
+        quantity: 1,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+
+      showNotification("Added to cart","success");
+    } catch(err){ console.error(err); showNotification("Failed to add to cart","error"); }
+  }
+
+  // ---------- Cart count ----------
+  function updateCartCount(){
+    if(!cartCountEl) return;
+    if(!userAuth.currentUser){ cartCountEl.textContent="0"; return; }
+    const itemsRef = userDb.collection("carts").doc(userAuth.currentUser.uid).collection("items");
+    itemsRef.onSnapshot(snapshot=>{
+      let total=0;
+      snapshot.forEach(doc=>{ total+=doc.data().quantity||0; });
+      cartCountEl.textContent=total;
+    },err=>{ console.error(err); cartCountEl.textContent="0"; });
+  }
+
+  userAuth.onAuthStateChanged(user=>{
+    if(user) updateCartCount();
+    else if(cartCountEl) cartCountEl.textContent="0";
+  });
+
+  // ---------- Events ----------
+  categoryFilter?.addEventListener("change",applyFilters);
+  priceSort?.addEventListener("change",applyFilters);
+  if(searchInput){
+    let debounce;
+    searchInput.addEventListener("input",()=>{
+      clearTimeout(debounce);
+      debounce=setTimeout(()=>applyFilters(),300);
+    });
+  }
+
+  loadMoreBtn?.addEventListener("click",async ()=>{
+    showLoadMoreSpinner(true);
+    await new Promise(res=>setTimeout(res,350));
+    renderNextBatch();
+    showLoadMoreSpinner(false);
+  });
+
+  window.openProductModal = openProductModal;
+
+  document.addEventListener("DOMContentLoaded",()=>{ fetchAllProducts(); });
+
+})();
+</script>
+</body>
+</html>

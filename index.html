@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Homepage</title>
+  <link rel="stylesheet" href="index.css">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Poppins:wght@700&family=Great+Vibes&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+  <style>
+    *{
+        font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    #skinTip {
+      transition: opacity 0.5s ease;
+    }
+
+    #notification-container {
+      position: fixed;
+      top: 0.1rem;
+      right: 45%;
+      z-index: 1000;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+     #skeletonContainer.hidden {
+    display: none !important;
+  }
+
+  #leaveLoader {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(255,255,255,0.8);
+  display: none;
+  justify-content: center;
+  align-items: center;
+  z-index: 99999;
+  backdrop-filter: blur(3px);
+  transition: opacity 0.3s ease;
+}
+
+#leaveLoader.active {
+  display: flex;
+  opacity: 1;
+}
+
+.spinner {
+  width: 45px;
+  height: 45px;
+  border-radius: 50%;
+  border: 4px solid #ccc;
+  border-top-color: #000;
+  animation: spin 0.75s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Skeleton container */
+.skeleton {
+  background: #eee;
+  border-radius: 10px;
+  overflow: hidden;
+  position: relative;
+  animation: skeletonPulse 1.2s ease-in-out infinite;
+}
+
+@keyframes skeletonPulse {
+  0% { background-color: #eee; }
+  50% { background-color: #f5f5f5; }
+  100% { background-color: #eee; }
+}
+
+/* Fade-out animation before showing real product */
+.skeleton.fade-out {
+  animation: fadeOut 0.4s ease forwards;
+}
+
+@keyframes fadeOut {
+  from { opacity: 1; }
+  to { opacity: 0; transform: translateY(5px); }
+}
+
+/* Product entrance animation */
+.product-card {
+  opacity: 0;
+  transform: translateY(20px);
+  animation: slideUp 0.45s ease forwards;
+}
+
+@keyframes slideUp {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* .logo{
+  display: none !important;
+} */
+ .logo {
+  text-align: center;
+  display: block;
+}
+
+
+.log-btn i{
+    display: flex !important;
+    color: #000 !important;
+    font-size: 15px;
+  }
+  </style>
+</head>
+<body class="bg-white text-gray-800">
+
+  <!-- Notification container -->
+  <div id="notification-container"></div>
+    
+  <!-- Navbar -->
+  <header id="mainHeader"
+    class=" fixed top-0 left-0 w-full bg-pink-100  p-4 flex justify-between items-center flex-wrap gap-4 text-sm font-medium md:gap-6 z-50">
+    <h1 class="text-2xl font-bold main-head">Pearl Skin Care</h1>
+    <nav class="nav-bar space-x-6 text-sm font-medium flex flex-wrap items-center gap-4">
+      <div class="mr-14">
+      <!-- HAMBURGER BUTTON (inside navbar) -->
+<button id="menuToggle" class="text-xl md:hidden">
+  <i class="fas fa-bars"></i>
+</button>
+<!-- MOBILE MENU (outside nav/header!) -->
+<div id="menuOverlay"
+     class="fixed inset-0 bg-black bg-opacity-40 z-40 hidden md:hidden">
+<div id="mobileMenu"
+     class="modal-open fixed top-0 left-0 w-64 h-full bg-white shadow-lg p-6 transform -translate-x-full
+            transition-all duration-300 z-50 md:hidden">
+    <button id="closeMenu" class="text-2xl text-gray-600 mb-6 hover:text-red-500">&times;</button>
+
+    <div class="flex flex-col space-y-4 text-lg font-medium">
+        <span id="welcomeTextMobile" class="text-sm text-gray-700 hidden"></span>
+
+        <a href="products.html" class="hover:text-pink-500 flex items-center gap-2">
+            <i class="fa fa-shop"></i> Shop
+        </a>
+
+        <a href="customer-dashboard.html"
+           class="block px-2 py-2 text-sm text-gray-700 hover:bg-pink-50 rounded">
+           👤 Dashboard
+        </a>
+
+        <a href="mailto:victoradeyimika0@gmail.com"
+           class="block px-2 py-2 text-sm text-gray-700 hover:bg-pink-50 rounded flex items-center gap-2">
+            <i class="fas fa-envelope text-pink-500"></i> Email Us
+        </a>
+
+        <a href="https://wa.me/2349053380773" target="_blank"
+           class="block px-2 py-2 text-sm text-gray-700 hover:bg-pink-50 rounded flex items-center gap-2">
+            <i class="fab fa-whatsapp text-green-500"></i> WhatsApp
+        </a>
+
+        <a href="https://instagram.com/yourhandle" target="_blank"
+           class="block px-2 py-2 text-sm text-gray-700 hover:bg-pink-50 rounded flex items-center gap-2">
+            <i class="fab fa-instagram text-pink-600"></i> Instagram
+        </a>
+    </div>
+    </div>
+</div>
+    </div>
+    <div class="logo-con">
+      <div class="logo md:hidden">
+      <h1 class="brand">Pearl</h1>
+      <p class="tagline">SKIN CARE</p>
+    </div>
+    </div>
+      <a href="cart.html" class="cart-tag relative inline-block">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 inline text-pink-500" fill="none" viewBox="0 0 24 24"
+          stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13l-1.35 2.7a1 1 0 001.85.9L7 13zm0 0H5m14 0v6a1 1 0 001 1h1a1 1 0 001-1v-6M7 19a2 2 0 104 0 2 2 0 00-4 0zm10 0a2 2 0 104 0 2 2 0 00-4 0z" />
+        </svg>
+        <span id="cartCount"
+          class="absolute -top-2 -right-2 bg-red-500 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center">0</span>
+      </a>
+
+      <a href="#" class="main-head hover:text-pink-500 nav-link"><i class="fa fa-home"></i> Home</a>
+      <a href="products.html" class="main-head hover:text-pink-500 nav-link"><i class="fa fa-shop"></i> Shop</a>
+      <a href="#categories" class="main-head hover:text-pink-500 nav-link"><i class="fa fa-layer-group"></i> Categories</a>
+
+      <div class="relative group inline-block main-head">
+        <button class="hover:text-pink-500 "><i class="fa fa-phone"></i> Contact</button>
+        <div class="absolute hidden group-hover:block bg-pink-100 shadow rounded mt-1 z-50 min-w-[150px] fixed top-5 right-[-70%] text-left">
+          <a href="customer-dashboard.html" class="block px-4 py-2 text-sm text-gray-700 hover:bg-white">👤 Dashboard</a>
+          <a href="mailto:victoradeyimika0@gmail.com" class="block px-4 py-2 text-sm text-gray-700 hover:bg-white"><i
+              class="fas fa-envelope text-pink-500"></i> Email
+            Us</a>
+          <a href="https://wa.me/2349053380773" target="_blank"
+            class="block px-4 py-2 text-sm text-gray-700 hover:bg-white"><i
+              class="fab fa-whatsapp text-green-500"></i> WhatsApp</a>
+          <a href="https://instagram.com/yourhandle" target="_blank"
+            class="block px-4 py-2 text-sm text-gray-700 hover:bg-white"><i
+              class="fab fa-instagram text-pink-600"></i> Instagram</a>
+        </div>
+      </div>
+
+      <div class="log-btn">
+      <span id="welcomeText" class="text-sm text-gray-700 hidden main-head"></span>
+      <button id="loginBtn"><i class="fas fa-user text-xl hover:underline text-sm"></i></button>
+      <button id="logoutBtn"><i class="fas fa-user-check text-pink-600 hover:underline ml-2 text-sm hidden"></i></button>
+      </div>
+    </nav>
+  </header>
+
+  <!-- Login Modal -->
+  <div id="loginModal"
+    class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+    <div class="bg-white p-6 rounded-xl shadow-xl w-full max-w-sm relative">
+      <h2 class="text-xl font-bold mb-4 text-center">Login</h2>
+
+      <input id="loginEmail" type="email"
+        class="w-full border p-2 rounded mb-3"
+        placeholder="Email" />
+
+        <div class="relative">
+  <input id="loginPassword" type="password"
+    class="w-full border p-2 rounded mb-3"
+    placeholder="Password" />
+
+  <i id="toggleLoginPassword"
+     class="fa-solid fa-eye absolute right-3 top-3 cursor-pointer text-gray-400"></i>
+</div>
+
+      <button id="loginSubmit"
+        class="w-full bg-pink-600 text-white py-2 rounded hover:bg-pink-700">
+        Login
+      </button>
+
+      <p id="loginError" class="text-red-500 text-sm text-center mt-2 hidden"></p>
+
+      <div class="my-4 flex items-center">
+        <div class="flex-grow border-t"></div>
+        <span class="mx-2 text-gray-500 text-sm">OR</span>
+        <div class="flex-grow border-t"></div>
+      </div>
+
+      <div class="text-center my-4">
+        <button id="googleLogin" class="w-full flex items-center justify-center border p-2 rounded hover:bg-gray-100">
+          <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" class="w-6 h-6 mr-2" />
+          Continue with Google
+        </button>
+      </div>
+
+      <p class="mt-4 text-center text-sm">
+      Don't have an account? <a href="register.html" class="text-pink-600">Register</a>
+    </p>
+  </div>
+
+      <button onclick="closeLoginModal()"
+        class="absolute top-3 right-3 text-white text-xl font-bold">&times;</button>
+    </div>
+  </div>
+
+  <!-- Signup Modal -->
+  <div id="signupModal"
+    class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+    <div class="bg-white p-6 rounded-lg w-full max-w-sm relative shadow">
+      <button onclick="closeSignupModal()"
+        class="absolute top-2 right-3 text-gray-500 text-xl hover:text-red-600">×</button>
+      <h3 class="text-lg font-bold text-pink-600 mb-4">Create an Account</h3>
+
+      <input id="signupName" type="text" placeholder="Full Name" class="w-full mb-3 px-4 py-2 border rounded" />
+      <input id="signupEmail" type="email" placeholder="Email" class="w-full mb-3 px-4 py-2 border rounded" />
+      <input id="signupPassword" type="password" placeholder="Password"
+        class="w-full mb-4 px-4 py-2 border rounded" />
+
+      <button id="signupSubmit"
+        class="w-full bg-pink-600 text-white py-2 rounded hover:bg-pink-700">Sign Up</button>
+
+      <p class="text-sm mt-4 text-center">Already have an account?
+        <button onclick="openLoginModal()" class="text-pink-600 underline hover:text-pink-800">Login</button>
+      </p>
+    </div>
+  </div>
+
+  <!-- Hero Section -->
+  <section class="relative bg-pink-50 text-center overflow-hidden h-80 mt-20">
+    <div id="slider" class="flex w-[500%] transition-all duration-700">
+      <img src="https://nuffoodsspectrum.in/wp-content/uploads/2022/11/1-11.jpeg" alt="1"
+        class="w-full h-80 object-cover">
+      <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSWLq7VQPhLyGKSP-KBw7DlBJhvGcAP0kYNcg&s" alt="2"
+        class="w-full h-80 object-cover">
+      <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSLgV5Eg7VAlsdZ6vf-NU47HfWHIjqtlfLENQ&s" alt="3"
+        class="w-full h-80 object-cover">
+      <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQHmlStV9pcR8H3-REwG9RDh3nIMYOmgaGvWw&s" alt="4"
+        class="w-full h-80 object-cover">
+      <img src="https://content.jdmagicbox.com/comp/def_content/nutritional-supplement-manufacturers/071412a218-nutritional-supplement-manufacturers-2-iow23.jpg"
+        alt="5" class="w-full h-80 object-cover">
+    </div>
+    <div class="absolute top-0 left-0 w-full h-full bg-black/30 flex items-center justify-center">
+      <h2 class="text-white text-4xl font-bold">Nourish Your Skin Naturally</h2>
+    </div>
+
+    <button id="prevBtn" class="slide-btn prev">❮</button>
+  <button id="nextBtn" class="slide-btn next">❯</button>
+  </section>
+
+  <!-- Featured Products -->
+  <section class="p-6">
+    <h2 class="text-2xl font-semibold mb-4">Featured Products</h2>
+    <div id="product-list" class="grid grid-cols-2 md:grid-cols-4 gap-4 "></div>
+  </section>
+
+  <!-- Product Detail Modal -->
+  <div id="productModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+    <div class="bg-white w-11/12 max-w-md p-6 rounded shadow-lg relative">
+      <button onclick="closeModal()" class="absolute top-2 right-2 text-gray-500 hover:text-red-600 text-xl">×</button>
+      <h2 id="modalProductName" class="text-xl font-bold mb-2"></h2>
+      <img id="modalProductImage" class="w-full h-48 object-cover rounded mb-2" />
+      <p id="modalProductPrice" class="text-pink-600 font-semibold text-lg mb-1"></p>
+      <p id="modalProductDescription" class="text-sm text-gray-700 mb-4"></p>
+      <button id="modalAddToCartBtn" class="bg-pink-600 text-white px-4 py-2 rounded hover:bg-pink-700 w-full">Add to
+        Cart</button>
+    </div>
+  </div>
+
+  <!-- Promo Section -->
+  <section class="bg-pink-50 p-6 my-6 rounded-xl text-center">
+    <h3 class="text-2xl font-semibold mb-4">💡 Skin Tips</h3>
+    <p id="skinTip" class="text-lg text-gray-700 font-medium">Loading tip...</p>
+  </section>
+
+  <!-- Categories -->
+  <section id="categories" class="p-6">
+    <h3 class="text-2xl font-semibold mb-4">Browse by Category</h3>
+    <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
+      <button onclick="filterProducts('All')" data-category="All"
+        class="category-btn bg-pink-100 p-4 rounded-xl text-center hover:bg-pink-200 cursor-pointer">
+        💧<br />All
+      </button>
+      <button onclick="filterProducts('Brightening')" data-category="Brightening"
+        class="category-btn bg-pink-100 p-4 rounded-xl text-center hover:bg-pink-200 cursor-pointer">
+        ✨<br />Brightening
+      </button>
+      <button onclick="filterProducts('Anti-Aging')" data-category="Anti-Aging"
+        class="category-btn bg-pink-100 p-4 rounded-xl text-center hover:bg-pink-200 cursor-pointer">
+        🔄<br />Anti-Aging
+      </button>
+      <button onclick="filterProducts('Hydration')" data-category="Hydration"
+        class="category-btn bg-pink-100 p-4 rounded-xl text-center hover:bg-pink-200 cursor-pointer">
+        💦<br />Hydration
+      </button>
+      <button onclick="filterProducts('Supplements')" data-category="Supplements"
+        class="category-btn bg-pink-100 p-4 rounded-xl text-center hover:bg-pink-200 cursor-pointer">
+        💊<br />Supplements
+      </button>
+    </div>
+  </section>
+
+  <!-- ===== GLOBAL LEAVE LOADER ===== -->
+<div id="leaveLoader">
+  <div class="spinner"></div>
+</div>
+
+   <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+  <script src="home.js"></script>
+</body>
+</html>

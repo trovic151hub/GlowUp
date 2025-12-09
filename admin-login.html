@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Login</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+</head>
+<body class="bg-gray-100 flex items-center justify-center h-screen">
+
+  <div class="bg-white p-6 rounded shadow w-full max-w-sm">
+    <h1 class="text-2xl font-bold mb-4 text-center">Admin Login</h1>
+    <form id="adminLoginForm" class="flex flex-col gap-4">
+      <input type="email" id="adminEmail" placeholder="Email" class="border p-2 rounded" required />
+      <div class="relative">
+        <input type="password" id="adminPassword" placeholder="Password" class="border p-2 rounded w-full" required />
+        <i id="toggleAdminPassword" class="fa-solid fa-eye absolute right-3 top-2.5 cursor-pointer"></i>
+      </div>
+      <div id="loginError" class="text-red-600 text-sm hidden"></div>
+      <button type="submit" id="loginBtn" class="bg-pink-600 text-white px-4 py-2 rounded flex justify-center items-center gap-2">
+        <span id="loginBtnText">Login</span>
+        <span id="loginSpinner" class="hidden"><i class="fa-solid fa-circle-notch fa-spin"></i></span>
+      </button>
+    </form>
+    <p class="mt-4 text-sm text-gray-500 text-center">Don't have an account? <a href="admin-register.html" class="text-pink-600">Register</a></p>
+  </div>
+
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+  <script>
+  // ===== Firebase config =====
+  const firebaseConfig = {
+    apiKey: "AIzaSyDdTPmpaIPWSDWOmR-fXgvAb7hoxZUawcc",
+    authDomain: "e-commerce-39c74.firebaseapp.com",
+    projectId: "e-commerce-39c74",
+    storageBucket: "e-commerce-39c74.firebasestorage.app",
+    messagingSenderId: "863375033754",
+    appId: "1:863375033754:web:7ba248c8dbb1566c83e623"
+  };
+
+  // Initialize Firebase
+  const app = firebase.apps.length ? firebase.app() : firebase.initializeApp(firebaseConfig);
+  const auth = app.auth();
+  const db = app.firestore();
+
+  // ===== Elements =====
+  const form = document.getElementById("adminLoginForm");
+  const loginError = document.getElementById("loginError");
+  const loginBtn = document.getElementById("loginBtn");
+  const loginBtnText = document.getElementById("loginBtnText");
+  const loginSpinner = document.getElementById("loginSpinner");
+  const toggleAdminPassword = document.getElementById("toggleAdminPassword");
+  const adminPassword = document.getElementById("adminPassword");
+
+  // ===== Password Eye Toggle =====
+  toggleAdminPassword.addEventListener("click", () => {
+    if (adminPassword.type === "password") {
+      adminPassword.type = "text";
+      toggleAdminPassword.classList.replace("fa-eye", "fa-eye-slash");
+    } else {
+      adminPassword.type = "password";
+      toggleAdminPassword.classList.replace("fa-eye-slash", "fa-eye");
+    }
+  });
+
+  // ===== Login Handler =====
+  form.addEventListener("submit", async e => {
+    e.preventDefault();
+    loginError.classList.add("hidden");
+
+    loginBtn.disabled = true;
+    loginBtn.classList.add("opacity-50", "cursor-not-allowed");
+    loginBtnText.textContent = "Logging in...";
+    loginSpinner.classList.remove("hidden");
+
+    const email = document.getElementById("adminEmail").value.trim();
+    const password = adminPassword.value;
+
+    try {
+      // Persist login across sessions
+      await auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
+
+      // Sign in with Firebase Auth
+      const cred = await auth.signInWithEmailAndPassword(email, password);
+      const user = cred.user;
+
+      // Fetch admin document from the "admins" collection
+      const adminDoc = await db.collection("admins").doc(user.uid).get();
+
+      if (!adminDoc.exists || adminDoc.data().role !== "admin") {
+        loginError.textContent = "You are not authorized as admin.";
+        loginError.classList.remove("hidden");
+        await auth.signOut();
+      } else {
+        // Save admin session locally
+        localStorage.setItem("isAdminLoggedIn", "true");
+        localStorage.setItem("adminUid", user.uid);
+        window.location.href = "Admins.html"; // Redirect to admin dashboard
+      }
+
+    } catch (err) {
+      loginError.textContent = err.message;
+      loginError.classList.remove("hidden");
+    } finally {
+      loginBtn.disabled = false;
+      loginBtn.classList.remove("opacity-50", "cursor-not-allowed");
+      loginBtnText.textContent = "Login";
+      loginSpinner.classList.add("hidden");
+    }
+  });
+</script>
+
+  <!-- <script>
+  // ===== Firebase config =====
+  const firebaseConfig = {
+  apiKey: "AIzaSyDdTPmpaIPWSDWOmR-fXgvAb7hoxZUawcc",
+  authDomain: "e-commerce-39c74.firebaseapp.com",
+  projectId: "e-commerce-39c74",
+  storageBucket: "e-commerce-39c74.firebasestorage.app",
+  messagingSenderId: "863375033754",
+  appId: "1:863375033754:web:7ba248c8dbb1566c83e623"
+};
+
+  // Initialize Firebase
+  const app = firebase.apps.length ? firebase.app() : firebase.initializeApp(firebaseConfig);
+  const auth = app.auth();
+  const db = app.firestore();
+
+  // ===== Elements =====
+  const form = document.getElementById("adminLoginForm");
+  const loginError = document.getElementById("loginError");
+  const loginBtn = document.getElementById("loginBtn");
+  const loginBtnText = document.getElementById("loginBtnText");
+  const loginSpinner = document.getElementById("loginSpinner");
+  const toggleAdminPassword = document.getElementById("toggleAdminPassword");
+  const adminPassword = document.getElementById("adminPassword");
+
+  // ===== Password Eye Toggle =====
+  toggleAdminPassword.addEventListener("click", () => {
+    if (adminPassword.type === "password") {
+      adminPassword.type = "text";
+      toggleAdminPassword.classList.replace("fa-eye", "fa-eye-slash");
+    } else {
+      adminPassword.type = "password";
+      toggleAdminPassword.classList.replace("fa-eye-slash", "fa-eye");
+    }
+  });
+
+  // ===== Login Handler =====
+  form.addEventListener("submit", async e => {
+    e.preventDefault();
+    loginError.classList.add("hidden");
+
+    loginBtn.disabled = true;
+    loginBtn.classList.add("opacity-50", "cursor-not-allowed");
+    loginBtnText.textContent = "Logging in...";
+    loginSpinner.classList.remove("hidden");
+
+    const email = document.getElementById("adminEmail").value.trim();
+    const password = adminPassword.value;
+
+    try {
+      // Persist login across sessions
+      await auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
+
+      // Sign in
+      const cred = await auth.signInWithEmailAndPassword(email, password);
+      const user = cred.user;
+
+      // Fetch user document from shared "users" collection
+      const userDoc = await db.collection("users").doc(user.uid).get();
+
+      if (!userDoc.exists || userDoc.data().role !== "admin") {
+        loginError.textContent = "You are not authorized as admin.";
+        loginError.classList.remove("hidden");
+        await auth.signOut();
+      } else {
+        // Save admin session locally
+        localStorage.setItem("isAdminLoggedIn", "true");
+        localStorage.setItem("adminUid", user.uid);
+        window.location.href = "Admins.html"; // Redirect to admin dashboard
+      }
+
+    } catch (err) {
+      loginError.textContent = err.message;
+      loginError.classList.remove("hidden");
+    } finally {
+      loginBtn.disabled = false;
+      loginBtn.classList.remove("opacity-50", "cursor-not-allowed");
+      loginBtnText.textContent = "Login";
+      loginSpinner.classList.add("hidden");
+    }
+  });
+</script> -->
+
+  <!-- <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyCucLRzSTNEDZlpnSeIF-4FA0_5WUnB3Ew",
+      authDomain: "e-commerce-b4a61.firebaseapp.com",
+      projectId: "e-commerce-b4a61",
+      storageBucket: "e-commerce-b4a61.firebasestorage.app",
+      messagingSenderId: "886249797120",
+      appId: "1:886249797120:web:45ed77ce645da70d2e8ae5"
+    };
+
+    const app = firebase.apps.length ? firebase.app() : firebase.initializeApp(firebaseConfig);
+    const auth = app.auth();
+    const db = app.firestore();
+
+    const form = document.getElementById("adminLoginForm");
+    const loginError = document.getElementById("loginError");
+    const loginBtn = document.getElementById("loginBtn");
+    const loginBtnText = document.getElementById("loginBtnText");
+    const loginSpinner = document.getElementById("loginSpinner");
+    const toggleAdminPassword = document.getElementById("toggleAdminPassword");
+    const adminPassword = document.getElementById("adminPassword");
+
+    toggleAdminPassword.addEventListener("click", () => {
+      if (adminPassword.type === "password") {
+        adminPassword.type = "text";
+        toggleAdminPassword.classList.replace("fa-eye", "fa-eye-slash");
+      } else {
+        adminPassword.type = "password";
+        toggleAdminPassword.classList.replace("fa-eye-slash", "fa-eye");
+      }
+    });
+
+    form.addEventListener("submit", async e => {
+      e.preventDefault();
+      loginError.classList.add("hidden");
+
+      loginBtn.disabled = true;
+      loginBtn.classList.add("opacity-50", "cursor-not-allowed");
+      loginBtnText.textContent = "Logging in...";
+      loginSpinner.classList.remove("hidden");
+
+      const email = document.getElementById("adminEmail").value.trim();
+      const password = adminPassword.value;
+
+      try {
+        await auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
+
+        const cred = await auth.signInWithEmailAndPassword(email, password);
+        const user = cred.user;
+
+        const adminDoc = await db.collection("admins").doc(user.uid).get();
+        if (!adminDoc.exists) {
+          loginError.textContent = "You are not authorized as admin.";
+          loginError.classList.remove("hidden");
+          await auth.signOut();
+        } else {
+          localStorage.setItem("isAdminLoggedIn", "true");
+          window.location.href = "Admins.html";
+        }
+
+      } catch (err) {
+        loginError.textContent = err.message;
+        loginError.classList.remove("hidden");
+      }
+
+      loginBtn.disabled = false;
+      loginBtn.classList.remove("opacity-50", "cursor-not-allowed");
+      loginBtnText.textContent = "Login";
+      loginSpinner.classList.add("hidden");
+    });
+  </script> -->
+</body>
+</html>

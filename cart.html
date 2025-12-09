@@ -1,0 +1,603 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Shopping Cart</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+    <style>
+      *{
+        font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+    }
+
+    @import url('https://fonts.googleapis.com/css2?family=Lora:wght@700&family=Montserrat:wght@500&display=swap');
+
+    /* 📱 Mobile First Adjustments For Cart Page */
+*{
+        font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+    }
+
+    @import url('https://fonts.googleapis.com/css2?family=Lora:wght@700&family=Montserrat:wght@500&display=swap');
+@media (max-width: 640px) {   
+  header h1 {
+    font-size: 1.1rem !important;
+  }
+
+  /* Reduce padding in main */
+  main {
+    padding: 1rem !important;
+  }
+
+  /* Cart item layout becomes vertical */
+  .cart-item {
+    flex-direction: column;
+    align-items: flex-start !important;
+    gap: 12px;
+  }
+
+  .shop{
+    display: hidden !important;
+  }
+
+  /* Fix skeleton size */
+  #cartSkeleton .flex {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  /* Product image smaller */
+  .cart-img {
+    width: 64px !important;
+    height: 64px !important;
+  }
+
+  /* Text smaller */
+  .cart-title {
+    font-size: 0.85rem !important;
+  }
+
+  .cart-price {
+    font-size: 0.9rem !important;
+  }
+
+  /* Quantity section smaller */
+  .cart-qty button, 
+  .cart-qty span {
+    font-size: 0.85rem !important;
+  }
+
+  /* Checkout section aligned center */
+  #checkoutBtn {
+    width: 100%;
+    padding: 14px !important;
+    font-size: 1rem;
+  }
+
+  .total-box {
+    text-align: center !important;
+  }
+
+}
+
+/* --------------------------- */
+/* 📲 Very Small Phone (iPhone SE) */
+/* --------------------------- */
+@media (max-width: 380px) {
+  header h1 {
+    font-size: 1rem !important;
+  }
+
+  header a {
+    font-size: 0.8rem !important;
+  }
+
+  .cart-title {
+    font-size: 0.75rem !important;
+  }
+}
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-900">
+
+  <header class="bg-pink-100 p-4 shadow-md flex justify-between items-center">
+    <button onclick="history.back()">
+    <h1 class="text-xl font-bold">🛒 My Cart</h1>
+    </button>
+    <button onclick="history.back()">
+    <div class="flex space-x-2">
+    <i class="fas fa-shop mt-1"></i>
+    <a href="products.html" class="shop text-pink-600 font-bold">Continue Shopping</a>
+    </div>
+    </button>
+
+
+  </header>
+
+  <main class="p-6 max-w-4xl mx-auto">
+    <!-- Cart Skeletons (hidden by default) -->
+<div id="cartSkeleton" class="space-y-4">
+  <div class="flex items-center justify-between bg-white p-4 rounded shadow animate-pulse">
+    <div class="flex items-center gap-4">
+      <div class="w-16 h-16 bg-gray-200 rounded"></div>
+      <div>
+        <div class="w-32 h-4 bg-gray-200 mb-2 rounded"></div>
+        <div class="w-20 h-4 bg-gray-200 rounded"></div>
+      </div>
+    </div>
+    <div class="flex items-center gap-2">
+      <div class="w-6 h-4 bg-gray-200 rounded"></div>
+      <div class="w-8 h-4 bg-gray-200 rounded"></div>
+      <div class="w-6 h-4 bg-gray-200 rounded"></div>
+    </div>
+    <div class="text-right">
+      <div class="w-16 h-4 bg-gray-200 mb-2 rounded"></div>
+      <div class="w-12 h-4 bg-gray-200 rounded"></div>
+    </div>
+  </div>
+
+  <div class="flex items-center justify-between bg-white p-4 rounded shadow animate-pulse">
+    <div class="flex items-center gap-4">
+      <div class="w-16 h-16 bg-gray-200 rounded"></div>
+      <div>
+        <div class="w-32 h-4 bg-gray-200 mb-2 rounded"></div>
+        <div class="w-20 h-4 bg-gray-200 rounded"></div>
+      </div>
+    </div>
+    <div class="flex items-center gap-2">
+      <div class="w-6 h-4 bg-gray-200 rounded"></div>
+      <div class="w-8 h-4 bg-gray-200 rounded"></div>
+      <div class="w-6 h-4 bg-gray-200 rounded"></div>
+    </div>
+    <div class="text-right">
+      <div class="w-16 h-4 bg-gray-200 mb-2 rounded"></div>
+      <div class="w-12 h-4 bg-gray-200 rounded"></div>
+    </div>
+  </div>
+</div>
+
+    <div id="cartContainer" class="space-y-4"></div>
+
+    <div class="text-right mt-6">
+      <h2 class="text-xl font-semibold mb-2">Total: ₦<span id="totalPrice">0</span></h2>
+      <a href="checkout.html">
+      <button id="checkoutBtn" class="bg-pink-500 text-white px-6 py-2 rounded hover:bg-pink-600">Checkout</button>
+      </a>
+    </div>
+  </main>
+
+<!-- Firebase Compat Scripts -->
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+
+<script>
+/* ===========================
+   Upgraded cart.js (paste into your cart page)
+   =========================== */
+
+(function(){
+  // --- SINGLE Firebase App config (same as home/admin) ---
+  const firebaseConfig = {
+    apiKey: "AIzaSyDdTPmpaIPWSDWOmR-fXgvAb7hoxZUawcc",
+    authDomain: "e-commerce-39c74.firebaseapp.com",
+    projectId: "e-commerce-39c74",
+    storageBucket: "e-commerce-39c74.firebasestorage.app",
+    messagingSenderId: "863375033754",
+    appId: "1:863375033754:web:7ba248c8dbb1566c83e623"
+  };
+
+  if (!window.firebase) {
+    console.error("Firebase not loaded. Ensure firebase scripts are included on the page.");
+    return;
+  }
+
+  if (!firebase.apps.length) {
+    firebase.initializeApp(firebaseConfig);
+  }
+
+  const userAuth = firebase.auth();
+  const userDb = firebase.firestore();
+
+  // State
+  let currentUser = null;
+  let cartUnsub = null;
+
+  // Elements (gracefully handle missing)
+  const cartContainer = document.getElementById("cartContainer");
+  const cartSkeleton  = document.getElementById("cartSkeleton");
+  const totalSpan     = document.getElementById("totalPrice");
+  const checkoutBtn   = document.getElementById("checkoutBtn");
+
+  // Small helper: safely toggle element class
+  function showElem(el){ if(!el) return; el.classList.remove('hidden'); }
+  function hideElem(el){ if(!el) return; el.classList.add('hidden'); }
+
+  // Notification (keeps your original style but safer)
+  function showNotification(msg, type = "info", dur = 3000){
+    const container = document.body;
+    const div = document.createElement("div");
+    div.textContent = msg;
+    div.className = `px-4 py-2 rounded shadow text-white fixed top-4 left-1/2 transform -translate-x-1/2 z-50 transition-opacity opacity-0`;
+    if (type === "success") div.classList.add("bg-green-500");
+    else if (type === "error") div.classList.add("bg-red-500");
+    else if (type === "warning") div.classList.add("bg-yellow-500","text-black");
+    else div.classList.add("bg-blue-500");
+    container.appendChild(div);
+    // fade-in/out
+    requestAnimationFrame(()=> div.style.opacity = "1");
+    setTimeout(()=> { div.style.opacity = "0"; setTimeout(()=> div.remove(), 300); }, dur);
+  }
+
+  // Start / stop cart listener
+  function startCartListener(){
+    stopCartListener();
+    if (!currentUser) return;
+
+    if (cartSkeleton) hideElem(cartSkeleton); // show skeleton initially removed then shown below
+    if (cartSkeleton) showElem(cartSkeleton);
+    if (cartContainer) cartContainer.innerHTML = "";
+
+    const itemsRef = userDb.collection("carts").doc(currentUser.uid).collection("items").orderBy("createdAt","asc");
+
+    cartUnsub = itemsRef.onSnapshot(snapshot => {
+      const cartItems = snapshot.docs.map(doc => ({ docId: doc.id, ...doc.data() }));
+      if (cartSkeleton) hideElem(cartSkeleton);
+      renderCart(cartItems);
+    }, error => {
+      if (cartSkeleton) hideElem(cartSkeleton);
+      console.error("Cart listener error:", error);
+      showNotification("Failed to load cart", "error");
+      renderCart([]);
+    });
+  }
+
+  function stopCartListener(){
+    if (cartUnsub) {
+      try { cartUnsub(); } catch(e){ console.warn("Failed to unsubscribe cart listener", e); }
+      cartUnsub = null;
+    }
+  }
+
+  // Render cart
+  function renderCart(items = []){
+    if (!cartContainer) return;
+
+    cartContainer.innerHTML = "";
+    let total = 0;
+
+    if (!currentUser || items.length === 0) {
+      cartContainer.innerHTML = `<p class="text-center text-gray-500">Your cart is empty.</p>`;
+      if (totalSpan) totalSpan.textContent = "0";
+      if (checkoutBtn) {
+        checkoutBtn.disabled = true;
+        checkoutBtn.classList.add("opacity-50","cursor-not-allowed");
+      }
+      return;
+    }
+
+    items.forEach(it => {
+      const lineTotal = (it.price || 0) * (it.quantity || 0);
+      total += lineTotal;
+
+      // Create card
+      const div = document.createElement("div");
+      div.className = "flex items-center justify-between bg-white p-4 rounded shadow mb-3";
+
+      // Use safe fallback values
+      const imgSrc = it.image || 'https://via.placeholder.com/64';
+      const name = escapeHtml(it.name || 'Item');
+      const priceText = `₦${Number(it.price || 0).toLocaleString()}`;
+
+      div.innerHTML = `
+        <div class="flex items-center gap-4">
+          <img src="${imgSrc}" class="w-16 h-16 object-cover rounded" alt="${name}">
+          <div>
+            <h4 class="font-semibold">${name}</h4>
+            <p class="text-pink-500 font-bold">${priceText}</p>
+          </div>
+        </div>
+        <div class="flex items-center gap-2">
+          <button data-action="minus" data-id="${it.docId}" class="px-2 bg-gray-200 flex items-center justify-center gap-1">
+            <span>−</span>
+            <svg data-spinner="minus-${it.docId}" class="w-4 h-4 text-pink-500 animate-spin hidden" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path></svg>
+          </button>
+          <span class="w-8 text-center" id="qty-${it.docId}">${it.quantity}</span>
+          <button data-action="plus" data-id="${it.docId}" class="px-2 bg-gray-200 flex items-center justify-center gap-1">
+            <span>+</span>
+            <svg data-spinner="plus-${it.docId}" class="w-4 h-4 text-pink-500 animate-spin hidden" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path></svg>
+          </button>
+        </div>
+        <div class="text-right">
+          <p class="font-semibold">₦${lineTotal.toLocaleString()}</p>
+          <button data-action="remove" data-id="${it.docId}" class="text-red-600 text-sm flex items-center gap-1 hover:underline">
+            <span>Remove</span>
+            <svg data-spinner="remove-${it.docId}" class="w-4 h-4 text-pink-500 animate-spin hidden" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path></svg>
+          </button>
+        </div>
+      `;
+
+      cartContainer.appendChild(div);
+
+      // wire up controls
+      const minusBtn = div.querySelector('button[data-action="minus"]');
+      const plusBtn  = div.querySelector('button[data-action="plus"]');
+      const removeBtn= div.querySelector('button[data-action="remove"]');
+
+      minusBtn && (minusBtn.onclick = () => updateQtyWithSpinner(it.docId, -1, `minus-${it.docId}`));
+      plusBtn  && (plusBtn.onclick  = () => updateQtyWithSpinner(it.docId,  1, `plus-${it.docId}`));
+      removeBtn&& (removeBtn.onclick= () => removeWithSpinner(it.docId, `remove-${it.docId}`));
+    });
+
+    // Update subtotal & checkout state
+    if (totalSpan) totalSpan.textContent = total.toLocaleString();
+    if (checkoutBtn) {
+      checkoutBtn.disabled = false;
+      checkoutBtn.classList.remove("opacity-50","cursor-not-allowed");
+    }
+  }
+
+  // Helper to toggle spinner visibility by spinner data attribute key
+  function toggleSpinner(spinnerKey, show = true) {
+    const svg = document.querySelector(`[data-spinner="${spinnerKey}"]`);
+    if (!svg) return;
+    if (show) svg.classList.remove("hidden");
+    else svg.classList.add("hidden");
+  }
+
+  // Update quantity using a Firestore transaction
+  async function updateQtyWithSpinner(docId, delta, spinnerKey) {
+    if (!currentUser) return showNotification("Login required", "error");
+    toggleSpinner(spinnerKey, true);
+
+    const itemRef = userDb.collection("carts").doc(currentUser.uid).collection("items").doc(docId);
+    try {
+      await userDb.runTransaction(async (t) => {
+        const doc = await t.get(itemRef);
+        if (!doc.exists) throw new Error("Item missing");
+        const currentQty = doc.data().quantity || 0;
+        const newQty = currentQty + delta;
+        if (newQty <= 0) {
+          t.delete(itemRef);
+        } else {
+          t.update(itemRef, { quantity: newQty });
+        }
+      });
+      // Success feedback (UI updates will come from snapshot listener)
+    } catch (err) {
+      console.error("Quantity update failed:", err);
+      showNotification("Quantity update failed", "error");
+    } finally {
+      toggleSpinner(spinnerKey, false);
+    }
+  }
+
+  // Remove item
+  function removeWithSpinner(docId, spinnerKey) {
+    if (!currentUser) return showNotification("Login required", "error");
+    toggleSpinner(spinnerKey, true);
+
+    userDb.collection("carts").doc(currentUser.uid).collection("items").doc(docId)
+      .delete()
+      .then(()=> showNotification("Item removed", "success"))
+      .catch(err => {
+        console.error("Remove failed:", err);
+        showNotification("Remove failed", "error");
+      })
+      .finally(()=> toggleSpinner(spinnerKey, false));
+  }
+
+  // Checkout button behaviour - simple redirect to checkout page (you can expand)
+  if (checkoutBtn) {
+    checkoutBtn.addEventListener("click", async (e) => {
+      e.preventDefault();
+      if (!currentUser) {
+        showNotification("Please log in to checkout", "warning");
+        // if you have a login modal: open it here (e.g. openLoginModal())
+        return;
+      }
+      // Optional: validate cart non-empty client-side (server listener will enforce).
+      // Redirect to your checkout page
+      window.location.href = "checkout.html";
+    });
+  }
+
+  // Auth listener to start/stop cart
+  userAuth.onAuthStateChanged(user => {
+    currentUser = user;
+    if (user) {
+      startCartListener();
+    } else {
+      stopCartListener();
+      if (cartSkeleton) hideElem(cartSkeleton);
+      renderCart([]);
+    }
+  });
+
+  // Small escape helper
+  function escapeHtml(text){ if(text==null) return ''; return String(text).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
+
+  // Expose for debugging if needed
+  window._cart = { startCartListener, stopCartListener };
+
+})();
+</script>
+
+<!-- <script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyAw3H8R1hlnURjF3Nw66uLIHLRm60ZOfB0",
+    authDomain: "e-commerce-project-9d5fc.firebaseapp.com",
+    projectId: "e-commerce-project-9d5fc",
+    storageBucket: "e-commerce-project-9d5fc.appspot.com",
+    messagingSenderId: "170026324556",
+    appId: "1:170026324556:web:cdae7d84eab13eecd21ae9"
+  };
+
+  firebase.initializeApp(firebaseConfig);
+  const userAuth = firebase.auth();
+  const userDb   = firebase.firestore();
+
+  let currentUser = null;
+  let cartUnsub = null;
+
+  const cartContainer = document.getElementById("cartContainer");
+  const cartSkeleton  = document.getElementById("cartSkeleton");
+  const totalSpan     = document.getElementById("totalPrice");
+  const checkoutBtn   = document.getElementById("checkoutBtn");
+
+  userAuth.onAuthStateChanged(user => {
+    currentUser = user;
+    if (user) {
+      startCartListener();
+    } else {
+      stopCartListener();
+      cartSkeleton.classList.add("hidden");
+      renderCart([]);
+    }
+  });
+
+  function startCartListener() {
+    stopCartListener();
+    if (!currentUser) return;
+
+    cartSkeleton.classList.remove("hidden");
+    cartContainer.innerHTML = "";
+
+    const itemsRef = userDb.collection("carts").doc(currentUser.uid).collection("items");
+
+    cartUnsub = itemsRef.onSnapshot(snapshot => {
+      const cartItems = snapshot.docs.map(doc => ({ docId: doc.id, ...doc.data() }));
+      cartSkeleton.classList.add("hidden");
+      renderCart(cartItems);
+    }, error => {
+      cartSkeleton.classList.add("hidden");
+      console.error("Cart listener error:", error.message);
+      showNotification("Failed to load cart", "error");
+    });
+  }
+
+  function stopCartListener() {
+    if (cartUnsub) cartUnsub();
+    cartUnsub = null;
+  }
+
+  function renderCart(items) {
+    cartContainer.innerHTML = "";
+    let total = 0;
+
+    if (!currentUser || items.length === 0) {
+      cartContainer.innerHTML = `<p class="text-center text-gray-500">Your cart is empty.</p>`;
+      totalSpan.textContent = "0";
+      checkoutBtn.disabled = true;
+      checkoutBtn.classList.add("opacity-50", "cursor-not-allowed");
+      return;
+    }
+
+    items.forEach(it => {
+      const lineTotal = it.price * it.quantity;
+      total += lineTotal;
+
+      const div = document.createElement("div");
+      div.className = "flex items-center justify-between bg-white p-4 rounded shadow mb-3";
+
+      div.innerHTML = `
+        <div class="flex items-center gap-4">
+          <img src="${it.image || 'https://via.placeholder.com/64'}" class="w-16 h-16 object-cover rounded">
+          <div>
+            <h4 class="font-semibold">${it.name}</h4>
+            <p class="text-pink-500 font-bold">₦${it.price.toLocaleString()}</p>
+          </div>
+        </div>
+        <div class="flex items-center gap-2">
+          <button id="minus-${it.docId}" class="px-2 bg-gray-200 flex items-center justify-center gap-1">
+            <span>−</span>
+            <svg id="minusSpinner-${it.docId}" class="w-4 h-4 text-pink-500 animate-spin hidden" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+            </svg>
+          </button>
+          <span class="w-8 text-center" id="qty-${it.docId}">${it.quantity}</span>
+          <button id="plus-${it.docId}" class="px-2 bg-gray-200 flex items-center justify-center gap-1">
+            <span>+</span>
+            <svg id="plusSpinner-${it.docId}" class="w-4 h-4 text-pink-500 animate-spin hidden" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+            </svg>
+          </button>
+        </div>
+        <div class="text-right">
+          <p class="font-semibold">₦${lineTotal.toLocaleString()}</p>
+          <button id="remove-${it.docId}" class="text-red-600 text-sm flex items-center gap-1 hover:underline">
+            <span>Remove</span>
+            <svg id="removeSpinner-${it.docId}" class="w-4 h-4 text-pink-500 animate-spin hidden" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+            </svg>
+          </button>
+        </div>
+      `;
+
+      cartContainer.appendChild(div);
+
+      const minusBtn = document.getElementById(`minus-${it.docId}`);
+      const plusBtn  = document.getElementById(`plus-${it.docId}`);
+      const removeBtn= document.getElementById(`remove-${it.docId}`);
+
+      minusBtn.onclick = () => updateQtyWithSpinner(it.docId, -1, `minusSpinner-${it.docId}`);
+      plusBtn.onclick  = () => updateQtyWithSpinner(it.docId, 1, `plusSpinner-${it.docId}`);
+      removeBtn.onclick= () => removeWithSpinner(it.docId, `removeSpinner-${it.docId}`);
+    });
+
+    totalSpan.textContent = total.toLocaleString();
+    checkoutBtn.disabled = false;
+    checkoutBtn.classList.remove("opacity-50", "cursor-not-allowed");
+  }
+
+  function updateQtyWithSpinner(docId, delta, spinnerId) {
+    const spinner = document.getElementById(spinnerId);
+    spinner.classList.remove("hidden");
+
+    const itemRef = userDb.collection("carts").doc(currentUser.uid).collection("items").doc(docId);
+    userDb.runTransaction(async t => {
+      const doc = await t.get(itemRef);
+      if (!doc.exists) throw "Item missing";
+      const newQty = doc.data().quantity + delta;
+      if (newQty <= 0) t.delete(itemRef);
+      else t.update(itemRef, { quantity: newQty });
+    }).catch(err => {
+      console.error(err);
+      showNotification("Quantity update failed", "error");
+    }).finally(() => spinner.classList.add("hidden"));
+  }
+
+  function removeWithSpinner(docId, spinnerId) {
+    const spinner = document.getElementById(spinnerId);
+    spinner.classList.remove("hidden");
+
+    userDb.collection("carts").doc(currentUser.uid).collection("items").doc(docId)
+      .delete()
+      .then(() => showNotification("Item removed", "success"))
+      .catch(err => {
+        console.error(err);
+        showNotification("Remove failed", "error");
+      })
+      .finally(() => spinner.classList.add("hidden"));
+  }
+
+  function showNotification(msg, type = "info", dur = 3000) {
+    const container = document.body;
+    const div = document.createElement("div");
+    div.textContent = msg;
+    div.className = `px-4 py-2 rounded shadow text-white fixed top-4 right-[45%] z-50 opacity-0 transition-opacity`;
+    if (type === "success") div.classList.add("bg-green-500");
+    else if (type === "error") div.classList.add("bg-red-500");
+    else if (type === "warning") div.classList.add("bg-yellow-500","text-black");
+    else div.classList.add("bg-blue-500");
+    container.appendChild(div);
+    setTimeout(() => div.classList.add("opacity-100"), 10);
+    setTimeout(() => { div.classList.remove("opacity-100"); setTimeout(() => div.remove(), 300); }, dur);
+  }
+</script> -->
+</body>
+</html>

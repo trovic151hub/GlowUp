@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Order Success</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    *{
+        font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+    }
+
+    @import url('https://fonts.googleapis.com/css2?family=Lora:wght@700&family=Montserrat:wght@500&display=swap');
+
+/* MOBILE: max-width 640px             */
+@media (max-width: 640px) {
+    *{
+        font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+    }
+
+    @import url('https://fonts.googleapis.com/css2?family=Lora:wght@700&family=Montserrat:wght@500&display=swap');
+
+  .bg-white {
+    padding: 1.5rem;
+  }
+
+  h1 {
+    font-size: 1.5rem;
+  }
+
+  #successMessage {
+    font-size: 1rem;
+    line-height: 1.4;
+  }
+
+  #successMessage strong {
+    font-size: 1.05rem;
+  }
+
+  a {
+    width: 100%;
+    font-size: 1rem;
+    padding: 0.75rem;
+  }
+}
+
+/* ----------------------------------- */
+/* VERY SMALL SCREENS: max-width 380px */
+/* ----------------------------------- */
+@media (max-width: 380px) {
+  h1 {
+    font-size: 1.3rem;
+  }
+
+  #successMessage {
+    font-size: 0.95rem;
+  }
+
+  #successMessage strong {
+    font-size: 1rem;
+  }
+
+  a {
+    font-size: 0.95rem;
+    padding: 0.6rem;
+  }
+}
+
+/* ----------------------------------- */
+/* OPTIONAL: Pulse animation on emoji  */
+/* ----------------------------------- */
+@keyframes pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.2); }
+}
+
+h1::before {
+  content: '🎉 ';
+  display: inline-block;
+  animation: pulse 1.5s infinite;
+}
+
+  </style>
+</head>
+<body class="bg-green-50 text-gray-900">
+
+  <main class="min-h-screen flex flex-col justify-center items-center p-6">
+    <div class="bg-white p-8 rounded shadow max-w-md w-full text-center">
+      <h1 class="text-2xl font-bold text-green-600 mb-4">🎉 Order Confirmed!</h1>
+      <p id="successMessage" class="mb-6 text-lg">Thank you for your purchase.</p>
+      <a href="index.html" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">Back to Home</a>
+    </div>
+  </main>
+
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+
+<script>
+  // ===== 1. Firebase Config & Init =====
+  const firebaseConfig = {
+    apiKey: "AIzaSyDdTPmpaIPWSDWOmR-fXgvAb7hoxZUawcc",
+    authDomain: "e-commerce-39c74.firebaseapp.com",
+    projectId: "e-commerce-39c74",
+    storageBucket: "e-commerce-39c74.firebasestorage.app",
+    messagingSenderId: "863375033754",
+    appId: "1:863375033754:web:7ba248c8dbb1566c83e623"
+  };
+
+  firebase.initializeApp(firebaseConfig);
+  const auth = firebase.auth();
+  const db = firebase.firestore();
+
+  const msg = document.getElementById("successMessage");
+
+  // ===== 2. Wait for Auth =====
+  auth.onAuthStateChanged(async user => {
+    if (!user) {
+      msg.textContent = "Your order was processed.";
+      return;
+    }
+
+    try {
+      // ===== 3. Fetch Orders for Current User =====
+      const snapshot = await db.collection("orders")
+        .where("userId", "==", user.uid)
+        .get();
+
+      if (snapshot.empty) {
+        msg.textContent = "Your order was processed.";
+        return;
+      }
+
+      // ===== 4. Pick the latest order by timestamp =====
+      let latestOrder = null;
+      snapshot.forEach(doc => {
+        const data = doc.data();
+        if (!latestOrder || data.timestamp.toDate() > latestOrder.timestamp.toDate()) {
+          latestOrder = data;
+        }
+      });
+
+      // ===== 5. Display Success Message =====
+      if (latestOrder) {
+        msg.innerHTML = `
+          Thank you, <strong>${latestOrder.name}</strong>!<br/>
+          Your order total is <strong>₦${latestOrder.total.toLocaleString()}</strong>.<br/>
+          Payment Method: <strong>${latestOrder.paymentMethod}</strong>
+        `;
+      } else {
+        msg.textContent = "Your order was processed.";
+      }
+
+      // ===== 6. Optionally Clear Cart =====
+      const cartRef = db.collection("carts").doc(user.uid).collection("items");
+      const cartSnapshot = await cartRef.get();
+      const batch = db.batch();
+      cartSnapshot.forEach(doc => batch.delete(doc.ref));
+      await batch.commit();
+
+    } catch (err) {
+      console.error("Error fetching latest order:", err);
+      msg.textContent = "Your order was processed.";
+    }
+  });
+</script>
+</body>
+</html>
