@@ -400,21 +400,48 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // ===== Validate Billing =====
   function validateBilling(){
-    const name = document.getElementById("name").value.trim();
-    const phone = document.getElementById("phone").value.trim();
-    const email = document.getElementById("email").value.trim();
-    const address = document.getElementById("address").value.trim();
-    const state = stateInput.value.trim();
-    const lga = lgaInput.value;
-    const option = deliverySelect.value;
+  const name = document.getElementById("name").value.trim();
+  const phone = document.getElementById("phone").value.trim();
+  const email = document.getElementById("email").value.trim();
+  const address = document.getElementById("address").value.trim();
+  const state = stateInput.value.trim();
+  const lga = lgaInput.value;
+  const option = deliverySelect.value;
 
-    if(!name || !phone || !email || !address || !state || (state.toLowerCase() === "lagos" && !lga) || !option){
+  // Lagos → do not require delivery option
+  if (state.toLowerCase() === "lagos") {
+    if (!name || !phone || !email || !address || !state || !lga) {
       alert("Please fill all billing and delivery fields.");
       return null;
     }
-
     return { name, phone, email, address, state, lga };
   }
+
+  // Non-Lagos → delivery option required
+  if (!name || !phone || !email || !address || !state || !option) {
+    alert("Please fill all billing and delivery fields.");
+    return null;
+  }
+
+  return { name, phone, email, address, state, lga };
+}
+
+  // function validateBilling(){
+  //   const name = document.getElementById("name").value.trim();
+  //   const phone = document.getElementById("phone").value.trim();
+  //   const email = document.getElementById("email").value.trim();
+  //   const address = document.getElementById("address").value.trim();
+  //   const state = stateInput.value.trim();
+  //   const lga = lgaInput.value;
+  //   const option = deliverySelect.value;
+
+  //   if(!name || !phone || !email || !address || !state || (state.toLowerCase() === "lagos" && !lga) || !option){
+  //     alert("Please fill all billing and delivery fields.");
+  //     return null;
+  //   }
+
+  //   return { name, phone, email, address, state, lga };
+  // }
 
   // ===== Save Order =====
   async function saveOrder(order){
