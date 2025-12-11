@@ -7,34 +7,94 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
   <style>
-    *{
-        font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+    * {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
     }
     @import url('https://fonts.googleapis.com/css2?family=Lora:wght@700&family=Montserrat:wght@500&display=swap');
+
+    /* Modal animations */
+    .modal-fade { animation: fadeIn 0.3s ease forwards; }
+    .modal-slide { animation: slideDown 0.35s ease forwards; transform: translateY(-20px); opacity: 0; }
+    @keyframes fadeIn { from {opacity:0;} to{opacity:1;} }
+    @keyframes slideDown { 0%{opacity:0; transform:translateY(-20px);} 100%{opacity:1; transform:translateY(0);} }
+
+    .modal {
+      position: fixed; top:0; left:0; width:100%; height:100%;
+      background: rgba(0,0,0,0.4); display:flex; justify-content:center; align-items:center;
+      opacity:0; pointer-events:none; transition:opacity 0.3s ease; z-index:1000;
+    }
+    .modal.show { opacity:1; pointer-events:auto; }
+    .modal-content {
+      background:#fff; padding:2rem; border-radius:0.5rem; text-align:center;
+      transform: translateY(-30px); transition: transform 0.3s ease;
+      min-width:280px; max-width:90%;
+    }
+    .modal.show .modal-content { transform: translateY(0); }
+
+    .close-btn {
+      margin-top:1rem; background:#f87171; color:#fff; border:none; padding:0.5rem 1rem;
+      border-radius:0.25rem; cursor:pointer; font-weight:bold; transition: background 0.2s ease;
+    }
+    .close-btn:hover { background:#ef4444; }
+
+    /* Success Modal */
+    #successModal div {
+      transform: scale(1);
+      opacity: 1;
+    }
+    #successModal {
+      background: rgba(255, 192, 203, 0.4);
+      transition: opacity 0.3s ease;
+    }
+    #successModal.hidden {
+      opacity: 0;
+      pointer-events: none;
+    }
   </style>
 </head>
-<body class="bg-gray-50 flex items-center justify-center h-screen">
+<body class="min-h-screen flex items-center justify-center p-4
+             bg-gradient-to-br from-pink-200 via-pink-300 to-pink-400">
 
-  <!-- Notification Container -->
-  <div id="notification-container" class="fixed top-5 right-5 space-y-2 z-50"></div>
+  <!-- Success Modal -->
+  <div id="successModal" class="fixed inset-0 hidden z-50 flex items-center justify-center">
+    <div class="bg-white/90 backdrop-blur-md p-6 rounded-2xl shadow-2xl text-center transform scale-90 opacity-0 transition-all duration-300">
+      <h3 class="text-2xl font-bold text-pink-600 mb-4">Login Successful 🎉</h3>
+      <p class="text-sm  mb-4">Welcome back! You are logged in.</p>
+    </div>
+  </div>
 
-  <!-- Custom Prompt Container -->
-  <div id="prompt-container" class="fixed top-5 left-1/2 transform -translate-x-1/2 bg-white p-4 rounded-lg shadow-lg hidden z-50 flex items-center space-x-2">
-    <label id="prompt-label" class="font-medium text-gray-700">Enter value:</label>
-    <input id="prompt-input" type="text" class="border border-gray-300 rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-blue-400">
-    <button id="prompt-submit" class="bg-pink-600 text-white px-3 py-1 rounded hover:bg-pink-700">Submit</button>
+  <!-- Error Modal -->
+  <div id="errorModal" class="modal hidden">
+    <div class="modal-content">
+      <h3 id="errorMessage">Something went wrong ❌</h3>
+      <button class="close-btn" onclick="closeErrorModal()">Okay</button>
+    </div>
   </div>
 
   <!-- Login Form -->
-  <div class="bg-white p-6 rounded shadow-md w-full max-w-md">
-    <h2 class="text-2xl font-bold mb-4 text-center">Login</h2>
+  <div class="bg-white/80 backdrop-blur-md w-full max-w-md p-6 rounded-2xl shadow-2xl">
+    <div class="flex justify-center my-4 mb-10">
+      <img class="w-28 h-20 rounded-full shadow-lg" src="https://res.cloudinary.com/dut2dpxuc/image/upload/v1764188839/e1232d47-ee66-47c9-97fa-b9b86232fb80_n35lqo.png" alt="">
+    </div>
+
+    <h1 class="text-3xl font-extrabold mb-3 text-center text-pink-600 drop-shadow-md">Welcome Back!</h1>
+    <p class="text-sm font-medium text-center mb-4 bg-clip-text text-transparent bg-gradient-to-r from-pink-500 via-pink-400 to-pink-300 drop-shadow-sm">Log back into your Pearl account.</p>
+
     <form id="loginForm" class="space-y-4">
-      <input type="email" id="loginEmail" placeholder="Email" class="w-full border p-2 rounded" required />
+      <input type="email" id="loginEmail" placeholder="Email" class="w-full border border-pink-300 p-3 rounded-lg focus:ring-2 focus:ring-pink-400 focus:outline-none" required />
       <div class="relative">
-        <input type="password" id="loginPassword" placeholder="Password" class="border p-3 rounded w-full" required />
+        <input type="password" id="loginPassword" placeholder="Password" class="border border-pink-300 p-3 rounded-lg w-full focus:ring-2 focus:ring-pink-400 focus:outline-none" required />
         <i id="toggleLoginPassword" class="fa-solid fa-eye text-gray-400 absolute right-3 top-3 cursor-pointer"></i>
       </div>
-      <button type="submit" class="w-full bg-pink-600 text-white py-2 rounded hover:bg-pink-700">Login</button>
+
+      <button type="submit" id="loginBtn" class="w-full bg-pink-600 text-white py-3 rounded-xl hover:bg-pink-700 flex justify-center items-center transition-all duration-300 shadow-md hover:shadow-lg">
+        <span id="loginBtnText">Login</span>
+        <div id="loginLoader" class="hidden flex items-center gap-1 ml-2">
+          <div class="w-2 h-2 bg-white rounded-full animate-pulse"></div>
+          <div class="w-2 h-2 bg-white rounded-full animate-pulse delay-150"></div>
+          <div class="w-2 h-2 bg-white rounded-full animate-pulse delay-300"></div>
+        </div>
+      </button>
     </form>
 
     <p class="mt-2 text-center text-sm">
@@ -43,7 +103,7 @@
 
     <div class="text-center my-4">
       <p class="text-sm mb-2">OR</p>
-      <button id="googleLogin" class="w-full flex items-center justify-center border p-2 rounded hover:bg-gray-100">
+      <button id="googleLogin" class="w-full flex items-center justify-center border p-3 rounded-lg hover:bg-gray-100">
         <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" class="w-6 h-6 mr-2" />
         Continue with Google
       </button>
@@ -51,6 +111,10 @@
 
     <p class="mt-4 text-center text-sm">
       Don't have an account? <a href="register.html" class="text-pink-600">Register</a>
+    </p>
+
+    <p class="text-sm font-[400] text-center mt-4">Back to 
+      <a href="index.html" class="text-pink-600 font-medium">Home</a>
     </p>
   </div>
 
@@ -60,56 +124,65 @@
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
 
   <script>
-  // --- Notifications ---
-  function showNotification(message, type="info", duration=3000) {
-    const container = document.getElementById("notification-container");
-    if (!container) return; // safety check
-    const notif = document.createElement("div");
-    notif.textContent = message;
-    notif.className = `px-4 py-2 rounded shadow text-white transition-transform transform opacity-0`;
-    switch(type) {
-      case "success": notif.classList.add("bg-green-500"); break;
-      case "error": notif.classList.add("bg-red-500"); break;
-      case "warning": notif.classList.add("bg-yellow-500", "text-black"); break;
-      default: notif.classList.add("bg-blue-500"); break;
+    /* ===== Success / Error Modals ===== */
+    function showSuccessModal() {
+      const modal = document.getElementById("successModal");
+      if (!modal) return;
+      modal.classList.remove("hidden");
+      setTimeout(() => modal.querySelector('div').classList.add('show'), 50);
     }
-    container.appendChild(notif);
-    setTimeout(() => notif.classList.add("opacity-100"), 10);
-    setTimeout(() => { notif.classList.remove("opacity-100"); setTimeout(() => notif.remove(), 300); }, duration);
-  }
+    function closeModal() {
+      const modal = document.getElementById("successModal");
+      if (!modal) return;
+      modal.querySelector('div').classList.remove('show');
+      setTimeout(() => modal.classList.add('hidden'), 300);
+    }
+    function showErrorModal(message) {
+      const modal = document.getElementById("errorModal");
+      const errorMsg = document.getElementById("errorMessage");
+      if(modal && errorMsg){
+        errorMsg.textContent = message;
+        modal.classList.remove("hidden");
+      } else { alert(message); }
+    }
+    function closeErrorModal() {
+      const modal = document.getElementById("errorModal");
+      if(modal) modal.classList.add("hidden");
+    }
 
-  // --- Custom Prompt ---
-  function customPrompt(message, callback) {
-    const container = document.getElementById("prompt-container");
-    const label = document.getElementById("prompt-label");
-    const input = document.getElementById("prompt-input");
-    const submit = document.getElementById("prompt-submit");
-    if (!container || !label || !input || !submit) return; // safety check
-    label.textContent = message;
-    input.value = "";
-    container.classList.remove("hidden");
-    submit.onclick = () => {
-      const value = input.value.trim();
-      container.classList.add("hidden");
-      callback(value);
+    /* ===== Login Button Loader ===== */
+    function setLoginLoading(isLoading) {
+      const btn = document.getElementById("loginBtn");
+      const btnText = document.getElementById("loginBtnText");
+      const loader = document.getElementById("loginLoader");
+      if(isLoading){
+        btn.disabled = true;
+        btn.classList.add("cursor-not-allowed","opacity-70");
+        btnText.textContent = "Logging in…";
+        loader.classList.remove("hidden");
+      } else {
+        btn.disabled = false;
+        btn.classList.remove("cursor-not-allowed","opacity-70");
+        btnText.textContent = "Login";
+        loader.classList.add("hidden");
+      }
+    }
+
+    /* ===== Firebase Setup ===== */
+    const firebaseConfig = {
+      apiKey: "AIzaSyDdTPmpaIPWSDWOmR-fXgvAb7hoxZUawcc",
+      authDomain: "e-commerce-39c74.firebaseapp.com",
+      projectId: "e-commerce-39c74",
+      storageBucket: "e-commerce-39c74.firebasestorage.app",
+      messagingSenderId: "863375033754",
+      appId: "1:863375033754:web:7ba248c8dbb1566c83e623"
     };
-  }
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.firestore();
+    const provider = new firebase.auth.GoogleAuthProvider();
 
-  // --- Firebase Setup ---
-  const firebaseConfig = {
-    apiKey: "AIzaSyDdTPmpaIPWSDWOmR-fXgvAb7hoxZUawcc",
-    authDomain: "e-commerce-39c74.firebaseapp.com",
-    projectId: "e-commerce-39c74",
-    storageBucket: "e-commerce-39c74.firebasestorage.app",
-    messagingSenderId: "863375033754",
-    appId: "1:863375033754:web:7ba248c8dbb1566c83e623"
-  };
-  firebase.initializeApp(firebaseConfig);
-  const auth = firebase.auth();
-  const db = firebase.firestore();
-  const provider = new firebase.auth.GoogleAuthProvider();
-
-  // ===== Password Eye Toggle =====
+    /* ===== Password Eye Toggle ===== */
     const loginPassword = document.getElementById("loginPassword");
     const toggleLoginPassword = document.getElementById("toggleLoginPassword");
     toggleLoginPassword.addEventListener("click", () => {
@@ -122,72 +195,73 @@
       }
     });
 
-  // --- Email/Password Login ---
-  const loginForm = document.getElementById("loginForm");
-  loginForm?.addEventListener("submit", async e => {
-    e.preventDefault();
-    const email = document.getElementById("loginEmail")?.value.trim();
-    const password = document.getElementById("loginPassword")?.value;
-    if (!email || !password) { showNotification("Please fill in all fields", "warning"); return; }
+    /* ===== Email/Password Login ===== */
+    const loginForm = document.getElementById("loginForm");
+    loginForm?.addEventListener("submit", async e => {
+      e.preventDefault();
+      const email = document.getElementById("loginEmail")?.value.trim();
+      const password = document.getElementById("loginPassword")?.value;
+      if (!email || !password) { showErrorModal("Please fill in all fields"); return; }
 
-    try {
-      const userCredential = await auth.signInWithEmailAndPassword(email, password);
-      const user = userCredential.user;
-      const userRef = db.collection("users").doc(user.uid);
-      const userSnap = await userRef.get();
-      if (!userSnap.exists) {
-        await userRef.set({
+      setLoginLoading(true);
+      try {
+        const userCredential = await auth.signInWithEmailAndPassword(email, password);
+        const user = userCredential.user;
+        await db.collection("users").doc(user.uid).set({
           name: user.displayName || "",
           email: user.email,
           phone: "",
           address: "",
-          createdAt: firebase.firestore.FieldValue.serverTimestamp()
-        });
-      }
-      showNotification("Welcome, " + (user.displayName || user.email), "success");
-      window.location.href = "index.html";
-    } catch(err) {
-      console.error(err);
-      showNotification(err.message, "error");
-    }
-  });
+          lastLogin: firebase.firestore.FieldValue.serverTimestamp()
+        }, { merge: true });
 
-  // --- Google Login ---
-  document.getElementById("googleLogin")?.addEventListener("click", async () => {
-    try {
-      const result = await auth.signInWithPopup(provider);
-      const user = result.user;
-      await db.collection("users").doc(user.uid).set({
-        name: user.displayName || "",
-        email: user.email,
-        phone: "",
-        address: ""
-      }, { merge: true });
-      showNotification("Logged in as " + (user.displayName || user.email), "success");
-      window.location.href = "index.html";
-    } catch(err) {
-      console.error(err);
-      showNotification(err.message, "error");
-    }
-  });
-
-  // --- Forgot Password ---
-  document.getElementById("forgotPassword")?.addEventListener("click", () => {
-    customPrompt("Enter your registered email:", async email => {
-      if (!email) return;
-      try {
-        await auth.sendPasswordResetEmail(email);
-        showNotification("Password reset email sent!", "success");
+        setLoginLoading(false);
+        showSuccessModal();
+        setTimeout(() => window.location.href = "index.html", 1300);
       } catch(err) {
-        showNotification(err.message, "error");
+        console.error(err);
+        setLoginLoading(false);
+        showErrorModal(err.message);
       }
     });
-  });
 
-  // --- Reload page if back navigation ---
-  window.addEventListener("pageshow", event => {
-    if (event.persisted || (performance.navigation && performance.navigation.type === 2)) window.location.reload();
-  });
-</script>
+    /* ===== Google Login ===== */
+    document.getElementById("googleLogin")?.addEventListener("click", async () => {
+      setLoginLoading(true);
+      try {
+        const result = await auth.signInWithPopup(provider);
+        const user = result.user;
+        await db.collection("users").doc(user.uid).set({
+          name: user.displayName || "",
+          email: user.email,
+          phone: "",
+          address: "",
+          lastLogin: firebase.firestore.FieldValue.serverTimestamp()
+        }, { merge: true });
+
+        setLoginLoading(false);
+        showSuccessModal();
+        setTimeout(() => window.location.href = "index.html", 1300);
+      } catch(err) {
+        console.error(err);
+        setLoginLoading(false);
+        showErrorModal(err.message);
+      }
+    });
+
+    /* ===== Forgot Password ===== */
+    document.getElementById("forgotPassword")?.addEventListener("click", () => {
+      const email = prompt("Enter your registered email:");
+      if (!email) return;
+      auth.sendPasswordResetEmail(email).then(() => {
+        showSuccessModal();
+      }).catch(err => showErrorModal(err.message));
+    });
+
+    /* ===== Reload page if back navigation ===== */
+    window.addEventListener("pageshow", event => {
+      if (event.persisted || (performance.navigation && performance.navigation.type === 2)) window.location.reload();
+    });
+  </script>
 </body>
 </html>

@@ -10,20 +10,22 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
   <style>
     *{
-        font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+      font-family: 'Poppins', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
     }
 
     html {
       scroll-behavior: smooth;
     }
 
-    #skinTip {
-      transition: opacity 0.5s ease;
+    body {
+      background: #fff7f9;
+      color: #333;
     }
 
+    /* Notification */
     #notification-container {
       position: fixed;
-      top: 0.1rem;
+      top: 1rem;
       right: 45%;
       z-index: 1000;
       display: flex;
@@ -31,157 +33,229 @@
       gap: 0.5rem;
     }
 
-     #skeletonContainer.hidden {
-    display: none !important;
-  }
+    /* Loader */
+    #leaveLoader {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(255,255,255,0.85);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 99999;
+      backdrop-filter: blur(3px);
+      transition: opacity 0.3s ease;
+    }
 
-  #leaveLoader {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(255,255,255,0.8);
-  display: none;
-  justify-content: center;
-  align-items: center;
-  z-index: 99999;
-  backdrop-filter: blur(3px);
-  transition: opacity 0.3s ease;
+    #leaveLoader.active {
+      display: flex;
+      opacity: 1;
+    }
+
+    .spinner {
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      border: 5px solid #f0c4d7;
+      border-top-color: #e11d48;
+      animation: spin 0.75s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* Hero Overlay */
+    .hero-overlay {
+      background: linear-gradient(to bottom, rgba(0,0,0,0.25), rgba(0,0,0,0.35));
+    }
+
+    .slide-btn {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      background: rgba(255,255,255,0.7);
+      color: #e11d48;
+      font-weight: bold;
+      padding: 0.5rem 0.75rem;
+      border-radius: 50%;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      z-index: 10;
+    }
+
+    .slide-btn:hover {
+      background: #e11d48;
+      color: #fff;
+    }
+
+    .slide-btn.prev { left: 1rem; }
+    .slide-btn.next { right: 1rem; }
+
+    /* Featured Products */
+    .product-card {
+      background: #fff;
+      border-radius: 1rem;
+      overflow: hidden;
+      box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+      transition: transform 0.3s, box-shadow 0.3s;
+    }
+
+    .product-card:hover {
+      transform: translateY(-6px);
+      box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+    }
+
+    .product-card img {
+      border-bottom: 1px solid #f0c4d7;
+    }
+
+    .product-card h3 {
+      font-family: 'Playfair Display', serif;
+    }
+
+    /* Categories */
+    .category-btn {
+      background: #ffe5ec;
+      font-weight: 600;
+      transition: all 0.3s ease;
+    }
+
+    .category-btn:hover {
+      background: #fbcfe8;
+      transform: translateY(-4px);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+
+    /* Skin Tips */
+    #skinTip {
+      transition: opacity 0.5s ease;
+      font-style: italic;
+      color: #e11d48;
+    }
+
+    /* Navbar */
+    #mainHeader {
+      /* background: linear-gradient(90deg, #fbcfe8, #f9a8d4); */
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+
+    #mainHeader a.nav-link:hover {
+      color: #e11d48 !important;
+    }
+
+    /* Login/Signup Buttons */
+    #loginSubmit, #signupSubmit, #modalAddToCartBtn {
+      background: #e11d48;
+      transition: background 0.3s ease;
+    }
+
+    #loginSubmit:hover, #signupSubmit:hover, #modalAddToCartBtn:hover {
+      background: #be123c;
+    }
+
+    /* Skeleton animations */
+    .skeleton {
+      background: #eee;
+      border-radius: 10px;
+      overflow: hidden;
+      position: relative;
+      animation: skeletonPulse 1.2s ease-in-out infinite;
+    }
+
+    @keyframes skeletonPulse {
+      0% { background-color: #eee; }
+      50% { background-color: #f5f5f5; }
+      100% { background-color: #eee; }
+    }
+
+    .skeleton.fade-out {
+      animation: fadeOut 0.4s ease forwards;
+    }
+
+    @keyframes fadeOut {
+      from { opacity: 1; }
+      to { opacity: 0; transform: translateY(5px); }
+    }
+
+    .product-card {
+      opacity: 0;
+      transform: translateY(20px);
+      animation: slideUp 0.45s ease forwards;
+    }
+
+    @keyframes slideUp {
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .log-btn i {
+  display: inline-block;
+  font-size: 15px; /* bigger so it’s visible */
+  color: #000 !important;
 }
 
-#leaveLoader.active {
-  display: flex;
-  opacity: 1;
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateX(50px); }
+  to { opacity: 1; transform: translateX(0); }
 }
-
-.spinner {
-  width: 45px;
-  height: 45px;
-  border-radius: 50%;
-  border: 4px solid #ccc;
-  border-top-color: #000;
-  animation: spin 0.75s linear infinite;
+.animate-fadeIn {
+  animation: fadeIn 0.3s ease-out;
 }
-
-@keyframes spin {
-  to { transform: rotate(360deg); }
-}
-
-/* Skeleton container */
-.skeleton {
-  background: #eee;
-  border-radius: 10px;
-  overflow: hidden;
-  position: relative;
-  animation: skeletonPulse 1.2s ease-in-out infinite;
-}
-
-@keyframes skeletonPulse {
-  0% { background-color: #eee; }
-  50% { background-color: #f5f5f5; }
-  100% { background-color: #eee; }
-}
-
-/* Fade-out animation before showing real product */
-.skeleton.fade-out {
-  animation: fadeOut 0.4s ease forwards;
-}
-
-@keyframes fadeOut {
-  from { opacity: 1; }
-  to { opacity: 0; transform: translateY(5px); }
-}
-
-/* Product entrance animation */
-.product-card {
-  opacity: 0;
-  transform: translateY(20px);
-  animation: slideUp 0.45s ease forwards;
-}
-
-@keyframes slideUp {
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-/* .logo{
-  display: none !important;
-} */
- .logo {
-  text-align: center;
-  display: block;
-}
-
-
-.log-btn i{
-    display: flex !important;
-    color: #000 !important;
-    font-size: 15px;
-  }
   </style>
 </head>
 <body class="bg-white text-gray-800">
 
-  <!-- Notification container -->
-  <div id="notification-container"></div>
-    
+  <!-- Notification Container -->
+<div id="notification-container" class="fixed top-4 right-4 z-50 flex flex-col gap-2"></div>
+
   <!-- Navbar -->
   <header id="mainHeader"
-    class=" fixed top-0 left-0 w-full bg-pink-100  p-4 flex justify-between items-center flex-wrap gap-4 text-sm font-medium md:gap-6 z-50">
+    class="fixed top-0 left-0 w-full p-4 flex justify-between items-center flex-wrap gap-4 text-sm font-medium md:gap-6 z-50">
     <h1 class="text-2xl font-bold main-head">Pearl Skin Care</h1>
     <nav class="nav-bar space-x-6 text-sm font-medium flex flex-wrap items-center gap-4">
-      <div class="mr-14">
-      <!-- HAMBURGER BUTTON (inside navbar) -->
-<button id="menuToggle" class="text-xl md:hidden">
-  <i class="fas fa-bars"></i>
-</button>
-<!-- MOBILE MENU (outside nav/header!) -->
-<div id="menuOverlay"
-     class="fixed inset-0 bg-black bg-opacity-40 z-40 hidden md:hidden">
-<div id="mobileMenu"
-     class="modal-open fixed top-0 left-0 w-64 h-full bg-white shadow-lg p-6 transform -translate-x-full
-            transition-all duration-300 z-50 md:hidden">
+        <!-- Hamburger + Mobile Menu -->
+<div class="mr-14 ham md:hidden">
+  <button id="menuToggle" class="text-xl md:hidden">
+    <i class="fas fa-bars md:hidden"></i>
+  </button>
+
+  <!-- Overlay -->
+  <div id="menuOverlay" class="fixed inset-0 bg-black bg-opacity-40 z-40 hidden md:hidden"></div>
+
+  <!-- Mobile Menu -->
+  <div id="mobileMenu" class="fixed top-0 left-0 w-64 h-full bg-white shadow-lg p-6 transform -translate-x-full transition-transform duration-300 z-50 md:hidden">
     <button id="closeMenu" class="text-2xl text-gray-600 mb-6 hover:text-red-500">&times;</button>
-
     <div class="flex flex-col space-y-4 text-lg font-medium">
-        <span id="welcomeTextMobile" class="text-sm text-gray-700 hidden"></span>
-
-        <a href="products.html" class="hover:text-pink-500 flex items-center gap-2">
-            <i class="fa fa-shop"></i> Shop
-        </a>
-
-        <a href="customer-dashboard.html"
-           class="block px-2 py-2 text-sm text-gray-700 hover:bg-pink-50 rounded">
-           👤 Dashboard
-        </a>
-
-        <a href="mailto:victoradeyimika0@gmail.com"
-           class="block px-2 py-2 text-sm text-gray-700 hover:bg-pink-50 rounded flex items-center gap-2">
-            <i class="fas fa-envelope text-pink-500"></i> Email Us
-        </a>
-
-        <a href="https://wa.me/2349053380773" target="_blank"
-           class="block px-2 py-2 text-sm text-gray-700 hover:bg-pink-50 rounded flex items-center gap-2">
-            <i class="fab fa-whatsapp text-green-500"></i> WhatsApp
-        </a>
-
-        <a href="https://instagram.com/yourhandle" target="_blank"
-           class="block px-2 py-2 text-sm text-gray-700 hover:bg-pink-50 rounded flex items-center gap-2">
-            <i class="fab fa-instagram text-pink-600"></i> Instagram
-        </a>
+      <span id="welcomeTextMobile" class="text-sm text-gray-700 hidden"></span>
+      <a href="products.html" class="hover:bg-pink-50 px-2 py-2 flex items-left gap-2"><i class="fa fa-shop mt-1"></i> Shop</a>
+      <a href="customer-dashboard.html" class="block px-2 py-2 text-sm text-gray-700 hover:bg-pink-50 rounded text-left -ml-1"><span class="text-[20px]">👤</span> Dashboard</a>
+      <a href="mailto:victoradeyimika0@gmail.com" class="block px-2 py-2 text-sm text-gray-700 hover:bg-pink-50 rounded flex text-left gap-2 -ml-1">
+        <i class="fas fa-envelope text-[20px] text-pink-500"></i> Email Us
+      </a>
+      <a href="https://wa.me/2349053380773" target="_blank" class="block px-2 py-2 text-sm text-gray-700 hover:bg-pink-50 rounded flex text-center gap-2 -ml-1">
+        <i class="fab fa-whatsapp text-green-500 text-[20px]"></i> WhatsApp
+      </a>
+      <a href="https://instagram.com/yourhandle" target="_blank" class="block px-2 py-2 text-sm text-gray-700 hover:bg-pink-50 rounded flex text-center gap-2 -ml-1">
+        <i class="fab fa-instagram text-pink-600 text-[20px]"></i> Instagram
+      </a>
     </div>
-    </div>
+  </div>
 </div>
-    </div>
-    <div class="logo-con">
-      <div class="logo md:hidden">
-      <h1 class="brand">Pearl</h1>
-      <p class="tagline">SKIN CARE</p>
-    </div>
-    </div>
+
+      <!-- Logo -->
+      <div class="logo-con">
+        <div class="logo md:hidden text-center">
+          <h1 class="brand">Pearl</h1>
+          <p class="tagline">SKIN CARE</p>
+        </div>
+      </div>
+
+      <!-- Cart -->
       <a href="cart.html" class="cart-tag relative inline-block">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 inline text-pink-500" fill="none" viewBox="0 0 24 24"
           stroke="currentColor">
@@ -192,30 +266,27 @@
           class="absolute -top-2 -right-2 bg-red-500 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center">0</span>
       </a>
 
-      <a href="#" class="main-head hover:text-pink-500 nav-link"><i class="fa fa-home"></i> Home</a>
-      <a href="products.html" class="main-head hover:text-pink-500 nav-link"><i class="fa fa-shop"></i> Shop</a>
-      <a href="#categories" class="main-head hover:text-pink-500 nav-link"><i class="fa fa-layer-group"></i> Categories</a>
+      <!-- Navbar Links -->
+      <a href="#" class="main-head hover:text-pink-600 nav-link"><i class="fa fa-home"></i> Home</a>
+      <a href="products.html" class="main-head hover:text-pink-600 nav-link"><i class="fa fa-shop"></i> Shop</a>
+      <a href="#categories" class="main-head hover:text-pink-600 nav-link"><i class="fa fa-layer-group"></i> Categories</a>
 
+      <!-- Contact Dropdown -->
       <div class="relative group inline-block main-head">
-        <button class="hover:text-pink-500 "><i class="fa fa-phone"></i> Contact</button>
+        <button class="hover:text-pink-600"><i class="fa fa-phone"></i> Contact</button>
         <div class="absolute hidden group-hover:block bg-pink-100 shadow rounded mt-1 z-50 min-w-[150px] fixed top-5 right-[-70%] text-left">
           <a href="customer-dashboard.html" class="block px-4 py-2 text-sm text-gray-700 hover:bg-white">👤 Dashboard</a>
-          <a href="mailto:victoradeyimika0@gmail.com" class="block px-4 py-2 text-sm text-gray-700 hover:bg-white"><i
-              class="fas fa-envelope text-pink-500"></i> Email
-            Us</a>
-          <a href="https://wa.me/2349053380773" target="_blank"
-            class="block px-4 py-2 text-sm text-gray-700 hover:bg-white"><i
-              class="fab fa-whatsapp text-green-500"></i> WhatsApp</a>
-          <a href="https://instagram.com/yourhandle" target="_blank"
-            class="block px-4 py-2 text-sm text-gray-700 hover:bg-white"><i
-              class="fab fa-instagram text-pink-600"></i> Instagram</a>
+          <a href="mailto:victoradeyimika0@gmail.com" class="block px-4 py-2 text-sm text-gray-700 hover:bg-white"><i class="fas fa-envelope text-pink-500"></i> Email Us</a>
+          <a href="https://wa.me/2349053380773" target="_blank" class="block px-4 py-2 text-sm text-gray-700 hover:bg-white"><i class="fab fa-whatsapp text-green-500"></i> WhatsApp</a>
+          <a href="https://instagram.com/yourhandle" target="_blank" class="block px-4 py-2 text-sm text-gray-700 hover:bg-white"><i class="fab fa-instagram text-pink-600"></i> Instagram</a>
         </div>
       </div>
 
+      <!-- Login / Logout -->
       <div class="log-btn">
-      <span id="welcomeText" class="text-sm text-gray-700 hidden main-head"></span>
-      <button id="loginBtn"><i class="fas fa-user text-xl hover:underline text-sm"></i></button>
-      <button id="logoutBtn"><i class="fas fa-user-check text-pink-600 hover:underline ml-2 text-sm hidden"></i></button>
+        <span id="welcomeText" class="text-sm text-gray-700 hidden main-head"></span>
+        <button id="loginBtn"><i class="fas fa-user text-xl hover:underline text-sm"></i></button>
+        <button id="logoutBtn"><i class="fas fa-user-check text-pink-600 hover:underline ml-2 text-sm hidden"></i></button>
       </div>
     </nav>
   </header>
@@ -308,9 +379,6 @@
     <div class="absolute top-0 left-0 w-full h-full bg-black/30 flex items-center justify-center">
       <h2 class="text-white text-4xl font-bold">Nourish Your Skin Naturally</h2>
     </div>
-
-    <button id="prevBtn" class="slide-btn prev">❮</button>
-  <button id="nextBtn" class="slide-btn next">❯</button>
   </section>
 
   <!-- Featured Products -->
@@ -370,7 +438,6 @@
   <div class="spinner"></div>
 </div>
 
-   <!-- Firebase SDKs -->
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>

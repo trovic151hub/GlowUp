@@ -128,10 +128,11 @@
 }
 </style>
 <body class="bg-white text-gray-800">
+<!-- Notification Container -->
 <div id="notification-container" class="fixed top-4 right-4 z-50 flex flex-col gap-2"></div>
 
   <!-- Header -->
-  <header class="bg-pink-100 shadow-md p-4 flex justify-between items-center">
+  <header class="bg-gradient-to-r from-[#fbcfe8] to-[#f9a8d4] shadow-md p-4 flex justify-between items-center fixed top-0 w-full">
     <div class="flex space-x-2">
         <button onclick="history.back()">
           <i class="fas fa-arrow-left"></i>
@@ -146,7 +147,7 @@
   </header>
 
   <!-- Filter and Sort -->
-  <section class="p-6">
+  <section class="p-6 mt-16">
     <div class="flex flex-col md:flex-row md:justify-between gap-4">
       <div>
         <label class="font-semibold mr-2">Filter by Category:</label>
@@ -270,20 +271,105 @@
   const adminApp = firebase.apps.find(a => a.name === "AdminApp") || firebase.initializeApp(firebaseConfig, "AdminApp");
   const adminDb = adminApp.firestore();
 
-  // ---------- UI helper ----------
-  function showNotification(message, type = "info", duration = 3000) {
-    const container = document.getElementById("notification-container") || document.body;
-    const div = document.createElement("div");
-    div.textContent = message;
-    div.className = `px-4 py-2 rounded shadow text-white fixed top-2 right-[45%] transition-transform transform opacity-0`;
-    if(type==="success") div.classList.add("bg-green-500");
-    else if(type==="error") div.classList.add("bg-red-500");
-    else if(type==="warning") div.classList.add("bg-yellow-500","text-black");
-    else div.classList.add("bg-blue-500");
-    container.appendChild(div);
-    setTimeout(()=> div.classList.add("opacity-100"), 10);
-    setTimeout(()=> { div.classList.remove("opacity-100"); setTimeout(()=> div.remove(),300); }, duration);
+  // ---------- NOTIFICATIONS ----------
+const activeNotifications = new Set();
+
+function showNotification(message, type="info", duration=3000){
+  let container = document.getElementById("notification-container");
+  if(!container){
+    container = document.createElement("div");
+    container.id = "notification-container";
+    container.className = "fixed top-4 right-4 z-50 flex flex-col gap-2";
+    document.body.appendChild(container);
   }
+
+  // Prevent duplicate notifications
+  if(activeNotifications.has(message)) return;
+  activeNotifications.add(message);
+
+  // Create notification element
+  const notif = document.createElement("div");
+  notif.className = `
+    flex items-center justify-between gap-3 p-4 bg-white rounded-lg shadow-lg
+    border border-gray-200 min-w-[250px] max-w-sm
+    animate-slideIn
+  `;
+
+  // Icon based on type
+  const icon = document.createElement("span");
+  if(type==="success") icon.innerHTML=`<i class="fas fa-check-circle text-green-500 text-xl"></i>`;
+  else if(type==="error") icon.innerHTML=`<i class="fas fa-times-circle text-red-500 text-xl"></i>`;
+  else if(type==="warning") icon.innerHTML=`<i class="fas fa-exclamation-triangle text-yellow-500 text-xl"></i>`;
+  else icon.innerHTML=`<i class="fas fa-info-circle text-blue-500 text-xl"></i>`;
+
+  // Message text
+  const text = document.createElement("span");
+  text.className="flex-1 text-gray-800 font-medium";
+  text.textContent = message;
+
+  // Close button
+  const closeBtn = document.createElement("button");
+  closeBtn.innerHTML = "&times;";
+  closeBtn.className = "ml-4 text-gray-400 hover:text-gray-600 font-bold text-lg";
+  closeBtn.onclick = () => removeNotification(notif, message);
+
+  notif.appendChild(icon);
+  notif.appendChild(text);
+  notif.appendChild(closeBtn);
+  container.appendChild(notif);
+
+  // Auto-remove after duration
+  setTimeout(()=> removeNotification(notif, message), duration);
+}
+
+// Remove notification with slide-out
+function removeNotification(notif, message){
+  if(!notif) return;
+  notif.classList.remove("animate-slideIn");
+  notif.classList.add("animate-slideOut");
+  notif.addEventListener("animationend", ()=> notif.remove());
+  activeNotifications.delete(message);
+}
+
+// ---------- Notification Styles ----------
+const style = document.createElement("style");
+style.textContent = `
+#notification-container {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  position: fixed;
+  top: 1rem;
+  right: 1rem;
+  z-index: 9999;
+}
+@media (max-width: 640px) {
+  #notification-container {
+    top: 6%;
+    left: 50%;
+    right: auto;
+    transform: translate(-50%, -50%);
+    align-items: center;
+    width: 90%;
+  }
+  #notification-container > div {
+    width: 100%;
+    max-width: 300px;
+  }
+}
+@keyframes slideIn {
+  from { opacity: 0; transform: translateX(50px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+.animate-slideIn { animation: slideIn 0.3s ease-out forwards; }
+
+@keyframes slideOut {
+  from { opacity: 1; transform: translateX(0); }
+  to { opacity: 0; transform: translateX(50px); }
+}
+.animate-slideOut { animation: slideOut 0.3s ease-in forwards; }
+`;
+document.head.appendChild(style);
 
   function showButtonSpinner(button, show){
     if(!button) return;

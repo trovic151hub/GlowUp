@@ -5,164 +5,121 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Shopping Cart</title>
   <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
-    <style>
-      *{
-        font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+  <style>
+    * {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
     }
 
     @import url('https://fonts.googleapis.com/css2?family=Lora:wght@700&family=Montserrat:wght@500&display=swap');
 
-    /* 📱 Mobile First Adjustments For Cart Page */
-*{
-        font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+    /* 📱 Mobile First Adjustments */
+    @media (max-width: 640px) {
+      header h1 {
+        font-size: 1.1rem !important;
+      }
+
+      main {
+        padding: 1rem !important;
+      }
+
+      /* Cart item layout vertical */
+      .cart-item {
+        @apply flex flex-col items-start gap-3 !important;
+      }
+
+      .cart-img {
+        width: 64px !important;
+        height: 64px !important;
+      }
+
+      .cart-title {
+        font-size: 0.85rem !important;
+      }
+
+      .cart-price {
+        font-size: 0.9rem !important;
+      }
+
+      .cart-qty button,
+      .cart-qty span {
+        font-size: 0.85rem !important;
+      }
+
+      #checkoutBtn {
+        width: 100%;
+        padding: 0.5rem !important;
+        font-size: 1rem !important;
+      }
+
+      .total-box {
+        text-align: center !important;
+      }
+
+      .shop {
+        display: none !important;
+      }
     }
 
-    @import url('https://fonts.googleapis.com/css2?family=Lora:wght@700&family=Montserrat:wght@500&display=swap');
-@media (max-width: 640px) {   
-  header h1 {
-    font-size: 1.1rem !important;
-  }
-
-  /* Reduce padding in main */
-  main {
-    padding: 1rem !important;
-  }
-
-  /* Cart item layout becomes vertical */
-  .cart-item {
-    flex-direction: column;
-    align-items: flex-start !important;
-    gap: 12px;
-  }
-
-  .shop{
-    display: hidden !important;
-  }
-
-  /* Fix skeleton size */
-  #cartSkeleton .flex {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 12px;
-  }
-
-  /* Product image smaller */
-  .cart-img {
-    width: 64px !important;
-    height: 64px !important;
-  }
-
-  /* Text smaller */
-  .cart-title {
-    font-size: 0.85rem !important;
-  }
-
-  .cart-price {
-    font-size: 0.9rem !important;
-  }
-
-  /* Quantity section smaller */
-  .cart-qty button, 
-  .cart-qty span {
-    font-size: 0.85rem !important;
-  }
-
-  /* Checkout section aligned center */
-  #checkoutBtn {
-    width: 100%;
-    padding: 14px !important;
-    font-size: 1rem;
-  }
-
-  .total-box {
-    text-align: center !important;
-  }
-
-}
-
-/* --------------------------- */
-/* 📲 Very Small Phone (iPhone SE) */
-/* --------------------------- */
-@media (max-width: 380px) {
-  header h1 {
-    font-size: 1rem !important;
-  }
-
-  header a {
-    font-size: 0.8rem !important;
-  }
-
-  .cart-title {
-    font-size: 0.75rem !important;
-  }
-}
-    </style>
+    /* Very Small Phones */
+    @media (max-width: 380px) {
+      header h1 {
+        font-size: 1rem !important;
+      }
+      header a {
+        font-size: 0.8rem !important;
+      }
+      .cart-title {
+        font-size: 0.75rem !important;
+      }
+    }
+  </style>
 </head>
 <body class="bg-gray-50 text-gray-900">
+  <!-- Notification Container -->
+<div id="notification-container" class="fixed top-4 right-4 z-50 flex flex-col gap-2"></div>
 
-  <header class="bg-pink-100 p-4 shadow-md flex justify-between items-center">
+  <header class="bg-gradient-to-r from-[#fbcfe8] to-[#f9a8d4] p-4 shadow-md flex justify-between items-center">
     <button onclick="history.back()">
-    <h1 class="text-xl font-bold">🛒 My Cart</h1>
+      <h1 class="text-xl font-bold">🛒 My Cart</h1>
     </button>
     <button onclick="history.back()">
-    <div class="flex space-x-2">
-    <i class="fas fa-shop mt-1"></i>
-    <a href="products.html" class="shop text-pink-600 font-bold">Continue Shopping</a>
-    </div>
+      <div class="flex space-x-2">
+        <a href="products.html"><i class="fas fa-shop mt-1"></i></a>
+        <a href="products.html" class="shop text-pink-600 font-bold">Continue Shopping</a>
+      </div>
     </button>
-
-
   </header>
 
   <main class="p-6 max-w-4xl mx-auto">
     <!-- Cart Skeletons (hidden by default) -->
-<div id="cartSkeleton" class="space-y-4">
-  <div class="flex items-center justify-between bg-white p-4 rounded shadow animate-pulse">
-    <div class="flex items-center gap-4">
-      <div class="w-16 h-16 bg-gray-200 rounded"></div>
-      <div>
-        <div class="w-32 h-4 bg-gray-200 mb-2 rounded"></div>
-        <div class="w-20 h-4 bg-gray-200 rounded"></div>
+    <div id="cartSkeleton" class="space-y-4">
+      <div class="flex items-center justify-between bg-white p-4 rounded shadow animate-pulse cart-item">
+        <div class="flex items-center gap-4">
+          <div class="w-16 h-16 bg-gray-200 rounded cart-img"></div>
+          <div>
+            <div class="w-32 h-4 bg-gray-200 mb-2 rounded cart-title"></div>
+            <div class="w-20 h-4 bg-gray-200 rounded cart-price"></div>
+          </div>
+        </div>
+        <div class="flex items-center gap-2 cart-qty">
+          <div class="w-6 h-4 bg-gray-200 rounded"></div>
+          <div class="w-8 h-4 bg-gray-200 rounded"></div>
+          <div class="w-6 h-4 bg-gray-200 rounded"></div>
+        </div>
+        <div class="text-right total-box">
+          <div class="w-16 h-4 bg-gray-200 mb-2 rounded"></div>
+          <div class="w-12 h-4 bg-gray-200 rounded"></div>
+        </div>
       </div>
     </div>
-    <div class="flex items-center gap-2">
-      <div class="w-6 h-4 bg-gray-200 rounded"></div>
-      <div class="w-8 h-4 bg-gray-200 rounded"></div>
-      <div class="w-6 h-4 bg-gray-200 rounded"></div>
-    </div>
-    <div class="text-right">
-      <div class="w-16 h-4 bg-gray-200 mb-2 rounded"></div>
-      <div class="w-12 h-4 bg-gray-200 rounded"></div>
-    </div>
-  </div>
-
-  <div class="flex items-center justify-between bg-white p-4 rounded shadow animate-pulse">
-    <div class="flex items-center gap-4">
-      <div class="w-16 h-16 bg-gray-200 rounded"></div>
-      <div>
-        <div class="w-32 h-4 bg-gray-200 mb-2 rounded"></div>
-        <div class="w-20 h-4 bg-gray-200 rounded"></div>
-      </div>
-    </div>
-    <div class="flex items-center gap-2">
-      <div class="w-6 h-4 bg-gray-200 rounded"></div>
-      <div class="w-8 h-4 bg-gray-200 rounded"></div>
-      <div class="w-6 h-4 bg-gray-200 rounded"></div>
-    </div>
-    <div class="text-right">
-      <div class="w-16 h-4 bg-gray-200 mb-2 rounded"></div>
-      <div class="w-12 h-4 bg-gray-200 rounded"></div>
-    </div>
-  </div>
-</div>
 
     <div id="cartContainer" class="space-y-4"></div>
 
     <div class="text-right mt-6">
       <h2 class="text-xl font-semibold mb-2">Total: ₦<span id="totalPrice">0</span></h2>
       <a href="checkout.html">
-      <button id="checkoutBtn" class="bg-pink-500 text-white px-6 py-2 rounded hover:bg-pink-600">Checkout</button>
+        <button id="checkoutBtn" class="bg-pink-500 text-white px-6 py-2 rounded hover:bg-pink-600">Checkout</button>
       </a>
     </div>
   </main>
@@ -173,10 +130,6 @@
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 
 <script>
-/* ===========================
-   Upgraded cart.js (paste into your cart page)
-   =========================== */
-
 (function(){
   // --- SINGLE Firebase App config (same as home/admin) ---
   const firebaseConfig = {
@@ -214,21 +167,98 @@
   function showElem(el){ if(!el) return; el.classList.remove('hidden'); }
   function hideElem(el){ if(!el) return; el.classList.add('hidden'); }
 
-  // Notification (keeps your original style but safer)
-  function showNotification(msg, type = "info", dur = 3000){
-    const container = document.body;
-    const div = document.createElement("div");
-    div.textContent = msg;
-    div.className = `px-4 py-2 rounded shadow text-white fixed top-4 left-1/2 transform -translate-x-1/2 z-50 transition-opacity opacity-0`;
-    if (type === "success") div.classList.add("bg-green-500");
-    else if (type === "error") div.classList.add("bg-red-500");
-    else if (type === "warning") div.classList.add("bg-yellow-500","text-black");
-    else div.classList.add("bg-blue-500");
-    container.appendChild(div);
-    // fade-in/out
-    requestAnimationFrame(()=> div.style.opacity = "1");
-    setTimeout(()=> { div.style.opacity = "0"; setTimeout(()=> div.remove(), 300); }, dur);
+  // ---------- NOTIFICATIONS ----------
+const activeNotifications = new Set();
+
+function showNotification(message, type="info", duration=3000){
+  let container = document.getElementById("notification-container");
+  if(!container){
+    container = document.createElement("div");
+    container.id = "notification-container";
+    container.className = "fixed top-4 right-4 z-50 flex flex-col gap-2";
+    document.body.appendChild(container);
   }
+
+  if(activeNotifications.has(message)) return; // prevent duplicates
+  activeNotifications.add(message);
+
+  const notif = document.createElement("div");
+  notif.className = `
+    flex items-center justify-between gap-3 p-4 bg-white rounded-lg shadow-lg
+    border border-gray-200 min-w-[250px] max-w-sm
+    animate-slideIn
+  `;
+
+  const icon = document.createElement("span");
+  if(type==="success") icon.innerHTML=`<i class="fas fa-check-circle text-green-500 text-xl"></i>`;
+  else if(type==="error") icon.innerHTML=`<i class="fas fa-times-circle text-red-500 text-xl"></i>`;
+  else if(type==="warning") icon.innerHTML=`<i class="fas fa-exclamation-triangle text-yellow-500 text-xl"></i>`;
+  else icon.innerHTML=`<i class="fas fa-info-circle text-blue-500 text-xl"></i>`;
+
+  const text = document.createElement("span");
+  text.className="flex-1 text-gray-800 font-medium";
+  text.textContent = message;
+
+  const closeBtn = document.createElement("button");
+  closeBtn.innerHTML = "&times;";
+  closeBtn.className = "ml-4 text-gray-400 hover:text-gray-600 font-bold text-lg";
+  closeBtn.onclick = () => removeNotification(notif, message);
+
+  notif.appendChild(icon);
+  notif.appendChild(text);
+  notif.appendChild(closeBtn);
+  container.appendChild(notif);
+
+  setTimeout(()=> removeNotification(notif, message), duration);
+}
+
+function removeNotification(notif, message){
+  if(!notif) return;
+  notif.classList.remove("animate-slideIn");
+  notif.classList.add("animate-slideOut");
+  notif.addEventListener("animationend", ()=> notif.remove());
+  activeNotifications.delete(message);
+}
+
+// ---------- Notification Styles ----------
+const style = document.createElement("style");
+style.textContent = `
+#notification-container {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  position: fixed;
+  top: 1rem;
+  right: 1rem;
+  z-index: 9999;
+}
+@media (max-width: 640px) {
+  #notification-container {
+    top: 7%;
+    left: 50%;
+    right: auto;
+    transform: translate(-50%, -50%);
+    align-items: center;
+    width: 90%;
+  }
+  #notification-container > div {
+    width: 100%;
+    max-width: 300px;
+  }
+}
+@keyframes slideIn {
+  from { opacity: 0; transform: translateX(50px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+.animate-slideIn { animation: slideIn 0.3s ease-out forwards; }
+
+@keyframes slideOut {
+  from { opacity: 1; transform: translateX(0); }
+  to { opacity: 0; transform: translateX(50px); }
+}
+.animate-slideOut { animation: slideOut 0.3s ease-in forwards; }
+`;
+document.head.appendChild(style);
 
   // Start / stop cart listener
   function startCartListener(){
@@ -423,181 +453,5 @@
 
 })();
 </script>
-
-<!-- <script>
-  const firebaseConfig = {
-    apiKey: "AIzaSyAw3H8R1hlnURjF3Nw66uLIHLRm60ZOfB0",
-    authDomain: "e-commerce-project-9d5fc.firebaseapp.com",
-    projectId: "e-commerce-project-9d5fc",
-    storageBucket: "e-commerce-project-9d5fc.appspot.com",
-    messagingSenderId: "170026324556",
-    appId: "1:170026324556:web:cdae7d84eab13eecd21ae9"
-  };
-
-  firebase.initializeApp(firebaseConfig);
-  const userAuth = firebase.auth();
-  const userDb   = firebase.firestore();
-
-  let currentUser = null;
-  let cartUnsub = null;
-
-  const cartContainer = document.getElementById("cartContainer");
-  const cartSkeleton  = document.getElementById("cartSkeleton");
-  const totalSpan     = document.getElementById("totalPrice");
-  const checkoutBtn   = document.getElementById("checkoutBtn");
-
-  userAuth.onAuthStateChanged(user => {
-    currentUser = user;
-    if (user) {
-      startCartListener();
-    } else {
-      stopCartListener();
-      cartSkeleton.classList.add("hidden");
-      renderCart([]);
-    }
-  });
-
-  function startCartListener() {
-    stopCartListener();
-    if (!currentUser) return;
-
-    cartSkeleton.classList.remove("hidden");
-    cartContainer.innerHTML = "";
-
-    const itemsRef = userDb.collection("carts").doc(currentUser.uid).collection("items");
-
-    cartUnsub = itemsRef.onSnapshot(snapshot => {
-      const cartItems = snapshot.docs.map(doc => ({ docId: doc.id, ...doc.data() }));
-      cartSkeleton.classList.add("hidden");
-      renderCart(cartItems);
-    }, error => {
-      cartSkeleton.classList.add("hidden");
-      console.error("Cart listener error:", error.message);
-      showNotification("Failed to load cart", "error");
-    });
-  }
-
-  function stopCartListener() {
-    if (cartUnsub) cartUnsub();
-    cartUnsub = null;
-  }
-
-  function renderCart(items) {
-    cartContainer.innerHTML = "";
-    let total = 0;
-
-    if (!currentUser || items.length === 0) {
-      cartContainer.innerHTML = `<p class="text-center text-gray-500">Your cart is empty.</p>`;
-      totalSpan.textContent = "0";
-      checkoutBtn.disabled = true;
-      checkoutBtn.classList.add("opacity-50", "cursor-not-allowed");
-      return;
-    }
-
-    items.forEach(it => {
-      const lineTotal = it.price * it.quantity;
-      total += lineTotal;
-
-      const div = document.createElement("div");
-      div.className = "flex items-center justify-between bg-white p-4 rounded shadow mb-3";
-
-      div.innerHTML = `
-        <div class="flex items-center gap-4">
-          <img src="${it.image || 'https://via.placeholder.com/64'}" class="w-16 h-16 object-cover rounded">
-          <div>
-            <h4 class="font-semibold">${it.name}</h4>
-            <p class="text-pink-500 font-bold">₦${it.price.toLocaleString()}</p>
-          </div>
-        </div>
-        <div class="flex items-center gap-2">
-          <button id="minus-${it.docId}" class="px-2 bg-gray-200 flex items-center justify-center gap-1">
-            <span>−</span>
-            <svg id="minusSpinner-${it.docId}" class="w-4 h-4 text-pink-500 animate-spin hidden" viewBox="0 0 24 24">
-              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
-            </svg>
-          </button>
-          <span class="w-8 text-center" id="qty-${it.docId}">${it.quantity}</span>
-          <button id="plus-${it.docId}" class="px-2 bg-gray-200 flex items-center justify-center gap-1">
-            <span>+</span>
-            <svg id="plusSpinner-${it.docId}" class="w-4 h-4 text-pink-500 animate-spin hidden" viewBox="0 0 24 24">
-              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
-            </svg>
-          </button>
-        </div>
-        <div class="text-right">
-          <p class="font-semibold">₦${lineTotal.toLocaleString()}</p>
-          <button id="remove-${it.docId}" class="text-red-600 text-sm flex items-center gap-1 hover:underline">
-            <span>Remove</span>
-            <svg id="removeSpinner-${it.docId}" class="w-4 h-4 text-pink-500 animate-spin hidden" viewBox="0 0 24 24">
-              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
-            </svg>
-          </button>
-        </div>
-      `;
-
-      cartContainer.appendChild(div);
-
-      const minusBtn = document.getElementById(`minus-${it.docId}`);
-      const plusBtn  = document.getElementById(`plus-${it.docId}`);
-      const removeBtn= document.getElementById(`remove-${it.docId}`);
-
-      minusBtn.onclick = () => updateQtyWithSpinner(it.docId, -1, `minusSpinner-${it.docId}`);
-      plusBtn.onclick  = () => updateQtyWithSpinner(it.docId, 1, `plusSpinner-${it.docId}`);
-      removeBtn.onclick= () => removeWithSpinner(it.docId, `removeSpinner-${it.docId}`);
-    });
-
-    totalSpan.textContent = total.toLocaleString();
-    checkoutBtn.disabled = false;
-    checkoutBtn.classList.remove("opacity-50", "cursor-not-allowed");
-  }
-
-  function updateQtyWithSpinner(docId, delta, spinnerId) {
-    const spinner = document.getElementById(spinnerId);
-    spinner.classList.remove("hidden");
-
-    const itemRef = userDb.collection("carts").doc(currentUser.uid).collection("items").doc(docId);
-    userDb.runTransaction(async t => {
-      const doc = await t.get(itemRef);
-      if (!doc.exists) throw "Item missing";
-      const newQty = doc.data().quantity + delta;
-      if (newQty <= 0) t.delete(itemRef);
-      else t.update(itemRef, { quantity: newQty });
-    }).catch(err => {
-      console.error(err);
-      showNotification("Quantity update failed", "error");
-    }).finally(() => spinner.classList.add("hidden"));
-  }
-
-  function removeWithSpinner(docId, spinnerId) {
-    const spinner = document.getElementById(spinnerId);
-    spinner.classList.remove("hidden");
-
-    userDb.collection("carts").doc(currentUser.uid).collection("items").doc(docId)
-      .delete()
-      .then(() => showNotification("Item removed", "success"))
-      .catch(err => {
-        console.error(err);
-        showNotification("Remove failed", "error");
-      })
-      .finally(() => spinner.classList.add("hidden"));
-  }
-
-  function showNotification(msg, type = "info", dur = 3000) {
-    const container = document.body;
-    const div = document.createElement("div");
-    div.textContent = msg;
-    div.className = `px-4 py-2 rounded shadow text-white fixed top-4 right-[45%] z-50 opacity-0 transition-opacity`;
-    if (type === "success") div.classList.add("bg-green-500");
-    else if (type === "error") div.classList.add("bg-red-500");
-    else if (type === "warning") div.classList.add("bg-yellow-500","text-black");
-    else div.classList.add("bg-blue-500");
-    container.appendChild(div);
-    setTimeout(() => div.classList.add("opacity-100"), 10);
-    setTimeout(() => { div.classList.remove("opacity-100"); setTimeout(() => div.remove(), 300); }, dur);
-  }
-</script> -->
 </body>
 </html>

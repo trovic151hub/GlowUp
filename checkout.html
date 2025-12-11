@@ -99,15 +99,17 @@
   </style>
 </head>
 <body class="bg-gray-50 text-gray-900">
+  <!-- Notification Container -->
+<div id="notification-container" class="fixed top-4 right-4 z-50 flex flex-col gap-2"></div>
 
-  <header class="bg-pink-100 p-4 shadow-md flex justify-between items-center">
+  <header class="fixed top-0 w-full bg-gradient-to-r from-[#fbcfe8] to-[#f9a8d4] shadow-md z-50 p-4 shadow-md flex justify-between items-center">
     <button onclick="history.back()">
       <h1 class="text-xl font-bold">🧾 Checkout</h1>
     </button>
     <a href="cart.html" class="text-pink-600 font-bold">🛒 Back to Cart</a>
   </header>
 
-  <main class="p-6 max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8 relative">
+  <main class="p-6 max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8 relative mt-16">
 
     <!-- Billing Form -->
     <div class="bg-white p-6 shadow rounded">
@@ -184,6 +186,97 @@ document.addEventListener("DOMContentLoaded", () => {
   const auth = firebase.auth();
   const db = firebase.firestore();
 
+  // ---------- NOTIFICATIONS ----------
+  const activeNotifications = new Set();
+  function showNotification(message, type="info", duration=3000){
+    let container = document.getElementById("notification-container");
+    if(!container){
+      container = document.createElement("div");
+      container.id = "notification-container";
+      container.className = "fixed top-4 right-4 z-50 flex flex-col gap-2";
+      document.body.appendChild(container);
+    }
+
+    if(activeNotifications.has(message)) return;
+    activeNotifications.add(message);
+
+    const notif = document.createElement("div");
+    notif.className = `
+      flex items-center justify-between gap-3 p-4 bg-white rounded-lg shadow-lg
+      border border-gray-200 min-w-[250px] max-w-sm
+      animate-slideIn
+    `;
+
+    const icon = document.createElement("span");
+    if(type==="success") icon.innerHTML=`<i class="fas fa-check-circle text-green-500 text-xl"></i>`;
+    else if(type==="error") icon.innerHTML=`<i class="fas fa-times-circle text-red-500 text-xl"></i>`;
+    else if(type==="warning") icon.innerHTML=`<i class="fas fa-exclamation-triangle text-yellow-500 text-xl"></i>`;
+    else icon.innerHTML=`<i class="fas fa-info-circle text-blue-500 text-xl"></i>`;
+
+    const text = document.createElement("span");
+    text.className="flex-1 text-gray-800 font-medium";
+    text.textContent = message;
+
+    const closeBtn = document.createElement("button");
+    closeBtn.innerHTML = "&times;";
+    closeBtn.className = "ml-4 text-gray-400 hover:text-gray-600 font-bold text-lg";
+    closeBtn.onclick = () => removeNotification(notif, message);
+
+    notif.appendChild(icon);
+    notif.appendChild(text);
+    notif.appendChild(closeBtn);
+    container.appendChild(notif);
+
+    setTimeout(()=> removeNotification(notif, message), duration);
+  }
+
+  function removeNotification(notif, message){
+    if(!notif) return;
+    notif.classList.remove("animate-slideIn");
+    notif.classList.add("animate-slideOut");
+    notif.addEventListener("animationend", ()=> notif.remove());
+    activeNotifications.delete(message);
+  }
+
+  // ---------- Notification Styles ----------
+  const style = document.createElement("style");
+  style.textContent = `
+  #notification-container {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    position: fixed;
+    top: 1rem;
+    right: 1rem;
+    z-index: 9999;
+  }
+  @media (max-width: 640px) {
+    #notification-container {
+      top: 7%;
+      left: 50%;
+      right: auto;
+      transform: translate(-50%, -50%);
+      align-items: center;
+      width: 90%;
+    }
+    #notification-container > div {
+      width: 100%;
+      max-width: 300px;
+    }
+  }
+  @keyframes slideIn {
+    from { opacity: 0; transform: translateX(50px); }
+    to { opacity: 1; transform: translateX(0); }
+  }
+  .animate-slideIn { animation: slideIn 0.3s ease-out forwards; }
+  @keyframes slideOut {
+    from { opacity: 1; transform: translateX(0); }
+    to { opacity: 0; transform: translateX(50px); }
+  }
+  .animate-slideOut { animation: slideOut 0.3s ease-in forwards; }
+  `;
+  document.head.appendChild(style);
+
   // ====== DOM Elements ======
   const stateInput = document.getElementById("state");
   const lgaInput = document.getElementById("lga");
@@ -213,14 +306,14 @@ document.addEventListener("DOMContentLoaded", () => {
   ];
 
   const states =[
-  "Abia", "Adamawa", "Akwa Ibom", "Anambra", "Bauchi", 
-  "Bayelsa", "Benue", "Borno", "Cross River", "Delta", 
-  "Ebonyi", "Edo", "Ekiti", "Enugu", "Gombe", "Imo", 
-  "Jigawa", "Kaduna", "Kano", "Katsina", "Kebbi", "Kogi", 
-  "Kwara", "Lagos", "Nasarawa", "Niger", "Ogun", "Ondo", 
-  "Osun", "Oyo", "Plateau", "Rivers", "Sokoto", "Taraba", 
-  "Yobe", "Zamfara", "Abuja"
-];
+    "Abia", "Adamawa", "Akwa Ibom", "Anambra", "Bauchi", 
+    "Bayelsa", "Benue", "Borno", "Cross River", "Delta", 
+    "Ebonyi", "Edo", "Ekiti", "Enugu", "Gombe", "Imo", 
+    "Jigawa", "Kaduna", "Kano", "Katsina", "Kebbi", "Kogi", 
+    "Kwara", "Lagos", "Nasarawa", "Niger", "Ogun", "Ondo", 
+    "Osun", "Oyo", "Plateau", "Rivers", "Sokoto", "Taraba", 
+    "Yobe", "Zamfara", "Abuja"
+  ];
   const lagosLGAs = Object.keys(lagosLGAFees);
 
   // ====== App State ======
@@ -240,7 +333,6 @@ document.addEventListener("DOMContentLoaded", () => {
   function showLGAOrDelivery() {
     const state = stateInput.value.trim().toLowerCase();
 
-    // Show/hide Lagos LGA dropdown
     if (state === "lagos") {
       lgaInput.style.display = "block";
       lgaInput.innerHTML = '<option value="">Select LGA</option>';
@@ -249,15 +341,13 @@ document.addEventListener("DOMContentLoaded", () => {
         opt.value = lga; opt.textContent = lga;
         lgaInput.appendChild(opt);
       });
-      // Disable delivery option until LGA is selected
-    deliverySelect.disabled = true;
+      deliverySelect.disabled = true;
     } else {
       lgaInput.style.display = "none";
       lgaInput.value = "";
-      deliverySelect.disabled = false; // Enable delivery for non-Lagos
+      deliverySelect.disabled = false;
     }
 
-    // Update GUO delivery availability
     const guoOption = deliverySelect.querySelector('option[value="guo"]');
     if (guoOption) {
       if (guoSupportedStates.includes(state)) {
@@ -305,7 +395,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // ===== Load user + cart =====
   auth.onAuthStateChanged(user => {
     if(!user){
-      alert("Please log in to access checkout.");
+      showNotification("Please log in to access checkout.", "error");
       window.location.href = "user-login.html";
       return;
     }
@@ -400,48 +490,29 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // ===== Validate Billing =====
   function validateBilling(){
-  const name = document.getElementById("name").value.trim();
-  const phone = document.getElementById("phone").value.trim();
-  const email = document.getElementById("email").value.trim();
-  const address = document.getElementById("address").value.trim();
-  const state = stateInput.value.trim();
-  const lga = lgaInput.value;
-  const option = deliverySelect.value;
+    const name = document.getElementById("name").value.trim();
+    const phone = document.getElementById("phone").value.trim();
+    const email = document.getElementById("email").value.trim();
+    const address = document.getElementById("address").value.trim();
+    const state = stateInput.value.trim();
+    const lga = lgaInput.value;
+    const option = deliverySelect.value;
 
-  // Lagos → do not require delivery option
-  if (state.toLowerCase() === "lagos") {
-    if (!name || !phone || !email || !address || !state || !lga) {
-      alert("Please fill all billing and delivery fields.");
+    if (state.toLowerCase() === "lagos") {
+      if (!name || !phone || !email || !address || !state || !lga) {
+        showNotification("Please fill all billing and delivery fields.", "warning");
+        return null;
+      }
+      return { name, phone, email, address, state, lga };
+    }
+
+    if (!name || !phone || !email || !address || !state || !option) {
+      showNotification("Please fill all billing and delivery fields.", "warning");
       return null;
     }
+
     return { name, phone, email, address, state, lga };
   }
-
-  // Non-Lagos → delivery option required
-  if (!name || !phone || !email || !address || !state || !option) {
-    alert("Please fill all billing and delivery fields.");
-    return null;
-  }
-
-  return { name, phone, email, address, state, lga };
-}
-
-  // function validateBilling(){
-  //   const name = document.getElementById("name").value.trim();
-  //   const phone = document.getElementById("phone").value.trim();
-  //   const email = document.getElementById("email").value.trim();
-  //   const address = document.getElementById("address").value.trim();
-  //   const state = stateInput.value.trim();
-  //   const lga = lgaInput.value;
-  //   const option = deliverySelect.value;
-
-  //   if(!name || !phone || !email || !address || !state || (state.toLowerCase() === "lagos" && !lga) || !option){
-  //     alert("Please fill all billing and delivery fields.");
-  //     return null;
-  //   }
-
-  //   return { name, phone, email, address, state, lga };
-  // }
 
   // ===== Save Order =====
   async function saveOrder(order){
@@ -452,7 +523,7 @@ document.addEventListener("DOMContentLoaded", () => {
       cartItems.forEach(item=>batch.delete(ref.doc(item.docId)));
       await batch.commit();
       window.location.href="order-success.html";
-    }catch(err){ console.error(err); alert("Something went wrong."); }
+    }catch(err){ console.error(err); showNotification("Something went wrong.", "error"); }
   }
 
   // ===== Payment Handler =====
@@ -480,7 +551,7 @@ document.addEventListener("DOMContentLoaded", () => {
         ref:"REF_"+Date.now(),
         metadata:{custom_fields:[{display_name:"Name",value:billing.name},{display_name:"Phone",value:billing.phone},{display_name:"Address",value:billing.address}]},
         callback:response=>{ saveOrder({...billing,items:cartItems,total,deliveryFee,totalWeight,paymentRef:response.reference,paymentMethod:"Paystack"}); },
-        onClose:()=>alert("Payment closed.")
+        onClose:()=>showNotification("Payment closed.", "info")
       }); handler.openIframe();
     } else if(method==="flutterwave"){
       flutterwaveBtn.disabled=true;
@@ -495,7 +566,7 @@ document.addEventListener("DOMContentLoaded", () => {
         callback:response=>{
           flutterwaveBtn.disabled=false; flutterwaveBtn.textContent=og;
           if(response.status==="successful"){ saveOrder({...billing,items:cartItems,total,deliveryFee,totalWeight,paymentRef:response.transaction_id,paymentMethod:"Flutterwave"}); }
-          else alert("Payment failed.");
+          else showNotification("Payment failed.", "error");
         },
         onclose:()=>{ flutterwaveBtn.disabled=false; flutterwaveBtn.textContent=og; }
       });
@@ -503,11 +574,11 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   flutterwaveBtn.disabled = true;
-flutterwaveBtn.classList.add("bg-gray-300", "cursor-not-allowed");
+  flutterwaveBtn.classList.add("bg-gray-300", "cursor-not-allowed");
 
   paystackBtn.addEventListener("click",()=>handlePayment("paystack"));
   flutterwaveBtn.addEventListener("click",()=>handlePayment("flutterwave"));
-  
+
 });
 </script>
 </body>

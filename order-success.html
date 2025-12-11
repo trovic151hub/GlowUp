@@ -5,99 +5,92 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Order Success</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <style>
-    *{
-        font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
-    }
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
 
-    @import url('https://fonts.googleapis.com/css2?family=Lora:wght@700&family=Montserrat:wght@500&display=swap');
-
-/* MOBILE: max-width 640px             */
-@media (max-width: 640px) {
-    *{
-        font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
-    }
-
-    @import url('https://fonts.googleapis.com/css2?family=Lora:wght@700&family=Montserrat:wght@500&display=swap');
-
-  .bg-white {
-    padding: 1.5rem;
+<style>
+  * {
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
   }
 
-  h1 {
-    font-size: 1.5rem;
+  @import url('https://fonts.googleapis.com/css2?family=Lora:wght@700&family=Montserrat:wght@500&display=swap');
+
+  /* MOBILE */
+  @media (max-width: 640px) {
+    .card-box { padding: 1.5rem !important; }
+    h1 { font-size: 1.5rem; }
+    #successMessage { font-size: 1rem; }
+    a { width: 100%; padding: 0.75rem; }
   }
 
-  #successMessage {
-    font-size: 1rem;
-    line-height: 1.4;
+  /* VERY SMALL SCREEN */
+  @media (max-width: 380px) {
+    h1 { font-size: 1.3rem; }
+    #successMessage { font-size: 0.95rem; }
+    a { font-size: 0.95rem; padding: 0.6rem; }
   }
 
-  #successMessage strong {
-    font-size: 1.05rem;
+  /* Emoji Pulse */
+  @keyframes pulse { 
+    0%,100% { transform: scale(1); }
+    50% { transform: scale(1.2); }
   }
 
-  a {
-    width: 100%;
-    font-size: 1rem;
-    padding: 0.75rem;
-  }
-}
-
-/* ----------------------------------- */
-/* VERY SMALL SCREENS: max-width 380px */
-/* ----------------------------------- */
-@media (max-width: 380px) {
-  h1 {
-    font-size: 1.3rem;
+  h1::before {
+    content: '🎉 ';
+    display: inline-block;
+    animation: pulse 1.5s infinite;
   }
 
-  #successMessage {
-    font-size: 0.95rem;
+  /* Fade-in Animation */
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
   }
-
-  #successMessage strong {
-    font-size: 1rem;
-  }
-
-  a {
-    font-size: 0.95rem;
-    padding: 0.6rem;
-  }
-}
-
-/* ----------------------------------- */
-/* OPTIONAL: Pulse animation on emoji  */
-/* ----------------------------------- */
-@keyframes pulse {
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.2); }
-}
-
-h1::before {
-  content: '🎉 ';
-  display: inline-block;
-  animation: pulse 1.5s infinite;
-}
-
-  </style>
+  .animate-fadeIn { animation: fadeIn 0.5s ease-out; }
+</style>
 </head>
-<body class="bg-green-50 text-gray-900">
+
+<body class="bg-gradient-to-br from-pink-100 via-pink-200 to-pink-300 text-gray-900">
 
   <main class="min-h-screen flex flex-col justify-center items-center p-6">
-    <div class="bg-white p-8 rounded shadow max-w-md w-full text-center">
-      <h1 class="text-2xl font-bold text-green-600 mb-4">🎉 Order Confirmed!</h1>
-      <p id="successMessage" class="mb-6 text-lg">Thank you for your purchase.</p>
-      <a href="index.html" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">Back to Home</a>
+
+    <div class="card-box bg-white/90 backdrop-blur-lg p-8 rounded-2xl shadow-xl max-w-md w-full text-center animate-fadeIn border border-pink-200">
+
+      <!-- Success Icon -->
+      <div class="flex justify-center mb-4">
+        <div class="w-20 h-20 bg-pink-100 rounded-full flex items-center justify-center shadow-inner">
+          <i class="fas fa-check text-pink-600 text-4xl"></i>
+        </div>
+      </div>
+
+      <h1 class="text-3xl font-bold text-pink-600 mb-2">Order Successful!</h1>
+
+      <p id="successMessage" class="mb-6 text-gray-700 text-base">
+        Thank you for your purchase. Your order has been confirmed.
+      </p>
+
+      <a href="customer-dashboard.html" 
+         class="block bg-pink-600 text-white px-4 py-2 rounded-lg mb-3 hover:bg-pink-700 transition">
+        View Orders
+      </a>
+
+      <a href="index.html" 
+         class="block text-pink-700 font-medium">
+         Back to Home
+      </a>
+
     </div>
+
   </main>
 
+
+<!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 
 <script>
-  // ===== 1. Firebase Config & Init =====
+  // ===== Firebase Config =====
   const firebaseConfig = {
     apiKey: "AIzaSyDdTPmpaIPWSDWOmR-fXgvAb7hoxZUawcc",
     authDomain: "e-commerce-39c74.firebaseapp.com",
@@ -110,10 +103,9 @@ h1::before {
   firebase.initializeApp(firebaseConfig);
   const auth = firebase.auth();
   const db = firebase.firestore();
-
   const msg = document.getElementById("successMessage");
 
-  // ===== 2. Wait for Auth =====
+  // ===== Fetch Latest Order =====
   auth.onAuthStateChanged(async user => {
     if (!user) {
       msg.textContent = "Your order was processed.";
@@ -121,7 +113,6 @@ h1::before {
     }
 
     try {
-      // ===== 3. Fetch Orders for Current User =====
       const snapshot = await db.collection("orders")
         .where("userId", "==", user.uid)
         .get();
@@ -131,7 +122,7 @@ h1::before {
         return;
       }
 
-      // ===== 4. Pick the latest order by timestamp =====
+      // Find most recent order
       let latestOrder = null;
       snapshot.forEach(doc => {
         const data = doc.data();
@@ -140,18 +131,17 @@ h1::before {
         }
       });
 
-      // ===== 5. Display Success Message =====
       if (latestOrder) {
-        msg.innerHTML = `
-          Thank you, <strong>${latestOrder.name}</strong>!<br/>
-          Your order total is <strong>₦${latestOrder.total.toLocaleString()}</strong>.<br/>
-          Payment Method: <strong>${latestOrder.paymentMethod}</strong>
-        `;
-      } else {
-        msg.textContent = "Your order was processed.";
-      }
+  setTimeout(() => {
+    msg.innerHTML = `
+      Thank you, <strong>${latestOrder.name}</strong>!<br>
+      Your order total is <strong>₦${latestOrder.total.toLocaleString()}</strong>.<br>
+      Payment Method: <strong>${latestOrder.paymentMethod}</strong>
+    `;
+  }, 60000); // Delay before showing real order info
+}
 
-      // ===== 6. Optionally Clear Cart =====
+      // Clear cart items
       const cartRef = db.collection("carts").doc(user.uid).collection("items");
       const cartSnapshot = await cartRef.get();
       const batch = db.batch();
@@ -164,5 +154,6 @@ h1::before {
     }
   });
 </script>
+
 </body>
 </html>

@@ -7,37 +7,100 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
   <style>
-    *{
-        font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+    * {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
     }
     @import url('https://fonts.googleapis.com/css2?family=Lora:wght@700&family=Montserrat:wght@500&display=swap');
+
+    /* Modal animations */
+    .modal-fade { animation: fadeIn 0.3s ease forwards; }
+    .modal-slide { animation: slideDown 0.35s ease forwards; transform: translateY(-20px); opacity: 0; }
+    @keyframes fadeIn { from {opacity:0;} to{opacity:1;} }
+    @keyframes slideDown { 0%{opacity:0; transform:translateY(-20px);} 100%{opacity:1; transform:translateY(0);} }
+
+    .modal {
+      position: fixed; top:0; left:0; width:100%; height:100%;
+      background: rgba(0,0,0,0.4); display:flex; justify-content:center; align-items:center;
+      opacity:0; pointer-events:none; transition:opacity 0.3s ease; z-index:1000;
+    }
+    .modal.show { opacity:1; pointer-events:auto; }
+    .modal-content {
+      background:#fff; padding:2rem; border-radius:0.5rem; text-align:center;
+      transform: translateY(-30px); transition: transform 0.3s ease;
+      min-width:280px; max-width:90%;
+    }
+    .modal.show .modal-content { transform: translateY(0); }
+
+    .close-btn {
+      margin-top:1rem; background:#f87171; color:#fff; border:none; padding:0.5rem 1rem;
+      border-radius:0.25rem; cursor:pointer; font-weight:bold; transition: background 0.2s ease;
+    }
+    .close-btn:hover { background:#ef4444; }
+
+    /* Success Modal */
+    #successModal div {
+      transform: scale(1);
+      opacity: 1;
+    }
+    #successModal {
+      background: rgba(255, 192, 203, 0.4);
+      transition: opacity 0.3s ease;
+    }
+    #successModal.hidden {
+      opacity: 0;
+      pointer-events: none;
+    }
   </style>
 </head>
-<body class="bg-gray-50 min-h-screen flex items-center justify-center p-4">
+<body class="min-h-screen flex items-center justify-center p-4
+             bg-gradient-to-br from-pink-200 via-pink-300 to-pink-400">
 
-  <!-- Notification Container -->
-  <div id="notification-container" class="fixed top-5 right-5 space-y-2 z-50"></div>
+  <!-- Success Modal -->
+  <div id="successModal" class="fixed inset-0 hidden z-50 flex items-center justify-center">
+    <div class="bg-white/90 backdrop-blur-md p-6 rounded-2xl shadow-2xl text-center transform scale-90 opacity-0 transition-all duration-300">
+      <h3 class="text-2xl font-bold text-pink-600 mb-4">Registration Successful 🎉</h3>
+      <p class="text-sm mb-4">Welcome to Pearl — Your journey to radiance begins!</p>
+    </div>
+  </div>
 
-  <div class="bg-white w-full max-w-md p-6 rounded-lg shadow-md">
-    <h2 class="text-2xl font-bold mb-4 text-center">Create Account</h2>
+  <!-- Error Modal -->
+  <div id="errorModal" class="modal hidden">
+    <div class="modal-content">
+      <h3 id="errorMessage">Something went wrong ❌</h3>
+      <button class="close-btn" onclick="closeErrorModal()">Okay</button>
+    </div>
+  </div>
+
+  <div class="bg-white/80 backdrop-blur-md w-full max-w-md p-6 rounded-2xl shadow-2xl">
+    <div class="flex justify-center my-4 mb-6">
+      <img class="w-28 h-20 rounded-full shadow-lg" src="https://res.cloudinary.com/dut2dpxuc/image/upload/v1764188839/e1232d47-ee66-47c9-97fa-b9b86232fb80_n35lqo.png" alt="">
+    </div>
+
+    <h2 class="text-3xl font-extrabold mb-3 text-center text-pink-600 drop-shadow-md">
+      Create Account
+    </h2>
+
+    <p class="text-sm font-medium text-center mb-4 bg-clip-text text-transparent bg-gradient-to-r from-pink-500 via-pink-400 to-pink-300 drop-shadow-sm">
+  Step Into Radiance — Welcome to Pearl, Home of Natural Beauty.
+</p>
 
     <form id="registerForm" class="space-y-4">
-      <input type="text" id="regName" placeholder="Full Name" class="w-full border p-3 rounded" required>
-      <input type="email" id="regEmail" placeholder="Email" class="w-full border p-3 rounded" required>
-      <!-- <input type="password" id="regPassword" placeholder="Password" class="w-full border p-3 rounded" required> -->
-       <div class="relative">
-  <input type="password" id="regPassword" placeholder="Password" class="border p-3 rounded w-full" required />
-  <i id="toggleRegPassword" class="fa-solid fa-eye text-gray-400 absolute right-3 top-2.5 cursor-pointer"></i>
-</div>
-      <input type="text" id="regPhone" placeholder="Phone Number" class="w-full border p-3 rounded">
-      <input type="text" id="regAddress" placeholder="Address" class="w-full border p-3 rounded">
+      <input type="text" id="regName" placeholder="Full Name" class="w-full border border-pink-300 p-3 rounded-lg focus:ring-2 focus:ring-pink-400 focus:outline-none" required>
+      <input type="email" id="regEmail" placeholder="Email" class="w-full border border-pink-300 p-3 rounded-lg focus:ring-2 focus:ring-pink-400 focus:outline-none" required>
+      <div class="relative">
+        <input type="password" id="regPassword" placeholder="Password" class="border border-pink-300 p-3 rounded-lg w-full focus:ring-2 focus:ring-pink-400 focus:outline-none" required />
+        <i id="toggleRegPassword" class="fa-solid fa-eye text-gray-400 absolute right-3 top-3 cursor-pointer"></i>
+      </div>
+      <input type="text" id="regPhone" placeholder="Phone Number" class="w-full border border-pink-300 p-3 rounded-lg focus:ring-2 focus:ring-pink-400 focus:outline-none">
+      <input type="text" id="regAddress" placeholder="Address" class="w-full border border-pink-300 p-3 rounded-lg focus:ring-2 focus:ring-pink-400 focus:outline-none">
 
-      <button type="submit" class="w-full bg-pink-600 text-white py-3 rounded-lg hover:bg-pink-700">
+      <button type="submit" id="registerBtn" class="w-full bg-pink-600 text-white py-3 rounded-xl hover:bg-pink-700 flex justify-center items-center transition-all duration-300 shadow-md hover:shadow-lg">
         <span id="registerBtnText">Register</span>
-        <svg id="registerSpinner" class="animate-spin h-5 w-5 ml-2 hidden text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
-  </svg>
+        <div id="registerLoader" class="hidden flex items-center gap-1 ml-2">
+          <div class="w-2 h-2 bg-white rounded-full animate-pulse"></div>
+          <div class="w-2 h-2 bg-white rounded-full animate-pulse delay-150"></div>
+          <div class="w-2 h-2 bg-white rounded-full animate-pulse delay-300"></div>
+        </div>
       </button>
     </form>
 
@@ -53,10 +116,11 @@
       Already have an account?
       <a href="login.html" class="text-pink-600">Login</a>
     </p>
+
+    <p class="text-sm font-[400] text-center mt-4">Back to 
+      <a href="index.html" class="text-pink-600 font-medium">Home</a>
+    </p>
   </div>
-
-</body>
-
 
   <!-- Firebase Scripts -->
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
@@ -64,138 +128,149 @@
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
 
   <script>
-  // ===== Notification System =====
-  function showNotification(message, type="info", duration=3000){
-    const container = document.getElementById("notification-container");
-    const notif = document.createElement("div");
-    notif.textContent = message;
-    notif.className = `px-4 py-2 rounded shadow text-white transition-transform transform opacity-0`;
-    if(type==="success") notif.classList.add("bg-green-500");
-    else if(type==="error") notif.classList.add("bg-red-500");
-    else if(type==="warning") notif.classList.add("bg-yellow-500 text-black");
-    else notif.classList.add("bg-blue-500");
-    container.appendChild(notif);
-    setTimeout(()=>notif.classList.add("opacity-100"),10);
-    setTimeout(()=>{notif.classList.remove("opacity-100"); setTimeout(()=>notif.remove(),300)},duration);
-  }
-
-  // ===== Firebase Config =====
-  const firebaseConfig = {
-    apiKey: "AIzaSyDdTPmpaIPWSDWOmR-fXgvAb7hoxZUawcc",
-    authDomain: "e-commerce-39c74.firebaseapp.com",
-    projectId: "e-commerce-39c74",
-    storageBucket: "e-commerce-39c74.firebasestorage.app",
-    messagingSenderId: "863375033754",
-    appId: "1:863375033754:web:7ba248c8dbb1566c83e623"
-  };
-  firebase.initializeApp(firebaseConfig);
-  const auth = firebase.auth();
-  const db = firebase.firestore();
-  const provider = new firebase.auth.GoogleAuthProvider();
-
-  // ===== Password Eye Toggle =====
-  const regPassword = document.getElementById("regPassword");
-  const toggleRegPassword = document.getElementById("toggleRegPassword");
-
-  toggleRegPassword.addEventListener("click", () => {
-    if (regPassword.type === "password") {
-      regPassword.type = "text";
-      toggleRegPassword.classList.replace("fa-eye", "fa-eye-slash");
-    } else {
-      regPassword.type = "password";
-      toggleRegPassword.classList.replace("fa-eye-slash", "fa-eye");
+    /* ===== Success / Error Modals ===== */
+    function showSuccessModal() {
+      const modal = document.getElementById("successModal");
+      if (!modal) return;
+      modal.classList.remove("hidden");
+      setTimeout(() => modal.querySelector('div').classList.add('show'), 1000);
     }
-  });
-
-  // ===== Email/Password Registration =====
-  const registerForm = document.getElementById("registerForm");
-  registerForm?.addEventListener("submit", async e=>{
-    e.preventDefault();
-    const name = document.getElementById("regName").value.trim();
-    const email = document.getElementById("regEmail").value.trim();
-    const password = document.getElementById("regPassword").value;
-    const phone = document.getElementById("regPhone").value.trim();
-    const address = document.getElementById("regAddress").value.trim();
-
-    try{
-      const userCredential = await auth.createUserWithEmailAndPassword(email,password);
-      const user = userCredential.user;
-      await user.updateProfile({ displayName: name });
-
-      // ===== Create user doc =====
-      await db.collection("users").doc(user.uid).set({
-        name: name,
-        email: email,
-        phone: phone || "",
-        address: address || "",
-        createdAt: firebase.firestore.FieldValue.serverTimestamp()
-      });
-
-      showNotification("Account created successfully!", "success");
-      window.location.href="login.html";
-    }catch(err){
-      console.error(err);
-      showNotification(err.message,"error");
+    function closeModal() {
+      const modal = document.getElementById("successModal");
+      if (!modal) return;
+      modal.querySelector('div').classList.remove('show');
+      setTimeout(() => modal.classList.add('hidden'), 300);
     }
-  });
-
-  // ===== Google Registration/Login =====
-  document.getElementById("googleLogin")?.addEventListener("click", async ()=>{
-    try{
-      const result = await auth.signInWithPopup(provider);
-      const user = result.user;
-
-      // ===== Merge with users collection =====
-      await db.collection("users").doc(user.uid).set({
-        name: user.displayName || "",
-        email: user.email,
-        phone: "",
-        address: "",
-        createdAt: firebase.firestore.FieldValue.serverTimestamp()
-      },{merge:true});
-
-      showNotification("Logged in as "+(user.displayName||user.email),"success");
-      window.location.href="index.html";
-    }catch(err){
-      console.error(err);
-      showNotification(err.message,"error");
+    function showErrorModal(message) {
+      const modal = document.getElementById("errorModal");
+      const errorMsg = document.getElementById("errorMessage");
+      if(modal && errorMsg){
+        errorMsg.textContent = message;
+        modal.classList.remove("hidden");
+      } else { alert(message); }
     }
-  });
-
-  // ===== Check Auth State (for pages that need user info) =====
-  firebase.auth().onAuthStateChanged(user=>{
-    if(user){
-      console.log("User logged in:", user.uid, user.displayName);
-      // You can set global state if needed:
-      window.currentUser = user;
-    }else{
-      console.log("No user logged in");
-      window.currentUser = null;
+    function closeErrorModal() {
+      const modal = document.getElementById("errorModal");
+      if(modal) modal.classList.add("hidden");
     }
-  });
 
-  // ===== Reload page if navigating back =====
-  window.addEventListener("pageshow", event=>{
-    if(event.persisted||(performance.navigation && performance.navigation.type===2)) 
-      window.location.reload();
-  });
+    /* ===== Register Button Loader ===== */
+    function setRegisterLoading(isLoading) {
+      const btn = document.getElementById("registerBtn");
+      const btnText = document.getElementById("registerBtnText");
+      const loader = document.getElementById("registerLoader");
+      if(isLoading){
+        btn.disabled = true;
+        btn.classList.add("cursor-not-allowed","opacity-70");
+        btnText.textContent = "Registering…";
+        loader.classList.remove("hidden");
+      } else {
+        btn.disabled = false;
+        btn.classList.remove("cursor-not-allowed","opacity-70");
+        btnText.textContent = "Register";
+        loader.classList.add("hidden");
+      }
+    }
 
-  // ===== Optional Helper: Current User Orders =====
-  async function getUserOrders(){
-    if(!auth.currentUser) return [];
-    const snap = await db.collection("orders")
-      .where("userId","==",auth.currentUser.uid)
-      .orderBy("timestamp","desc")
-      .get();
-    return snap.docs.map(d=>({id:d.id,...d.data()}));
-  }
+    /* ===== Firebase Config ===== */
+    const firebaseConfig = {
+      apiKey: "AIzaSyDdTPmpaIPWSDWOmR-fXgvAb7hoxZUawcc",
+      authDomain: "e-commerce-39c74.firebaseapp.com",
+      projectId: "e-commerce-39c74",
+      storageBucket: "e-commerce-39c74.firebasestorage.app",
+      messagingSenderId: "863375033754",
+      appId: "1:863375033754:web:7ba248c8dbb1566c83e623"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.firestore();
+    const provider = new firebase.auth.GoogleAuthProvider();
 
-  // ===== Optional Helper: User Cart =====
-  async function getUserCart(){
-    if(!auth.currentUser) return [];
-    const doc = await db.collection("carts").doc(auth.currentUser.uid).get();
-    return doc.exists ? doc.data().items || [] : [];
-  }
-</script>
+    /* ===== Password Eye Toggle ===== */
+    const regPassword = document.getElementById("regPassword");
+    const toggleRegPassword = document.getElementById("toggleRegPassword");
+    toggleRegPassword.addEventListener("click",()=>{
+      if(regPassword.type==="password"){
+        regPassword.type="text";
+        toggleRegPassword.classList.replace("fa-eye","fa-eye-slash");
+      } else {
+        regPassword.type="password";
+        toggleRegPassword.classList.replace("fa-eye-slash","fa-eye");
+      }
+    });
+
+    /* ===== Email/Password Registration ===== */
+    const registerForm = document.getElementById("registerForm");
+    registerForm?.addEventListener("submit", async e=>{
+      e.preventDefault();
+      const name = document.getElementById("regName").value.trim();
+      const email = document.getElementById("regEmail").value.trim();
+      const password = document.getElementById("regPassword").value;
+      const phone = document.getElementById("regPhone").value.trim();
+      const address = document.getElementById("regAddress").value.trim();
+
+      setRegisterLoading(true);
+
+      try{
+        const userCredential = await auth.createUserWithEmailAndPassword(email,password);
+        const user = userCredential.user;
+        await user.updateProfile({displayName:name});
+
+        await db.collection("users").doc(user.uid).set({
+          name,email,phone:phone||"",address:address||"",
+          createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+
+        setRegisterLoading(false);
+        showSuccessModal();
+        setTimeout(()=> window.location.href="login.html",1300);
+      } catch(err){
+        console.error(err);
+        setRegisterLoading(false);
+        showErrorModal(err.message);
+      }
+    });
+
+    /* ===== Google Registration/Login ===== */
+    document.getElementById("googleLogin")?.addEventListener("click", async ()=>{
+      try{
+        const result = await auth.signInWithPopup(provider);
+        const user = result.user;
+
+        await db.collection("users").doc(user.uid).set({
+          name: user.displayName||"", email:user.email, phone:"", address:"",
+          createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        },{merge:true});
+
+        showSuccessModal();
+        setTimeout(()=> window.location.href="index.html",1300);
+
+      } catch(err){
+        console.error(err);
+        showErrorModal(err.message);
+      }
+    });
+
+    /* ===== Auth State ===== */
+    firebase.auth().onAuthStateChanged(user=>{
+      window.currentUser = user||null;
+    });
+
+    /* ===== Reload on Back Navigation ===== */
+    window.addEventListener("pageshow", event=>{
+      if(event.persisted||(performance.navigation&&performance.navigation.type===2))
+        window.location.reload();
+    });
+
+    /* ===== Optional: Fetch Orders / Cart ===== */
+    async function getUserOrders(){ if(!auth.currentUser) return [];
+      const snap = await db.collection("orders").where("userId","==",auth.currentUser.uid).orderBy("timestamp","desc").get();
+      return snap.docs.map(d=>({id:d.id,...d.data()}));
+    }
+    async function getUserCart(){ if(!auth.currentUser) return [];
+      const doc = await db.collection("carts").doc(auth.currentUser.uid).get();
+      return doc.exists ? doc.data().items||[] : [];
+    }
+  </script>
 </body>
 </html>

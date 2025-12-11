@@ -34,21 +34,85 @@
     "Use natural products when possible to avoid irritation."
   ];
 
-  // ---------- UI Helpers ----------
-  function showNotification(message, type="info", duration=3000){
-    const container = document.getElementById("notification-container");
-    if(!container){ alert(message); return; }
-    const div = document.createElement("div");
-    div.textContent = message;
-    div.className="px-4 py-2 rounded shadow text-white transition-transform transform opacity-0";
-    if(type==="success") div.classList.add("bg-green-500");
-    else if(type==="error") div.classList.add("bg-red-500");
-    else if(type==="warning") div.classList.add("bg-yellow-500","text-black");
-    else div.classList.add("bg-blue-500");
-    container.appendChild(div);
-    requestAnimationFrame(()=> div.style.opacity = '1');
-    setTimeout(()=> { div.style.opacity = '0'; setTimeout(()=> div.remove(), 300); }, duration);
+  // ---------- NOTIFICATIONS ----------
+const activeNotifications = new Set();
+
+function showNotification(message, type="info", duration=3000){
+  const containerId = "notification-container";
+  let container = document.getElementById(containerId);
+
+  // Create container if missing
+  if(!container){
+    container = document.createElement("div");
+    container.id = containerId;
+    container.className = "fixed top-4 right-4 z-50 flex flex-col gap-2";
+    document.body.appendChild(container);
   }
+
+  // Prevent duplicate notifications
+  if(activeNotifications.has(message)) return;
+  activeNotifications.add(message);
+
+  // Create notification element
+  const notif = document.createElement("div");
+  notif.className = `
+    flex items-center justify-between gap-3 p-4 bg-white rounded-lg shadow-lg
+    border border-gray-200 min-w-[250px] max-w-sm
+    animate-slideIn
+  `;
+
+  // Icon based on type
+  const icon = document.createElement("span");
+  if(type==="success") icon.innerHTML=`<i class="fas fa-check-circle text-green-500 text-xl"></i>`;
+  else if(type==="error") icon.innerHTML=`<i class="fas fa-times-circle text-red-500 text-xl"></i>`;
+  else if(type==="warning") icon.innerHTML=`<i class="fas fa-exclamation-triangle text-yellow-500 text-xl"></i>`;
+  else icon.innerHTML=`<i class="fas fa-info-circle text-blue-500 text-xl"></i>`;
+
+  // Message
+  const text = document.createElement("span");
+  text.className="flex-1 text-gray-800 font-medium";
+  text.textContent = message;
+
+  // Close button
+  const closeBtn = document.createElement("button");
+  closeBtn.innerHTML = "&times;";
+  closeBtn.className = "ml-4 text-gray-400 hover:text-gray-600 font-bold text-lg";
+  closeBtn.onclick = () => removeNotification(notif, message);
+
+  notif.appendChild(icon);
+  notif.appendChild(text);
+  notif.appendChild(closeBtn);
+  container.appendChild(notif);
+
+  // Auto-remove
+  setTimeout(()=> removeNotification(notif, message), duration);
+}
+
+// Remove notification with slide-out
+function removeNotification(notif, message){
+  if(!notif) return;
+  notif.classList.remove("animate-slideIn");
+  notif.classList.add("animate-slideOut");
+  notif.addEventListener("animationend", ()=> notif.remove());
+  activeNotifications.delete(message);
+}
+
+// ---------- NOTIFICATION STYLES ----------
+const style = document.createElement("style");
+style.textContent = `
+@keyframes slideIn {
+  from { opacity: 0; transform: translateX(50px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+.animate-slideIn { animation: slideIn 0.3s ease-out forwards; }
+
+@keyframes slideOut {
+  from { opacity: 1; transform: translateX(0); }
+  to { opacity: 0; transform: translateX(50px); }
+}
+.animate-slideOut { animation: slideOut 0.3s ease-in forwards; }
+`;
+document.head.appendChild(style);
 
   function rotateTipsFade(){
     const el = document.getElementById("skinTip");
@@ -70,12 +134,23 @@
   }
 
   // ---------- Header Scroll ----------
-  const header = document.getElementById("mainHeader");
-  window.addEventListener("scroll",()=>{
-    if(!header) return;
-    if(window.scrollY>50){ header.classList.remove("bg-white"); header.classList.add("bg-pink-100"); }
-    else { header.classList.remove("bg-pink-100"); header.classList.add("bg-white"); }
-  });
+const header = document.getElementById("mainHeader");
+
+window.addEventListener("scroll", () => {
+  if (!header) return;
+
+  if (window.scrollY > 50) {
+    // Remove white background
+    header.classList.remove("bg-white");
+    // Add gradient classes individually
+    header.classList.add("bg-gradient-to-r", "from-[#fbcfe8]", "to-[#f9a8d4]");
+  } else {
+    // Remove gradient classes individually
+    header.classList.remove("bg-gradient-to-r", "from-[#fbcfe8]", "to-[#f9a8d4]");
+    // Add white background
+    header.classList.add("bg-white");
+  }
+});
 
   // ---------- PRODUCTS ----------
   async function filterProducts(category="All"){
@@ -425,32 +500,44 @@ toggleLoginPassword.addEventListener("click", () => {
   function escapeHtml(text){ if(text==null) return ''; return String(text).replace(/[&<>"']/g, m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
   function showLoader(el){ if(!el) return null; const original=el.innerHTML; el.disabled=true; el.innerHTML=`<span class="animate-spin border-2 border-white border-t-transparent rounded-full w-4 h-4 inline-block mr-2"></span> Loading...`; return ()=>{ el.disabled=false; el.innerHTML=original; }; }
 
-  const menuToggle = document.getElementById("menuToggle");
+  // Hamburger Menu
+const menuToggle = document.getElementById("menuToggle");
 const mobileMenu = document.getElementById("mobileMenu");
 const menuOverlay = document.getElementById("menuOverlay");
 const closeMenu = document.getElementById("closeMenu");
+
+let scrollPosition = 0;
 
 function openMenu() {
     mobileMenu.classList.remove("-translate-x-full");
     mobileMenu.classList.add("translate-x-0");
     menuOverlay.classList.remove("hidden");
+
+    // Disable background scroll
+    scrollPosition = window.scrollY;
+    document.body.style.position = "fixed";
+    document.body.style.top = `-${scrollPosition}px`;
+    document.body.style.left = "0";
+    document.body.style.right = "0";
+    document.body.style.overflow = "hidden";
 }
 
 function closeMenuFunc() {
     mobileMenu.classList.remove("translate-x-0");
     mobileMenu.classList.add("-translate-x-full");
     menuOverlay.classList.add("hidden");
+
+    // Enable background scroll
+    document.body.style.position = "";
+    document.body.style.top = "";
+    document.body.style.left = "";
+    document.body.style.right = "";
+    document.body.style.overflow = "";
+    window.scrollTo(0, scrollPosition); // Restore scroll
 }
 
 menuToggle.addEventListener("click", openMenu);
 closeMenu.addEventListener("click", closeMenuFunc);
 menuOverlay.addEventListener("click", closeMenuFunc);
-
-  // // ---------- MOBILE MENU ----------
-  // const menuToggle = document.getElementById("menuToggle");
-  // const mobileMenu = document.getElementById("mobileMenu");
-  // if(menuToggle && mobileMenu){
-  //     menuToggle.addEventListener("click", ()=>{ mobileMenu.classList.toggle("hidden"); });
-  // }
 
 })();
