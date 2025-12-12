@@ -24,9 +24,9 @@
       }
 
       /* Cart item layout vertical */
-      .cart-item {
+      /* .cart-item {
         @apply flex flex-col items-start gap-3 !important;
-      }
+      } */
 
       .cart-img {
         width: 64px !important;
@@ -79,7 +79,7 @@
   <!-- Notification Container -->
 <div id="notification-container" class="fixed top-4 right-4 z-50 flex flex-col gap-2"></div>
 
-  <header class="bg-gradient-to-r from-[#fbcfe8] to-[#f9a8d4] p-4 shadow-md flex justify-between items-center">
+  <header class="bg-gradient-to-r from-[#fbcfe8] to-[#f9a8d4] fixed top-0 w-full p-4 shadow-md flex justify-between items-center z-50">
     <button onclick="history.back()">
       <h1 class="text-xl font-bold">🛒 My Cart</h1>
     </button>
@@ -91,7 +91,7 @@
     </button>
   </header>
 
-  <main class="p-6 max-w-4xl mx-auto">
+  <main class="p-6 max-w-4xl mx-auto mt-16">
     <!-- Cart Skeletons (hidden by default) -->
     <div id="cartSkeleton" class="space-y-4">
       <div class="flex items-center justify-between bg-white p-4 rounded shadow animate-pulse cart-item">

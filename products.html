@@ -501,50 +501,114 @@ document.head.appendChild(style);
     else loadMoreText.textContent="Load More";
   }
 
-  // ---------- Modal ----------
+  // // ---------- Modal ----------
   function openProductModal(id){
-    const product = filteredProducts.find(p=>p.id===id)||allProducts.find(p=>p.id===id);
-    if(!product) return;
+  const product = filteredProducts.find(p => p.id === id) || allProducts.find(p => p.id === id);
+  if(!product) return;
 
-    modalContent.innerHTML=`
-      <div class="bg-white rounded-lg shadow-xl max-w-3xl w-full mx-4 md:mx-0 overflow-hidden">
-        <div class="flex justify-between items-center p-4 border-b">
-          <h3 class="text-lg font-semibold">${product.name||""}</h3>
-          <button id="closeModalBtn" class="text-gray-700 text-xl px-2">✕</button>
+  modalContent.innerHTML=`
+    <div class="bg-white rounded-lg shadow-xl max-w-3xl w-full mx-4 md:mx-0 overflow-hidden relative">
+      <div class="flex justify-between items-center p-4 border-b">
+        <h3 class="text-lg font-semibold">${product.name||""}</h3>
+        <button id="closeModalBtn" class="text-gray-700 text-xl px-2">✕</button>
+      </div>
+      <div class="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div class="flex items-center justify-center">
+          <img src="${product.image||'https://via.placeholder.com/300'}" alt="${product.name||''}" class="max-h-80 object-contain"/>
         </div>
-        <div class="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div class="flex items-center justify-center">
-            <img src="${product.image||'https://via.placeholder.com/300'}" alt="${product.name||''}" class="max-h-80 object-contain"/>
-          </div>
-          <div>
-            <p class="text-pink-500 font-bold text-2xl mb-2">₦${(product.price||0).toLocaleString()}</p>
-            <p class="text-sm text-gray-700 mb-4">${product.description||''}</p>
-            <div class="space-x-2">
-              <button id="modalAddToCartBtn" class="px-4 py-2 bg-pink-600 text-white rounded">Add to Cart</button>
-              <button id="buyNowBtn" class="px-4 py-2 border rounded">Buy Now</button>
-            </div>
+        <div>
+          <p class="text-pink-500 font-bold text-2xl mb-2">₦${(product.price||0).toLocaleString()}</p>
+          <p class="text-sm text-gray-700 mb-4">${product.description||''}</p>
+          <div class="space-x-2">
+            <button id="modalAddToCartBtn" class="px-4 py-2 bg-pink-600 text-white rounded">Add to Cart</button>
+            <button id="buyNowBtn" class="px-4 py-2 border rounded">Buy Now</button>
           </div>
         </div>
       </div>
-    `;
-    productModal.classList.remove("hidden");
+    </div>
+  `;
 
-    document.getElementById("closeModalBtn").onclick = ()=>productModal.classList.add("hidden");
+  // Show modal
+  productModal.classList.remove("hidden");
 
-    document.getElementById("modalAddToCartBtn").onclick = async ()=>{
-      showButtonSpinner(document.getElementById("modalAddToCartBtn"),true);
-      await addToCartFromPage(product);
-      showButtonSpinner(document.getElementById("modalAddToCartBtn"),false);
-      productModal.classList.add("hidden");
-    };
+  // Disable background scroll
+  document.body.style.overflow = "hidden";
 
-    document.getElementById("buyNowBtn").onclick = async ()=>{
-      showButtonSpinner(document.getElementById("buyNowBtn"),true);
-      await addToCartFromPage(product);
-      showButtonSpinner(document.getElementById("buyNowBtn"),false);
-      window.location.href="cart.html";
-    };
+  // Close modal function
+  function closeModal(){
+    productModal.classList.add("hidden");
+    document.body.style.overflow = ""; // re-enable scroll
   }
+
+  // Close button
+  document.getElementById("closeModalBtn").onclick = closeModal;
+
+  // Close modal on clicking outside content
+  productModal.addEventListener("click", e => {
+    if(e.target === productModal) closeModal();
+  });
+
+  // Add to Cart button
+  document.getElementById("modalAddToCartBtn").onclick = async ()=>{
+    showButtonSpinner(document.getElementById("modalAddToCartBtn"), true);
+    await addToCartFromPage(product);
+    showButtonSpinner(document.getElementById("modalAddToCartBtn"), false);
+    closeModal();
+  };
+
+  // Buy Now button
+  document.getElementById("buyNowBtn").onclick = async ()=>{
+    showButtonSpinner(document.getElementById("buyNowBtn"), true);
+    await addToCartFromPage(product);
+    showButtonSpinner(document.getElementById("buyNowBtn"), false);
+    closeModal();
+    window.location.href="cart.html";
+  };
+}
+
+  // function openProductModal(id){
+  //   const product = filteredProducts.find(p=>p.id===id)||allProducts.find(p=>p.id===id);
+  //   if(!product) return;
+
+  //   modalContent.innerHTML=`
+  //     <div class="bg-white rounded-lg shadow-xl max-w-3xl w-full mx-4 md:mx-0 overflow-hidden">
+  //       <div class="flex justify-between items-center p-4 border-b">
+  //         <h3 class="text-lg font-semibold">${product.name||""}</h3>
+  //         <button id="closeModalBtn" class="text-gray-700 text-xl px-2">✕</button>
+  //       </div>
+  //       <div class="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+  //         <div class="flex items-center justify-center">
+  //           <img src="${product.image||'https://via.placeholder.com/300'}" alt="${product.name||''}" class="max-h-80 object-contain"/>
+  //         </div>
+  //         <div>
+  //           <p class="text-pink-500 font-bold text-2xl mb-2">₦${(product.price||0).toLocaleString()}</p>
+  //           <p class="text-sm text-gray-700 mb-4">${product.description||''}</p>
+  //           <div class="space-x-2">
+  //             <button id="modalAddToCartBtn" class="px-4 py-2 bg-pink-600 text-white rounded">Add to Cart</button>
+  //             <button id="buyNowBtn" class="px-4 py-2 border rounded">Buy Now</button>
+  //           </div>
+  //         </div>
+  //       </div>
+  //     </div>
+  //   `;
+  //   productModal.classList.remove("hidden");
+
+  //   document.getElementById("closeModalBtn").onclick = ()=>productModal.classList.add("hidden");
+
+  //   document.getElementById("modalAddToCartBtn").onclick = async ()=>{
+  //     showButtonSpinner(document.getElementById("modalAddToCartBtn"),true);
+  //     await addToCartFromPage(product);
+  //     showButtonSpinner(document.getElementById("modalAddToCartBtn"),false);
+  //     productModal.classList.add("hidden");
+  //   };
+
+  //   document.getElementById("buyNowBtn").onclick = async ()=>{
+  //     showButtonSpinner(document.getElementById("buyNowBtn"),true);
+  //     await addToCartFromPage(product);
+  //     showButtonSpinner(document.getElementById("buyNowBtn"),false);
+  //     window.location.href="cart.html";
+  //   };
+  // }
 
   productModal.addEventListener("click",e=>{
     if(e.target===productModal) productModal.classList.add("hidden");

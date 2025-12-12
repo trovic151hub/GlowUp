@@ -50,26 +50,42 @@
       opacity: 0;
       pointer-events: none;
     }
+    .modal-wrapper {
+    opacity: 0;
+    transform: translateY(-20px);
+    transition: all .3s ease-out;
+  }
+  .modal-wrapper.show {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  /* Disable scroll when modal is open */
+  body.modal-open {
+    overflow: hidden;
+  }
   </style>
 </head>
 <body class="min-h-screen flex items-center justify-center p-4
              bg-gradient-to-br from-pink-200 via-pink-300 to-pink-400">
 
   <!-- Success Modal -->
-  <div id="successModal" class="fixed inset-0 hidden z-50 flex items-center justify-center">
-    <div class="bg-white/90 backdrop-blur-md p-6 rounded-2xl shadow-2xl text-center transform scale-90 opacity-0 transition-all duration-300">
-      <h3 class="text-2xl font-bold text-pink-600 mb-4">Registration Successful 🎉</h3>
-      <p class="text-sm mb-4">Welcome to Pearl — Your journey to radiance begins!</p>
-    </div>
+   <div id="successModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+  <div class="modal-wrapper bg-white p-6 rounded-xl shadow-xl text-center w-80">
+      <h2 class="text-xl font-bold text-green-600">Success!</h2>
+      <p class="mt-2">Your account has been created</p>
+      <!-- <button onclick="closeModal()" class="mt-4 bg-pink-600 text-white px-4 py-2 rounded">OK</button> -->
   </div>
+</div>
 
   <!-- Error Modal -->
-  <div id="errorModal" class="modal hidden">
-    <div class="modal-content">
-      <h3 id="errorMessage">Something went wrong ❌</h3>
-      <button class="close-btn" onclick="closeErrorModal()">Okay</button>
-    </div>
+   <div id="errorModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+  <div class="modal-wrapper bg-white p-6 rounded-xl shadow-xl text-center w-80">
+      <h2 class="text-xl font-bold text-red-600">Error</h2>
+      <p id="errorMessage" class="mt-2"></p>
+      <!-- <button onclick="closeErrorModal()" class="mt-4 bg-gray-600 text-white px-4 py-2 rounded">Close</button> -->
   </div>
+</div>
 
   <div class="bg-white/80 backdrop-blur-md w-full max-w-md p-6 rounded-2xl shadow-2xl">
     <div class="flex justify-center my-4 mb-6">
@@ -129,30 +145,83 @@
 
   <script>
     /* ===== Success / Error Modals ===== */
-    function showSuccessModal() {
-      const modal = document.getElementById("successModal");
-      if (!modal) return;
-      modal.classList.remove("hidden");
-      setTimeout(() => modal.querySelector('div').classList.add('show'), 1000);
-    }
-    function closeModal() {
-      const modal = document.getElementById("successModal");
-      if (!modal) return;
-      modal.querySelector('div').classList.remove('show');
-      setTimeout(() => modal.classList.add('hidden'), 300);
-    }
-    function showErrorModal(message) {
-      const modal = document.getElementById("errorModal");
-      const errorMsg = document.getElementById("errorMessage");
-      if(modal && errorMsg){
-        errorMsg.textContent = message;
-        modal.classList.remove("hidden");
-      } else { alert(message); }
-    }
-    function closeErrorModal() {
-      const modal = document.getElementById("errorModal");
-      if(modal) modal.classList.add("hidden");
-    }
+function showSuccessModal() {
+  const modal = document.getElementById("successModal");
+  if (!modal) return;
+
+  document.body.classList.add("modal-open"); // disable scroll
+  modal.classList.remove("hidden");
+
+  setTimeout(() => {
+    modal.querySelector(".modal-wrapper").classList.add("show");
+  }, 10);
+}
+
+function closeModal() {
+  const modal = document.getElementById("successModal");
+  if (!modal) return;
+
+  modal.querySelector(".modal-wrapper").classList.remove("show");
+
+  setTimeout(() => {
+    modal.classList.add("hidden");
+    document.body.classList.remove("modal-open");
+  }, 300);
+}
+
+function showErrorModal(message) {
+  const modal = document.getElementById("errorModal");
+  const text = document.getElementById("errorMessage");
+
+  if (!modal || !text) return alert(message);
+
+  text.textContent = message;
+
+  document.body.classList.add("modal-open"); // disable scroll
+  modal.classList.remove("hidden");
+
+  setTimeout(() => {
+    modal.querySelector(".modal-wrapper").classList.add("show");
+  }, 10);
+}
+
+function closeErrorModal() {
+  const modal = document.getElementById("errorModal");
+  if (!modal) return;
+
+  modal.querySelector(".modal-wrapper").classList.remove("show");
+
+  setTimeout(() => {
+    modal.classList.add("hidden");
+    document.body.classList.remove("modal-open");
+  }, 300);
+}
+
+    // /* ===== Success / Error Modals ===== */
+    // function showSuccessModal() {
+    //   const modal = document.getElementById("successModal");
+    //   if (!modal) return;
+    //   modal.classList.remove("hidden");
+    //   setTimeout(() => modal.querySelector('div').classList.add('show'), 1000);
+    // }
+    // function closeModal() {
+    //   const modal = document.getElementById("successModal");
+    //   if (!modal) return;
+    //   modal.querySelector('div').classList.remove('show');
+    //   setTimeout(() => modal.classList.add('hidden'), 300);
+    // }
+    // function showErrorModal(message) {
+    //   const modal = document.getElementById("errorModal");
+    //   const errorMsg = document.getElementById("errorMessage");
+    //   if(modal && errorMsg){
+    //     errorMsg.textContent = message;
+    //     modal.classList.remove("hidden");
+    //   } else { alert(message); }
+    // }
+    // function closeErrorModal() {
+    //   const modal = document.getElementById("errorModal");
+    //   if(modal) modal.classList.add("hidden");
+    // }
 
     /* ===== Register Button Loader ===== */
     function setRegisterLoading(isLoading) {
@@ -222,13 +291,37 @@
         });
 
         setRegisterLoading(false);
-        showSuccessModal();
-        setTimeout(()=> window.location.href="login.html",1300);
-      } catch(err){
-        console.error(err);
-        setRegisterLoading(false);
-        showErrorModal(err.message);
-      }
+showSuccessModal();
+
+setTimeout(() => window.location.href = "login.html", 1300);
+
+} catch (err) {
+  console.error(err);
+  setRegisterLoading(false);
+
+  // --- Friendly Firebase Error Messages ---
+  if (err.code === "auth/email-already-in-use") {
+    showErrorModal("This email is already registered. Try logging in.");
+  } 
+  else if (err.code === "auth/invalid-email") {
+    showErrorModal("Invalid email format.");
+  } 
+  else if (err.code === "auth/weak-password") {
+    showErrorModal("Password is too weak. Use a stronger one.");
+  } 
+  else {
+    showErrorModal("Registration failed. Please try again.");
+  }
+}
+
+      //   setRegisterLoading(false);
+      //   showSuccessModal();
+      //   setTimeout(()=> window.location.href="login.html",1300);
+      // } catch(err){
+      //   console.error(err);
+      //   setRegisterLoading(false);
+      //   showErrorModal(err.message);
+      // }
     });
 
     /* ===== Google Registration/Login ===== */

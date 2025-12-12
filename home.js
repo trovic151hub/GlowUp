@@ -260,56 +260,48 @@ productList.querySelectorAll('.add-btn').forEach(btn=>{
     } else if(existing) existing.remove();
   }
 
-  // ---------- VIEW PRODUCT MODAL ----------
-function viewProduct(productId){
+  function viewProduct(productId){
   const product = currentProducts.find(p=>p.id===productId);
   if(!product) return showNotification("Product not found","error");
 
   let modal = document.getElementById("productModal");
 
-if(!modal){
-    modal = document.createElement("div");
-    modal.id = "productModal";
-    modal.className = "fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden";
-    document.body.appendChild(modal);
-}
+  if(!modal){
+      modal = document.createElement("div");
+      modal.id = "productModal";
+      modal.className = "fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden";
+      document.body.appendChild(modal);
+  }
 
-/* Always update the inner HTML so new buttons show */
-modal.innerHTML = `
-  <div class="bg-white rounded-lg p-6 max-w-lg w-full relative">
-    <button id="closeProductModal" class="absolute top-2 right-2 text-gray-500 hover:text-gray-800">&times;</button>
-    <img id="modalProductImage" src="" class="w-full h-64 object-cover mb-4 rounded">
-    <h2 id="modalProductName" class="text-xl font-bold mb-2"></h2>
-    <p id="modalProductPrice" class="text-pink-500 font-semibold mb-4"></p>
-    <p id="modalProductDescription" class="text-gray-700 mb-4"></p>
+  modal.innerHTML = `
+    <div class="bg-white rounded-lg p-6 max-w-lg w-full relative">
+      <button id="closeProductModal" class="absolute top-2 right-2 text-gray-500 hover:text-gray-800">&times;</button>
+      <img id="modalProductImage" src="" class="w-full h-64 object-cover mb-4 rounded">
+      <h2 id="modalProductName" class="text-xl font-bold mb-2"></h2>
+      <p id="modalProductPrice" class="text-pink-500 font-semibold mb-4"></p>
+      <p id="modalProductDescription" class="text-gray-700 mb-4"></p>
 
-    <button id="modalAddToCartBtn"
-      class="w-full mb-2 px-4 py-2 bg-pink-600 text-white rounded hover:bg-pink-700">
-      Add to Cart
-    </button>
+      <button id="modalAddToCartBtn"
+        class="w-full mb-2 px-4 py-2 bg-pink-600 text-white rounded hover:bg-pink-700">
+        Add to Cart
+      </button>
 
-    <button id="buyNowBtn"
-      class="w-full px-4 py-2 border rounded hover:bg-gray-100">
-      Buy Now
-    </button>
-  </div>
-`;
+      <button id="buyNowBtn"
+        class="w-full px-4 py-2 border rounded hover:bg-gray-100">
+        Buy Now
+      </button>
+    </div>
+  `;
 
-/* Close button */
-modal.querySelector("#closeProductModal").onclick = () => {
-    modal.classList.add("hidden");
-};
   // --- Populate modal content ---
   document.getElementById("modalProductImage").src = product.image || 'https://via.placeholder.com/300x200?text=No+Image';
   document.getElementById("modalProductName").textContent = product.name || "Untitled";
   document.getElementById("modalProductPrice").textContent = `₦${Number(product.price||0).toLocaleString()}`;
   document.getElementById("modalProductDescription").textContent = product.description || "No description available.";
 
-  // --- IMPORTANT: Select buttons after modal is in DOM ---
   const addBtn = modal.querySelector("#modalAddToCartBtn");
   const buyBtn = modal.querySelector("#buyNowBtn");
 
-  // Add to Cart Button
   if(addBtn){
     addBtn.onclick = async ()=>{
       const reset = showButtonLoader(addBtn);
@@ -318,29 +310,31 @@ modal.querySelector("#closeProductModal").onclick = () => {
     };
   }
 
-  // Buy Now Button
   if(buyBtn){
     buyBtn.onclick = async ()=>{
       const reset = showButtonLoader(buyBtn);
-
-      // Add to cart first
       await window.addToCart(product.id);
-
       reset && reset();
-
-      // Open cart page instantly
       window.location.href = "cart.html";
     };
   }
 
+  // --- Show modal and disable background ---
   modal.classList.remove("hidden");
-}
+  document.body.style.overflow = "hidden"; // prevent scrolling
+  modal.addEventListener("click", (e)=>{
+    if(e.target === modal){ // click outside modal content closes it
+      closeModal();
+    }
+  });
 
-  window.viewProduct = viewProduct;
+  // --- Close button handler ---
+  modal.querySelector("#closeProductModal").onclick = closeModal;
 
-  window.closeModal = function(){ 
-  const m=document.getElementById("productModal"); 
-  if(m) m.classList.add("hidden"); 
+  function closeModal(){
+    modal.classList.add("hidden");
+    document.body.style.overflow = ""; // re-enable scroll
+  }
 }
 
   // ---------- BUTTON LOADER ----------
@@ -487,8 +481,54 @@ toggleLoginPassword.addEventListener("click", () => {
 });
 
   // ---------- GOOGLE LOGIN ----------
-  const googleLogin = document.getElementById("googleLogin");
-  if(googleLogin) googleLogin.disabled = true;
+const googleLoginBtn = document.getElementById("googleLogin");
+if (googleLoginBtn) {
+  googleLoginBtn.disabled = false; // enable button
+
+  googleLoginBtn.addEventListener("click", async () => {
+    googleLoginBtn.disabled = true;
+    googleLoginBtn.innerHTML = `
+      <span class="loader w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></span>
+      Redirecting...
+    `;
+
+    const provider = new firebase.auth.GoogleAuthProvider();
+
+    try {
+      const result = await firebase.auth().signInWithPopup(provider);
+      const user = result.user;
+
+      // Optional: save/update user in Firestore
+      const userRef = firebase.firestore().collection("users").doc(user.uid);
+      await userRef.set(
+        {
+          name: user.displayName || "",
+          email: user.email || "",
+          photoURL: user.photoURL || "",
+          lastLogin: firebase.firestore.FieldValue.serverTimestamp()
+        },
+        { merge: true }
+      );
+
+      // Hide login modal
+      const loginModal = document.getElementById("loginModal");
+      if (loginModal) loginModal.classList.add("hidden");
+
+      // Show success notification
+      showNotification(`Welcome ${user.displayName || "User"}!`, "success", 4000);
+
+    } catch (err) {
+      console.error("Google Sign-In error:", err);
+      showNotification("Google login failed. Try again.", "error", 4000);
+    } finally {
+      googleLoginBtn.disabled = false;
+      googleLoginBtn.innerHTML = `
+        <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" class="w-6 h-6 mr-2" />
+        Continue with Google
+      `;
+    }
+  });
+}
 
   // ---------- INITIAL LOAD ----------
   rotateTipsFade();
