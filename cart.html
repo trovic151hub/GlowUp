@@ -291,82 +291,227 @@ document.head.appendChild(style);
   }
 
   // Render cart
-  function renderCart(items = []){
-    if (!cartContainer) return;
+  function renderCart(items = []) {
+  if (!cartContainer) return;
 
-    cartContainer.innerHTML = "";
-    let total = 0;
+  cartContainer.innerHTML = "";
+  let total = 0;
 
-    if (!currentUser || items.length === 0) {
-      cartContainer.innerHTML = `<p class="text-center text-gray-500">Your cart is empty.</p>`;
-      if (totalSpan) totalSpan.textContent = "0";
-      if (checkoutBtn) {
-        checkoutBtn.disabled = true;
-        checkoutBtn.classList.add("opacity-50","cursor-not-allowed");
-      }
-      return;
-    }
-
-    items.forEach(it => {
-      const lineTotal = (it.price || 0) * (it.quantity || 0);
-      total += lineTotal;
-
-      // Create card
-      const div = document.createElement("div");
-      div.className = "flex items-center justify-between bg-white p-4 rounded shadow mb-3";
-
-      // Use safe fallback values
-      const imgSrc = it.image || 'https://via.placeholder.com/64';
-      const name = escapeHtml(it.name || 'Item');
-      const priceText = `₦${Number(it.price || 0).toLocaleString()}`;
-
-      div.innerHTML = `
-        <div class="flex items-center gap-4">
-          <img src="${imgSrc}" class="w-16 h-16 object-cover rounded" alt="${name}">
-          <div>
-            <h4 class="font-semibold">${name}</h4>
-            <p class="text-pink-500 font-bold">${priceText}</p>
-          </div>
-        </div>
-        <div class="flex items-center gap-2">
-          <button data-action="minus" data-id="${it.docId}" class="px-2 bg-gray-200 flex items-center justify-center gap-1">
-            <span>−</span>
-            <svg data-spinner="minus-${it.docId}" class="w-4 h-4 text-pink-500 animate-spin hidden" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path></svg>
-          </button>
-          <span class="w-8 text-center" id="qty-${it.docId}">${it.quantity}</span>
-          <button data-action="plus" data-id="${it.docId}" class="px-2 bg-gray-200 flex items-center justify-center gap-1">
-            <span>+</span>
-            <svg data-spinner="plus-${it.docId}" class="w-4 h-4 text-pink-500 animate-spin hidden" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path></svg>
-          </button>
-        </div>
-        <div class="text-right">
-          <p class="font-semibold">₦${lineTotal.toLocaleString()}</p>
-          <button data-action="remove" data-id="${it.docId}" class="text-red-600 text-sm flex items-center gap-1 hover:underline">
-            <span>Remove</span>
-            <svg data-spinner="remove-${it.docId}" class="w-4 h-4 text-pink-500 animate-spin hidden" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path></svg>
-          </button>
-        </div>
-      `;
-
-      cartContainer.appendChild(div);
-
-      // wire up controls
-      const minusBtn = div.querySelector('button[data-action="minus"]');
-      const plusBtn  = div.querySelector('button[data-action="plus"]');
-      const removeBtn= div.querySelector('button[data-action="remove"]');
-
-      minusBtn && (minusBtn.onclick = () => updateQtyWithSpinner(it.docId, -1, `minus-${it.docId}`));
-      plusBtn  && (plusBtn.onclick  = () => updateQtyWithSpinner(it.docId,  1, `plus-${it.docId}`));
-      removeBtn&& (removeBtn.onclick= () => removeWithSpinner(it.docId, `remove-${it.docId}`));
-    });
-
-    // Update subtotal & checkout state
-    if (totalSpan) totalSpan.textContent = total.toLocaleString();
+  if (!currentUser || items.length === 0) {
+    cartContainer.innerHTML = `<p class="text-center text-gray-500">Your cart is empty.</p>`;
+    if (totalSpan) totalSpan.textContent = "0";
     if (checkoutBtn) {
-      checkoutBtn.disabled = false;
-      checkoutBtn.classList.remove("opacity-50","cursor-not-allowed");
+      checkoutBtn.disabled = true;
+      checkoutBtn.classList.add("opacity-50", "cursor-not-allowed");
     }
+    return;
   }
+
+  items.forEach(it => {
+    const quantity = it.quantity || 0;
+    const price = it.price || 0;
+    const originalPrice = it.originalPrice || null;
+    const lineTotal = price * quantity;
+    total += lineTotal;
+
+    const div = document.createElement("div");
+    div.className = "flex flex-col bg-white p-4 rounded shadow mb-3 cart-item";
+
+    div.innerHTML = `
+      <!-- Image + description -->
+      <div class="flex items-start gap-4">
+        <img src="${it.image || 'https://via.placeholder.com/64'}"
+             class="w-24 h-24 object-cover rounded cart-img"
+             alt="${escapeHtml(it.name)}">
+
+        <div class="flex-1 space-y-1">
+          <div class="font-medium text-gray-900">${escapeHtml(it.name)}</div>
+          ${it.description
+            ? `<div class="text-gray-500 text-sm">${escapeHtml(it.description)}</div>`
+            : ''}
+        </div>
+      </div>
+
+      <!-- Price (no accumulation, just actual price × quantity display) -->
+      <div class="mt-2 text-pink-500 font-bold">
+        ₦${lineTotal.toLocaleString()} (${quantity})
+      </div>
+
+      ${originalPrice
+        ? `<div class="line-through text-gray-400 text-sm">₦${originalPrice.toLocaleString()}</div>`
+        : ''}
+
+      <!-- Actions -->
+      <div class="mt-4 flex items-center justify-between">
+        <button data-action="delete" data-id="${it.docId}"
+                class="text-red-600 flex items-center gap-1">
+          <i class="fas fa-trash-alt"></i> Delete
+        </button>
+
+        <div class="flex items-center gap-2">
+          <button data-action="minus" data-id="${it.docId}"
+                  class="bg-blue-500 text-white rounded-full w-6 h-6 flex items-center justify-center">−</button>
+
+          <span id="qty-${it.docId}" class="w-6 text-center">${quantity}</span>
+
+          <button data-action="plus" data-id="${it.docId}"
+                  class="bg-blue-500 text-white rounded-full w-6 h-6 flex items-center justify-center">+</button>
+        </div>
+      </div>
+    `;
+
+    cartContainer.appendChild(div);
+
+    // Buttons
+    const plusBtn = div.querySelector('button[data-action="plus"]');
+    const minusBtn = div.querySelector('button[data-action="minus"]');
+    const deleteBtn = div.querySelector('button[data-action="delete"]');
+    const qtySpan = div.querySelector(`#qty-${it.docId}`);
+
+    // Disable minus if qty = 1
+    if (quantity <= 1) {
+      minusBtn.disabled = true;
+      minusBtn.classList.add("opacity-50", "cursor-not-allowed");
+    }
+
+    // ==== PLUS BUTTON ====
+plusBtn.onclick = async () => {
+  plusBtn.disabled = true;
+
+  await Promise.resolve(updateQtyWithSpinner(it.docId, 1));
+
+  plusBtn.disabled = false;
+
+  // Smooth visual update
+  div.classList.add("fade-update");
+  setTimeout(() => div.classList.remove("fade-update"), 300);
+
+  // 🔔 Notification
+  showNotification("Item Added");
+};
+
+// ==== MINUS BUTTON ====
+minusBtn.onclick = async () => {
+  if (quantity <= 1) {
+    qtySpan.classList.add("shake");
+    setTimeout(() => qtySpan.classList.remove("shake"), 300);
+    return;
+  }
+
+  minusBtn.disabled = true;
+
+  await Promise.resolve(updateQtyWithSpinner(it.docId, -1));
+
+  minusBtn.disabled = false;
+
+  // Smooth visual update
+  div.classList.add("fade-update");
+  setTimeout(() => div.classList.remove("fade-update"), 300);
+
+  // 🔔 Notification
+  showNotification("Item Removed");
+};
+
+    // ==== DELETE BUTTON ====
+    deleteBtn.onclick = async () => {
+      deleteBtn.disabled = true;
+
+      await Promise.resolve(removeWithSpinner(it.docId));
+
+      deleteBtn.disabled = false;
+
+      // fade out and remove
+      div.classList.add("fade-update");
+      setTimeout(() => div.remove(), 300);
+    };
+  });
+
+  // Update subtotal
+  if (totalSpan) totalSpan.textContent = total.toLocaleString();
+
+  // Enable checkout
+  if (checkoutBtn) {
+    checkoutBtn.disabled = false;
+    checkoutBtn.classList.remove("opacity-50", "cursor-not-allowed");
+  }
+}
+
+  // function renderCart(items = []){
+  //   if (!cartContainer) return;
+
+  //   cartContainer.innerHTML = "";
+  //   let total = 0;
+
+  //   if (!currentUser || items.length === 0) {
+  //     cartContainer.innerHTML = `<p class="text-center text-gray-500">Your cart is empty.</p>`;
+  //     if (totalSpan) totalSpan.textContent = "0";
+  //     if (checkoutBtn) {
+  //       checkoutBtn.disabled = true;
+  //       checkoutBtn.classList.add("opacity-50","cursor-not-allowed");
+  //     }
+  //     return;
+  //   }
+
+  //   items.forEach(it => {
+  //     const lineTotal = (it.price || 0) * (it.quantity || 0);
+  //     total += lineTotal;
+
+  //     // Create card
+  //     const div = document.createElement("div");
+  //     div.className = "flex items-center justify-between bg-white p-4 rounded shadow mb-3";
+
+  //     // Use safe fallback values
+  //     const imgSrc = it.image || 'https://via.placeholder.com/64';
+  //     const name = escapeHtml(it.name || 'Item');
+  //     const priceText = `₦${Number(it.price || 0).toLocaleString()}`;
+
+  //     div.innerHTML = `
+  //       <div class="flex items-center gap-4">
+  //         <img src="${imgSrc}" class="w-16 h-16 object-cover rounded" alt="${name}">
+  //         <div>
+  //           <h4 class="font-semibold">${name}</h4>
+  //           <p class="text-pink-500 font-bold">${priceText}</p>
+  //         </div>
+  //       </div>
+  //       <div class="flex items-center gap-2">
+  //         <button data-action="minus" data-id="${it.docId}" class="px-2 bg-gray-200 flex items-center justify-center gap-1">
+  //           <span>−</span>
+  //           <svg data-spinner="minus-${it.docId}" class="w-4 h-4 text-pink-500 animate-spin hidden" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path></svg>
+  //         </button>
+  //         <span class="w-8 text-center" id="qty-${it.docId}">${it.quantity}</span>
+  //         <button data-action="plus" data-id="${it.docId}" class="px-2 bg-gray-200 flex items-center justify-center gap-1">
+  //           <span>+</span>
+  //           <svg data-spinner="plus-${it.docId}" class="w-4 h-4 text-pink-500 animate-spin hidden" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path></svg>
+  //         </button>
+  //       </div>
+  //       <div class="text-right">
+  //         <p class="font-semibold">₦${lineTotal.toLocaleString()}</p>
+  //         <button data-action="remove" data-id="${it.docId}" class="text-red-600 text-sm flex items-center gap-1 hover:underline">
+  //           <span>Remove</span>
+  //           <svg data-spinner="remove-${it.docId}" class="w-4 h-4 text-pink-500 animate-spin hidden" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path></svg>
+  //         </button>
+  //       </div>
+  //     `;
+
+  //     cartContainer.appendChild(div);
+
+  //     // wire up controls
+  //     const minusBtn = div.querySelector('button[data-action="minus"]');
+  //     const plusBtn  = div.querySelector('button[data-action="plus"]');
+  //     const removeBtn= div.querySelector('button[data-action="remove"]');
+
+  //     minusBtn && (minusBtn.onclick = () => updateQtyWithSpinner(it.docId, -1, `minus-${it.docId}`));
+  //     plusBtn  && (plusBtn.onclick  = () => updateQtyWithSpinner(it.docId,  1, `plus-${it.docId}`));
+  //     removeBtn&& (removeBtn.onclick= () => removeWithSpinner(it.docId, `remove-${it.docId}`));
+  //   });
+
+  //   // Update subtotal & checkout state
+  //   if (totalSpan) totalSpan.textContent = total.toLocaleString();
+  //   if (checkoutBtn) {
+  //     checkoutBtn.disabled = false;
+  //     checkoutBtn.classList.remove("opacity-50","cursor-not-allowed");
+  //   }
+  // }
 
   // Helper to toggle spinner visibility by spinner data attribute key
   function toggleSpinner(spinnerKey, show = true) {
