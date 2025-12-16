@@ -509,7 +509,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if(method==="paystack"){
       const handler=PaystackPop.setup({
-        key:'pk_test_0ed65a8011643dd303600706cb990c9ba067f199',
+        // key:'pk_test_0ed65a8011643dd303600706cb990c9ba067f199',
+        key: 'FLWPUBK-ab52b28f916f15647998c3593b2f511d-X',
         email:billing.email,
         amount:total*100,
         ref:"REF_"+Date.now(),
@@ -518,7 +519,7 @@ document.addEventListener("DOMContentLoaded", () => {
         onClose:()=>showNotification("Payment closed.", "info")
       }); handler.openIframe();
     } else if(method==="flutterwave"){
-      flutterwaveBtn.disabled=true;
+      flutterwaveBtn.disabled=false;
       const og=flutterwaveBtn.textContent;
       flutterwaveBtn.innerHTML=`<i class="fas fa-spinner fa-spin mr-2"></i> Processing...`;
       FlutterwaveCheckout({
@@ -537,8 +538,8 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  flutterwaveBtn.disabled = true;
-  flutterwaveBtn.classList.add("bg-gray-300", "cursor-not-allowed");
+  // flutterwaveBtn.disabled = true;
+  // flutterwaveBtn.classList.add("bg-gray-300", "cursor-not-allowed");
 
   paystackBtn.addEventListener("click",()=>handlePayment("paystack"));
   flutterwaveBtn.addEventListener("click",()=>handlePayment("flutterwave"));
