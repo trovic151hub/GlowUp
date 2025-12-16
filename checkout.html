@@ -509,8 +509,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if(method==="paystack"){
       const handler=PaystackPop.setup({
-        // key:'pk_test_0ed65a8011643dd303600706cb990c9ba067f199',
-        key: 'FLWPUBK-ab52b28f916f15647998c3593b2f511d-X',
+        key:'pk_test_0ed65a8011643dd303600706cb990c9ba067f199',
         email:billing.email,
         amount:total*100,
         ref:"REF_"+Date.now(),
@@ -523,7 +522,8 @@ document.addEventListener("DOMContentLoaded", () => {
       const og=flutterwaveBtn.textContent;
       flutterwaveBtn.innerHTML=`<i class="fas fa-spinner fa-spin mr-2"></i> Processing...`;
       FlutterwaveCheckout({
-        public_key:"FLWPUBK_TEST-b2421fa441f5939350f84533d0f2d3a2-X",
+        // public_key:"FLWPUBK_TEST-b2421fa441f5939350f84533d0f2d3a2-X",
+        key: 'FLWPUBK-ab52b28f916f15647998c3593b2f511d-X',
         tx_ref:"TX_"+Date.now(),
         amount:total,
         currency:"NGN",
