@@ -355,58 +355,79 @@ firebase.auth().onAuthStateChanged(async (user) => {
   };
 
   // Render Modal
-  function renderModal(order){
-    currentOpenOrder = order;
-    const deliveryFee = getDeliveryFee(order);
-    const prog = shipmentTimelineHtml(order.shipmentStatus || 'processing');
+  function renderModal(order) {
+  currentOpenOrder = order;
+  const deliveryFee = getDeliveryFee(order);
+  const prog = shipmentTimelineHtml(order.shipmentStatus || 'processing');
 
-    const headerHtml = `<div class="flex justify-between items-center">
+  const headerHtml = `<div class="flex justify-between items-center">
+    <div>
+      <div class="text-lg font-semibold">${escapeHtml(order.name || '')}</div>
+      <div class="text-xs text-gray-600">${escapeHtml(order.email || '')} • ${escapeHtml(order.phone || '')}</div>
+      <div class="text-xs text-gray-600 mt-1">Ref: ${escapeHtml(order.paymentRef || '')}</div>
+    </div>
+    <div class="text-right">
+      <div class="text-sm">Total</div>
+      <div class="text-xl font-bold">₦${Number(order.total || 0).toLocaleString()}</div>
+    </div>
+  </div>`;
+
+  const itemsHtml = (order.items || []).map(i => `
+    <div class="flex justify-between border-b py-2">
       <div>
-        <div class="text-lg font-semibold">${escapeHtml(order.name || '')}</div>
-        <div class="text-xs text-gray-600">${escapeHtml(order.email || '')} • ${escapeHtml(order.phone || '')}</div>
-        <div class="text-xs text-gray-600 mt-1">Ref: ${escapeHtml(order.paymentRef || '')}</div>
+        <div class="font-medium">${escapeHtml(i.name)}</div>
+        <div class="text-xs text-gray-600">₦${Number(i.price).toLocaleString()} each</div>
       </div>
       <div class="text-right">
-        <div class="text-sm">Total</div>
-        <div class="text-xl font-bold">₦${Number(order.total || 0).toLocaleString()}</div>
+        <div>${i.quantity} ×</div>
+        <div class="font-semibold">₦${(i.price*i.quantity).toLocaleString()}</div>
       </div>
+    </div>`).join('');
+
+  const delivery = order.delivery || {};
+
+  // Determine display text based on type and state
+  let deliveryText = '';
+  if (delivery.type === 'home' && delivery.state?.toLowerCase() === 'lagos') {
+    deliveryText = `Home Delivery<br>LGA: ${delivery.lga || '—'}<br>Address: ${delivery.address || '—'}`;
+  } else {
+    deliveryText = `Company: ${delivery.company?.toUpperCase() || '—'}<br>
+                    Type: ${delivery.type || '—'}<br>
+                    Terminal: ${delivery.terminal || '—'}<br>
+                    State: ${delivery.state || '—'}<br>
+                    Address: ${delivery.address || '—'}`;
+  }
+
+  const deliveryHtml = `
+    <div class="mt-4">
+      <h4 class="font-semibold">Delivery</h4>
+      <p class="text-sm text-gray-600">${deliveryText}</p>
+      <div class="mt-2">${prog}</div>
+      <div class="mt-2 text-sm text-gray-700">
+        Fee: ₦${deliveryFee.toLocaleString()}<br>
+        Weight: ${order.totalWeight || 0} kg
+      </div>
+    </div>
+  `;
+
+  const paymentHtml = `
+    <div class="mt-4">
+      <h4 class="font-semibold">Payment</h4>
+      <p class="text-sm text-gray-600">${escapeHtml(order.paymentMethod || '')}</p>
+      <p class="text-sm text-gray-600">Ref: ${escapeHtml(order.paymentRef || '')}</p>
+    </div>
+  `;
+
+  detailContent.innerHTML = `
+    <div class="mt-3">
+      ${headerHtml}
+      <div class="mt-4">
+        <h4 class="font-semibold">Items</h4>
+        <div class="mt-2">${itemsHtml || '<div class="text-gray-500">No items listed</div>'}</div>
+      </div>
+      ${deliveryHtml}
+      ${paymentHtml}
     </div>`;
-
-    const itemsHtml = (order.items || []).map(i => `
-      <div class="flex justify-between border-b py-2">
-        <div>
-          <div class="font-medium">${escapeHtml(i.name)}</div>
-          <div class="text-xs text-gray-600">₦${Number(i.price).toLocaleString()} each</div>
-        </div>
-        <div class="text-right">
-          <div>${i.quantity} ×</div>
-          <div class="font-semibold">₦${(i.price*i.quantity).toLocaleString()}</div>
-        </div>
-      </div>`).join('');
-
-    detailContent.innerHTML = `
-      <div class="mt-3">
-        ${headerHtml}
-        <div class="mt-4">
-          <h4 class="font-semibold">Items</h4>
-          <div class="mt-2">${itemsHtml || '<div class="text-gray-500">No items listed</div>'}</div>
-        </div>
-        <div class="mt-4">
-          <h4 class="font-semibold">Delivery</h4>
-          <p class="text-sm text-gray-600">${escapeHtml(order.address || '—')}</p>
-          <div class="mt-2">${prog}</div>
-          <div class="mt-2 text-sm text-gray-700">
-            <div>Option: ${order.deliveryOption?.toUpperCase() || '—'}</div>
-            <div>Fee: ₦${deliveryFee.toLocaleString()}</div>
-            <div>Weight: ${order.totalWeight || 0} kg</div>
-          </div>
-        </div>
-        <div class="mt-4">
-          <h4 class="font-semibold">Payment</h4>
-          <p class="text-sm text-gray-600">${escapeHtml(order.paymentMethod || '')}</p>
-          <p class="text-sm text-gray-600">Ref: ${escapeHtml(order.paymentRef || '')}</p>
-        </div>
-      </div>`;
 
     // ===== MODAL STATUS CONTROLS =====
     modalStatusControls.innerHTML = '';
@@ -472,8 +493,8 @@ firebase.auth().onAuthStateChanged(async (user) => {
     updateSummary();
   });
 
-  // Download PDF
-  async function downloadPdf(order) {
+  // ===== DOWNLOAD PDF =====
+async function downloadPdf(order) {
   if (!order) return;
 
   try {
@@ -527,7 +548,6 @@ firebase.auth().onAuthStateChanged(async (user) => {
     doc.text(`Email: ${order.email || ""}`, margin+5, y); y+=7;
     doc.text(`Phone: ${order.phone || ""}`, margin+5, y); y+=7;
     doc.text(`Payment Ref: ${order.paymentRef || ""}`, margin+5, y);
-
     y += 15;
 
     // ===== TABLE HEADER =====
@@ -571,15 +591,49 @@ firebase.auth().onAuthStateChanged(async (user) => {
     y += rowHeight + 5;
 
     // ===== DELIVERY INFO =====
-    doc.setFont("helvetica","normal");
-    doc.setFontSize(11);
-    doc.setTextColor(gray);
-    const deliveryFee = getDeliveryFee(order);
-    const weight = order.totalWeight || 0;
-    doc.text("Delivery:", margin, y); y+=6;
-    doc.text(`Option: ${order.deliveryOption || '—'}`, margin, y); y+=6;
-    doc.text(`Fee: ₦${deliveryFee.toLocaleString()}`, margin, y); y+=6;
-    doc.text(`Weight: ${weight} kg`, margin, y); y+=8;
+const delivery = order.delivery || {};
+const deliveryFee = getDeliveryFee(order);
+const weight = order.totalWeight || 0;
+
+doc.setFont("helvetica","normal");
+doc.setFontSize(11);
+doc.setTextColor(gray);
+doc.text("Delivery:", margin, y); y += 6;
+
+// Check for Lagos home delivery
+if (delivery.type === 'home' && delivery.state?.toLowerCase() === 'lagos') {
+  doc.text(`Home Delivery`, margin, y); y += 6;
+  doc.text(`LGA: ${delivery.lga || '—'}`, margin, y); y += 6;
+  doc.text(`Address: ${delivery.address || '—'}`, margin, y); y += 6;
+} else {
+  doc.text(`Company: ${delivery.company?.toUpperCase() || '—'}`, margin, y); y += 6;
+  doc.text(`Type: ${delivery.type || '—'}`, margin, y); y += 6;
+  doc.text(`Terminal: ${delivery.terminal || '—'}`, margin, y); y += 6;
+  doc.text(`State: ${delivery.state || '—'}`, margin, y); y += 6;
+  doc.text(`LGA: ${delivery.lga || '—'}`, margin, y); y += 6;
+  doc.text(`Address: ${delivery.address || '—'}`, margin, y); y += 6;
+}
+
+doc.text(`Fee: ₦${deliveryFee.toLocaleString()}`, margin, y); y += 6;
+doc.text(`Weight: ${weight} kg`, margin, y); y += 8;
+
+    // // ===== DELIVERY INFO =====
+    // const delivery = order.delivery || {};
+    // const deliveryFee = getDeliveryFee(order);
+    // const weight = order.totalWeight || 0;
+
+    // doc.setFont("helvetica","normal");
+    // doc.setFontSize(11);
+    // doc.setTextColor(gray);
+    // doc.text("Delivery:", margin, y); y+=6;
+    // doc.text(`Company: ${delivery.company?.toUpperCase() || '—'}`, margin, y); y+=6;
+    // doc.text(`Type: ${delivery.type || '—'}`, margin, y); y+=6;
+    // doc.text(`Terminal: ${delivery.terminal || '—'}`, margin, y); y+=6;
+    // doc.text(`State: ${delivery.state || '—'}`, margin, y); y+=6;
+    // doc.text(`LGA: ${delivery.lga || '—'}`, margin, y); y+=6;
+    // doc.text(`Address: ${delivery.address || '—'}`, margin, y); y+=6;
+    // doc.text(`Fee: ₦${deliveryFee.toLocaleString()}`, margin, y); y+=6;
+    // doc.text(`Weight: ${weight} kg`, margin, y); y+=8;
 
     // ===== PAYMENT INFO =====
     doc.text("Payment:", margin, y); y+=6;
@@ -598,7 +652,7 @@ firebase.auth().onAuthStateChanged(async (user) => {
   } catch(err) {
     showAlert("Failed to generate PDF: "+(err.message||err), "Error");
   }
-};
+}
 
 // ===== DOWNLOAD PDF BUTTON =====
 const downloadPdfBtn = document.getElementById('downloadPdfBtn');
@@ -606,7 +660,6 @@ downloadPdfBtn.onclick = () => {
   if (!currentOpenOrder) return showAlert("No order selected", "Error");
   downloadPdf(currentOpenOrder);
 };
-
   // ===== INITIAL LOAD =====
   clearAndLoad();
 </script>

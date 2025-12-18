@@ -533,6 +533,7 @@
           id: product.id,
           name: product.name,
           price: product.price,
+          weight: Number(product.weight), // ✅ ADD THIS
           image: product.image || "https://via.placeholder.com/150",
           quantity: 1,
           createdAt: firebase.firestore.FieldValue.serverTimestamp()
@@ -551,6 +552,11 @@
         let total=0;
         snapshot.forEach(doc=>{ total+=doc.data().quantity||0; });
         cartCountEl.textContent=total;
+
+        let totalWeight = 0;
+snapshot.forEach(doc => {
+  totalWeight += (doc.data().weight || 0) * (doc.data().quantity || 0);
+});
       },err=>{ console.error(err); cartCountEl.textContent="0"; });
     }
 

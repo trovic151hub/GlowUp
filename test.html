@@ -1,0 +1,763 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Order History — Advanced</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Firebase compat -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+  <!-- jsPDF for PDF generation -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+
+  <style>
+    @keyframes slide-in { 0%{transform:translateY(-20px);opacity:0}100%{transform:none;opacity:1} }
+    .animate-slide-in { animation: slide-in .22s ease-out; }
+    .timeline-step { width: 10px; height: 10px; border-radius: 999px; display:inline-block; margin-right:8px; }
+  </style>
+</head>
+<body class="bg-gray-50 text-gray-900">
+
+<header class="bg-pink-600 text-white p-4">
+  <div class="max-w-6xl mx-auto flex items-center justify-between">
+    <div class="flex space-x-2">
+      <button onclick="history.back()">
+        <i class="fas fa-arrow-left"></i>
+      </button>
+      <h1 class="text-lg font-bold">Order History — Advanced</h1>
+    </div>
+    <div id="adminBadge" class="hidden bg-white text-pink-600 px-2 py-1 rounded text-sm">ADMIN</div>
+  </div>
+</header>
+
+<main class="max-w-6xl mx-auto p-6">
+
+  <!-- FILTERS / SEARCH -->
+  <section class="bg-white p-4 rounded shadow mb-6">
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
+      <input id="qText" placeholder="Search product / name / paymentRef" class="border p-2 rounded" />
+      <select id="filterStatus" class="border p-2 rounded">
+        <option value="all">All status</option>
+        <option value="pending">Pending</option>
+        <option value="completed">Completed</option>
+      </select>
+      <select id="filterShipment" class="border p-2 rounded">
+        <option value="all">All shipment</option>
+        <option value="processing">Processing</option>
+        <option value="shipped">Shipped</option>
+        <option value="delivered">Delivered</option>
+      </select>
+      <select id="filterPayment" class="border p-2 rounded">
+        <option value="all">All payment</option>
+        <option value="Paystack">Paystack</option>
+        <option value="Flutterwave">Flutterwave</option>
+        <option value="Cash">Cash</option>
+      </select>
+    </div>
+
+    <div class="flex gap-3 mt-3">
+      <input id="dateFrom" type="date" class="border p-2 rounded" />
+      <input id="dateTo" type="date" class="border p-2 rounded" />
+      <button id="applyFilters" class="bg-pink-600 text-white px-4 py-2 rounded">Apply</button>
+      <button id="clearFilters" class="bg-gray-200 px-4 py-2 rounded">Clear</button>
+      <div class="ml-auto flex gap-2">
+        <button id="refreshBtn" class="bg-blue-600 text-white px-3 py-2 rounded">Refresh</button>
+      </div>
+    </div>
+  </section>
+
+  <div id="ordersSummary" class="mb-4 p-2 bg-gray-100 rounded text-sm text-gray-700">
+    Loading summary...
+  </div>
+
+  <!-- ORDERS TABLE -->
+  <section class="bg-white p-4 rounded shadow">
+    <div class="overflow-auto">
+      <table class="w-full text-left">
+        <thead class="bg-pink-100">
+          <tr>
+            <th class="p-2">When</th>
+            <th class="p-2">Customer</th>
+            <th class="p-2">Total</th>
+            <th class="p-2">Payment</th>
+            <th class="p-2">Shipment</th>
+            <!-- <th class="p-2">Delivery</th> -->
+            <th class="p-2">Status</th>
+            <th class="p-2">Actions</th>
+          </tr>
+        </thead>
+        <tbody id="ordersTbody" class="w-full border-collapse"></tbody>
+      </table>
+    </div>
+    <div class="flex justify-center mt-4">
+      <button id="loadMoreBtn" class="bg-pink-500 text-white px-4 py-2 rounded">Load more</button>
+    </div>
+  </section>
+</main>
+
+<!-- DETAIL MODAL -->
+<div id="detailModal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50 p-4">
+  <div class="bg-white w-full max-w-2xl p-6 rounded shadow-lg animate-slide-in max-h-[90vh] overflow-auto">
+    <div class="flex justify-between items-start gap-4">
+      <h2 class="text-2xl font-semibold text-pink-600">Order Details</h2>
+      <div>
+        <button id="modalClose" class="text-gray-600 hover:text-gray-800 text-xl">&times;</button>
+      </div>
+    </div>
+    <div id="detailContent" class="mt-4 space-y-3 text-sm text-gray-800"></div>
+    <div class="mt-4 flex gap-2">
+      <button id="downloadPdfBtn" class="bg-pink-600 text-white px-4 py-2 rounded">Download PDF</button>
+      <button id="emailReceiptBtn" class="bg-blue-600 text-white px-4 py-2 rounded opacity-50 cursor-not-allowed">Email Receipt</button>
+      <div id="modalStatusControls" class="ml-auto flex gap-2"></div>
+    </div>
+  </div>
+</div>
+
+<div id="modalStatusControls" class="mt-4 flex items-center"></div>
+<script>
+  // ===== Firebase Config =====
+  const firebaseConfig = {
+    apiKey: "AIzaSyDdTPmpaIPWSDWOmR-fXgvAb7hoxZUawcc",
+    authDomain: "e-commerce-39c74.firebaseapp.com",
+    projectId: "e-commerce-39c74",
+    storageBucket: "e-commerce-39c74.firebasestorage.app",
+    messagingSenderId: "863375033754",
+    appId: "1:863375033754:web:7ba248c8dbb1566c83e623"
+  };
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.firestore();
+
+  let PAGE_SIZE = 6, lastDoc = null, loadingMore = false, activeFilters = {}, currentOpenOrder = null;
+  window.isAdmin = false; // default
+
+  // ===== Check Admin from "admins" collection =====
+firebase.auth().onAuthStateChanged(async (user) => {
+  if (user) {
+    try {
+      const adminDoc = await db.collection("admins").doc(user.uid).get();
+      window.isAdmin = adminDoc.exists; // true if user is in admins collection
+    } catch (err) {
+      console.error("Failed to check admin status:", err);
+      window.isAdmin = false;
+    }
+  } else {
+    window.isAdmin = false;
+  }
+  clearAndLoad(); // your existing function
+});
+
+  const ordersTbody = document.getElementById('ordersTbody');
+  const loadMoreBtn = document.getElementById('loadMoreBtn');
+  const qText = document.getElementById('qText');
+  const filterStatus = document.getElementById('filterStatus');
+  const filterShipment = document.getElementById('filterShipment');
+  const filterPayment = document.getElementById('filterPayment');
+  const dateFrom = document.getElementById('dateFrom');
+  const dateTo = document.getElementById('dateTo');
+  const detailModal = document.getElementById('detailModal');
+  const detailContent = document.getElementById('detailContent');
+  const modalClose = document.getElementById('modalClose');
+  const ordersSummary = document.getElementById('ordersSummary');
+  const modalStatusControls = document.getElementById('modalStatusControls');
+
+  // ===== ALERT MODAL =====
+  const alertModal = document.createElement('div');
+  alertModal.className = 'fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 hidden z-50';
+  alertModal.innerHTML = `
+    <div class="bg-white p-6 rounded shadow-lg w-80 text-center">
+      <div id="alertMessage" class="mb-4"></div>
+      <button id="alertOkBtn" class="bg-blue-600 text-white px-4 py-2 rounded">OK</button>
+    </div>`;
+  document.body.appendChild(alertModal);
+  const alertMessage = alertModal.querySelector('#alertMessage');
+  const alertOkBtn = alertModal.querySelector('#alertOkBtn');
+  alertOkBtn.addEventListener('click', () => alertModal.classList.add('hidden'));
+  function showAlert(msg, type='Info') {
+    alertMessage.innerHTML = `<strong>${type}:</strong> ${msg}`;
+    alertModal.classList.remove('hidden');
+  }
+
+  // ===== CONFIRM MODAL =====
+  const confirmModal = document.createElement('div');
+  confirmModal.className = 'fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 hidden z-50';
+  confirmModal.innerHTML = `
+    <div class="bg-white p-6 rounded shadow-lg w-80 text-center">
+      <div id="confirmMessage" class="mb-4"></div>
+      <div class="flex justify-around">
+        <button id="confirmYesBtn" class="bg-green-600 text-white px-4 py-2 rounded">Yes</button>
+        <button id="confirmNoBtn" class="bg-red-600 text-white px-4 py-2 rounded">No</button>
+      </div>
+    </div>`;
+  document.body.appendChild(confirmModal);
+  const confirmMessage = confirmModal.querySelector('#confirmMessage');
+  const confirmYesBtn = confirmModal.querySelector('#confirmYesBtn');
+  const confirmNoBtn = confirmModal.querySelector('#confirmNoBtn');
+  function showConfirm(msg) {
+    return new Promise(resolve => {
+      confirmMessage.innerText = msg;
+      confirmModal.classList.remove('hidden');
+      confirmYesBtn.onclick = () => { confirmModal.classList.add('hidden'); resolve(true); };
+      confirmNoBtn.onclick = () => { confirmModal.classList.add('hidden'); resolve(false); };
+    });
+  }
+
+  function capitalize(str) { return str.charAt(0).toUpperCase() + str.slice(1); }
+  function escapeHtml(str) { return str?.toString()?.replace(/[&<"']/g, m => ({'&':'&amp;','<':'&lt;','"':'&quot;',"'":'&#039;'}[m])) || ''; }
+
+  function shipmentTimelineHtml(status) {
+    const steps = ['processing','shipped','delivered'];
+    return `<div class="flex items-center gap-4">${steps.map((s, idx) => {
+      const done = steps.indexOf(status) >= idx;
+      return `<div class="flex items-center gap-3">
+        <span class="timeline-step ${done ? 'bg-green-600' : 'bg-gray-300'}"></span>
+        <div class="${done ? 'text-green-700 font-semibold' : 'text-gray-600'} text-sm">${capitalize(s)}</div>
+      </div>`;
+    }).join('<span class="text-gray-300">→</span>')}</div>`;
+  }
+
+  function getDeliveryFee(order) {
+    if(order.deliveryFee !== undefined) return order.deliveryFee;
+    const weight = order.totalWeight || 1;
+    if(order.deliveryOption==="gig") return 6700 + Math.max(weight-1,0)*800;
+    if(order.deliveryOption==="guo") return 3500 + Math.max(weight-1,0)*700;
+    if(order.state?.toLowerCase() === "lagos") return 0;
+    return 0;
+  }
+
+  function buildQuery(pageSize=PAGE_SIZE, startAfterDoc=null) {
+    let q = db.collection('orders').orderBy('timestamp','desc');
+    if(activeFilters.status && activeFilters.status!=='all') q = q.where('fulfilled','==', activeFilters.status==='completed');
+    if(activeFilters.payment && activeFilters.payment!=='all') q = q.where('paymentMethod','==', activeFilters.payment);
+    if(activeFilters.shipment && activeFilters.shipment!=='all') q = q.where('shipmentStatus','==', activeFilters.shipment);
+    if(activeFilters.from) q = q.where('timestamp','>=', firebase.firestore.Timestamp.fromDate(new Date(activeFilters.from+'T00:00:00')));
+    if(activeFilters.to) q = q.where('timestamp','<=', firebase.firestore.Timestamp.fromDate(new Date(activeFilters.to+'T23:59:59')));
+    if(startAfterDoc) q = q.startAfter(startAfterDoc);
+    return q.limit(pageSize);
+  }
+
+  async function clearAndLoad() { ordersTbody.innerHTML=''; lastDoc=null; await loadMore(true); }
+
+  function updateSummary() {
+    const rows = Array.from(ordersTbody.children).filter(r => r.__order);
+    const totalOrders = rows.length;
+    const totalDeliveryFee = rows.reduce((sum, r) => sum + getDeliveryFee(r.__order), 0);
+    const totalWeight = rows.reduce((sum, r) => sum + (r.__order.totalWeight||0), 0);
+    ordersSummary.innerHTML = `<strong>Total Orders:</strong> ${totalOrders} | <strong>Total Delivery Fee:</strong> ₦${totalDeliveryFee.toLocaleString()} | <strong>Total Weight:</strong> ${totalWeight} kg`;
+  }
+
+  async function loadMore(isInitial=false) {
+    if(loadingMore) return;
+    loadingMore = true; loadMoreBtn.disabled = true;
+
+    for(let i=0;i<3;i++){
+      const r = document.createElement('tr'); 
+      r.innerHTML = `<td class="p-2 bg-gray-200 animate-pulse"></td>`.repeat(8); 
+      ordersTbody.appendChild(r);
+    }
+
+    try{
+      const snap = await buildQuery(PAGE_SIZE, lastDoc).get();
+      if(!snap.empty){
+        if(isInitial) ordersTbody.innerHTML='';
+        const docs = snap.docs.map(d => ({id:d.id,...d.data()}));
+        const filteredDocs = activeFilters.q ? docs.filter(o => {
+          const qlow = activeFilters.q.toLowerCase();
+          return (o.name && o.name.toLowerCase().includes(qlow)) ||
+                 (o.paymentRef && o.paymentRef.toLowerCase().includes(qlow)) ||
+                 (Array.isArray(o.items) && o.items.some(it => (it.name||'').toLowerCase().includes(qlow)));
+        }) : docs;
+
+        filteredDocs.forEach(order => ordersTbody.appendChild(orderRow(order)));
+        lastDoc = snap.docs[snap.docs.length-1];
+        loadMoreBtn.style.display = snap.size < PAGE_SIZE ? 'none' : 'inline-block';
+      } else if(isInitial){
+        ordersTbody.innerHTML = `<tr><td colspan="8" class="p-4 text-center text-gray-500">No orders found.</td></tr>`;
+        loadMoreBtn.style.display='none';
+      }
+    }catch(err){
+      console.error(err);
+      ordersTbody.innerHTML = `<tr><td colspan="8" class="p-4 text-red-500">Failed to load orders.</td></tr>`;
+    } finally {
+      loadingMore = false; loadMoreBtn.disabled = false; updateSummary();
+    }
+  }
+
+  function orderRow(order){
+    const tr=document.createElement('tr');
+    const when = order.timestamp?.toDate?.()?.toLocaleString() || new Date(order.timestamp||'').toLocaleString();
+    const deliveryFee = getDeliveryFee(order);
+    tr.innerHTML=`<td class="p-2 align-top border border-gray-300">${when}</td>
+<td class="p-2 align-top border border-gray-300">${order.name||''}</td>
+<td class="p-2 align-top border border-gray-300">₦${Number(order.total||0).toLocaleString()}</td>
+<td class="p-2 align-top border border-gray-300">${order.paymentMethod||''}</td>
+<td class="p-2 align-top border border-gray-300">${order.shipmentStatus || 'processing'}</td>
+<td class="p-2 align-top border border-gray-300">
+  <span class="px-2 py-1 rounded text-xs ${order.fulfilled?'bg-green-200 text-green-800':'bg-yellow-200 text-yellow-800'}">
+    ${order.fulfilled?'Completed':'Pending'}
+  </span>
+</td>
+<td class="p-2 align-top border border-gray-300">
+  <div class="flex flex-col md:flex-row gap-2">
+    <button class="bg-blue-600 text-white px-3 py-1 rounded" onclick='openDetail("${order.id}")'>Detail</button>
+    <button class="bg-pink-500 text-white px-3 py-1 rounded" onclick='toggleFulfilled("${order.id}", ${!!order.fulfilled})'>${order.fulfilled?'Mark Pending':'Mark Complete'}</button>
+    <button class="bg-red-500 text-white px-3 py-1 rounded opacity-50 cursor-not-allowed" onclick='deleteOrder("${order.id}")' disabled>Delete</button>
+  </div>
+</td>
+
+`;
+    tr.__order = order;
+    return tr;
+  }
+
+  // ===== DELETE & TOGGLE =====
+  window.deleteOrder = async function(orderId) {
+    if(!window.isAdmin) return showAlert("Only admins can delete orders","Error");
+    const confirmed = await showConfirm("Are you sure you want to delete this order?");
+    if(!confirmed) return;
+    try {
+      await db.collection('orders').doc(orderId).delete();
+      showAlert("Order deleted successfully!","Success");
+      clearAndLoad();
+    } catch(err){ showAlert("Failed to delete order: "+err.message,"Error"); }
+  };
+
+  window.toggleFulfilled = async function(orderId, oldStatus){
+    if(!window.isAdmin) return showAlert("Only admins can update orders","Error");
+    try {
+      await db.collection('orders').doc(orderId).update({ fulfilled: !oldStatus });
+      const row = Array.from(ordersTbody.children).find(r => r.__order?.id === orderId);
+      if(row){
+        row.__order.fulfilled = !oldStatus;
+        const newRow = orderRow(row.__order);
+        ordersTbody.replaceChild(newRow, row);
+      }
+      updateSummary();
+    } catch(err){ showAlert("Failed to update order: "+err.message,"Error"); }
+  };
+
+  function updateShipmentStatus(orderId,newStatus){
+    if(!window.isAdmin) return showAlert("Only admins can update shipment status","Error");
+    db.collection('orders').doc(orderId).update({ shipmentStatus: newStatus })
+      .catch(err => showAlert("Failed to update shipment status: "+err.message,"Error"));
+  }
+
+  // ===== DETAIL MODAL =====
+  window.openDetail = function(orderId){
+    const row = Array.from(ordersTbody.children).find(r => r.__order?.id===orderId);
+    if(!row) return;
+    currentOpenOrder = row.__order;
+    renderModal(currentOpenOrder);
+  };
+
+  function renderModal(order) {
+  currentOpenOrder = order;
+  const deliveryFee = getDeliveryFee(order);
+  const prog = shipmentTimelineHtml(order.shipmentStatus || 'processing');
+
+  const headerHtml = `<div class="flex justify-between items-center">
+    <div>
+      <div class="text-lg font-semibold">${escapeHtml(order.name || '')}</div>
+      <div class="text-xs text-gray-600">${escapeHtml(order.email || '')} • ${escapeHtml(order.phone || '')}</div>
+      <div class="text-xs text-gray-600 mt-1">Ref: ${escapeHtml(order.paymentRef || '')}</div>
+    </div>
+    <div class="text-right">
+      <div class="text-sm">Total</div>
+      <div class="text-xl font-bold">₦${Number(order.total || 0).toLocaleString()}</div>
+    </div>
+  </div>`;
+
+  const itemsHtml = (order.items || []).map(i => `
+    <div class="flex justify-between border-b py-2">
+      <div>
+        <div class="font-medium">${escapeHtml(i.name)}</div>
+        <div class="text-xs text-gray-600">₦${Number(i.price).toLocaleString()} each</div>
+      </div>
+      <div class="text-right">
+        <div>${i.quantity} ×</div>
+        <div class="font-semibold">₦${(i.price*i.quantity).toLocaleString()}</div>
+      </div>
+    </div>`).join('');
+
+  const delivery = order.delivery || {};
+
+  // Determine display text based on type and state
+  let deliveryText = '';
+  if (delivery.type === 'home' && delivery.state?.toLowerCase() === 'lagos') {
+    deliveryText = `Home Delivery<br>LGA: ${delivery.lga || '—'}<br>Address: ${delivery.address || '—'}`;
+  } else {
+    deliveryText = `Company: ${delivery.company?.toUpperCase() || '—'}<br>
+                    Type: ${delivery.type || '—'}<br>
+                    Terminal: ${delivery.terminal || '—'}<br>
+                    State: ${delivery.state || '—'}<br>
+                    Address: ${delivery.address || '—'}`;
+  }
+
+  const deliveryHtml = `
+    <div class="mt-4">
+      <h4 class="font-semibold">Delivery</h4>
+      <p class="text-sm text-gray-600">${deliveryText}</p>
+      <div class="mt-2">${prog}</div>
+      <div class="mt-2 text-sm text-gray-700">
+        Fee: ₦${deliveryFee.toLocaleString()}<br>
+        Weight: ${order.totalWeight || 0} kg
+      </div>
+    </div>
+  `;
+
+  const paymentHtml = `
+    <div class="mt-4">
+      <h4 class="font-semibold">Payment</h4>
+      <p class="text-sm text-gray-600">${escapeHtml(order.paymentMethod || '')}</p>
+      <p class="text-sm text-gray-600">Ref: ${escapeHtml(order.paymentRef || '')}</p>
+    </div>
+  `;
+
+  detailContent.innerHTML = `
+    <div class="mt-3">
+      ${headerHtml}
+      <div class="mt-4">
+        <h4 class="font-semibold">Items</h4>
+        <div class="mt-2">${itemsHtml || '<div class="text-gray-500">No items listed</div>'}</div>
+      </div>
+      ${deliveryHtml}
+      ${paymentHtml}
+    </div>`;
+
+//   function renderModal(order){
+//   currentOpenOrder = order;
+//   const deliveryFee = getDeliveryFee(order);
+//   const prog = shipmentTimelineHtml(order.shipmentStatus || 'processing');
+
+//   const headerHtml = `<div class="flex justify-between items-center">
+//     <div>
+//       <div class="text-lg font-semibold">${escapeHtml(order.name || '')}</div>
+//       <div class="text-xs text-gray-600">${escapeHtml(order.email || '')} • ${escapeHtml(order.phone || '')}</div>
+//       <div class="text-xs text-gray-600 mt-1">Ref: ${escapeHtml(order.paymentRef || '')}</div>
+//     </div>
+//     <div class="text-right">
+//       <div class="text-sm">Total</div>
+//       <div class="text-xl font-bold">₦${Number(order.total || 0).toLocaleString()}</div>
+//     </div>
+//   </div>`;
+
+//   const itemsHtml = (order.items || []).map(i => `
+//     <div class="flex justify-between border-b py-2">
+//       <div>
+//         <div class="font-medium">${escapeHtml(i.name)}</div>
+//         <div class="text-xs text-gray-600">₦${Number(i.price).toLocaleString()} each</div>
+//       </div>
+//       <div class="text-right">
+//         <div>${i.quantity} ×</div>
+//         <div class="font-semibold">₦${(i.price*i.quantity).toLocaleString()}</div>
+//       </div>
+//     </div>`).join('');
+
+//   const delivery = order.delivery || {};
+//   // New structured delivery info
+//   const deliveryHtml = `
+//     <div class="mt-4">
+//       <h4 class="font-semibold">Delivery</h4>
+//       <p class="text-sm text-gray-600">Address: ${escapeHtml(order.address || '—')}</p>
+//       <div class="mt-2">${prog}</div>
+//       <div class="mt-2 text-sm text-gray-700">
+//         <div>Company: ${delivery.company?.toUpperCase() || '—'}</div>
+//         <div>Type: ${delivery.type || '—'}</div>
+//         <div>Terminal: ${delivery.terminal || '—'}</div>
+//         <div>State: ${delivery.state || '—'}</div>
+//         <div>LGA: ${delivery.lga || '—'}</div>
+//         <div>Fee: ₦${deliveryFee.toLocaleString()}</div>
+//         <div>Weight: ${order.totalWeight || 0} kg</div>
+//       </div>
+//     </div>
+//   `;
+
+//   const paymentHtml = `
+//     <div class="mt-4">
+//       <h4 class="font-semibold">Payment</h4>
+//       <p class="text-sm text-gray-600">${escapeHtml(order.paymentMethod || '')}</p>
+//       <p class="text-sm text-gray-600">Ref: ${escapeHtml(order.paymentRef || '')}</p>
+//     </div>
+//   `;
+
+//   detailContent.innerHTML = `
+//     <div class="mt-3">
+//       ${headerHtml}
+//       <div class="mt-4">
+//         <h4 class="font-semibold">Items</h4>
+//         <div class="mt-2">${itemsHtml || '<div class="text-gray-500">No items listed</div>'}</div>
+//       </div>
+//       ${deliveryHtml}
+//       ${paymentHtml}
+//     </div>`;
+
+//   // Render Modal
+//   function renderModal(order){
+//     currentOpenOrder = order;
+//     const deliveryFee = getDeliveryFee(order);
+//     const prog = shipmentTimelineHtml(order.shipmentStatus || 'processing');
+
+//     const headerHtml = `<div class="flex justify-between items-center">
+//       <div>
+//         <div class="text-lg font-semibold">${escapeHtml(order.name || '')}</div>
+//         <div class="text-xs text-gray-600">${escapeHtml(order.email || '')} • ${escapeHtml(order.phone || '')}</div>
+//         <div class="text-xs text-gray-600 mt-1">Ref: ${escapeHtml(order.paymentRef || '')}</div>
+//       </div>
+//       <div class="text-right">
+//         <div class="text-sm">Total</div>
+//         <div class="text-xl font-bold">₦${Number(order.total || 0).toLocaleString()}</div>
+//       </div>
+//     </div>`;
+
+//     const itemsHtml = (order.items || []).map(i => `
+//       <div class="flex justify-between border-b py-2">
+//         <div>
+//           <div class="font-medium">${escapeHtml(i.name)}</div>
+//           <div class="text-xs text-gray-600">₦${Number(i.price).toLocaleString()} each</div>
+//         </div>
+//         <div class="text-right">
+//           <div>${i.quantity} ×</div>
+//           <div class="font-semibold">₦${(i.price*i.quantity).toLocaleString()}</div>
+//         </div>
+//       </div>`).join('');
+
+//     detailContent.innerHTML = `
+//       <div class="mt-3">
+//         ${headerHtml}
+//         <div class="mt-4">
+//           <h4 class="font-semibold">Items</h4>
+//           <div class="mt-2">${itemsHtml || '<div class="text-gray-500">No items listed</div>'}</div>
+//         </div>
+//         <div class="mt-4">
+//           <h4 class="font-semibold">Delivery</h4>
+//           <p class="text-sm text-gray-600">${escapeHtml(order.address || '—')}</p>
+//           <div class="mt-2">${prog}</div>
+//           <div class="mt-2 text-sm text-gray-700">
+//             <div>Option: ${order.deliveryOption?.toUpperCase() || '—'}</div>
+//             <div>Fee: ₦${deliveryFee.toLocaleString()}</div>
+//             <div>Weight: ${order.totalWeight || 0} kg</div>
+//           </div>
+//         </div>
+//         <div class="mt-4">
+//           <h4 class="font-semibold">Payment</h4>
+//           <p class="text-sm text-gray-600">${escapeHtml(order.paymentMethod || '')}</p>
+//           <p class="text-sm text-gray-600">Ref: ${escapeHtml(order.paymentRef || '')}</p>
+//         </div>
+//       </div>`;
+
+    // ===== MODAL STATUS CONTROLS =====
+    modalStatusControls.innerHTML = '';
+  const sel = document.createElement('select');
+  sel.className = 'border p-2 rounded';
+  sel.innerHTML = `
+    <option value="processing">Processing</option>
+    <option value="shipped">Shipped</option>
+    <option value="delivered">Delivered</option>
+  `;
+  sel.value = order.shipmentStatus || 'processing';
+  sel.onchange = () => updateShipmentStatus(order.id, sel.value);
+  modalStatusControls.appendChild(sel);
+
+    if(window.isAdmin){
+      const delBtn = document.createElement('button');
+      delBtn.className='ml-2 bg-red-600 text-white px-3 py-2 rounded';
+      delBtn.innerText = 'Delete Order';
+      delBtn.onclick = ()=>deleteOrder(order.id);
+      modalStatusControls.appendChild(delBtn);
+    }
+
+    detailModal.classList.remove('hidden');
+    detailModal.classList.add('flex');
+  }
+
+  modalClose.onclick = () => { detailModal.classList.add('hidden'); detailModal.classList.remove('flex'); currentOpenOrder=null; }
+
+  document.getElementById('applyFilters').onclick = () => {
+    activeFilters.q = qText.value;
+    activeFilters.status = filterStatus.value;
+    activeFilters.payment = filterPayment.value;
+    activeFilters.shipment = filterShipment.value;
+    activeFilters.from = dateFrom.value;
+    activeFilters.to = dateTo.value;
+    clearAndLoad();
+  };
+
+  document.getElementById('clearFilters').onclick = () => {
+    qText.value=''; filterStatus.value='all'; filterPayment.value='all'; filterShipment.value='all';
+    dateFrom.value=''; dateTo.value=''; activeFilters={}; clearAndLoad();
+  };
+
+  loadMoreBtn.onclick = () => loadMore();
+  document.getElementById('refreshBtn').onclick = () => clearAndLoad();
+
+  // ===== REAL-TIME UPDATES =====
+  db.collection('orders').orderBy('timestamp','desc').onSnapshot(snap => {
+    snap.docChanges().forEach(change => {
+      const order = {id: change.doc.id, ...change.doc.data()};
+      if(change.type === 'added') ordersTbody.appendChild(orderRow(order));
+      if(change.type === 'modified'){
+        const row = Array.from(ordersTbody.children).find(r => r.__order?.id === order.id);
+        if(row){ const newRow = orderRow(order); ordersTbody.replaceChild(newRow,row); }
+        if(currentOpenOrder?.id === order.id) renderModal(order);
+      }
+      if(change.type === 'removed'){
+        const row = Array.from(ordersTbody.children).find(r => r.__order?.id === order.id);
+        if(row) row.remove();
+        if(currentOpenOrder?.id === order.id){ detailModal.classList.add('hidden'); currentOpenOrder=null; }
+      }
+    });
+    updateSummary();
+  });
+
+  // ===== DOWNLOAD PDF =====
+async function downloadPdf(order) {
+  if (!order) return;
+
+  try {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF("p", "mm", "a4");
+
+    const dark = "#222222";
+    const gray = "#555555";
+    const gold = "#d4a017";
+    const rowLight = "#f7f7f7";
+
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const margin = 15;
+    let y = 20;
+
+    // ===== LOGO =====
+    const logoURL = "https://res.cloudinary.com/dut2dpxuc/image/upload/v1764188839/e1232d47-ee66-47c9-97fa-b9b86232fb80_n35lqo.png";
+    const response = await fetch(logoURL);
+    const blob = await response.blob();
+    const base64Logo = await new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onloadend = () => resolve(reader.result);
+      reader.onerror = reject;
+      reader.readAsDataURL(blob);
+    });
+    const logoWidth = 50, logoHeight = 25, logoX = (pageWidth - logoWidth)/2;
+    doc.addImage(base64Logo, "PNG", logoX, 10, logoWidth, logoHeight);
+    y = 45;
+
+    // ===== ORDER TITLE =====
+    doc.setFont("helvetica","bold");
+    doc.setFontSize(18);
+    doc.setTextColor(dark);
+    doc.text("ORDER RECEIPT", margin, y);
+    y += 15;
+
+    // ===== HORIZONTAL LINE =====
+    doc.setDrawColor("#e0e0e0");
+    doc.setLineWidth(0.5);
+    doc.line(margin, y, pageWidth - margin, y);
+    y += 5;
+
+    // ===== CUSTOMER INFO =====
+    doc.setFillColor("#f9f9f9");
+    doc.roundedRect(margin, y, pageWidth - margin*2, 40, 3, 3, "F");
+    doc.setFontSize(12);
+    doc.setTextColor(dark);
+
+    y += 10;
+    doc.text(`Name: ${order.name || ""}`, margin+5, y); y+=7;
+    doc.text(`Email: ${order.email || ""}`, margin+5, y); y+=7;
+    doc.text(`Phone: ${order.phone || ""}`, margin+5, y); y+=7;
+    doc.text(`Payment Ref: ${order.paymentRef || ""}`, margin+5, y);
+    y += 15;
+
+    // ===== TABLE HEADER =====
+    doc.setDrawColor("#e0e0e0");
+    doc.setLineWidth(0.5);
+    doc.setFillColor(gold);
+    doc.setTextColor("#ffffff");
+    doc.setFontSize(11);
+    const tableX = margin;
+    const tableWidth = pageWidth - margin*2;
+    const rowHeight = 8;
+
+    doc.rect(tableX, y, tableWidth, rowHeight, "F");
+    doc.text("Item", tableX + 2, y + 6);
+    doc.text("Qty", tableX + 80, y + 6);
+    doc.text("Price", tableX + 110, y + 6, { align: "right" });
+    doc.text("Total", tableX + 150, y + 6, { align: "right" });
+    y += rowHeight;
+
+    // ===== ITEM ROWS =====
+    const items = order.items || [];
+    doc.setTextColor("#000000");
+    items.forEach((i, index) => {
+      if (y > 260) { doc.addPage(); y = 20; }
+      if (index % 2 === 0) { doc.setFillColor(rowLight); doc.rect(tableX, y, tableWidth, rowHeight, "F"); }
+      doc.text(i.name || "", tableX + 2, y + 6);
+      doc.text(`${i.quantity}`, tableX + 80, y + 6);
+      doc.text(`₦${Number(i.price).toLocaleString()}`, tableX + 110, y + 6, { align: "right" });
+      doc.text(`₦${(i.price*i.quantity).toLocaleString()}`, tableX + 150, y + 6, { align: "right" });
+      doc.rect(tableX, y, tableWidth, rowHeight);
+      y += rowHeight;
+    });
+
+    // ===== TOTAL ROW =====
+    doc.setFillColor("#eaeaea");
+    doc.rect(tableX, y, tableWidth, rowHeight, "F");
+    doc.setFont("helvetica", "bold");
+    doc.text("Order Total", tableX + 110, y + 6, { align: "right" });
+    doc.text(`₦${Number(order.total || 0).toLocaleString()}`, tableX + 150, y + 6, { align: "right" });
+    doc.rect(tableX, y, tableWidth, rowHeight);
+    y += rowHeight + 5;
+
+    // ===== DELIVERY INFO =====
+    const delivery = order.delivery || {};
+    const deliveryFee = getDeliveryFee(order);
+    const weight = order.totalWeight || 0;
+
+    doc.setFont("helvetica","normal");
+    doc.setFontSize(11);
+    doc.setTextColor(gray);
+    doc.text("Delivery:", margin, y); y+=6;
+    doc.text(`Company: ${delivery.company?.toUpperCase() || '—'}`, margin, y); y+=6;
+    doc.text(`Type: ${delivery.type || '—'}`, margin, y); y+=6;
+    doc.text(`Terminal: ${delivery.terminal || '—'}`, margin, y); y+=6;
+    doc.text(`State: ${delivery.state || '—'}`, margin, y); y+=6;
+    doc.text(`LGA: ${delivery.lga || '—'}`, margin, y); y+=6;
+    doc.text(`Address: ${delivery.address || '—'}`, margin, y); y+=6;
+    doc.text(`Fee: ₦${deliveryFee.toLocaleString()}`, margin, y); y+=6;
+    doc.text(`Weight: ${weight} kg`, margin, y); y+=8;
+
+    // ===== PAYMENT INFO =====
+    doc.text("Payment:", margin, y); y+=6;
+    doc.text(`Method: ${order.paymentMethod || ''}`, margin, y); y+=6;
+    doc.text(`Ref: ${order.paymentRef || ''}`, margin, y); y+=8;
+
+    // ===== FOOTER =====
+    y = 285;
+    doc.setFontSize(10);
+    doc.setTextColor(gray);
+    doc.text("Thank you for shopping with Pearl Skin Care!", pageWidth/2, y, { align: "center" });
+
+    doc.save(`Order_${order.paymentRef || order.id}.pdf`);
+    showAlert("PDF generated successfully!", "Success");
+
+  } catch(err) {
+    showAlert("Failed to generate PDF: "+(err.message||err), "Error");
+  }
+}
+
+// ===== DOWNLOAD PDF BUTTON =====
+const downloadPdfBtn = document.getElementById('downloadPdfBtn');
+downloadPdfBtn.onclick = () => {
+  if (!currentOpenOrder) return showAlert("No order selected", "Error");
+  downloadPdf(currentOpenOrder);
+};
+
+
+
+  // ===== INITIAL LOAD =====
+  clearAndLoad();
+</script>
+</body>
+</html>

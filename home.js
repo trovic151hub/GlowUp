@@ -190,48 +190,106 @@ window.addEventListener("scroll", () => {
   }
 });
 
-  // ---------- PRODUCTS ----------
-  async function filterProducts(category="All"){
-    displayedCount=0;
-    const productList = document.getElementById("product-list");
-    if(!productList) return;
+// ---------- PRODUCTS ----------
+async function filterProducts(category="All"){
+  displayedCount = 0;
+  const productList = document.getElementById("product-list");
+  if(!productList) return;
 
-    // skeleton
-    productList.innerHTML="";
-    for(let i=0;i<perPage;i++){
-      productList.innerHTML += `<div class="animate-pulse border rounded-xl p-4 text-center shadow">
-        <div class="h-32 bg-gray-300 mb-2 rounded"></div>
-        <div class="h-5 bg-gray-300 mb-1 rounded"></div>
-        <div class="h-5 bg-gray-300 w-1/2 mx-auto rounded"></div>
-      </div>`;
-    }
-
-    showPageLoader();
-    try{
-      const snapshot = await adminDb.collection("products").get();
-      const allProducts = snapshot.docs.map(d=>({id:d.id,...d.data()}));
-      const filtered = category==="All" ? allProducts : allProducts.filter(p=>p.category===category);
-      currentProducts = filtered || [];
-
-      // category highlight
-      document.querySelectorAll(".category-btn").forEach(btn=>{
-        if(btn.dataset.category===category){
-          btn.classList.add("bg-pink-500","text-white");
-          btn.classList.remove("bg-pink-100","text-gray-800");
-        } else {
-          btn.classList.remove("bg-pink-500","text-white");
-          btn.classList.add("bg-pink-100","text-gray-800");
-        }
-      });
-
-      setTimeout(()=> { renderProducts(true); hidePageLoader(); },300);
-    }catch(err){
-      console.error(err);
-      showNotification("Failed to load products","error");
-      hidePageLoader();
-      if(productList) productList.innerHTML = `<div class="text-center text-gray-500 col-span-full">Failed to load products</div>`;
-    }
+  // skeleton
+  productList.innerHTML = "";
+  for(let i=0; i<perPage; i++){
+    productList.innerHTML += `<div class="animate-pulse border rounded-xl p-4 text-center shadow">
+      <div class="h-32 bg-gray-300 mb-2 rounded"></div>
+      <div class="h-5 bg-gray-300 mb-1 rounded"></div>
+      <div class="h-5 bg-gray-300 w-1/2 mx-auto rounded"></div>
+    </div>`;
   }
+
+  showPageLoader();
+  try {
+    const snapshot = await adminDb.collection("products").get();
+
+    // Map products and ensure weight is included
+    const allProducts = snapshot.docs.map(d => ({
+      id: d.id,
+      name: d.data().name || "Untitled",
+      price: Number(d.data().price || 0),
+      image: d.data().image || "https://via.placeholder.com/300x200?text=No+Image",
+      category: d.data().category || "Misc",
+      description: d.data().description || "",
+      weight: Number(d.data().weight || 0) // ✅ ensures weight is saved
+    }));
+
+    const filtered = category === "All" ? allProducts : allProducts.filter(p => p.category === category);
+    currentProducts = filtered || [];
+
+    // category highlight
+    document.querySelectorAll(".category-btn").forEach(btn => {
+      if(btn.dataset.category === category){
+        btn.classList.add("bg-pink-500","text-white");
+        btn.classList.remove("bg-pink-100","text-gray-800");
+      } else {
+        btn.classList.remove("bg-pink-500","text-white");
+        btn.classList.add("bg-pink-100","text-gray-800");
+      }
+    });
+
+    setTimeout(() => { 
+      renderProducts(true); 
+      hidePageLoader(); 
+    }, 300);
+
+  } catch(err) {
+    console.error(err);
+    showNotification("Failed to load products","error");
+    hidePageLoader();
+    if(productList) productList.innerHTML = `<div class="text-center text-gray-500 col-span-full">Failed to load products</div>`;
+  }
+}
+
+  // // ---------- PRODUCTS ----------
+  // async function filterProducts(category="All"){
+  //   displayedCount=0;
+  //   const productList = document.getElementById("product-list");
+  //   if(!productList) return;
+
+  //   // skeleton
+  //   productList.innerHTML="";
+  //   for(let i=0;i<perPage;i++){
+  //     productList.innerHTML += `<div class="animate-pulse border rounded-xl p-4 text-center shadow">
+  //       <div class="h-32 bg-gray-300 mb-2 rounded"></div>
+  //       <div class="h-5 bg-gray-300 mb-1 rounded"></div>
+  //       <div class="h-5 bg-gray-300 w-1/2 mx-auto rounded"></div>
+  //     </div>`;
+  //   }
+
+  //   showPageLoader();
+  //   try{
+  //     const snapshot = await adminDb.collection("products").get();
+  //     const allProducts = snapshot.docs.map(d=>({id:d.id,...d.data()}));
+  //     const filtered = category==="All" ? allProducts : allProducts.filter(p=>p.category===category);
+  //     currentProducts = filtered || [];
+
+  //     // category highlight
+  //     document.querySelectorAll(".category-btn").forEach(btn=>{
+  //       if(btn.dataset.category===category){
+  //         btn.classList.add("bg-pink-500","text-white");
+  //         btn.classList.remove("bg-pink-100","text-gray-800");
+  //       } else {
+  //         btn.classList.remove("bg-pink-500","text-white");
+  //         btn.classList.add("bg-pink-100","text-gray-800");
+  //       }
+  //     });
+
+  //     setTimeout(()=> { renderProducts(true); hidePageLoader(); },300);
+  //   }catch(err){
+  //     console.error(err);
+  //     showNotification("Failed to load products","error");
+  //     hidePageLoader();
+  //     if(productList) productList.innerHTML = `<div class="text-center text-gray-500 col-span-full">Failed to load products</div>`;
+  //   }
+  // }
   window.filterProducts = filterProducts;
 
     // ---------- RENDER PRODUCTS ----------
@@ -387,39 +445,130 @@ productList.querySelectorAll('.add-btn').forEach(btn=>{
   }
 
   // ---------- CART ----------
-  window.addToCart = async function(id){
-    if(!userAuth.currentUser) return showNotification("Login required","error");
-    const product = currentProducts.find(p=>p.id===id);
-    if(!product) return showNotification("Not found","error");
+window.addToCart = async function(id){
+  if(!userAuth.currentUser) return showNotification("Login required","error");
 
-    const uid = userAuth.currentUser.uid;
-    const cartDocRef = userDb.collection("carts").doc(uid);
-    const itemsRef = cartDocRef.collection("items");
+  // Find product from currentProducts (ensures weight exists)
+  const product = currentProducts.find(p => p.id === id);
+  if(!product) return showNotification("Product not found","error");
 
-    try{
-      const cartSnap = await cartDocRef.get();
-      if(!cartSnap.exists) await cartDocRef.set({createdAt:firebase.firestore.FieldValue.serverTimestamp()});
-      const q = await itemsRef.where("id","==",product.id).get();
-      if(!q.empty) await q.docs[0].ref.update({quantity:firebase.firestore.FieldValue.increment(1)});
-      else await itemsRef.add({id:product.id,name:product.name,price:product.price,image:product.image||'https://via.placeholder.com/150',quantity:1,createdAt:firebase.firestore.FieldValue.serverTimestamp()});
-      showNotification("Added!","success");
-      updateCartCount();
-    } catch(err){ console.error(err); showNotification("Failed","error"); }
+  const uid = userAuth.currentUser.uid;
+  const cartDocRef = userDb.collection("carts").doc(uid);
+  const itemsRef = cartDocRef.collection("items");
+
+  try {
+    // Create cart if it doesn't exist
+    const cartSnap = await cartDocRef.get();
+    if(!cartSnap.exists) {
+      await cartDocRef.set({ createdAt: firebase.firestore.FieldValue.serverTimestamp() });
+    }
+
+    // Check if item already in cart
+    const q = await itemsRef.where("id", "==", product.id).get();
+    if(!q.empty) {
+      // Increment quantity if already exists
+      await q.docs[0].ref.update({
+        quantity: firebase.firestore.FieldValue.increment(1)
+      });
+    } else {
+      // Add new item with weight included
+      await itemsRef.add({
+        id: product.id,
+        name: product.name,
+        price: Number(product.price) || 0,
+        image: product.image || 'https://via.placeholder.com/150',
+        quantity: 1,
+        weight: Number(product.weight || 0), // ✅ weight included
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+    }
+
+    showNotification("Added to cart!","success");
+    updateCartCount();
+
+  } catch(err) {
+    console.error(err);
+    showNotification("Failed to add to cart","error");
   }
+}
+
+  // // ---------- CART ----------
+  // window.addToCart = async function(id){
+  //   if(!userAuth.currentUser) return showNotification("Login required","error");
+  //   const product = currentProducts.find(p=>p.id===id);
+  //   if(!product) return showNotification("Not found","error");
+
+  //   const uid = userAuth.currentUser.uid;
+  //   const cartDocRef = userDb.collection("carts").doc(uid);
+  //   const itemsRef = cartDocRef.collection("items");
+
+  //   try{
+  //     const cartSnap = await cartDocRef.get();
+  //     if(!cartSnap.exists) await cartDocRef.set({createdAt:firebase.firestore.FieldValue.serverTimestamp()});
+  //     const q = await itemsRef.where("id","==",product.id).get();
+  //     if(!q.empty) await q.docs[0].ref.update({quantity:firebase.firestore.FieldValue.increment(1)});
+  //     else await itemsRef.add({
+  //   id: product.id,
+  //   name: product.name,
+  //   price: Number(product.price) || 0,
+  //   image: product.image || 'https://via.placeholder.com/150',
+  //   quantity: 1,
+  //   weight: Number(product.weight), // ✅ ADD THIS LINE
+  //   createdAt: firebase.firestore.FieldValue.serverTimestamp()
+  // });
+
+  //     showNotification("Added!","success");
+  //     updateCartCount();
+  //   } catch(err){ console.error(err); showNotification("Failed","error"); }
+  // }
 
   function updateCartCount(){
     const el = document.getElementById("cartCount");
     if(!el) return;
-    if(cartUnsub){ try{ cartUnsub(); } catch(e){} cartUnsub=null; }
-    if(!userAuth.currentUser){ el.textContent="0"; return; }
 
-    const itemsRef = userDb.collection("carts").doc(userAuth.currentUser.uid).collection("items");
-    cartUnsub = itemsRef.onSnapshot(snapshot=>{
-      let total=0;
-      snapshot.forEach(doc=> total+=doc.data().quantity||0);
-      el.textContent=total;
-    }, err=>{ console.error(err); el.textContent="0"; });
-  }
+    // Unsubscribe previous snapshot listener if exists
+    if(cartUnsub){
+        try { cartUnsub(); } catch(e) { console.error(e); }
+        cartUnsub = null;
+    }
+
+    // If user is not logged in, show 0
+    if(!userAuth.currentUser){
+        el.textContent = "0";
+        return;
+    }
+
+    const itemsRef = userDb.collection("carts")
+        .doc(userAuth.currentUser.uid)
+        .collection("items");
+
+    // Listen for realtime changes
+    cartUnsub = itemsRef.onSnapshot(snapshot => {
+        let total = 0;
+        snapshot.forEach(doc => {
+            const qty = Number(doc.data().quantity) || 0;
+            total += qty;
+        });
+        el.textContent = total;
+    }, err => {
+        console.error("Cart count update error:", err);
+        el.textContent = "0";
+    });
+}
+
+  // function updateCartCount(){
+  //   const el = document.getElementById("cartCount");
+  //   if(!el) return;
+  //   if(cartUnsub){ try{ cartUnsub(); } catch(e){} cartUnsub=null; }
+  //   if(!userAuth.currentUser){ el.textContent="0"; return; }
+
+  //   const itemsRef = userDb.collection("carts").doc(userAuth.currentUser.uid).collection("items");
+  //   cartUnsub = itemsRef.onSnapshot(snapshot=>{
+  //     let total=0;
+  //     snapshot.forEach(doc=> total+=doc.data().quantity||0);
+  //     el.textContent=total;
+  //   }, err=>{ console.error(err); el.textContent="0"; });
+  // }
 
   // ---------- USER AUTH UI ----------
   userAuth.onAuthStateChanged(user=>{

@@ -105,6 +105,92 @@
   const db = firebase.firestore();
   const msg = document.getElementById("successMessage");
 
+  // ===== Safe Timestamp Converter =====
+  function safeToDate(ts) {
+    if (!ts) return null;
+    if (ts.toDate) return ts.toDate();
+    if (ts.seconds) return new Date(ts.seconds * 1000);
+    return null;
+  }
+
+  // ===== Fetch Latest Order =====
+  auth.onAuthStateChanged(async user => {
+    if (!user) {
+      msg.textContent = "Your order was processed.";
+      return;
+    }
+
+    try {
+      const snapshot = await db
+        .collection("orders")
+        .where("userId", "==", user.uid)
+        .get();
+
+      if (snapshot.empty) {
+        msg.textContent = "Your order was processed.";
+        return;
+      }
+
+      // Find most recent order safely
+      let latestOrder = null;
+      let latestDate = null;
+
+      snapshot.forEach(doc => {
+        const data = doc.data();
+        const orderDate =
+          safeToDate(data.createdAt) ||
+          safeToDate(data.timestamp);
+
+        if (!orderDate) return;
+
+        if (!latestDate || orderDate > latestDate) {
+          latestDate = orderDate;
+          latestOrder = data;
+        }
+      });
+
+      if (latestOrder) {
+        setTimeout(() => {
+          msg.innerHTML = `
+            Thank you, <strong>${latestOrder.name}</strong>!<br>
+            Your order total is <strong>₦${latestOrder.total.toLocaleString()}</strong>.<br>
+            Payment Method: <strong>${latestOrder.paymentMethod}</strong>
+          `;
+        }, 3000);
+      } else {
+        msg.textContent = "Your order was processed.";
+      }
+
+      // Clear cart items
+      const cartRef = db.collection("carts").doc(user.uid).collection("items");
+      const cartSnapshot = await cartRef.get();
+      const batch = db.batch();
+      cartSnapshot.forEach(doc => batch.delete(doc.ref));
+      await batch.commit();
+
+    } catch (err) {
+      console.error("Error fetching latest order:", err);
+      msg.textContent = "Your order was processed.";
+    }
+  });
+</script>
+
+<!-- <script>
+  // ===== Firebase Config =====
+  const firebaseConfig = {
+    apiKey: "AIzaSyDdTPmpaIPWSDWOmR-fXgvAb7hoxZUawcc",
+    authDomain: "e-commerce-39c74.firebaseapp.com",
+    projectId: "e-commerce-39c74",
+    storageBucket: "e-commerce-39c74.firebasestorage.app",
+    messagingSenderId: "863375033754",
+    appId: "1:863375033754:web:7ba248c8dbb1566c83e623"
+  };
+
+  firebase.initializeApp(firebaseConfig);
+  const auth = firebase.auth();
+  const db = firebase.firestore();
+  const msg = document.getElementById("successMessage");
+
   // ===== Fetch Latest Order =====
   auth.onAuthStateChanged(async user => {
     if (!user) {
@@ -153,7 +239,7 @@
       msg.textContent = "Your order was processed.";
     }
   });
-</script>
+</script> -->
 
 </body>
 </html>
