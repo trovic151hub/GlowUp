@@ -172,6 +172,7 @@
     bottom: 20px !important;
     left: 20px !important;
     max-width: 80% !important;
+    background: none !important;
   }
 
   .hero-overlay h1 {
