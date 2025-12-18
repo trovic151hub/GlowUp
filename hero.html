@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hero Slider</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+</head>
+<body>
+    <header class="bg-pink-600 text-white p-4">
+  <div class="max-w-6xl mx-auto flex items-center justify-between">
+    <div class="flex space-x-2">
+      <button onclick="history.back()">
+        <i class="fas fa-arrow-left"></i>
+      </button>
+      <h1 class="text-lg font-bold">Hero Slider</h1>
+    </div>
+  </div>
+</header>
+
+    <div class="max-w-3xl mx-auto p-4">
+  <h2 class="text-2xl font-bold mb-4">Hero Slider Admin</h2>
+
+  <!-- Slide Form -->
+  <form id="slideForm" class="mb-6 bg-white p-4 rounded shadow">
+    <div class="mb-3">
+      <label class="font-semibold">Slide Image</label>
+      <input type="file" id="slideImage" accept="image/*" class="w-full border p-2 rounded">
+    </div>
+    <div class="mb-3">
+      <label class="font-semibold">Headline</label>
+      <input type="text" id="slideHeadline" class="w-full border p-2 rounded" placeholder="Glow Naturally">
+    </div>
+    <div class="mb-3">
+      <label class="font-semibold">Subtext</label>
+      <input type="text" id="slideSubtext" class="w-full border p-2 rounded" placeholder="Discover our skincare products">
+    </div>
+    <div class="mb-3">
+      <label class="font-semibold">Order</label>
+      <input type="number" id="slideOrder" class="w-full border p-2 rounded" value="1">
+    </div>
+    <div class="mb-3">
+      <label class="font-semibold">Link</label>
+      <input type="text" id="slideLink" class="w-full border p-2 rounded" placeholder="/products">
+    </div>
+    <div class="mb-3 flex items-center gap-2">
+      <input type="checkbox" id="slideActive" checked>
+      <label class="font-semibold">Active</label>
+    </div>
+    <button type="submit" class="bg-pink-500 text-white px-4 py-2 rounded">Add Slide</button>
+  </form>
+
+  <!-- Existing Slides -->
+  <h3 class="text-xl font-bold mb-2">Existing Slides</h3>
+  <div id="slidesList" class="space-y-3"></div>
+</div>
+
+<!-- Firebase compat -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+<script>
+    // ===== Firebase Config =====
+  const firebaseConfig = {
+    apiKey: "AIzaSyDdTPmpaIPWSDWOmR-fXgvAb7hoxZUawcc",
+    authDomain: "e-commerce-39c74.firebaseapp.com",
+    projectId: "e-commerce-39c74",
+    storageBucket: "e-commerce-39c74.firebasestorage.app",
+    messagingSenderId: "863375033754",
+    appId: "1:863375033754:web:7ba248c8dbb1566c83e623"
+  };
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.firestore();
+
+// Cloudinary Settings
+const CLOUDINARY_URL = "https://api.cloudinary.com/v1_1/YOUR_CLOUD_NAME/image/upload";
+const CLOUDINARY_UPLOAD_PRESET = "YOUR_UPLOAD_PRESET";
+
+// DOM Elements
+const slideForm = document.getElementById("slideForm");
+const slideImage = document.getElementById("slideImage");
+const slideHeadline = document.getElementById("slideHeadline");
+const slideSubtext = document.getElementById("slideSubtext");
+const slideOrder = document.getElementById("slideOrder");
+const slideLink = document.getElementById("slideLink");
+const slideActive = document.getElementById("slideActive");
+const slidesList = document.getElementById("slidesList");
+
+// ===== Upload to Cloudinary =====
+async function uploadImage(file) {
+  const formData = new FormData();
+  formData.append("file", file);
+  formData.append("upload_preset", CLOUDINARY_UPLOAD_PRESET);
+
+  const res = await fetch(CLOUDINARY_URL, {
+    method: "POST",
+    body: formData
+  });
+
+  const data = await res.json();
+  return data.secure_url;
+}
+
+// ===== Add Slide =====
+slideForm.addEventListener("submit", async e => {
+  e.preventDefault();
+  if (!slideImage.files[0]) return alert("Select an image!");
+
+  const imageUrl = await uploadImage(slideImage.files[0]);
+
+  await db.collection("heroSlider").add({
+    imageURL: imageUrl,
+    headline: slideHeadline.value,
+    subText: slideSubtext.value,
+    order: Number(slideOrder.value),
+    link: slideLink.value,
+    active: slideActive.checked
+  });
+
+  slideForm.reset();
+  loadSlides();
+});
+
+// ===== Load Slides =====
+async function loadSlides() {
+  slidesList.innerHTML = "";
+  const snapshot = await db.collection("heroSlider").orderBy("order").get();
+  snapshot.forEach(doc => {
+    const data = doc.data();
+    const div = document.createElement("div");
+    div.className = "flex justify-between bg-gray-50 p-3 rounded shadow items-center";
+    div.innerHTML = `
+      <div class="flex items-center gap-3">
+        <img src="${data.imageURL}" class="w-20 h-12 object-cover rounded">
+        <div>
+          <div class="font-semibold">${data.headline}</div>
+          <div class="text-sm text-gray-600">${data.subText}</div>
+          <div class="text-xs text-gray-500">Order: ${data.order}</div>
+        </div>
+      </div>
+      <div class="flex gap-2">
+        <button data-id="${doc.id}" class="bg-red-500 text-white px-2 py-1 rounded deleteBtn">Delete</button>
+        <button data-id="${doc.id}" class="bg-green-500 text-white px-2 py-1 rounded toggleBtn">
+          ${data.active ? "Deactivate" : "Activate"}
+        </button>
+      </div>
+    `;
+    slidesList.appendChild(div);
+  });
+
+  // Delete Slide
+  document.querySelectorAll(".deleteBtn").forEach(btn => {
+    btn.addEventListener("click", async () => {
+      await db.collection("heroSlider").doc(btn.dataset.id).delete();
+      loadSlides();
+    });
+  });
+
+  // Toggle Active
+  document.querySelectorAll(".toggleBtn").forEach(btn => {
+    btn.addEventListener("click", async () => {
+      const docRef = db.collection("heroSlider").doc(btn.dataset.id);
+      const docSnap = await docRef.get();
+      const active = docSnap.data().active;
+      await docRef.update({ active: !active });
+      loadSlides();
+    });
+  });
+}
+
+// Initial Load
+loadSlides();
+
+</script>
+</body>
+</html>

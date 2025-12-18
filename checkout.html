@@ -296,11 +296,11 @@ document.addEventListener("DOMContentLoaded", () => {
 };
 
   const guoSupportedStates=["lagos","abuja","abia","anambra",
-  "enugu","imo","rivers","delta","edo","benue","kaduna","kano",
+  "benin","enugu","imo","rivers","delta","edo","benue","kaduna","kano",
   "benin","ebonyi","plateau","warri","asaba"
 ];
 
-  const states=["Abia","Adamawa","Akwa Ibom","Anambra",
+  const states=["Abia","Adamawa","Akwa Ibom","Anambra","Benin",
   "Bauchi","Bayelsa","Benue","Borno","Cross River","Delta",
   "Ebonyi","Edo","Ekiti","Enugu","Gombe","Imo","Jigawa",
   "Kaduna","Kano","Katsina","Kebbi","Kogi","Kwara","Lagos",
@@ -525,8 +525,8 @@ function renderOrderWithDelivery() {
   const deliveryInfo = {
     state: stateInput.value || "—",
     lga: lgaInput.value || "—",
-    type: deliveryType.value || "home",
-    company: deliverySelect.value?.toUpperCase() || "LOCAL",
+    type: deliveryType.value || "",
+    company: deliverySelect.value?.toUpperCase() || "",
     terminal: terminal.value || "—",
     address: document.getElementById("address").value || "—"
   };
@@ -556,18 +556,6 @@ if (isLagos) {
     deliveryFee += 800;
   }
 }
-
-  // // ===== Delivery Fee Calculation =====
-  // deliveryFee = 0;
-  // if (stateLower === "lagos" && deliveryInfo.lga) {
-  //   deliveryFee = lagosLGAFees[deliveryInfo.lga] || 0;
-  // } else if (deliveryInfo.company === "GIG") {
-  //   deliveryFee = 6700 + Math.max(totalWeight - 1, 0) * 800;
-  // } else if (deliveryInfo.company === "GUO" && guoSupportedStates.includes(stateLower)) {
-  //   deliveryFee = 3500 + Math.max(totalWeight - 1, 0) * 700;
-  // }
-  // if (deliveryInfo.type === "home") deliveryFee += 800;
-
   // ===== Delivery Description (Block Style) =====
   let deliveryDescHtml = "";
 

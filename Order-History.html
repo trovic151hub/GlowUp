@@ -617,24 +617,6 @@ if (delivery.type === 'home' && delivery.state?.toLowerCase() === 'lagos') {
 doc.text(`Fee: ₦${deliveryFee.toLocaleString()}`, margin, y); y += 6;
 doc.text(`Weight: ${weight} kg`, margin, y); y += 8;
 
-    // // ===== DELIVERY INFO =====
-    // const delivery = order.delivery || {};
-    // const deliveryFee = getDeliveryFee(order);
-    // const weight = order.totalWeight || 0;
-
-    // doc.setFont("helvetica","normal");
-    // doc.setFontSize(11);
-    // doc.setTextColor(gray);
-    // doc.text("Delivery:", margin, y); y+=6;
-    // doc.text(`Company: ${delivery.company?.toUpperCase() || '—'}`, margin, y); y+=6;
-    // doc.text(`Type: ${delivery.type || '—'}`, margin, y); y+=6;
-    // doc.text(`Terminal: ${delivery.terminal || '—'}`, margin, y); y+=6;
-    // doc.text(`State: ${delivery.state || '—'}`, margin, y); y+=6;
-    // doc.text(`LGA: ${delivery.lga || '—'}`, margin, y); y+=6;
-    // doc.text(`Address: ${delivery.address || '—'}`, margin, y); y+=6;
-    // doc.text(`Fee: ₦${deliveryFee.toLocaleString()}`, margin, y); y+=6;
-    // doc.text(`Weight: ${weight} kg`, margin, y); y+=8;
-
     // ===== PAYMENT INFO =====
     doc.text("Payment:", margin, y); y+=6;
     doc.text(`Method: ${order.paymentMethod || ''}`, margin, y); y+=6;

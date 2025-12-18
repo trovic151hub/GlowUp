@@ -48,31 +48,6 @@
     font-size: 15px;
   }
 
-  /* Hero Slider Mobile Responsiveness */
-@media (max-width: 640px) {
-  section.relative {
-    height: 200px !important; /* reduce height for small screens */
-    margin-top: 4rem !important; /* adjust spacing from navbar */
-  }
-
-  section.relative img {
-    height: 200px !important;
-    width: 100% !important;
-    object-fit: cover;
-  }
-
-  section.relative h2 {
-    font-size: 20px !important; /* smaller heading */
-    padding: 0 10px !important; /* add side padding */
-    line-height: 1.2 !important; /* tighten line height */
-  }
-
-  /* Optional: Adjust overlay opacity if needed */
-  section.relative > .absolute {
-    background: rgba(0, 0, 0, 0.25) !important;
-  }
-}
-
   /* Featured Products grid */
   #product-list {
     grid-template-columns: repeat(2, 1fr) !important;
@@ -185,4 +160,44 @@
 }
 .animate-slideOut {
   animation: slideOut 0.3s ease-in forwards;
+}
+
+/* ===== Mobile Responsive ===== */
+@media (max-width: 768px) {
+  .hero-slider {
+    height: 300px !important; /* shorter slider on mobile */
+  }
+
+  .hero-overlay {
+    bottom: 20px !important;
+    left: 20px !important;
+    max-width: 80% !important;
+  }
+
+  .hero-overlay h1 {
+    font-size: 1.5rem !important;
+  }
+
+  .hero-overlay p {
+    font-size: 1rem !important;
+  }
+
+  .hero-dots span {
+    width: 10px !important;
+    height: 10px !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .hero-slider {
+    height: 220px !important; /* smaller for phones */
+  }
+
+  .hero-overlay h1 {
+    font-size: 1.2rem !important;
+  }
+
+  .hero-overlay p {
+    font-size: 0.9rem !important;
+  }
 }
