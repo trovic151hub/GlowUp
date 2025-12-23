@@ -8,287 +8,6 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Poppins:wght@700&family=Great+Vibes&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
-  <style>
-    *{
-      font-family: 'Poppins', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
-    }
-
-    html {
-      scroll-behavior: smooth;
-    }
-
-    body {
-      background: #fff7f9;
-      color: #333;
-    }
-
-    /* Notification */
-    #notification-container {
-      position: fixed;
-      top: 1rem;
-      right: 45%;
-      z-index: 1000;
-      display: flex;
-      flex-direction: column;
-      gap: 0.5rem;
-    }
-
-    /* Loader */
-    #leaveLoader {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(255,255,255,0.85);
-      display: none;
-      justify-content: center;
-      align-items: center;
-      z-index: 99999;
-      backdrop-filter: blur(3px);
-      transition: opacity 0.3s ease;
-    }
-
-    #leaveLoader.active {
-      display: flex;
-      opacity: 1;
-    }
-
-    .spinner {
-      width: 50px;
-      height: 50px;
-      border-radius: 50%;
-      border: 5px solid #f0c4d7;
-      border-top-color: #e11d48;
-      animation: spin 0.75s linear infinite;
-    }
-
-    @keyframes spin {
-      to { transform: rotate(360deg); }
-    }
-
-    /* Hero Overlay */
-    .hero-overlay {
-      background: linear-gradient(to bottom, rgba(0,0,0,0.25), rgba(0,0,0,0.35));
-    }
-
-    .slide-btn {
-      position: absolute;
-      top: 50%;
-      transform: translateY(-50%);
-      background: rgba(255,255,255,0.7);
-      color: #e11d48;
-      font-weight: bold;
-      padding: 0.5rem 0.75rem;
-      border-radius: 50%;
-      cursor: pointer;
-      transition: all 0.3s ease;
-      z-index: 10;
-    }
-
-    .slide-btn:hover {
-      background: #e11d48;
-      color: #fff;
-    }
-
-    .slide-btn.prev { left: 1rem; }
-    .slide-btn.next { right: 1rem; }
-
-    /* Featured Products */
-    .product-card {
-      background: #fff;
-      border-radius: 1rem;
-      overflow: hidden;
-      box-shadow: 0 5px 20px rgba(0,0,0,0.08);
-      transition: transform 0.3s, box-shadow 0.3s;
-    }
-
-    .product-card:hover {
-      transform: translateY(-6px);
-      box-shadow: 0 10px 25px rgba(0,0,0,0.15);
-    }
-
-    .product-card img {
-      border-bottom: 1px solid #f0c4d7;
-    }
-
-    .product-card h3 {
-      font-family: 'Playfair Display', serif;
-    }
-
-    /* Categories */
-    .category-btn {
-      background: #ffe5ec;
-      font-weight: 600;
-      transition: all 0.3s ease;
-    }
-
-    .category-btn:hover {
-      background: #fbcfe8;
-      transform: translateY(-4px);
-      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-    }
-
-    /* Skin Tips */
-    #skinTip {
-      transition: opacity 0.5s ease;
-      font-style: italic;
-      color: #e11d48;
-    }
-
-    /* Navbar */
-    #mainHeader {
-      /* background: linear-gradient(90deg, #fbcfe8, #f9a8d4); */
-      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-    }
-
-    #mainHeader a.nav-link:hover {
-      color: #e11d48 !important;
-    }
-
-    /* Login/Signup Buttons */
-    #loginSubmit, #signupSubmit, #modalAddToCartBtn {
-      background: #e11d48;
-      transition: background 0.3s ease;
-    }
-
-    #loginSubmit:hover, #signupSubmit:hover, #modalAddToCartBtn:hover {
-      background: #be123c;
-    }
-
-    /* Skeleton animations */
-    .skeleton {
-      background: #eee;
-      border-radius: 10px;
-      overflow: hidden;
-      position: relative;
-      animation: skeletonPulse 1.2s ease-in-out infinite;
-    }
-
-    @keyframes skeletonPulse {
-      0% { background-color: #eee; }
-      50% { background-color: #f5f5f5; }
-      100% { background-color: #eee; }
-    }
-
-    .skeleton.fade-out {
-      animation: fadeOut 0.4s ease forwards;
-    }
-
-    @keyframes fadeOut {
-      from { opacity: 1; }
-      to { opacity: 0; transform: translateY(5px); }
-    }
-
-    .product-card {
-      opacity: 0;
-      transform: translateY(20px);
-      animation: slideUp 0.45s ease forwards;
-    }
-
-    @keyframes slideUp {
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
-    }
-
-    .log-btn i {
-  display: inline-block;
-  font-size: 15px; /* bigger so it’s visible */
-  color: #000 !important;
-}
-
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateX(50px); }
-  to { opacity: 1; transform: translateX(0); }
-}
-.animate-fadeIn {
-  animation: fadeIn 0.3s ease-out;
-}
-
-.hero-slider {
-  position: relative;
-  width: 100%;
-  height: 400px;
-  overflow: hidden;
-  /* border-radius: 12px; */
-}
-
-.hero-slider img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.hero-overlay {
-  position: absolute;
-  inset: 0;
-  background: rgba(0,0,0,0.35);
-  color: white;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  padding: 40px;
-}
-
-.hero-overlay h1 {
-  font-size: 2.5rem;
-  margin-bottom: 10px;
-}
-
-/* Dots */
-.hero-dots {
-  position: absolute;
-  bottom: 15px;
-  left: 50%;
-  transform: translateX(-50%);
-  display: flex;
-  gap: 10px;
-}
-
-.hero-dots span {
-  width: 10px;
-  height: 10px;
-  background: rgba(255,255,255,0.5);
-  border-radius: 50%;
-  cursor: pointer;
-  transition: all 0.3s ease;
-}
-
-.hero-dots span.active {
-  background: #ec4899;
-  transform: scale(1.3);
-}
-/* Fade animation */
-.hero-slider img {
-  transition: opacity 0.6s ease;
-  opacity: 1;
-}
-
-.hero-slider img.fade-out {
-  opacity: 0;
-}
-
-/* Text animation */
-.hero-overlay h1,
-.hero-overlay p {
-  opacity: 0;
-  transform: translateY(20px);
-  animation: textFadeUp 0.6s ease forwards;
-}
-
-.hero-overlay p {
-  animation-delay: 0.15s;
-}
-
-@keyframes textFadeUp {
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-  </style>
 </head>
 <body class="bg-white text-gray-800">
 
@@ -399,6 +118,10 @@
 
       <p id="loginError" class="text-red-500 text-sm text-center mt-2 hidden"></p>
 
+      <p class="mt-2 text-center text-sm">
+      <a href="#" id="forgotPassword" class="text-pink-600">Forgot Password?</a>
+    </p>
+
       <div class="my-4 flex items-center">
         <div class="flex-grow border-t"></div>
         <span class="mx-2 text-gray-500 text-sm">OR</span>
@@ -422,27 +145,83 @@
     </div>
   </div>
 
-  <!-- Signup Modal -->
-  <div id="signupModal"
-    class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-    <div class="bg-white p-6 rounded-lg w-full max-w-sm relative shadow">
-      <button onclick="closeSignupModal()"
-        class="absolute top-2 right-3 text-gray-500 text-xl hover:text-red-600">×</button>
-      <h3 class="text-lg font-bold text-pink-600 mb-4">Create an Account</h3>
+  <!-- Password Reset Email Modal -->
+<div id="passwordEmailModal" class="fixed inset-0 hidden z-50 flex items-center justify-center bg-black/40">
+  <div id="passwordEmailContent"
+       class="bg-white/90 backdrop-blur-md p-6 rounded-2xl shadow-2xl w-full max-w-sm
+              transform scale-90 opacity-0 transition-all duration-300">
 
-      <input id="signupName" type="text" placeholder="Full Name" class="w-full mb-3 px-4 py-2 border rounded" />
-      <input id="signupEmail" type="email" placeholder="Email" class="w-full mb-3 px-4 py-2 border rounded" />
-      <input id="signupPassword" type="password" placeholder="Password"
-        class="w-full mb-4 px-4 py-2 border rounded" />
+    <h3 class="text-2xl font-bold text-pink-600 mb-3 text-center">
+      Reset Password
+    </h3>
 
-      <button id="signupSubmit"
-        class="w-full bg-pink-600 text-white py-2 rounded hover:bg-pink-700">Sign Up</button>
+    <p class="text-sm text-gray-600 mb-4 text-center">
+      Enter your registered email to receive a password reset link.
+    </p>
 
-      <p class="text-sm mt-4 text-center">Already have an account?
-        <button onclick="openLoginModal()" class="text-pink-600 underline hover:text-pink-800">Login</button>
-      </p>
-    </div>
+    <input
+      type="email"
+      id="resetEmailInput"
+      placeholder="you@example.com"
+      class="w-full border border-gray-300 rounded-lg px-4 py-2 mb-4 focus:outline-none focus:ring-2 focus:ring-pink-500"
+    />
+
+    <button
+      id="sendResetLinkBtn"
+      class="w-full bg-pink-600 text-white py-2 rounded-lg hover:bg-pink-700 transition">
+      Send Reset Link
+    </button>
+
+    <button
+      id="cancelPasswordEmail"
+      class="w-full mt-3 text-sm text-gray-500 hover:text-gray-800 transition">
+      Cancel
+    </button>
   </div>
+</div>
+
+  <!-- Password Reset Success Modal -->
+<div id="passwordResetModal" class="fixed inset-0 hidden z-50 flex items-center justify-center bg-black/40">
+  <div id="passwordResetContent"
+       class="bg-white/90 backdrop-blur-md p-6 rounded-2xl shadow-2xl text-center
+              transform scale-90 opacity-0 transition-all duration-300 max-w-sm w-full">
+
+    <h3 class="text-2xl font-bold text-pink-600 mb-3">
+      Password Reset Sent
+    </h3>
+
+    <p class="text-sm text-gray-700 mb-5">
+      A password reset link has been sent to your email.  
+      Please check your inbox and spam folder.
+    </p>
+
+    <button
+      id="closePasswordResetBtn"
+      class="bg-pink-600 text-white px-6 py-2 rounded-lg hover:bg-pink-700 transition">
+      Okay
+    </button>
+  </div>
+</div>
+
+<!-- Password Reset Error Modal -->
+<div id="passwordErrorModal" class="fixed inset-0 hidden z-50 flex items-center justify-center bg-black/40">
+  <div class="bg-white p-6 rounded-2xl shadow-xl text-center max-w-sm w-full">
+
+    <h3 class="text-xl font-bold text-red-600 mb-3">
+      Reset Failed
+    </h3>
+
+    <p id="errorMessage" class="text-sm text-gray-700 mb-5">
+      Something went wrong.
+    </p>
+
+    <button
+      id="closePasswordErrorBtn"
+      class="bg-gray-800 text-white px-6 py-2 rounded-lg hover:bg-black transition">
+      Okay
+    </button>
+  </div>
+</div>
 
   <!-- Hero Section -->
    <div class="hero-slider mt-16">

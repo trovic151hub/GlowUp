@@ -290,6 +290,93 @@ window.addEventListener("scroll", () => {
   }
 });
 
+// ===== Open Email Modal =====
+function openPasswordEmailModal() {
+  const modal = document.getElementById("passwordEmailModal");
+  const content = document.getElementById("passwordEmailContent");
+  modal.classList.remove("hidden");
+  setTimeout(() => {
+    content.classList.remove("scale-90", "opacity-0");
+    content.classList.add("scale-100", "opacity-100");
+  }, 10);
+}
+
+// ===== Close Email Modal =====
+function closePasswordEmailModal() {
+  const modal = document.getElementById("passwordEmailModal");
+  const content = document.getElementById("passwordEmailContent");
+  content.classList.add("scale-90", "opacity-0");
+  setTimeout(() => {
+    modal.classList.add("hidden");
+  }, 300);
+}
+
+// ===== Success Modal =====
+function openPasswordResetModal() {
+  const modal = document.getElementById("passwordResetModal");
+  const content = document.getElementById("passwordResetContent");
+  modal.classList.remove("hidden");
+  setTimeout(() => {
+    content.classList.remove("scale-90", "opacity-0");
+    content.classList.add("scale-100", "opacity-100");
+  }, 10);
+}
+
+function closePasswordResetModal() {
+  const modal = document.getElementById("passwordResetModal");
+  const content = document.getElementById("passwordResetContent");
+  content.classList.add("scale-90", "opacity-0");
+  setTimeout(() => {
+    modal.classList.add("hidden");
+  }, 300);
+}
+
+// ===== Error Modal =====
+function showPasswordError(message) {
+  document.getElementById("errorMessage").innerText = message;
+  document.getElementById("passwordErrorModal").classList.remove("hidden");
+}
+
+function closePasswordErrorModal() {
+  document.getElementById("passwordErrorModal").classList.add("hidden");
+}
+
+// ===== Event Listeners for Modal Buttons =====
+document.getElementById("forgotPassword")?.addEventListener("click", openPasswordEmailModal);
+document.getElementById("sendResetLinkBtn")?.addEventListener("click", async () => {
+  const emailInput = document.getElementById("resetEmailInput");
+  const email = emailInput.value.trim();
+
+  if (!email) {
+    showPasswordError("Please enter your registered email.");
+    return;
+  }
+
+  const btn = document.getElementById("sendResetLinkBtn");
+
+  try {
+    btn.innerText = "Sending...";
+    btn.disabled = true;
+
+    await firebase.auth().sendPasswordResetEmail(email);
+
+    closePasswordEmailModal();
+    openPasswordResetModal();
+
+    emailInput.value = "";
+  } catch (err) {
+    showPasswordError(err.message);
+  } finally {
+    btn.innerText = "Send Reset Link";
+    btn.disabled = false;
+  }
+});
+
+// Modal close buttons
+document.getElementById("cancelPasswordEmail")?.addEventListener("click", closePasswordEmailModal);
+document.getElementById("closePasswordResetBtn")?.addEventListener("click", closePasswordResetModal);
+document.getElementById("closePasswordErrorBtn")?.addEventListener("click", closePasswordErrorModal);
+
 // ---------- PRODUCTS ----------
 async function filterProducts(category="All"){
   displayedCount = 0;
@@ -781,6 +868,4 @@ function closeMenuFunc() {
 menuToggle.addEventListener("click", openMenu);
 closeMenu.addEventListener("click", closeMenuFunc);
 menuOverlay.addEventListener("click", closeMenuFunc);
-  // ---------- rest of your code (renderProducts, viewProduct, addToCart, userAuth, login, etc.) ----------
-  // keep it exactly as you have, but whenever you fetch/update data, you can call showPageLoader() / hidePageLoader() if needed
 })();

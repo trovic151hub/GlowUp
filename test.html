@@ -10,6 +10,12 @@
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+  <script type="text/javascript" src="https://cdn.emailjs.com/sdk/3.2/email.min.js"></script>
+   <!-- Latest EmailJS SDK -->
+<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/emailjs-com@3/dist/email.min.js"></script>
+<script>
+  emailjs.init("cRuLIat7A3PEivQCu"); // replace with your EmailJS public key
+</script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
   <!-- jsPDF for PDF generation -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -112,7 +118,7 @@
     <div id="detailContent" class="mt-4 space-y-3 text-sm text-gray-800"></div>
     <div class="mt-4 flex gap-2">
       <button id="downloadPdfBtn" class="bg-pink-600 text-white px-4 py-2 rounded">Download PDF</button>
-      <button id="emailReceiptBtn" class="bg-blue-600 text-white px-4 py-2 rounded opacity-50 cursor-not-allowed">Email Receipt</button>
+      <button id="emailReceiptBtn" class="bg-blue-600 text-white px-4 py-2 rounded opacity-50 cursor-not-allowed" disabled>Email Receipt</button>
       <div id="modalStatusControls" class="ml-auto flex gap-2"></div>
     </div>
   </div>
@@ -250,6 +256,7 @@ firebase.auth().onAuthStateChanged(async (user) => {
     ordersSummary.innerHTML = `<strong>Total Orders:</strong> ${totalOrders} | <strong>Total Delivery Fee:</strong> ₦${totalDeliveryFee.toLocaleString()} | <strong>Total Weight:</strong> ${totalWeight} kg`;
   }
 
+  //  Load More btn
   async function loadMore(isInitial=false) {
     if(loadingMore) return;
     loadingMore = true; loadMoreBtn.disabled = true;
@@ -305,7 +312,6 @@ firebase.auth().onAuthStateChanged(async (user) => {
   <div class="flex flex-col md:flex-row gap-2">
     <button class="bg-blue-600 text-white px-3 py-1 rounded" onclick='openDetail("${order.id}")'>Detail</button>
     <button class="bg-pink-500 text-white px-3 py-1 rounded" onclick='toggleFulfilled("${order.id}", ${!!order.fulfilled})'>${order.fulfilled?'Mark Pending':'Mark Complete'}</button>
-    <button class="bg-red-500 text-white px-3 py-1 rounded opacity-50 cursor-not-allowed" onclick='deleteOrder("${order.id}")' disabled>Delete</button>
   </div>
 </td>
 
@@ -354,213 +360,118 @@ firebase.auth().onAuthStateChanged(async (user) => {
     renderModal(currentOpenOrder);
   };
 
+  // ===== Render Detail Modal =====
   function renderModal(order) {
-  currentOpenOrder = order;
-  const deliveryFee = getDeliveryFee(order);
-  const prog = shipmentTimelineHtml(order.shipmentStatus || 'processing');
+    currentOpenOrder = order;
+    const detailContent = document.getElementById("detailContent");
+    const modalStatusControls = document.getElementById("modalStatusControls");
+    const detailModal = document.getElementById("detailModal");
+    const emailReceiptBtn = document.getElementById("emailReceiptBtn");
 
-  const headerHtml = `<div class="flex justify-between items-center">
-    <div>
-      <div class="text-lg font-semibold">${escapeHtml(order.name || '')}</div>
-      <div class="text-xs text-gray-600">${escapeHtml(order.email || '')} • ${escapeHtml(order.phone || '')}</div>
-      <div class="text-xs text-gray-600 mt-1">Ref: ${escapeHtml(order.paymentRef || '')}</div>
-    </div>
-    <div class="text-right">
-      <div class="text-sm">Total</div>
-      <div class="text-xl font-bold">₦${Number(order.total || 0).toLocaleString()}</div>
-    </div>
-  </div>`;
+    // Enable email button
+    emailReceiptBtn.disabled = false;
+    emailReceiptBtn.classList.remove("opacity-50", "cursor-not-allowed");
 
-  const itemsHtml = (order.items || []).map(i => `
-    <div class="flex justify-between border-b py-2">
+    emailReceiptBtn.onclick = async () => {
+  if (!currentOpenOrder) return showAlert("No order selected", "Error");
+
+  try {
+    emailReceiptBtn.disabled = true;
+    emailReceiptBtn.innerText = "Sending...";
+
+    await sendReceiptEmail(currentOpenOrder);
+
+    showAlert("Receipt email sent successfully!", "Success");
+  } catch (err) {
+    showAlert(err.message || "Failed to send receipt email", "Error");
+  } finally {
+    emailReceiptBtn.disabled = false;
+    emailReceiptBtn.innerText = "Email Receipt";
+  }
+};
+
+    // ===== Modal Header & Items =====
+    const headerHtml = `<div class="flex justify-between items-center">
       <div>
-        <div class="font-medium">${escapeHtml(i.name)}</div>
-        <div class="text-xs text-gray-600">₦${Number(i.price).toLocaleString()} each</div>
+        <div class="text-lg font-semibold">${escapeHtml(order.name || '')}</div>
+        <div class="text-xs text-gray-600">${escapeHtml(order.email || '')} • ${escapeHtml(order.phone || '')}</div>
+        <div class="text-xs text-gray-600 mt-1">Ref: ${escapeHtml(order.paymentRef || '')}</div>
       </div>
       <div class="text-right">
-        <div>${i.quantity} ×</div>
-        <div class="font-semibold">₦${(i.price*i.quantity).toLocaleString()}</div>
+        <div class="text-sm">Total</div>
+        <div class="text-xl font-bold">₦${Number(order.total || 0).toLocaleString()}</div>
       </div>
-    </div>`).join('');
-
-  const delivery = order.delivery || {};
-
-  // Determine display text based on type and state
-  let deliveryText = '';
-  if (delivery.type === 'home' && delivery.state?.toLowerCase() === 'lagos') {
-    deliveryText = `Home Delivery<br>LGA: ${delivery.lga || '—'}<br>Address: ${delivery.address || '—'}`;
-  } else {
-    deliveryText = `Company: ${delivery.company?.toUpperCase() || '—'}<br>
-                    Type: ${delivery.type || '—'}<br>
-                    Terminal: ${delivery.terminal || '—'}<br>
-                    State: ${delivery.state || '—'}<br>
-                    Address: ${delivery.address || '—'}`;
-  }
-
-  const deliveryHtml = `
-    <div class="mt-4">
-      <h4 class="font-semibold">Delivery</h4>
-      <p class="text-sm text-gray-600">${deliveryText}</p>
-      <div class="mt-2">${prog}</div>
-      <div class="mt-2 text-sm text-gray-700">
-        Fee: ₦${deliveryFee.toLocaleString()}<br>
-        Weight: ${order.totalWeight || 0} kg
-      </div>
-    </div>
-  `;
-
-  const paymentHtml = `
-    <div class="mt-4">
-      <h4 class="font-semibold">Payment</h4>
-      <p class="text-sm text-gray-600">${escapeHtml(order.paymentMethod || '')}</p>
-      <p class="text-sm text-gray-600">Ref: ${escapeHtml(order.paymentRef || '')}</p>
-    </div>
-  `;
-
-  detailContent.innerHTML = `
-    <div class="mt-3">
-      ${headerHtml}
-      <div class="mt-4">
-        <h4 class="font-semibold">Items</h4>
-        <div class="mt-2">${itemsHtml || '<div class="text-gray-500">No items listed</div>'}</div>
-      </div>
-      ${deliveryHtml}
-      ${paymentHtml}
     </div>`;
 
-//   function renderModal(order){
-//   currentOpenOrder = order;
-//   const deliveryFee = getDeliveryFee(order);
-//   const prog = shipmentTimelineHtml(order.shipmentStatus || 'processing');
+    const itemsHtml = (order.items || []).map(i => `
+      <div class="flex justify-between border-b py-2">
+        <div>
+          <div class="font-medium">${escapeHtml(i.name)}</div>
+          <div class="text-xs text-gray-600">₦${Number(i.price).toLocaleString()} each</div>
+        </div>
+        <div class="text-right">
+          <div>${i.quantity} ×</div>
+          <div class="font-semibold">₦${(i.price*i.quantity).toLocaleString()}</div>
+        </div>
+      </div>`).join('');
 
-//   const headerHtml = `<div class="flex justify-between items-center">
-//     <div>
-//       <div class="text-lg font-semibold">${escapeHtml(order.name || '')}</div>
-//       <div class="text-xs text-gray-600">${escapeHtml(order.email || '')} • ${escapeHtml(order.phone || '')}</div>
-//       <div class="text-xs text-gray-600 mt-1">Ref: ${escapeHtml(order.paymentRef || '')}</div>
-//     </div>
-//     <div class="text-right">
-//       <div class="text-sm">Total</div>
-//       <div class="text-xl font-bold">₦${Number(order.total || 0).toLocaleString()}</div>
-//     </div>
-//   </div>`;
+    const deliveryFee = getDeliveryFee(order);
+    const prog = shipmentTimelineHtml(order.shipmentStatus || 'processing');
+    const delivery = order.delivery || {};
+    let deliveryText = '';
+    if (delivery.type === 'home' && delivery.state?.toLowerCase() === 'lagos') {
+      deliveryText = `Home Delivery<br>LGA: ${delivery.lga || '—'}<br>Address: ${delivery.address || '—'}`;
+    } else {
+      deliveryText = `Company: ${delivery.company?.toUpperCase() || '—'}<br>
+                      Type: ${delivery.type || '—'}<br>
+                      Terminal: ${delivery.terminal || '—'}<br>
+                      State: ${delivery.state || '—'}<br>
+                      Address: ${delivery.address || '—'}`;
+    }
 
-//   const itemsHtml = (order.items || []).map(i => `
-//     <div class="flex justify-between border-b py-2">
-//       <div>
-//         <div class="font-medium">${escapeHtml(i.name)}</div>
-//         <div class="text-xs text-gray-600">₦${Number(i.price).toLocaleString()} each</div>
-//       </div>
-//       <div class="text-right">
-//         <div>${i.quantity} ×</div>
-//         <div class="font-semibold">₦${(i.price*i.quantity).toLocaleString()}</div>
-//       </div>
-//     </div>`).join('');
+    const deliveryHtml = `
+      <div class="mt-4">
+        <h4 class="font-semibold">Delivery</h4>
+        <p class="text-sm text-gray-600">${deliveryText}</p>
+        <div class="mt-2">${prog}</div>
+        <div class="mt-2 text-sm text-gray-700">
+          Fee: ₦${deliveryFee.toLocaleString()}<br>
+          Weight: ${order.totalWeight || 0} kg
+        </div>
+      </div>
+    `;
 
-//   const delivery = order.delivery || {};
-//   // New structured delivery info
-//   const deliveryHtml = `
-//     <div class="mt-4">
-//       <h4 class="font-semibold">Delivery</h4>
-//       <p class="text-sm text-gray-600">Address: ${escapeHtml(order.address || '—')}</p>
-//       <div class="mt-2">${prog}</div>
-//       <div class="mt-2 text-sm text-gray-700">
-//         <div>Company: ${delivery.company?.toUpperCase() || '—'}</div>
-//         <div>Type: ${delivery.type || '—'}</div>
-//         <div>Terminal: ${delivery.terminal || '—'}</div>
-//         <div>State: ${delivery.state || '—'}</div>
-//         <div>LGA: ${delivery.lga || '—'}</div>
-//         <div>Fee: ₦${deliveryFee.toLocaleString()}</div>
-//         <div>Weight: ${order.totalWeight || 0} kg</div>
-//       </div>
-//     </div>
-//   `;
+    const paymentHtml = `
+      <div class="mt-4">
+        <h4 class="font-semibold">Payment</h4>
+        <p class="text-sm text-gray-600">${escapeHtml(order.paymentMethod || '')}</p>
+        <p class="text-sm text-gray-600">Ref: ${escapeHtml(order.paymentRef || '')}</p>
+      </div>
+    `;
 
-//   const paymentHtml = `
-//     <div class="mt-4">
-//       <h4 class="font-semibold">Payment</h4>
-//       <p class="text-sm text-gray-600">${escapeHtml(order.paymentMethod || '')}</p>
-//       <p class="text-sm text-gray-600">Ref: ${escapeHtml(order.paymentRef || '')}</p>
-//     </div>
-//   `;
-
-//   detailContent.innerHTML = `
-//     <div class="mt-3">
-//       ${headerHtml}
-//       <div class="mt-4">
-//         <h4 class="font-semibold">Items</h4>
-//         <div class="mt-2">${itemsHtml || '<div class="text-gray-500">No items listed</div>'}</div>
-//       </div>
-//       ${deliveryHtml}
-//       ${paymentHtml}
-//     </div>`;
-
-//   // Render Modal
-//   function renderModal(order){
-//     currentOpenOrder = order;
-//     const deliveryFee = getDeliveryFee(order);
-//     const prog = shipmentTimelineHtml(order.shipmentStatus || 'processing');
-
-//     const headerHtml = `<div class="flex justify-between items-center">
-//       <div>
-//         <div class="text-lg font-semibold">${escapeHtml(order.name || '')}</div>
-//         <div class="text-xs text-gray-600">${escapeHtml(order.email || '')} • ${escapeHtml(order.phone || '')}</div>
-//         <div class="text-xs text-gray-600 mt-1">Ref: ${escapeHtml(order.paymentRef || '')}</div>
-//       </div>
-//       <div class="text-right">
-//         <div class="text-sm">Total</div>
-//         <div class="text-xl font-bold">₦${Number(order.total || 0).toLocaleString()}</div>
-//       </div>
-//     </div>`;
-
-//     const itemsHtml = (order.items || []).map(i => `
-//       <div class="flex justify-between border-b py-2">
-//         <div>
-//           <div class="font-medium">${escapeHtml(i.name)}</div>
-//           <div class="text-xs text-gray-600">₦${Number(i.price).toLocaleString()} each</div>
-//         </div>
-//         <div class="text-right">
-//           <div>${i.quantity} ×</div>
-//           <div class="font-semibold">₦${(i.price*i.quantity).toLocaleString()}</div>
-//         </div>
-//       </div>`).join('');
-
-//     detailContent.innerHTML = `
-//       <div class="mt-3">
-//         ${headerHtml}
-//         <div class="mt-4">
-//           <h4 class="font-semibold">Items</h4>
-//           <div class="mt-2">${itemsHtml || '<div class="text-gray-500">No items listed</div>'}</div>
-//         </div>
-//         <div class="mt-4">
-//           <h4 class="font-semibold">Delivery</h4>
-//           <p class="text-sm text-gray-600">${escapeHtml(order.address || '—')}</p>
-//           <div class="mt-2">${prog}</div>
-//           <div class="mt-2 text-sm text-gray-700">
-//             <div>Option: ${order.deliveryOption?.toUpperCase() || '—'}</div>
-//             <div>Fee: ₦${deliveryFee.toLocaleString()}</div>
-//             <div>Weight: ${order.totalWeight || 0} kg</div>
-//           </div>
-//         </div>
-//         <div class="mt-4">
-//           <h4 class="font-semibold">Payment</h4>
-//           <p class="text-sm text-gray-600">${escapeHtml(order.paymentMethod || '')}</p>
-//           <p class="text-sm text-gray-600">Ref: ${escapeHtml(order.paymentRef || '')}</p>
-//         </div>
-//       </div>`;
+    detailContent.innerHTML = `
+      <div class="mt-3">
+        ${headerHtml}
+        <div class="mt-4">
+          <h4 class="font-semibold">Items</h4>
+          <div class="mt-2">${itemsHtml || '<div class="text-gray-500">No items listed</div>'}</div>
+        </div>
+        ${deliveryHtml}
+        ${paymentHtml}
+      </div>`;
 
     // ===== MODAL STATUS CONTROLS =====
     modalStatusControls.innerHTML = '';
-  const sel = document.createElement('select');
-  sel.className = 'border p-2 rounded';
-  sel.innerHTML = `
-    <option value="processing">Processing</option>
-    <option value="shipped">Shipped</option>
-    <option value="delivered">Delivered</option>
-  `;
-  sel.value = order.shipmentStatus || 'processing';
-  sel.onchange = () => updateShipmentStatus(order.id, sel.value);
-  modalStatusControls.appendChild(sel);
+    const sel = document.createElement('select');
+    sel.className = 'border p-2 rounded';
+    sel.innerHTML = `
+      <option value="processing">Processing</option>
+      <option value="shipped">Shipped</option>
+      <option value="delivered">Delivered</option>
+    `;
+    sel.value = order.shipmentStatus || 'processing';
+    sel.onchange = () => updateShipmentStatus(order.id, sel.value);
+    modalStatusControls.appendChild(sel);
 
     if(window.isAdmin){
       const delBtn = document.createElement('button');
@@ -573,6 +484,13 @@ firebase.auth().onAuthStateChanged(async (user) => {
     detailModal.classList.remove('hidden');
     detailModal.classList.add('flex');
   }
+
+  // ===== CLOSE MODAL =====
+  document.getElementById("modalClose").onclick = () => {
+    detailModal.classList.add('hidden');
+    detailModal.classList.remove('flex');
+    currentOpenOrder = null;
+  };
 
   modalClose.onclick = () => { detailModal.classList.add('hidden'); detailModal.classList.remove('flex'); currentOpenOrder=null; }
 
@@ -612,6 +530,37 @@ firebase.auth().onAuthStateChanged(async (user) => {
     });
     updateSummary();
   });
+
+  // Email Receipt
+  async function sendReceiptEmail(order) {
+  if (!window.isAdmin) throw new Error("Only admins can send emails.");
+
+  try {
+    const orderItems = (order.items || [])
+      .map(i => `${i.name} × ${i.quantity} = ₦${i.price * i.quantity}`)
+      .join('<br>');
+
+    const templateParams = {
+      to_email: order.email,
+      customer_name: order.name || "Customer",
+      order_id: order.paymentRef || order.id,
+      order_items: orderItems,
+      order_total: Number(order.total || 0).toLocaleString()
+    };
+
+    // Use the new SDK
+    const result = await emailjs.send(
+      "service_k1xpqh8",      // EmailJS service ID
+      "template_nlno322",     // EmailJS template ID (the Order Receipt template)
+      templateParams
+    );
+
+    return result;
+  } catch (err) {
+    console.error("EmailJS error:", err);
+    throw new Error(err.text || "Failed to send email via EmailJS");
+  }
+}
 
   // ===== DOWNLOAD PDF =====
 async function downloadPdf(order) {
@@ -711,22 +660,31 @@ async function downloadPdf(order) {
     y += rowHeight + 5;
 
     // ===== DELIVERY INFO =====
-    const delivery = order.delivery || {};
-    const deliveryFee = getDeliveryFee(order);
-    const weight = order.totalWeight || 0;
+const delivery = order.delivery || {};
+const deliveryFee = getDeliveryFee(order);
+const weight = order.totalWeight || 0;
 
-    doc.setFont("helvetica","normal");
-    doc.setFontSize(11);
-    doc.setTextColor(gray);
-    doc.text("Delivery:", margin, y); y+=6;
-    doc.text(`Company: ${delivery.company?.toUpperCase() || '—'}`, margin, y); y+=6;
-    doc.text(`Type: ${delivery.type || '—'}`, margin, y); y+=6;
-    doc.text(`Terminal: ${delivery.terminal || '—'}`, margin, y); y+=6;
-    doc.text(`State: ${delivery.state || '—'}`, margin, y); y+=6;
-    doc.text(`LGA: ${delivery.lga || '—'}`, margin, y); y+=6;
-    doc.text(`Address: ${delivery.address || '—'}`, margin, y); y+=6;
-    doc.text(`Fee: ₦${deliveryFee.toLocaleString()}`, margin, y); y+=6;
-    doc.text(`Weight: ${weight} kg`, margin, y); y+=8;
+doc.setFont("helvetica","normal");
+doc.setFontSize(11);
+doc.setTextColor(gray);
+doc.text("Delivery:", margin, y); y += 6;
+
+// Check for Lagos home delivery
+if (delivery.type === 'home' && delivery.state?.toLowerCase() === 'lagos') {
+  doc.text(`Home Delivery`, margin, y); y += 6;
+  doc.text(`LGA: ${delivery.lga || '—'}`, margin, y); y += 6;
+  doc.text(`Address: ${delivery.address || '—'}`, margin, y); y += 6;
+} else {
+  doc.text(`Company: ${delivery.company?.toUpperCase() || '—'}`, margin, y); y += 6;
+  doc.text(`Type: ${delivery.type || '—'}`, margin, y); y += 6;
+  doc.text(`Terminal: ${delivery.terminal || '—'}`, margin, y); y += 6;
+  doc.text(`State: ${delivery.state || '—'}`, margin, y); y += 6;
+  doc.text(`LGA: ${delivery.lga || '—'}`, margin, y); y += 6;
+  doc.text(`Address: ${delivery.address || '—'}`, margin, y); y += 6;
+}
+
+doc.text(`Fee: ₦${deliveryFee.toLocaleString()}`, margin, y); y += 6;
+doc.text(`Weight: ${weight} kg`, margin, y); y += 8;
 
     // ===== PAYMENT INFO =====
     doc.text("Payment:", margin, y); y+=6;
@@ -753,9 +711,6 @@ downloadPdfBtn.onclick = () => {
   if (!currentOpenOrder) return showAlert("No order selected", "Error");
   downloadPdf(currentOpenOrder);
 };
-
-
-
   // ===== INITIAL LOAD =====
   clearAndLoad();
 </script>
