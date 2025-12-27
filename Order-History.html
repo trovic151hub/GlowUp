@@ -115,11 +115,13 @@
       </div>
     </div>
     <div id="detailContent" class="mt-4 space-y-3 text-sm text-gray-800"></div>
-    <div class="mt-4 flex gap-2">
+    <div class="mt-4 flex gap-2 ">
       <button id="downloadPdfBtn" class="bg-pink-600 text-white px-4 py-2 rounded">Download PDF</button>
       <button id="emailReceiptBtn" class="bg-blue-600 text-white px-4 py-2 rounded opacity-50 cursor-not-allowed" disabled>Email Receipt</button>
       <div id="modalStatusControls" class="ml-auto flex gap-2"></div>
     </div>
+    <!-- International Order Control -->
+    <div id="internationalControls" class="mt-3"></div>
   </div>
 </div>
 
@@ -297,9 +299,15 @@ firebase.auth().onAuthStateChanged(async (user) => {
     const tr=document.createElement('tr');
     const when = order.timestamp?.toDate?.()?.toLocaleString() || new Date(order.timestamp||'').toLocaleString();
     const deliveryFee = getDeliveryFee(order);
+
+    // ✅ Calculate total including fee only for international orders
+  const totalWithFee = order.delivery?.isInternational
+    ? Number(order.total || 0) + deliveryFee
+    : Number(order.total || 0);
+
     tr.innerHTML=`<td class="p-2 align-top border border-gray-300">${when}</td>
 <td class="p-2 align-top border border-gray-300">${order.name||''}</td>
-<td class="p-2 align-top border border-gray-300">₦${Number(order.total||0).toLocaleString()}</td>
+<td class="p-2 align-top border border-gray-300">₦${totalWithFee.toLocaleString()}</td>
 <td class="p-2 align-top border border-gray-300">${order.paymentMethod||''}</td>
 <td class="p-2 align-top border border-gray-300">${order.shipmentStatus || 'processing'}</td>
 <td class="p-2 align-top border border-gray-300">
@@ -359,137 +367,303 @@ firebase.auth().onAuthStateChanged(async (user) => {
     renderModal(currentOpenOrder);
   };
 
+  // ===== Confirm International Payment =====
+async function confirmInternationalPayment(orderId) {
+  if (!orderId) throw new Error('Invalid order ID');
+
+  const orderRef = firebase.firestore().collection('orders').doc(orderId);
+  await orderRef.update({
+    'delivery.fulfilled': true,
+    'shipmentStatus': 'processing' // optionally reset shipment status
+  });
+}
+
+// ===== Update International Delivery =====
+async function updateInternationalDelivery(orderId, updatedDelivery) {
+  if (!orderId) throw new Error('Invalid order ID');
+  if (!updatedDelivery) throw new Error('No delivery info provided');
+
+  const orderRef = firebase.firestore().collection('orders').doc(orderId);
+
+  // Ensure deliveryFee is number
+  const fee = Number(updatedDelivery.deliveryFee) || 0;
+  await orderRef.update({
+    'delivery.deliveryFee': fee,
+    'delivery.type': updatedDelivery.type ?? 'home'
+  });
+}
+
+// Get Delivery Fee
+function getDeliveryFee(order) {
+  const delivery = order?.delivery || {};
+
+  // If international, always use the updated fee
+  if (delivery.isInternational) {
+    return delivery.deliveryFee != null ? Number(delivery.deliveryFee) : 0;
+  }
+
+  // Local/Nigeria: check if deliveryFee exists directly or in fallback fields
+  if (delivery.deliveryFee != null) {
+    return Number(delivery.deliveryFee);
+  }
+
+  // Optional: fallback if stored elsewhere in Firestore
+  if (order?.deliveryFee != null) {
+    return Number(order.deliveryFee);
+  }
+
+  // Default
+  return 0;
+}
+
   // ===== Render Detail Modal =====
   function renderModal(order) {
-    currentOpenOrder = order;
-    const detailContent = document.getElementById("detailContent");
-    const modalStatusControls = document.getElementById("modalStatusControls");
-    const detailModal = document.getElementById("detailModal");
-    const emailReceiptBtn = document.getElementById("emailReceiptBtn");
+  currentOpenOrder = order;
+  const detailContent = document.getElementById("detailContent");
+  const modalStatusControls = document.getElementById("modalStatusControls");
+  const detailModal = document.getElementById("detailModal");
+  const emailReceiptBtn = document.getElementById("emailReceiptBtn");
 
-    // Enable email button
-    emailReceiptBtn.disabled = false;
-    emailReceiptBtn.classList.remove("opacity-50", "cursor-not-allowed");
+  const internationalControls = document.getElementById("internationalControls");
+  internationalControls.innerHTML = ''; // reset every open
 
-    emailReceiptBtn.onclick = async () => {
-  if (!currentOpenOrder) return showAlert("No order selected", "Error");
+  // Enable email button
+  emailReceiptBtn.disabled = false;
+  emailReceiptBtn.classList.remove("opacity-50", "cursor-not-allowed");
 
-  try {
-    emailReceiptBtn.disabled = true;
-    emailReceiptBtn.innerText = "Sending...";
+  emailReceiptBtn.onclick = async () => {
+    if (!currentOpenOrder) return showAlert("No order selected", "Error");
+    try {
+      emailReceiptBtn.disabled = true;
+      emailReceiptBtn.innerText = "Sending...";
+      await sendReceiptEmail(currentOpenOrder);
+      showAlert("Receipt email sent successfully!", "Success");
+    } catch (err) {
+      showAlert(err.message || "Failed to send receipt email", "Error");
+    } finally {
+      emailReceiptBtn.disabled = false;
+      emailReceiptBtn.innerText = "Email Receipt";
+    }
+  };
 
-    await sendReceiptEmail(currentOpenOrder);
+  // ===== Calculate delivery fee & total WITH delivery =====
+  const deliveryFee = getDeliveryFee(order);       // delivery fee from Firestore
+  const orderTotal = Number(order.total || 0);     // original total from order items
 
-    showAlert("Receipt email sent successfully!", "Success");
-  } catch (err) {
-    showAlert(err.message || "Failed to send receipt email", "Error");
-  } finally {
-    emailReceiptBtn.disabled = false;
-    emailReceiptBtn.innerText = "Email Receipt";
-  }
-};
+  // ✅ Only add delivery fee for international orders
+  const totalWithFee = order.delivery?.isInternational
+    ? orderTotal + deliveryFee
+    : orderTotal;
 
-    // ===== Modal Header & Items =====
-    const headerHtml = `<div class="flex justify-between items-center">
+  // ===== Modal Header & Items =====
+  const headerHtml = `<div class="flex justify-between items-center">
+    <div>
+      <div class="text-lg font-semibold">${escapeHtml(order.name || '')}</div>
+      <div class="text-xs text-gray-600">${escapeHtml(order.email || '')} • ${escapeHtml(order.phone || '')}</div>
+      <div class="text-xs text-gray-600 mt-1">Ref: ${escapeHtml(order.paymentRef || '')}</div>
+    </div>
+    <div class="text-right">
+      <div class="text-sm">Total</div>
+      <div class="text-xl font-bold">₦${totalWithFee.toLocaleString()}</div>
+    </div>
+  </div>`;
+
+  const itemsHtml = (order.items || []).map(i => `
+    <div class="flex justify-between border-b py-2">
       <div>
-        <div class="text-lg font-semibold">${escapeHtml(order.name || '')}</div>
-        <div class="text-xs text-gray-600">${escapeHtml(order.email || '')} • ${escapeHtml(order.phone || '')}</div>
-        <div class="text-xs text-gray-600 mt-1">Ref: ${escapeHtml(order.paymentRef || '')}</div>
+        <div class="font-medium">${escapeHtml(i.name)}</div>
+        <div class="text-xs text-gray-600">₦${Number(i.price).toLocaleString()} each</div>
       </div>
       <div class="text-right">
-        <div class="text-sm">Total</div>
-        <div class="text-xl font-bold">₦${Number(order.total || 0).toLocaleString()}</div>
+        <div>${i.quantity} ×</div>
+        <div class="font-semibold">₦${(i.price*i.quantity).toLocaleString()}</div>
       </div>
-    </div>`;
+    </div>`).join('');
 
-    const itemsHtml = (order.items || []).map(i => `
-      <div class="flex justify-between border-b py-2">
-        <div>
-          <div class="font-medium">${escapeHtml(i.name)}</div>
-          <div class="text-xs text-gray-600">₦${Number(i.price).toLocaleString()} each</div>
-        </div>
-        <div class="text-right">
-          <div>${i.quantity} ×</div>
-          <div class="font-semibold">₦${(i.price*i.quantity).toLocaleString()}</div>
-        </div>
-      </div>`).join('');
+  const prog = shipmentTimelineHtml(order.shipmentStatus || 'processing');
+  const delivery = order.delivery || {};
+  let deliveryText = '';
 
-    const deliveryFee = getDeliveryFee(order);
-    const prog = shipmentTimelineHtml(order.shipmentStatus || 'processing');
-    const delivery = order.delivery || {};
-    let deliveryText = '';
-    if (delivery.type === 'home' && delivery.state?.toLowerCase() === 'lagos') {
-      deliveryText = `Home Delivery<br>LGA: ${delivery.lga || '—'}<br>Address: ${delivery.address || '—'}`;
-    } else {
-      deliveryText = `Company: ${delivery.company?.toUpperCase() || '—'}<br>
-                      Type: ${delivery.type || '—'}<br>
+  // ✅ INTERNATIONAL FIRST (always)
+  if (delivery.isInternational) {
+    deliveryText = `Company: ${delivery.company || '—'}<br>
+                    Type: ${delivery.type || '—'}<br>
+                    Terminal: ${delivery.terminal || '—'}<br>
+                    Country: ${delivery.country || '—'}<br>
+                    State: ${delivery.state || '—'}<br>
+                    Address: ${delivery.address || '—'}`;
+
+    if (!delivery.fulfilled) {
+      deliveryText += `<br>
+        <span class="text-sm text-blue-600 font-medium">
+          Update Available
+        </span>`;
+    }
+
+    if (delivery.fulfilled && (!delivery.deliveryFee || delivery.deliveryFee === 0)) {
+      deliveryText += `<br>
+        <span class="inline-block mt-2 px-3 py-1 rounded-full
+          bg-green-100 text-green-700 text-xs font-semibold">
+          Awaiting Admin Fee Update
+        </span>`;
+    }
+
+  // 🏠 Local Lagos Home Delivery
+  } else if (delivery.type === 'home' && delivery.state?.toLowerCase() === 'lagos') {
+    deliveryText = `Home Delivery<br>
+                    LGA: ${delivery.lga || '—'}<br>
+                    Address: ${delivery.address || '—'}`;
+
+  // 🏢 Company delivery
+  } else if (delivery.company) {
+    if (delivery.type === 'home') {
+      deliveryText = `Company: ${delivery.company || '—'}<br>
+                      Type: Home Delivery<br>
+                      State: ${delivery.state || '—'}<br>
+                      Address: ${delivery.address || '—'}`;
+    } else if (delivery.type === 'terminal') {
+      deliveryText = `Company: ${delivery.company || '—'}<br>
+                      Type: Terminal Pickup<br>
                       Terminal: ${delivery.terminal || '—'}<br>
+                      State: ${delivery.state || '—'}`;
+    } else {
+      deliveryText = `Company: ${delivery.company || '—'}<br>
+                      Type: ${delivery.type || '—'}<br>
                       State: ${delivery.state || '—'}<br>
                       Address: ${delivery.address || '—'}`;
     }
-
-    const deliveryHtml = `
-      <div class="mt-4">
-        <h4 class="font-semibold">Delivery</h4>
-        <p class="text-sm text-gray-600">${deliveryText}</p>
-        <div class="mt-2">${prog}</div>
-        <div class="mt-2 text-sm text-gray-700">
-          Fee: ₦${deliveryFee.toLocaleString()}<br>
-          Weight: ${order.totalWeight || 0} kg
-        </div>
-      </div>
-    `;
-
-    const paymentHtml = `
-      <div class="mt-4">
-        <h4 class="font-semibold">Payment</h4>
-        <p class="text-sm text-gray-600">${escapeHtml(order.paymentMethod || '')}</p>
-        <p class="text-sm text-gray-600">Ref: ${escapeHtml(order.paymentRef || '')}</p>
-      </div>
-    `;
-
-    detailContent.innerHTML = `
-      <div class="mt-3">
-        ${headerHtml}
-        <div class="mt-4">
-          <h4 class="font-semibold">Items</h4>
-          <div class="mt-2">${itemsHtml || '<div class="text-gray-500">No items listed</div>'}</div>
-        </div>
-        ${deliveryHtml}
-        ${paymentHtml}
-      </div>`;
-
-    // ===== MODAL STATUS CONTROLS =====
-    modalStatusControls.innerHTML = '';
-    const sel = document.createElement('select');
-    sel.className = 'border p-2 rounded';
-    sel.innerHTML = `
-      <option value="processing">Processing</option>
-      <option value="shipped">Shipped</option>
-      <option value="delivered">Delivered</option>
-    `;
-    sel.value = order.shipmentStatus || 'processing';
-    sel.onchange = () => updateShipmentStatus(order.id, sel.value);
-    modalStatusControls.appendChild(sel);
-
-    if(window.isAdmin){
-      const delBtn = document.createElement('button');
-      delBtn.className='ml-2 bg-red-600 text-white px-3 py-2 rounded';
-      delBtn.innerText = 'Delete Order';
-      delBtn.onclick = ()=>deleteOrder(order.id);
-      modalStatusControls.appendChild(delBtn);
-    }
-
-    detailModal.classList.remove('hidden');
-    detailModal.classList.add('flex');
   }
 
-  // ===== CLOSE MODAL =====
-  document.getElementById("modalClose").onclick = () => {
-    detailModal.classList.add('hidden');
-    detailModal.classList.remove('flex');
-    currentOpenOrder = null;
-  };
+  const deliveryHtml = `
+    <div class="mt-4">
+      <h4 class="font-semibold">Delivery</h4>
+      <p class="text-sm text-gray-600">${deliveryText}</p>
+      <div class="mt-2">${prog}</div>
+      <div class="mt-2 text-sm text-gray-700">
+        Fee: ₦${deliveryFee.toLocaleString()}<br>
+        Weight: ${order.totalWeight || 0} kg
+      </div>
+    </div>
+  `;
+
+  const paymentHtml = `
+    <div class="mt-4">
+      <h4 class="font-semibold">Payment</h4>
+      <p class="text-sm text-gray-600">${escapeHtml(order.paymentMethod || '')}</p>
+      <p class="text-sm text-gray-600">Ref: ${escapeHtml(order.paymentRef || '')}</p>
+    </div>
+  `;
+
+  detailContent.innerHTML = `
+    <div class="mt-3">
+      ${headerHtml}
+      <div class="mt-4">
+        <h4 class="font-semibold">Items</h4>
+        <div class="mt-2">${itemsHtml || '<div class="text-gray-500">No items listed</div>'}</div>
+      </div>
+      ${deliveryHtml}
+      ${paymentHtml}
+    </div>`;
+
+  // ===== MODAL STATUS CONTROLS =====
+  modalStatusControls.innerHTML = '';
+
+  const sel = document.createElement('select');
+  sel.className = 'border p-2 rounded';
+  sel.innerHTML = `
+    <option value="processing">Processing</option>
+    <option value="shipped">Shipped</option>
+    <option value="delivered">Delivered</option>
+  `;
+  sel.value = order.shipmentStatus || 'processing';
+  sel.onchange = () => updateShipmentStatus(order.id, sel.value);
+  modalStatusControls.appendChild(sel);
+
+  // Admin controls
+  if (window.isAdmin) {
+    const delBtn = document.createElement('button');
+    delBtn.className='ml-2 bg-red-600 text-white px-3 py-2 rounded';
+    delBtn.innerText = 'Delete Order';
+    delBtn.onclick = () => deleteOrder(order.id);
+    modalStatusControls.appendChild(delBtn);
+
+    if (delivery.isInternational) {
+      const adminControls = document.createElement('div');
+      adminControls.className =
+        'mt-3 p-4 border rounded-lg bg-gray-50 flex flex-col gap-2';
+
+      const title = document.createElement('div');
+      title.className = 'font-semibold text-sm text-gray-700';
+      title.innerText = 'International Order Control';
+      adminControls.appendChild(title);
+
+      const confirmPaymentBtn = document.createElement('button');
+      confirmPaymentBtn.className = 'bg-green-600 text-white px-3 py-2 rounded';
+      confirmPaymentBtn.innerText = delivery.fulfilled
+        ? 'Payment Confirmed'
+        : 'Confirm Payment';
+      confirmPaymentBtn.disabled = delivery.fulfilled;
+
+      confirmPaymentBtn.onclick = async () => {
+        try {
+          await confirmInternationalPayment(order.id);
+          confirmPaymentBtn.innerText = 'Payment Confirmed';
+          confirmPaymentBtn.disabled = true;
+          showAlert('Payment confirmed successfully!', 'Success');
+        } catch (err) {
+          showAlert(err.message || 'Failed to confirm payment', 'Error');
+        }
+      };
+      adminControls.appendChild(confirmPaymentBtn);
+
+      const feeInput = document.createElement('input');
+      feeInput.type = 'number';
+      feeInput.placeholder = 'Delivery Fee';
+      feeInput.value = delivery.deliveryFee || 0;
+      feeInput.className = 'border p-2 rounded';
+      adminControls.appendChild(feeInput);
+
+      const deliverySelect = document.createElement('select');
+      deliverySelect.className = 'border p-2 rounded';
+      deliverySelect.innerHTML = `
+        <option value="home" ${delivery.type === 'home' ? 'selected' : ''}>Home</option>
+        <option value="terminal" ${delivery.type === 'terminal' ? 'selected' : ''}>Terminal</option>
+      `;
+      adminControls.appendChild(deliverySelect);
+
+      const saveBtn = document.createElement('button');
+      saveBtn.className = 'bg-blue-600 text-white px-3 py-2 rounded';
+      saveBtn.innerText = 'Update Delivery';
+
+      saveBtn.onclick = async () => {
+        try {
+          const updatedDelivery = {
+            deliveryFee: Number(feeInput.value),
+            type: deliverySelect.value
+          };
+          await updateInternationalDelivery(order.id, updatedDelivery);
+          showAlert('Delivery updated successfully!', 'Success');
+        } catch (err) {
+          showAlert(err.message || 'Failed to update delivery', 'Error');
+        }
+      };
+      adminControls.appendChild(saveBtn);
+
+      internationalControls.appendChild(adminControls);
+    }
+  }
+
+  detailModal.classList.remove('hidden');
+  detailModal.classList.add('flex');
+}
+
+// ===== CLOSE MODAL =====
+document.getElementById("modalClose").onclick = () => {
+  const detailModal = document.getElementById("detailModal");
+  detailModal.classList.add('hidden');
+  detailModal.classList.remove('flex');
+  currentOpenOrder = null;
+};
 
   modalClose.onclick = () => { detailModal.classList.add('hidden'); detailModal.classList.remove('flex'); currentOpenOrder=null; }
 

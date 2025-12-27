@@ -124,6 +124,15 @@
         <input type="email" id="email" placeholder="Email Address" class="w-full border p-3 rounded-lg focus:ring-2 focus:ring-pink-300 focus:outline-none transition" required />
         <input type="text" id="address" placeholder="Home Address" class="w-full border p-3 rounded-lg focus:ring-2 focus:ring-pink-300 focus:outline-none transition" required />
 
+        <!-- Country -->
+<div class="space-y-2 relative">
+  <label class="font-semibold">Country</label>
+  <input id="countryInput" type="text" placeholder="Select country"
+    class="w-full border p-3 rounded-lg focus:ring-2 focus:ring-pink-300" />
+  <div id="countryDropdown"
+    class="absolute z-50 bg-white border w-full max-h-60 overflow-y-auto rounded shadow hidden"></div>
+</div>
+
         <!-- State & LGA -->
         <div class="space-y-2 relative">
           <label for="state" class="font-semibold">State</label>
@@ -159,7 +168,13 @@
         <h2 class="text-lg font-semibold mb-2">Choose Payment Method</h2>
         <div class="flex gap-4">
           <button id="payWithPaystack" type="button" class="bg-pink-600 text-white px-4 py-2 rounded hover:bg-pink-700">Paystack</button>
+          <button id="payWithWhatsApp" type="button" class="hidden bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">Continue on WhatsApp</button>
         </div>
+
+        <p id="internationalNotice"
+        class="hidden mt-3 text-sm text-gray-700 bg-yellow-50 border border-yellow-200 p-3 rounded">
+        International orders are confirmed via WhatsApp. Final delivery cost will be shared.
+        </p>
       </form>
     </div>
 
@@ -184,9 +199,14 @@
   <div id="overlaySpinner" class="hidden fixed inset-0 bg-black/30 flex items-center justify-center z-50">
     <div class="loader border-4 border-pink-500 border-t-transparent rounded-full w-12 h-12 animate-spin"></div>
   </div>
-
   <script>
 document.addEventListener("DOMContentLoaded", () => {
+  const WHATSAPP_NUMBER = "2349053380773"; // your number
+  const whatsappBtn = document.getElementById("payWithWhatsApp");
+  function generateWhatsappPaymentRef() {
+  return "WA-" + Date.now() + "-" + Math.floor(Math.random() * 1000);
+}
+
   // ===== Loader Overlay =====
   const loaderHTML = `
     <div id="checkout-loader" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
@@ -285,6 +305,106 @@ document.addEventListener("DOMContentLoaded", () => {
   const deliveryFeeEl=document.getElementById("deliveryFee");
   const orderSkeleton=document.getElementById("orderSkeleton");
   const suggestionsContainer=document.getElementById("stateSuggestions");
+
+/* ================= COUNTRY (GLOBAL) ================= */
+const countryInput = document.getElementById("countryInput");
+const countryDropdown = document.getElementById("countryDropdown");
+
+const countries = [
+  { name:"Afghanistan", flag:"🇦🇫" },{ name:"Albania", flag:"🇦🇱" },
+  { name:"Algeria", flag:"🇩🇿" },{ name:"Argentina", flag:"🇦🇷" },
+  { name:"Australia", flag:"🇦🇺" },{ name:"Austria", flag:"🇦🇹" },
+  { name:"Belgium", flag:"🇧🇪" },{ name:"Brazil", flag:"🇧🇷" },
+  { name:"Canada", flag:"🇨🇦" },{ name:"China", flag:"🇨🇳" },
+  { name:"Egypt", flag:"🇪🇬" },{ name:"France", flag:"🇫🇷" },
+  { name:"Germany", flag:"🇩🇪" },{ name:"Ghana", flag:"🇬🇭" },
+  { name:"India", flag:"🇮🇳" },{ name:"Ireland", flag:"🇮🇪" },
+  { name:"Italy", flag:"🇮🇹" },{ name:"Japan", flag:"🇯🇵" },
+  { name:"Kenya", flag:"🇰🇪" },{ name:"Mexico", flag:"🇲🇽" },
+  { name:"Netherlands", flag:"🇳🇱" },{ name:"Nigeria", flag:"🇳🇬" },
+  { name:"Norway", flag:"🇳🇴" },{ name:"Pakistan", flag:"🇵🇰" },
+  { name:"Portugal", flag:"🇵🇹" },{ name:"Qatar", flag:"🇶🇦" },
+  { name:"Saudi Arabia", flag:"🇸🇦" },{ name:"South Africa", flag:"🇿🇦" },
+  { name:"Spain", flag:"🇪🇸" },{ name:"Sweden", flag:"🇸🇪" },
+  { name:"Switzerland", flag:"🇨🇭" },{ name:"Turkey", flag:"🇹🇷" },
+  { name:"United Arab Emirates", flag:"🇦🇪" },
+  { name:"United Kingdom", flag:"🇬🇧" },
+  { name:"United States", flag:"🇺🇸" },
+  { name:"Zimbabwe", flag:"🇿🇼" }
+].sort((a,b)=>a.name.localeCompare(b.name));
+
+function renderCountries(filter=""){
+  countryDropdown.innerHTML="";
+  const list = countries.filter(c=>c.name.toLowerCase().includes(filter.toLowerCase()));
+
+  list.forEach(c=>{
+    const div=document.createElement("div");
+    div.className="p-3 cursor-pointer hover:bg-pink-50 flex gap-3";
+    div.innerHTML=`<span>${c.flag}</span><span>${c.name}</span>`;
+    div.onclick=()=>{
+      countryInput.value=c.name;
+      countryInput.dataset.flag=c.flag;
+      countryDropdown.classList.add("hidden");
+      togglePaymentByCountry();
+    };
+    countryDropdown.appendChild(div);
+  });
+}
+
+countryInput.addEventListener("focus",()=>{
+  countryDropdown.classList.remove("hidden");
+  renderCountries(countryInput.value);
+});
+
+countryInput.addEventListener("input",()=>{
+  countryDropdown.classList.remove("hidden");
+  renderCountries(countryInput.value);
+});
+
+document.addEventListener("click",e=>{
+  if(!countryInput.contains(e.target)&&!countryDropdown.contains(e.target)){
+    countryDropdown.classList.add("hidden");
+  }
+});
+
+// ===== Payment toggle by country =====
+function togglePaymentByCountry() {
+  const selectedCountry = countryInput.value.trim().toLowerCase();
+  const notice = document.getElementById("internationalNotice");
+
+  if (!selectedCountry || selectedCountry === "nigeria") {
+    // 🇳🇬 Local
+    paystackBtn.style.display = "inline-block";
+    whatsappBtn.classList.add("hidden");
+    notice.classList.add("hidden");
+
+    // Enable delivery options for Nigeria
+    deliverySelect.disabled = false;
+    deliveryType.disabled = false;
+    terminal.disabled = false;
+    deliverySelect.parentElement.style.display = "inline-block";
+    deliveryType.parentElement.style.display = "inline-block";
+    terminal.parentElement.style.display = "inline-block";
+  } else {
+    // 🌍 International
+    paystackBtn.style.display = "none";
+    whatsappBtn.classList.remove("hidden");
+    notice.classList.remove("hidden");
+    deliverySelect.disabled = true;
+
+    // ✅ Only show notification for non-Nigeria countries
+    showNotification(
+      "International orders are completed via WhatsApp.",
+      "info",
+      4000
+    );
+  }
+
+  // ✅ Render order so yellow international block shows
+  if (cartItems && cartItems.length > 0) {
+    renderOrderWithDelivery();
+  }
+}
 
   // ===== Data =====
   const lagosLGAFees={"Agege":3000,"Ajeromi-Ifelodun":3000,
@@ -531,7 +651,40 @@ function renderOrderWithDelivery() {
     address: document.getElementById("address").value || "—"
   };
 
+  // ===== International Delivery Check =====
   const stateLower = deliveryInfo.state.toLowerCase();
+  // const isInternational = countryInput.value.trim().toLowerCase() !== "nigeria";
+
+const country =
+  countryInput.value?.trim().toLowerCase() || "nigeria";
+  const isInternational = country !== "nigeria";
+
+  if (isInternational) {
+  deliveryFee = 0;
+
+  const feeDiv = document.createElement("div");
+  feeDiv.className =
+    "mt-4 p-3 bg-yellow-50 border border-yellow-300 rounded shadow-sm";
+
+  feeDiv.innerHTML = `
+    <div class="font-semibold mb-1 text-yellow-800">
+      🌍 International Delivery
+    </div>
+    <div>Country: ${countryInput.value || "—"}</div>
+    <div class="text-sm text-gray-700">
+      Delivery fee will be confirmed via WhatsApp
+    </div>
+  `;
+
+  orderContainer.appendChild(feeDiv);
+
+  deliveryFeeEl.textContent = "0";
+  totalSpan.textContent = subtotal.toLocaleString();
+
+  orderSkeleton?.classList.add("hidden");
+  orderContainer?.classList.remove("hidden");
+  return; // stop further rendering
+}
 
   // ===== Delivery Fee Calculation =====
 deliveryFee = 0;
@@ -615,63 +768,88 @@ terminal.onchange = () => renderOrderWithDelivery();
   }
 
   // ===== Save Order =====
-  async function saveOrder(order){
-    if(!currentUser){ showNotification("No logged in user","error"); return; }
-     // ===== Build structured delivery object =====
-let delivery = {};
-
-const stateLower = stateInput.value.trim().toLowerCase();
-if(stateLower === "lagos") {
-  // Home delivery to a specific LGA
-  delivery = {
-    company: "LOCAL",          // Or "—" if you want
-    type: "home",
-    terminal: "—",             // Not applicable
-    state: stateInput.value || "Lagos",
-    lga: lgaInput.value || "—",
-    address: document.getElementById("address").value || "—"
-  };
-} else {
-  // GIG / GUO delivery
-  delivery = {
-    company: deliverySelect.value?.toUpperCase() || "—",
-    type: deliveryType.value || "—",
-    terminal: terminal.value || "—",
-    state: stateInput.value || "—",
-    lga: "—",
-    address: document.getElementById("address").value || "—"
-  };
-}
-
-    showLoader(true);
-    try{
-        const orderRef = await db.collection("orders").add({
-  ...order,
-  userId: currentUser.uid,
-  delivery,                    // <-- save the structured delivery object
-  totalWeight,
-  deliveryFee,
-  timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-  createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-  createdAtClient: new Date(),   // ✅ ADD THIS LINE
-  fulfilled: false
-});
-
-      const cartRef = db.collection("carts").doc(currentUser.uid).collection("items");
-      const snapshot = await cartRef.get();
-      const batch = db.batch();
-      snapshot.forEach(doc=>batch.delete(doc.ref));
-      await batch.commit();
-
-      cartItems = [];
-      renderOrderWithDelivery();
-      showNotification("Order placed successfully!","success",4000);
-      setTimeout(()=>window.location.href="order-success.html",1500);
-    }catch(err){
-      console.error(err);
-      showNotification("Failed to save order. Try again.","error",4000);
-    }finally{ showLoader(false); }
+async function saveOrder(order) {
+  if (!currentUser) {
+    showNotification("No logged in user", "error");
+    return;
   }
+
+  // ===== Build structured delivery object =====
+  let delivery = {};
+  const stateLower = stateInput.value.trim().toLowerCase();
+  const countryLower = countryInput.value?.trim().toLowerCase() || "nigeria";
+
+  if (countryLower === "nigeria") {
+    if (stateLower === "lagos") {
+      delivery = {
+        company: "LOCAL",
+        type: "home",
+        terminal: "—",
+        state: stateInput.value || "Lagos",
+        lga: lgaInput.value || "—",
+        address: document.getElementById("address").value || "—",
+        country: "Nigeria"
+      };
+    } else {
+      delivery = {
+        company: deliverySelect.value?.toUpperCase() || "—",
+        type: deliveryType.value || "—",
+        terminal: terminal.value || "—",
+        state: stateInput.value || "—",
+        lga: "—",
+        address: document.getElementById("address").value || "—",
+        country: "Nigeria"
+      };
+    }
+  } else {
+    delivery = {
+      company: "International",
+      type: deliveryType.value || "—",
+      // terminal: terminal.value || "—",
+      state: stateInput.value || "—",
+      lga: "—",
+      address: document.getElementById("address").value || "—",
+      country: countryInput.value || "—",
+      isInternational: true
+    };
+  }
+
+  showLoader(true);
+  try {
+    const orderRef = await db.collection("orders").add({
+      ...order,
+      userId: currentUser.uid,
+      delivery,
+      totalWeight,
+      deliveryFee: order.deliveryFee || 0,
+      timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+      createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+      createdAtClient: new Date(),
+      fulfilled: false
+    });
+
+    // Clear cart
+    const cartRef = db.collection("carts").doc(currentUser.uid).collection("items");
+    const snapshot = await cartRef.get();
+    const batch = db.batch();
+    snapshot.forEach(doc => batch.delete(doc.ref));
+    await batch.commit();
+
+     cartItems = [];
+    renderOrderWithDelivery();
+    showNotification("Order placed successfully!", "success", 4000);
+    setTimeout(() => window.location.href = "order-success.html", 1500);
+
+    // ✅ Return orderRef so other functions can use it
+    return orderRef;
+  } catch (err) {
+    console.error(err);
+    showNotification("Failed to save order. Try again.", "error", 4000);
+    throw err; // propagate error so caller knows
+  } finally {
+    showLoader(false);
+  }
+}
 
   // ===== Payment Handler =====
   function handlePayment(){
@@ -718,6 +896,110 @@ if(stateLower === "lagos") {
     handler.openIframe();
   }
 
+  // Send WhatsApp Order
+async function sendWhatsAppOrder() {
+  const billing = validateBilling();
+  if (!billing || !cartItems.length) {
+    showNotification("Please complete billing details.", "error");
+    return;
+  }
+
+  // ✅ Generate WhatsApp payment reference ONCE
+  const whatsappPaymentRef = generateWhatsappPaymentRef();
+
+  // ===== Determine if international =====
+  const country = countryInput.value?.trim() || "Nigeria";
+  const isInternational = country.toLowerCase() !== "nigeria";
+
+  // ===== Build delivery object =====
+  const delivery = {
+    company: isInternational ? "INTERNATIONAL" : deliveryCompany?.value || "—",
+    type: deliveryType.value || "_",
+    state: stateInput?.value || "—",
+    lga: "—",
+    address: billing.address,
+    country,
+    isInternational
+  };
+
+  // ===== Calculate totals =====
+  let subtotal = 0;
+  cartItems.forEach(item => subtotal += item.price * item.quantity);
+
+  const deliveryFee = isInternational ? 0 : calculateDeliveryFee(delivery);
+  const total = subtotal + deliveryFee;
+
+  // ===== Save the order =====
+  showLoader(true);
+  let orderRef;
+
+  try {
+    orderRef = await saveOrder({
+      ...billing,
+      items: cartItems,
+      deliveryFee,
+      total,
+      totalWeight,
+
+      // ✅ SAME REF USED HERE
+      paymentRef: whatsappPaymentRef,
+      paymentMethod: "WhatsApp",
+      status: "pending_confirmation"
+    });
+  } catch (err) {
+    console.error("Error saving order:", err);
+    showNotification("Failed to save order. Please try again.", "error");
+    showLoader(false);
+    return;
+  }
+
+  showLoader(false);
+
+  // ===== Build WhatsApp message =====
+  const itemsText = cartItems
+    .map((item, index) =>
+      `${index + 1}. ${item.name}
+Qty: ${item.quantity}
+Price: ₦${item.price.toLocaleString()}
+Subtotal: ₦${(item.price * item.quantity).toLocaleString()}`
+    )
+    .join("\n\n");
+
+  const message = `
+*🛒 New ${isInternational ? "International" : "Local"} Order*
+*🧾 Payment Ref:* ${whatsappPaymentRef}
+*🆔 Order ID:* ${orderRef.id}
+
+*👤 Customer Details*
+- Name: ${billing.name}
+- Phone: ${billing.phone}
+- Email: ${billing.email}
+
+*🌍 Delivery Info*
+- Country: ${delivery.country}
+- Address: ${delivery.address}
+- Delivery Type: ${delivery.type}
+
+*📦 Order Items*
+${itemsText}
+
+*💰 Payment Summary*
+- Subtotal: ₦${subtotal.toLocaleString()}
+- Delivery Fee: ${isInternational ? "To be confirmed" : `₦${deliveryFee.toLocaleString()}`}
+- Total: ₦${total.toLocaleString()}
+
+⚠️ Please confirm stock availability and delivery cost with the customer.
+Thank you! 🙏
+`;
+
+  // ===== Open WhatsApp =====
+  const url = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
+  window.open(url, "_blank");
+
+  // ===== Redirect =====
+  window.location.href = `order-success.html?orderId=${orderRef.id}`;
+}
+
   // ===== Auth & Cart Fetch =====
   auth.onAuthStateChanged(user=>{
     if(!user){ showNotification("Please log in to access checkout.","error"); window.location.href="user-login.html"; return; }
@@ -741,7 +1023,11 @@ if(stateLower === "lagos") {
 
     db.collection("carts").doc(user.uid).collection("items").onSnapshot(snapshot=>{
       cartItems=snapshot.docs.map(doc=>({docId:doc.id,...doc.data()}));
+      
+      // ✅ Toggle payment and render only AFTER cartItems are loaded
+      togglePaymentByCountry();
       renderOrderWithDelivery();
+      
       showLoader(false);
     },err=>{
       console.error(err); 
@@ -751,6 +1037,7 @@ if(stateLower === "lagos") {
   });
 
   paystackBtn.addEventListener("click",handlePayment);
+  whatsappBtn.addEventListener("click", sendWhatsAppOrder);
 });
 </script>
 </body>
