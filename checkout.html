@@ -774,7 +774,7 @@ async function saveOrder(order) {
     return;
   }
 
-  // ===== Build structured delivery object =====
+  // ===== Build structured delivery object ===
   let delivery = {};
   const stateLower = stateInput.value.trim().toLowerCase();
   const countryLower = countryInput.value?.trim().toLowerCase() || "nigeria";
