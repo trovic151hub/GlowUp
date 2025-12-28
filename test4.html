@@ -923,41 +923,41 @@ async function saveOrder(order) {
     clearCheckoutInputs();
     showNotification("Order placed successfully!", "success", 4000);
 
-    // // ===== Show Success Modal =====
-    // const successModal = document.getElementById("orderSuccessModal");
-    // const successMsg = document.getElementById("successMessage");
+    // ===== Show Success Modal =====
+    const successModal = document.getElementById("orderSuccessModal");
+    const successMsg = document.getElementById("successMessage");
 
-    // if (successModal && successMsg) {
-    //   const isInternational = !!delivery.isInternational;
+    if (successModal && successMsg) {
+      const isInternational = !!delivery.isInternational;
 
-    //   if (order.paymentMethod === "Paystack") {
-    //     // Step 1: generic message
-    //     successMsg.textContent = "Thank you for your purchase. Your order has been confirmed.";
+      if (order.paymentMethod === "Paystack") {
+        // Step 1: generic message
+        successMsg.textContent = "Thank you for your purchase. Your order has been confirmed.";
 
-    //     // Step 2: after 1s, show detailed info
-    //     setTimeout(() => {
-    //       successMsg.innerHTML = `
-    //         Thank you, <strong>${order.name}</strong>!<br>
-    //         Your order total is <strong>₦${order.total?.toLocaleString()}</strong>.<br>
-    //         Payment Method: <strong>${order.paymentMethod}</strong><br>
-    //         Reference: <strong>${order.paymentRef}</strong>
-    //       `;
-    //     }, 1000);
+        // Step 2: after 1s, show detailed info
+        setTimeout(() => {
+          successMsg.innerHTML = `
+            Thank you, <strong>${order.name}</strong>!<br>
+            Your order total is <strong>₦${order.total?.toLocaleString()}</strong>.<br>
+            Payment Method: <strong>${order.paymentMethod}</strong><br>
+            Reference: <strong>${order.paymentRef}</strong>
+          `;
+        }, 1000);
 
-    //   } else if (isInternational) {
-    //     // WhatsApp / International orders
-    //     successMsg.innerHTML = `
-    //       Thank you, <strong>${order.name}</strong>!<br>
-    //       <div class="mt-2 text-yellow-700 font-semibold">
-    //         🌍 International order – delivery cost will be confirmed via WhatsApp.
-    //       </div>
-    //       Payment Method: <strong>${order.paymentMethod}</strong><br>
-    //       Reference: <strong>${order.paymentRef}</strong>
-    //     `;
-    //   }
+      } else if (isInternational) {
+        // WhatsApp / International orders
+        successMsg.innerHTML = `
+          Thank you, <strong>${order.name}</strong>!<br>
+          <div class="mt-2 text-yellow-700 font-semibold">
+            🌍 International order – delivery cost will be confirmed via WhatsApp.
+          </div>
+          Payment Method: <strong>${order.paymentMethod}</strong><br>
+          Reference: <strong>${order.paymentRef}</strong>
+        `;
+      }
 
-    //   successModal.classList.remove("hidden");
-    // }
+      successModal.classList.remove("hidden");
+    }
     console.log("Cart cleared:", cartItems);
 console.log("Inputs cleared:", name.value, email.value, countryInput.value);
 
@@ -1017,7 +1017,7 @@ console.log("Inputs cleared:", name.value, email.value, countryInput.value);
     handler.openIframe();
   }
 
-  // Send WhatsApp Order (Updated)
+  // Send WhatsApp Order (iOS-safe)
 async function sendWhatsAppOrder() {
   const billing = validateBilling();
   if (!billing || !cartItems.length) {
@@ -1042,43 +1042,25 @@ async function sendWhatsAppOrder() {
 
   let subtotal = 0;
   cartItems.forEach(item => subtotal += item.price * item.quantity);
+
   const deliveryFee = isInternational ? 0 : calculateDeliveryFee(delivery);
   const total = subtotal + deliveryFee;
 
-  showLoader(true);
-
-  let orderRef;
-  try {
-    orderRef = await saveOrder({
-      ...billing,
-      items: cartItems,
-      deliveryFee,
-      total,
-      totalWeight,
-      paymentRef: whatsappPaymentRef,
-      paymentMethod: "WhatsApp",
-      status: "pending_confirmation"
-    });
-  } catch (err) {
-    console.error("Error saving order:", err);
-    showNotification("Failed to save order. Please try again.", "error");
-    showLoader(false);
-    return;
-  }
-
-  showLoader(false);
-
-  // Build WhatsApp message
+  // ================================
+  // 1️⃣ BUILD WHATSAPP MESSAGE FIRST
+  // ================================
   const itemsText = cartItems
     .map((item, index) =>
-      `${index + 1}. ${item.name}\nQty: ${item.quantity}\nPrice: ₦${item.price.toLocaleString()}\nSubtotal: ₦${(item.price * item.quantity).toLocaleString()}`
+      `${index + 1}. ${item.name}
+Qty: ${item.quantity}
+Price: ₦${item.price.toLocaleString()}
+Subtotal: ₦${(item.price * item.quantity).toLocaleString()}`
     )
     .join("\n\n");
 
   const message = `
 *🛒 New ${isInternational ? "International" : "Local"} Order*
 *🧾 Payment Ref:* ${whatsappPaymentRef}
-*🆔 Order ID:* ${orderRef.id}
 
 *👤 Customer Details*
 - Name: ${billing.name}
@@ -1102,11 +1084,40 @@ ${itemsText}
 Thank you! 🙏
 `;
 
-  // Open WhatsApp
   const url = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
-  window.open(url, "_blank");
 
-  // Show success modal
+  // ================================
+  // 2️⃣ OPEN WHATSAPP IMMEDIATELY (iOS SAFE)
+  // ================================
+  window.location.href = url;
+
+  // ================================
+  // 3️⃣ NOW DO ASYNC WORK
+  // ================================
+  showLoader(true);
+
+  let orderRef;
+  try {
+    orderRef = await saveOrder({
+      ...billing,
+      items: cartItems,
+      deliveryFee,
+      total,
+      totalWeight,
+      paymentRef: whatsappPaymentRef,
+      paymentMethod: "WhatsApp",
+      status: "pending_confirmation"
+    });
+  } catch (err) {
+    console.error("Error saving order:", err);
+    showNotification("Failed to save order. Please try again.", "error");
+  }
+
+  showLoader(false);
+
+  // ================================
+  // 4️⃣ SHOW SUCCESS MODAL
+  // ================================
   const successModal = document.getElementById("orderSuccessModal");
   const successMessage = document.getElementById("successMessage");
 
@@ -1121,11 +1132,121 @@ Thank you! 🙏
     }
     <br>
     Payment Method: <strong>WhatsApp</strong><br>
-    Order ID: <strong>${orderRef.id}</strong>
+    Reference: <strong>${whatsappPaymentRef}</strong>
   `;
 
   successModal.classList.remove("hidden");
 }
+
+//   // Send WhatsApp Order (Updated)
+// async function sendWhatsAppOrder() {
+//   const billing = validateBilling();
+//   if (!billing || !cartItems.length) {
+//     showNotification("Please complete billing details.", "error");
+//     return;
+//   }
+
+//   const whatsappPaymentRef = generateWhatsappPaymentRef();
+
+//   const country = countryInput.value?.trim() || "Nigeria";
+//   const isInternational = country.toLowerCase() !== "nigeria";
+
+//   const delivery = {
+//     company: isInternational ? "INTERNATIONAL" : deliveryCompany?.value || "—",
+//     type: deliveryType.value || "_",
+//     state: stateInput?.value || "—",
+//     lga: "—",
+//     address: billing.address,
+//     country,
+//     isInternational
+//   };
+
+//   let subtotal = 0;
+//   cartItems.forEach(item => subtotal += item.price * item.quantity);
+//   const deliveryFee = isInternational ? 0 : calculateDeliveryFee(delivery);
+//   const total = subtotal + deliveryFee;
+
+//   showLoader(true);
+
+//   let orderRef;
+//   try {
+//     orderRef = await saveOrder({
+//       ...billing,
+//       items: cartItems,
+//       deliveryFee,
+//       total,
+//       totalWeight,
+//       paymentRef: whatsappPaymentRef,
+//       paymentMethod: "WhatsApp",
+//       status: "pending_confirmation"
+//     });
+//   } catch (err) {
+//     console.error("Error saving order:", err);
+//     showNotification("Failed to save order. Please try again.", "error");
+//     showLoader(false);
+//     return;
+//   }
+
+//   showLoader(false);
+
+//   // Build WhatsApp message
+//   const itemsText = cartItems
+//     .map((item, index) =>
+//       `${index + 1}. ${item.name}\nQty: ${item.quantity}\nPrice: ₦${item.price.toLocaleString()}\nSubtotal: ₦${(item.price * item.quantity).toLocaleString()}`
+//     )
+//     .join("\n\n");
+
+//   const message = `
+// *🛒 New ${isInternational ? "International" : "Local"} Order*
+// *🧾 Payment Ref:* ${whatsappPaymentRef}
+// *🆔 Order ID:* ${orderRef.id}
+
+// *👤 Customer Details*
+// - Name: ${billing.name}
+// - Phone: ${billing.phone}
+// - Email: ${billing.email}
+
+// *🌍 Delivery Info*
+// - Country: ${delivery.country}
+// - Address: ${delivery.address}
+// - Delivery Type: ${delivery.type}
+
+// *📦 Order Items*
+// ${itemsText}
+
+// *💰 Payment Summary*
+// - Subtotal: ₦${subtotal.toLocaleString()}
+// - Delivery Fee: ${isInternational ? "To be confirmed" : `₦${deliveryFee.toLocaleString()}`}
+// - Total: ₦${total.toLocaleString()}
+
+// ⚠️ Please confirm stock availability and delivery cost with the customer.
+// Thank you! 🙏
+// `;
+
+//   // Open WhatsApp
+//   const url = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
+//   window.open(url, "_blank");
+
+//   // Show success modal
+//   const successModal = document.getElementById("orderSuccessModal");
+//   const successMessage = document.getElementById("successMessage");
+
+//   successMessage.innerHTML = `
+//     Thank you, <strong>${billing.name}</strong>!<br><br>
+//     ${
+//       isInternational
+//         ? `<div class="text-yellow-700 font-semibold">
+//              🌍 International order – delivery cost will be confirmed via WhatsApp.
+//            </div>`
+//         : `Your total payment is <strong>₦${total.toLocaleString()}</strong>.`
+//     }
+//     <br>
+//     Payment Method: <strong>WhatsApp</strong><br>
+//     Order ID: <strong>${orderRef.id}</strong>
+//   `;
+
+//   successModal.classList.remove("hidden");
+// }
 
 // Show Success Modal
 function showOrderSuccess(messageHtml) {
