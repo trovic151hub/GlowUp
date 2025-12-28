@@ -923,41 +923,41 @@ async function saveOrder(order) {
     clearCheckoutInputs();
     showNotification("Order placed successfully!", "success", 4000);
 
-    // ===== Show Success Modal =====
-    const successModal = document.getElementById("orderSuccessModal");
-    const successMsg = document.getElementById("successMessage");
+    // // ===== Show Success Modal =====
+    // const successModal = document.getElementById("orderSuccessModal");
+    // const successMsg = document.getElementById("successMessage");
 
-    if (successModal && successMsg) {
-      const isInternational = !!delivery.isInternational;
+    // if (successModal && successMsg) {
+    //   const isInternational = !!delivery.isInternational;
 
-      if (order.paymentMethod === "Paystack") {
-        // Step 1: generic message
-        successMsg.textContent = "Thank you for your purchase. Your order has been confirmed.";
+    //   if (order.paymentMethod === "Paystack") {
+    //     // Step 1: generic message
+    //     successMsg.textContent = "Thank you for your purchase. Your order has been confirmed.";
 
-        // Step 2: after 1s, show detailed info
-        setTimeout(() => {
-          successMsg.innerHTML = `
-            Thank you, <strong>${order.name}</strong>!<br>
-            Your order total is <strong>₦${order.total?.toLocaleString()}</strong>.<br>
-            Payment Method: <strong>${order.paymentMethod}</strong><br>
-            Reference: <strong>${order.paymentRef}</strong>
-          `;
-        }, 1000);
+    //     // Step 2: after 1s, show detailed info
+    //     setTimeout(() => {
+    //       successMsg.innerHTML = `
+    //         Thank you, <strong>${order.name}</strong>!<br>
+    //         Your order total is <strong>₦${order.total?.toLocaleString()}</strong>.<br>
+    //         Payment Method: <strong>${order.paymentMethod}</strong><br>
+    //         Reference: <strong>${order.paymentRef}</strong>
+    //       `;
+    //     }, 1000);
 
-      } else if (isInternational) {
-        // WhatsApp / International orders
-        successMsg.innerHTML = `
-          Thank you, <strong>${order.name}</strong>!<br>
-          <div class="mt-2 text-yellow-700 font-semibold">
-            🌍 International order – delivery cost will be confirmed via WhatsApp.
-          </div>
-          Payment Method: <strong>${order.paymentMethod}</strong><br>
-          Reference: <strong>${order.paymentRef}</strong>
-        `;
-      }
+    //   } else if (isInternational) {
+    //     // WhatsApp / International orders
+    //     successMsg.innerHTML = `
+    //       Thank you, <strong>${order.name}</strong>!<br>
+    //       <div class="mt-2 text-yellow-700 font-semibold">
+    //         🌍 International order – delivery cost will be confirmed via WhatsApp.
+    //       </div>
+    //       Payment Method: <strong>${order.paymentMethod}</strong><br>
+    //       Reference: <strong>${order.paymentRef}</strong>
+    //     `;
+    //   }
 
-      successModal.classList.remove("hidden");
-    }
+    //   successModal.classList.remove("hidden");
+    // }
     console.log("Cart cleared:", cartItems);
 console.log("Inputs cleared:", name.value, email.value, countryInput.value);
 
