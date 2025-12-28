@@ -102,24 +102,17 @@
   transition: opacity 0.4s ease;
 }
 
-/* Emoji Pulse */
-  @keyframes pulse { 
-    0%,100% { transform: scale(1); }
-    50% { transform: scale(1.2); }
+#orderSuccessContent {
+    transform: translateY(-100%);
+    opacity: 0;
+    transition: transform 0.5s ease-out, opacity 0.5s ease-out;
   }
 
-  h1::before {
-    content: '🎉 ';
-    display: inline-block;
-    animation: pulse 1.5s infinite;
+  #orderSuccessContent.show {
+    transform: translateY(0);
+    opacity: 1;
   }
 
-  /* Fade-in Animation */
-  @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(10px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
-  .animate-fadeIn { animation: fadeIn 0.5s ease-out; }
   </style>
 </head>
 <body class="bg-gray-50 text-gray-900">
@@ -220,48 +213,28 @@
     <div class="loader border-4 border-pink-500 border-t-transparent rounded-full w-12 h-12 animate-spin"></div>
   </div>
 
-  <!-- Order Success Modal -->
-<div id="orderSuccessModal" class="hidden fixed inset-0 flex items-center justify-center bg-gradient-to-br from-pink-100 via-pink-200 to-pink-300 z-50">
-  <div class="bg-white/90 backdrop-blur-lg p-8 rounded-2xl shadow-xl max-w-md w-full text-center animate-fadeIn border border-pink-200">
-    <div class="flex justify-center mb-4">
+  <!-- ===== ORDER SUCCESS MODAL ===== -->
+<div id="orderSuccessModal" class="hidden fixed inset-0 bg-gradient-to-br from-pink-100 via-pink-200 to-pink-300 z-50 flex items-start justify-center p-6 overflow-hidden">
+  <div id="orderSuccessContent" class="bg-white/90 backdrop-blur-lg p-8 rounded-2xl shadow-xl max-w-md w-full text-center transform transition-transform duration-500 ease-out border border-pink-200 relative">
+    
+    <!-- Confetti Canvas -->
+    <canvas id="confettiCanvas" class="absolute inset-0 pointer-events-none z-0"></canvas>
+
+    <div class="flex justify-center mb-4 relative z-10">
       <div class="w-20 h-20 bg-pink-100 rounded-full flex items-center justify-center shadow-inner">
         <i class="fas fa-check text-pink-600 text-4xl"></i>
       </div>
     </div>
-    <h1 class="text-3xl font-bold text-pink-600 mb-2">Order Successful!</h1>
-    <p id="successMessage" class="mb-6 text-gray-700 text-base"></p>
-    <a href="customer-dashboard.html" 
-       class="block bg-pink-600 text-white px-4 py-2 rounded-lg mb-3 hover:bg-pink-700 transition">
+
+    <h1 class="text-3xl font-bold text-pink-600 mb-2 relative z-10">Order Successful!</h1>
+    <p id="successMessage" class="mb-6 text-gray-700 text-base relative z-10"></p>
+
+    <a href="customer-dashboard.html" class="block bg-pink-600 text-white px-4 py-2 rounded-lg mb-3 hover:bg-pink-700 transition relative z-10">
       View Orders
     </a>
-    <a href="index.html" 
-       class="block text-pink-700 font-medium">
-       Back to Home
-    </a>
+    <a href="index.html" class="block text-pink-700 font-medium relative z-10">Back to Home</a>
   </div>
 </div>
-
-  <!-- ORDER SUCCESS (HIDDEN) -->
-<!-- <section id="orderSuccess" class="hidden fixed inset-0 bg-white z-50 flex items-center justify-center p-6">
-  <div class="max-w-md w-full text-center">
-    <div class="text-green-500 text-5xl mb-4">✅</div>
-    <h2 class="text-2xl font-bold mb-2">Order Placed Successfully</h2>
-    <p class="text-gray-600 mb-4">
-      Your order has been received. Please continue the conversation on WhatsApp.
-    </p>
-
-    <div class="bg-gray-100 rounded p-3 text-sm mb-4">
-      <p><strong>Order ID:</strong> <span id="successOrderId"></span></p>
-      <p><strong>Payment Ref:</strong> <span id="successPaymentRef"></span></p>
-    </div>
-
-    <button
-      onclick="closeSuccess()"
-      class="bg-pink-500 text-white px-6 py-2 rounded hover:bg-pink-600 w-full">
-      Continue Shopping
-    </button>
-  </div>
-</section> -->
 
   <script>
 document.addEventListener("DOMContentLoaded", () => {
@@ -369,25 +342,6 @@ document.addEventListener("DOMContentLoaded", () => {
   const deliveryFeeEl=document.getElementById("deliveryFee");
   const orderSkeleton=document.getElementById("orderSkeleton");
   const suggestionsContainer=document.getElementById("stateSuggestions");
-
-   // ===== Helper to clear checkout form inputs =====
-  function clearCheckoutInputs() {
-    const inputs = [
-      name,
-      phone,
-      email,
-      address,
-      state,
-      lga,
-      countryInput,
-      deliveryType,
-      deliveryTypeLabel,
-      terminalLabel
-    ];
-    inputs.forEach(input => {
-      if (input) input.value = ""; // reset each input
-    });
-  }
 
 /* ================= COUNTRY (GLOBAL) ================= */
 const countryInput = document.getElementById("countryInput");
@@ -920,46 +874,16 @@ async function saveOrder(order) {
 
      cartItems = [];
     renderOrderWithDelivery();
-    clearCheckoutInputs();
     showNotification("Order placed successfully!", "success", 4000);
 
-    // ===== Show Success Modal =====
-    const successModal = document.getElementById("orderSuccessModal");
-    const successMsg = document.getElementById("successMessage");
-
-    if (successModal && successMsg) {
-      const isInternational = !!delivery.isInternational;
-
-      if (order.paymentMethod === "Paystack") {
-        // Step 1: generic message
-        successMsg.textContent = "Thank you for your purchase. Your order has been confirmed.";
-
-        // Step 2: after 1s, show detailed info
-        setTimeout(() => {
-          successMsg.innerHTML = `
-            Thank you, <strong>${order.name}</strong>!<br>
-            Your order total is <strong>₦${order.total?.toLocaleString()}</strong>.<br>
-            Payment Method: <strong>${order.paymentMethod}</strong><br>
-            Reference: <strong>${order.paymentRef}</strong>
-          `;
-        }, 1000);
-
-      } else if (isInternational) {
-        // WhatsApp / International orders
-        successMsg.innerHTML = `
-          Thank you, <strong>${order.name}</strong>!<br>
-          <div class="mt-2 text-yellow-700 font-semibold">
-            🌍 International order – delivery cost will be confirmed via WhatsApp.
-          </div>
-          Payment Method: <strong>${order.paymentMethod}</strong><br>
-          Reference: <strong>${order.paymentRef}</strong>
-        `;
-      }
-
-      successModal.classList.remove("hidden");
-    }
-    console.log("Cart cleared:", cartItems);
-console.log("Inputs cleared:", name.value, email.value, countryInput.value);
+    // Show success modal for both WhatsApp & Paystack
+showOrderSuccessModal({
+  name: order.name || billing.name || "Customer",
+  total: order.total || total,
+  paymentMethod: order.paymentMethod,
+  paymentRef: order.paymentRef,
+  delivery: order.delivery || delivery
+});
 
     // ✅ Return orderRef so other functions can use it
     return orderRef;
@@ -1127,25 +1051,70 @@ Thank you! 🙏
   successModal.classList.remove("hidden");
 }
 
-// Show Success Modal
-function showOrderSuccess(messageHtml) {
-  const modal = document.getElementById("orderSuccess");
-  const msg = document.getElementById("successMessage");
+// ===== SHOW ORDER SUCCESS MODAL =====
+  function showOrderSuccessModal(order) {
+    const modal = document.getElementById("orderSuccessModal");
+    const content = document.getElementById("orderSuccessContent");
+    const msg = document.getElementById("successMessage");
 
-  console.log("Cart cleared:", cartItems);
-console.log("Inputs cleared:", name.value, email.value, countryInput.value);
+    if (!modal || !content || !msg) return;
 
-  msg.innerHTML = messageHtml;
-  modal.classList.remove("hidden");
-}
+    console.log("Order object:", order); // debug
 
-function closeSuccess() {
-  document.getElementById("orderSuccess").classList.add("hidden");
-}
+    // Step 1: Set initial generic message
+    msg.textContent = "Thank you for your purchase. Your order has been confirmed.";
 
-function goToDashboard() {
-  window.location.href = "customer-dashboard.html";
-}
+    // Show modal
+    modal.classList.remove("hidden");
+
+    // Animate slide-in
+    setTimeout(() => content.classList.add("show"), 200);
+
+    // Step 2: Launch confetti
+    launchConfetti();
+
+    // Step 3: After 1s, show detailed order info
+    setTimeout(() => {
+      if (!order) return;
+
+      const isInternational = !!order.delivery?.isInternational;
+      msg.innerHTML = `
+        Thank you, <strong>${order.name || "Customer"}</strong>!<br>
+        ${
+          isInternational
+            ? `<div class="mt-2 text-yellow-700 font-semibold">
+                 🌍 International order – delivery cost will be confirmed via WhatsApp.
+               </div>`
+            : `Your order total is <strong>₦${(order.total || 0).toLocaleString()}</strong>.`
+        }
+        <br>
+        Payment Method: <strong>${order.paymentMethod || "N/A"}</strong><br>
+        Reference: <strong>${order.paymentRef || "N/A"}</strong>
+      `;
+    }, 1000);
+  }
+
+  // ===== CONFETTI =====
+  function launchConfetti() {
+    const canvas = document.getElementById("confettiCanvas");
+    if (!canvas) return;
+
+    const myConfetti = confetti.create(canvas, { resize: true, useWorker: true });
+    myConfetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } });
+  }
+
+  // ===== TEST MODAL ON PAGE LOAD =====
+  document.addEventListener("DOMContentLoaded", () => {
+    const testOrder = {
+      name: "Victor",
+      total: 12000,
+      paymentMethod: "TestPay",
+      paymentRef: "TEST123",
+      delivery: {}
+    };
+    // Uncomment this line to test modal:
+    // showOrderSuccessModal(testOrder);
+  });
 
   // ===== Auth & Cart Fetch =====
   auth.onAuthStateChanged(user=>{
