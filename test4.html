@@ -108,11 +108,11 @@
     50% { transform: scale(1.2); }
   }
 
-  h1::before {
-    content: '🎉 ';
-    display: inline-block;
-    animation: pulse 1.5s infinite;
-  }
+  .success-title::before {
+  content: '🎉 ';
+  display: inline-block;
+  animation: pulse 1.5s infinite;
+}
 
   /* Fade-in Animation */
   @keyframes fadeIn {
@@ -228,7 +228,7 @@
         <i class="fas fa-check text-pink-600 text-4xl"></i>
       </div>
     </div>
-    <h1 class="text-3xl font-bold text-pink-600 mb-2">Order Successful!</h1>
+    <h1 class="success-title text-3xl font-bold text-pink-600 mb-2">Order Successful!</h1>
     <p id="successMessage" class="mb-6 text-gray-700 text-base"></p>
     <a href="customer-dashboard.html" 
        class="block bg-pink-600 text-white px-4 py-2 rounded-lg mb-3 hover:bg-pink-700 transition">
@@ -240,28 +240,6 @@
     </a>
   </div>
 </div>
-
-  <!-- ORDER SUCCESS (HIDDEN) -->
-<!-- <section id="orderSuccess" class="hidden fixed inset-0 bg-white z-50 flex items-center justify-center p-6">
-  <div class="max-w-md w-full text-center">
-    <div class="text-green-500 text-5xl mb-4">✅</div>
-    <h2 class="text-2xl font-bold mb-2">Order Placed Successfully</h2>
-    <p class="text-gray-600 mb-4">
-      Your order has been received. Please continue the conversation on WhatsApp.
-    </p>
-
-    <div class="bg-gray-100 rounded p-3 text-sm mb-4">
-      <p><strong>Order ID:</strong> <span id="successOrderId"></span></p>
-      <p><strong>Payment Ref:</strong> <span id="successPaymentRef"></span></p>
-    </div>
-
-    <button
-      onclick="closeSuccess()"
-      class="bg-pink-500 text-white px-6 py-2 rounded hover:bg-pink-600 w-full">
-      Continue Shopping
-    </button>
-  </div>
-</section> -->
 
   <script>
 document.addEventListener("DOMContentLoaded", () => {
@@ -942,7 +920,7 @@ async function saveOrder(order) {
             Payment Method: <strong>${order.paymentMethod}</strong><br>
             Reference: <strong>${order.paymentRef}</strong>
           `;
-        }, 1000);
+        }, 3000);
 
       } else if (isInternational) {
         // WhatsApp / International orders
@@ -1047,7 +1025,7 @@ async function sendWhatsAppOrder() {
   const total = subtotal + deliveryFee;
 
   // ================================
-  // 1️⃣ BUILD WHATSAPP MESSAGE FIRST
+  // 1️⃣ BUILD WHATSAPP MESSAGE
   // ================================
   const itemsText = cartItems
     .map((item, index) =>
@@ -1087,18 +1065,17 @@ Thank you! 🙏
   const url = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
 
   // ================================
-  // 2️⃣ OPEN WHATSAPP IMMEDIATELY (iOS SAFE)
+  // 2️⃣ OPEN WHATSAPP IN NEW TAB (iOS SAFE)
   // ================================
-  window.location.href = url;
+  window.open(url, "_blank");
 
   // ================================
-  // 3️⃣ NOW DO ASYNC WORK
+  // 3️⃣ SAVE ORDER ASYNC
   // ================================
   showLoader(true);
 
-  let orderRef;
   try {
-    orderRef = await saveOrder({
+    await saveOrder({
       ...billing,
       items: cartItems,
       deliveryFee,
@@ -1138,7 +1115,7 @@ Thank you! 🙏
   successModal.classList.remove("hidden");
 }
 
-//   // Send WhatsApp Order (Updated)
+//   // Send WhatsApp Order (iOS-safe)
 // async function sendWhatsAppOrder() {
 //   const billing = validateBilling();
 //   if (!billing || !cartItems.length) {
@@ -1163,43 +1140,25 @@ Thank you! 🙏
 
 //   let subtotal = 0;
 //   cartItems.forEach(item => subtotal += item.price * item.quantity);
+
 //   const deliveryFee = isInternational ? 0 : calculateDeliveryFee(delivery);
 //   const total = subtotal + deliveryFee;
 
-//   showLoader(true);
-
-//   let orderRef;
-//   try {
-//     orderRef = await saveOrder({
-//       ...billing,
-//       items: cartItems,
-//       deliveryFee,
-//       total,
-//       totalWeight,
-//       paymentRef: whatsappPaymentRef,
-//       paymentMethod: "WhatsApp",
-//       status: "pending_confirmation"
-//     });
-//   } catch (err) {
-//     console.error("Error saving order:", err);
-//     showNotification("Failed to save order. Please try again.", "error");
-//     showLoader(false);
-//     return;
-//   }
-
-//   showLoader(false);
-
-//   // Build WhatsApp message
+//   // ================================
+//   // 1️⃣ BUILD WHATSAPP MESSAGE FIRST
+//   // ================================
 //   const itemsText = cartItems
 //     .map((item, index) =>
-//       `${index + 1}. ${item.name}\nQty: ${item.quantity}\nPrice: ₦${item.price.toLocaleString()}\nSubtotal: ₦${(item.price * item.quantity).toLocaleString()}`
+//       `${index + 1}. ${item.name}
+// Qty: ${item.quantity}
+// Price: ₦${item.price.toLocaleString()}
+// Subtotal: ₦${(item.price * item.quantity).toLocaleString()}`
 //     )
 //     .join("\n\n");
 
 //   const message = `
 // *🛒 New ${isInternational ? "International" : "Local"} Order*
 // *🧾 Payment Ref:* ${whatsappPaymentRef}
-// *🆔 Order ID:* ${orderRef.id}
 
 // *👤 Customer Details*
 // - Name: ${billing.name}
@@ -1223,11 +1182,40 @@ Thank you! 🙏
 // Thank you! 🙏
 // `;
 
-//   // Open WhatsApp
 //   const url = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
-//   window.open(url, "_blank");
 
-//   // Show success modal
+//   // ================================
+//   // 2️⃣ OPEN WHATSAPP IMMEDIATELY (iOS SAFE)
+//   // ================================
+//   window.location.href = url;
+
+//   // ================================
+//   // 3️⃣ NOW DO ASYNC WORK
+//   // ================================
+//   showLoader(true);
+
+//   let orderRef;
+//   try {
+//     orderRef = await saveOrder({
+//       ...billing,
+//       items: cartItems,
+//       deliveryFee,
+//       total,
+//       totalWeight,
+//       paymentRef: whatsappPaymentRef,
+//       paymentMethod: "WhatsApp",
+//       status: "pending_confirmation"
+//     });
+//   } catch (err) {
+//     console.error("Error saving order:", err);
+//     showNotification("Failed to save order. Please try again.", "error");
+//   }
+
+//   showLoader(false);
+
+//   // ================================
+//   // 4️⃣ SHOW SUCCESS MODAL
+//   // ================================
 //   const successModal = document.getElementById("orderSuccessModal");
 //   const successMessage = document.getElementById("successMessage");
 
@@ -1242,7 +1230,7 @@ Thank you! 🙏
 //     }
 //     <br>
 //     Payment Method: <strong>WhatsApp</strong><br>
-//     Order ID: <strong>${orderRef.id}</strong>
+//     Reference: <strong>${whatsappPaymentRef}</strong>
 //   `;
 
 //   successModal.classList.remove("hidden");

@@ -115,7 +115,11 @@ document.addEventListener("DOMContentLoaded", () => {
   const auth = firebase.auth();
   const db = firebase.firestore();
 
-  let currentUser = null, allOrders = [], currentFilter = "All", currentPage = 1, ordersUnsub = null;
+  let currentUser = null,
+      allOrders = [],
+      currentFilter = "All",
+      currentPage = 1,
+      ordersUnsub = null;
 
   auth.onAuthStateChanged(user => {
     currentUser = user;
@@ -123,7 +127,11 @@ document.addEventListener("DOMContentLoaded", () => {
       const firstName = user.displayName ? user.displayName.split(" ")[0] : user.email.split("@")[0];
       userNameSpan.textContent = firstName.charAt(0).toUpperCase() + firstName.slice(1);
       startOrdersListener();
-    } else { stopOrdersListener(); renderOrders([]); userNameSpan.textContent = "Customer"; }
+    } else {
+      stopOrdersListener();
+      renderOrders([]);
+      userNameSpan.textContent = "Customer";
+    }
   });
 
   function startOrdersListener() {
@@ -133,7 +141,340 @@ document.addEventListener("DOMContentLoaded", () => {
     ordersUnsub = ordersRef.onSnapshot(snapshot=>{
       allOrders = snapshot.docs.map(doc=>{
         const data = doc.data();
-        const status = data.shipmentStatus||data.status||"Pending";
+        const status = (data.shipmentStatus || data.status || "Pending").trim();
+        return {
+          id: doc.id,
+          total: data.total || 0,
+          items: data.items || [],
+          status,
+          createdAt: data.createdAt || data.timestamp,
+          name: data.name || '',
+          phone: data.phone || '',
+          email: data.email || '',
+          delivery: data.delivery || {}
+        };
+      }).sort((a,b)=>{
+        let da=a.createdAt, bn=b.createdAt;
+        da = da?.toDate ? da.toDate() : new Date(da.seconds*1000);
+        bn = bn?.toDate ? bn.toDate() : new Date(bn.seconds*1000);
+        return bn - da;
+      });
+      applyOrderFilter(currentFilter);
+
+      // Refresh modal timeline if open
+      if(!orderModal.classList.contains("hidden")){
+        const currentOrderId = modalContent.dataset.currentOrderId;
+        if(currentOrderId) refreshOrderModal(currentOrderId);
+      }
+    });
+  }
+
+  function stopOrdersListener(){ if(ordersUnsub) ordersUnsub(); ordersUnsub=null; }
+
+  window.filterOrders = (status)=>{
+    currentFilter = status;
+    document.querySelectorAll(".status-btn").forEach(btn=>{
+      if(btn.dataset.status===status){
+        btn.classList.add("bg-pink-500","text-white");
+        btn.classList.remove("bg-pink-100");
+      } else {
+        btn.classList.remove("bg-pink-500","text-white");
+        btn.classList.add("bg-pink-100");
+      }
+    });
+    applyOrderFilter(status);
+  };
+
+  function applyOrderFilter(status){
+    const filtered = status==="All" ? allOrders : allOrders.filter(o=>o.status.toLowerCase()===status.toLowerCase());
+    currentPage = 1;
+    renderPagination(filtered);
+    renderOrders(paginateOrders(filtered));
+  }
+
+  function paginateOrders(list){ return list.slice((currentPage-1)*pageSize, currentPage*pageSize); }
+
+  function renderPagination(list){
+    let container = document.getElementById("paginationControls");
+    if(!container && orderTableBody){
+      container = document.createElement("div");
+      container.id = "paginationControls";
+      container.className = "flex items-center justify-center gap-3 mt-4 text-sm";
+      orderTableBody.parentElement.appendChild(container);
+    }
+    if(!container) return;
+
+    const totalPages = Math.ceil(list.length / pageSize);
+    if(totalPages <= 1){ container.innerHTML=""; return; }
+
+    const prevDisabled = currentPage === 1 ? "opacity-50 cursor-not-allowed" : "";
+    const nextDisabled = currentPage === totalPages ? "opacity-50 cursor-not-allowed" : "";
+
+    container.innerHTML = `
+      <button onclick="changePage('prev')" class="px-3 py-1 rounded bg-pink-100 hover:bg-pink-200 ${prevDisabled}">Prev</button>
+      <span>Page ${currentPage} of ${totalPages}</span>
+      <button onclick="changePage('next')" class="px-3 py-1 rounded bg-pink-100 hover:bg-pink-200 ${nextDisabled}">Next</button>
+    `;
+  }
+
+  window.changePage = (dir)=>{
+    const filtered = currentFilter==="All" ? allOrders : allOrders.filter(o=>o.status.toLowerCase()===currentFilter.toLowerCase());
+    const totalPages = Math.ceil(filtered.length/pageSize);
+    if(dir==="next" && currentPage < totalPages) currentPage++;
+    if(dir==="prev" && currentPage > 1) currentPage--;
+    renderPagination(filtered);
+    renderOrders(paginateOrders(filtered));
+  };
+
+  function renderOrders(orders) {
+  if (!orderTableBody) return;
+  orderTableBody.innerHTML = "";
+
+  if (!orders.length) {
+    orderTableBody.innerHTML = `<tr><td colspan="4" class="text-center text-gray-500 p-2">No orders found.</td></tr>`;
+    return;
+  }
+
+  orders.forEach(order => {
+    let dateStr = "N/A";
+    const rawDate = order.createdAt;
+    if (rawDate) {
+      if (typeof rawDate.toDate === "function") {
+        dateStr = rawDate.toDate().toLocaleDateString();
+      } else if (rawDate.seconds) {
+        dateStr = new Date(rawDate.seconds * 1000).toLocaleDateString();
+      }
+    }
+
+    const totalStr = order.total?.toLocaleString() || "0";
+    const itemsCount = order.items?.length || 0;
+
+    const statusLower = order.status?.toLowerCase() || "";
+    const statusColor =
+      statusLower === "pending" ? "bg-yellow-300 text-yellow-800" :
+      statusLower === "pending-confirmation" ? "bg-yellow-200 text-yellow-900" :
+      statusLower === "shipped" ? "bg-blue-300 text-blue-800" :
+      statusLower === "delivered" ? "bg-green-300 text-green-800" : "bg-gray-300 text-gray-800";
+
+    const isEditable = ["pending", "pending-confirmation"].includes(statusLower);
+
+    const tr = document.createElement("tr");
+    tr.className = "border-b hover:bg-gray-50";
+    tr.innerHTML = `
+      <td class="p-2 text-center">${dateStr}</td>
+      <td class="p-2 text-center">₦${totalStr}</td>
+      <td class="p-2 text-center">${itemsCount}</td>
+      <td class="p-2 text-center">
+        <span class="px-2 py-1 rounded ${statusColor} text-sm font-semibold">${order.status}</span>
+        <button onclick="viewOrder('${order.id}')" class="ml-2 text-blue-500 hover:underline">View</button>
+        <button onclick="editOrder('${order.id}')"
+          class="ml-2 text-green-500 hover:underline"
+          ${!isEditable ? "disabled" : ""}>
+          Edit
+        </button>
+      </td>
+    `;
+    orderTableBody.appendChild(tr);
+  });
+}
+
+window.editOrder = (id) => {
+  modalContent.dataset.currentOrderId = id;
+  const order = allOrders.find(o => o.id === id);
+  if (!order || !["pending", "pending-confirmation"].includes(order.status?.toLowerCase())) return;
+
+  saveBtn.classList.remove("hidden");
+  modalContent.innerHTML = generateModalContent(order, true);
+
+  saveBtn.onclick = async () => {
+    const name = document.getElementById("editName").value;
+    const phone = document.getElementById("editPhone").value;
+    const email = document.getElementById("editEmail").value;
+    const address = document.getElementById("editAddress").value;
+
+    await db.collection("orders").doc(id).update({
+      name,
+      phone,
+      email,
+      "delivery.address": address
+    });
+
+    alert("Order updated successfully!");
+    closeModal();
+  };
+
+  orderModal.classList.remove("hidden");
+};
+
+//   function renderOrders(orders){
+//     if(!orderTableBody) return;
+//     orderTableBody.innerHTML="";
+//     if(!orders.length){
+//       orderTableBody.innerHTML=`<tr><td colspan="4" class="text-center text-gray-500 p-2">No orders found.</td></tr>`;
+//       return;
+//     }
+
+//     orders.forEach(order=>{
+//       let dateStr="N/A";
+//       const rawDate = order.createdAt;
+//       if(rawDate){
+//         if(typeof rawDate.toDate==="function") dateStr = rawDate.toDate().toLocaleDateString();
+//         else if(rawDate.seconds) dateStr = new Date(rawDate.seconds*1000).toLocaleDateString();
+//       }
+//       const totalStr = order.total?.toLocaleString() || "0";
+//       const itemsCount = order.items?.length || 0;
+//       const statusColor = order.status.toLowerCase()==="pending"?"bg-yellow-300 text-yellow-800":
+//                           order.status.toLowerCase()==="shipped"?"bg-blue-300 text-blue-800":
+//                           order.status.toLowerCase()==="delivered"?"bg-green-300 text-green-800":"bg-gray-300 text-gray-800";
+//       const tr = document.createElement("tr");
+//       tr.className="border-b hover:bg-gray-50";
+//       tr.innerHTML = `
+//         <td class="p-2 text-center">${dateStr}</td>
+//         <td class="p-2 text-center">₦${totalStr}</td>
+//         <td class="p-2 text-center">${itemsCount}</td>
+//         <td class="p-2 text-center">
+//           <span class="px-2 py-1 rounded ${statusColor} text-sm font-semibold">${order.status}</span>
+//           <button onclick="viewOrder('${order.id}')" class="ml-2 text-blue-500 hover:underline">View</button>
+//           <button onclick="editOrder('${order.id}')"
+//   class="ml-2 text-green-500 hover:underline"
+//   ${!(order.status==="Pending" || order.status==="Pending-Confirmation") ? "disabled class='opacity-50 cursor-not-allowed'" : ""}>
+//   Edit
+// </button>
+
+//         </td>
+//       `;
+//       orderTableBody.appendChild(tr);
+//     });
+//   }
+
+  function refreshOrderModal(orderId){
+    const order = allOrders.find(o=>o.id===orderId);
+    if(!order) return;
+    if(!orderModal.classList.contains("hidden")){
+      modalContent.innerHTML = generateModalContent(order, false);
+    }
+  }
+
+  window.viewOrder = (id)=>{
+    modalContent.dataset.currentOrderId = id;
+    const order = allOrders.find(o=>o.id===id); 
+    if(!order) return;
+    modalContent.innerHTML = generateModalContent(order,false);
+    orderModal.classList.remove("hidden");
+  };
+
+//   window.editOrder=(id)=>{
+//     modalContent.dataset.currentOrderId = id;
+//     const order = allOrders.find(o => o.id === id);
+// if (!order || !(order.status === "Pending" || order.status === "Pending-Confirmation")) return;
+//     // const order=allOrders.find(o=>o.id===id); if(!order || order.status!=="Pending") return;
+//     saveBtn.classList.remove("hidden");
+//     modalContent.innerHTML=generateModalContent(order,true);
+//     saveBtn.onclick=async ()=>{
+//       const name=document.getElementById("editName").value;
+//       const phone=document.getElementById("editPhone").value;
+//       const email=document.getElementById("editEmail").value;
+//       const address=document.getElementById("editAddress").value;
+//       await db.collection("orders").doc(id).update({name,phone,email,"delivery.address":address});
+//       alert("Order updated successfully!");
+//       closeModal();
+//     };
+//     orderModal.classList.remove("hidden");
+//   };
+
+  function generateModalContent(order,isEdit){
+    const editable=isEdit?"":"readonly class='bg-gray-100'";
+    const steps=["Pending","Shipped","Delivered"];
+    const normalizedStatus = steps.find(s => s.toLowerCase() === order.status.toLowerCase()) || "Pending";
+    const statusIndex = steps.indexOf(normalizedStatus);
+
+    return `
+      <h3 class="font-semibold text-gray-700 mb-2">Order Status</h3>
+      <div class="flex items-center justify-between mb-4">
+        <div class="flex-1 flex items-center">
+          ${steps.map((step,i)=>{
+            const isActive = i <= statusIndex;
+            const colorClass = step==="Pending"?"bg-yellow-400":step==="Shipped"?"bg-blue-400":"bg-green-400";
+            const dotColor = isActive ? colorClass : "bg-gray-300";
+            const lineColor = (i<statusIndex) ? (steps[i]==="Pending"?"bg-yellow-400":steps[i]==="Shipped"?"bg-blue-400":"bg-green-400") : "bg-gray-300";
+            return `<div class="w-3 h-3 rounded-full timeline-step ${dotColor}"></div>${i<steps.length-1?`<div class="flex-1 mx-2 timeline-line ${lineColor}"></div>`:""}`;
+          }).join('')}
+        </div>
+      </div>
+      <div class="flex justify-between text-xs text-gray-600 font-semibold">${steps.map(s=>`<span>${s}</span>`).join('')}</div>
+
+      <h3 class="font-semibold text-gray-700 mt-4">Edit Info</h3>
+      <div class="space-y-2">
+        <input id="editName" value="${order.name||''}" ${editable} class="w-full border px-2 py-1 rounded"/>
+        <input id="editPhone" value="${order.phone||''}" ${editable} class="w-full border px-2 py-1 rounded"/>
+        <input id="editEmail" value="${order.email||''}" ${editable} class="w-full border px-2 py-1 rounded"/>
+        <input id="editAddress" value="${order.delivery?.address||''}" ${editable} class="w-full border px-2 py-1 rounded"/>
+      </div>
+
+      <h3 class="font-semibold text-gray-700 mt-4">Items</h3>
+      <div class="space-y-1">
+        ${order.items.map(i=>`<div class="flex justify-between">${i.name} <span>${i.quantity} × ₦${i.price.toLocaleString()}</span></div>`).join('')}
+      </div>
+
+      <div class="mt-2 text-right font-bold text-lg">Total: ₦${Number(order.total).toLocaleString()}</div>
+    `;
+  }
+
+  window.closeModal = ()=>orderModal.classList.add("hidden");
+});
+</script>
+
+<!-- <script>
+document.addEventListener("DOMContentLoaded", () => {
+  const userNameSpan = document.getElementById("userName");
+  const orderTableBody = document.getElementById("orderTableBody");
+  const orderModal = document.getElementById("orderModal");
+  const modalContent = document.getElementById("modalContent");
+  const saveBtn = document.getElementById("saveBtn");
+  const pageSize = 10;
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyDdTPmpaIPWSDWOmR-fXgvAb7hoxZUawcc",
+    authDomain: "e-commerce-39c74.firebaseapp.com",
+    projectId: "e-commerce-39c74",
+    storageBucket: "e-commerce-39c74.firebasestorage.app",
+    messagingSenderId: "863375033754",
+    appId: "1:863375033754:web:7ba248c8dbb1566c83e623"
+  };
+  firebase.initializeApp(firebaseConfig);
+  const auth = firebase.auth();
+  const db = firebase.firestore();
+
+  let currentUser = null, 
+  allOrders = [], 
+  currentFilter = "All", 
+  currentPage = 1, 
+  ordersUnsub = null;
+
+  auth.onAuthStateChanged(user => {
+    currentUser = user;
+    if(user){
+      const firstName = user.displayName 
+      ? user.displayName.split(" ")[0] 
+      : user.email.split("@")[0];
+      userNameSpan.textContent = 
+      firstName.charAt(0).toUpperCase() + firstName.slice(1);
+      startOrdersListener();
+    } else { 
+      stopOrdersListener(); 
+      renderOrders([]); 
+      userNameSpan.textContent = "Customer"; }
+  });
+
+  function startOrdersListener() {
+    stopOrdersListener();
+    if(!currentUser) return;
+    const ordersRef = db.collection("orders").where("userId","==",currentUser.uid);
+    ordersUnsub = ordersRef.onSnapshot(snapshot=>{
+      allOrders = snapshot.docs.map(doc=>{
+        const data = doc.data();
+        // const status = data.shipmentStatus||data.status||"Pending";
+        const status = (data.status || "Pending").trim();
         return {id:doc.id,total:data.total||0,items:data.items||[],status,createdAt:data.createdAt||data.timestamp,name:data.name||'',phone:data.phone||'',email:data.email||'',delivery:data.delivery||{}};
       }).sort((a,b)=>{
         let da=a.createdAt,bn=b.createdAt;
@@ -258,7 +599,11 @@ document.addEventListener("DOMContentLoaded", () => {
   function generateModalContent(order,isEdit){
     const editable=isEdit?"":"readonly class='bg-gray-100'";
     const steps=["Pending","Shipped","Delivered"];
-    const statusIndex = steps.indexOf(order.status?.trim()) ?? 0;
+    // const statusIndex = steps.indexOf(order.status?.trim()) ?? 0;
+    const normalizedStatus =
+  steps.find(s => s.toLowerCase() === order.status.toLowerCase()) || "Pending";
+
+const statusIndex = steps.indexOf(normalizedStatus);
     return `
       <h3 class="font-semibold text-gray-700 mb-2">Order Status</h3>
       <div class="flex items-center justify-between mb-4">
@@ -274,180 +619,6 @@ document.addEventListener("DOMContentLoaded", () => {
       </div>
       <div class="flex justify-between text-xs text-gray-600 font-semibold">
         ${steps.map(s=>`<span>${s}</span>`).join('')}
-      </div>
-
-      <h3 class="font-semibold text-gray-700 mt-4">Edit Info</h3>
-      <div class="space-y-2">
-        <input id="editName" value="${order.name||''}" ${editable} class="w-full border px-2 py-1 rounded"/>
-        <input id="editPhone" value="${order.phone||''}" ${editable} class="w-full border px-2 py-1 rounded"/>
-        <input id="editEmail" value="${order.email||''}" ${editable} class="w-full border px-2 py-1 rounded"/>
-        <input id="editAddress" value="${order.delivery?.address||''}" ${editable} class="w-full border px-2 py-1 rounded"/>
-      </div>
-
-      <h3 class="font-semibold text-gray-700 mt-4">Items</h3>
-      <div class="space-y-1">
-        ${order.items.map(i=>`<div class="flex justify-between">${i.name} <span>${i.quantity} × ₦${i.price.toLocaleString()}</span></div>`).join('')}
-      </div>
-
-      <div class="mt-2 text-right font-bold text-lg">Total: ₦${Number(order.total).toLocaleString()}</div>
-    `;
-  }
-
-  window.closeModal=()=>orderModal.classList.add("hidden");
-});
-</script>
-<!-- <script>
-document.addEventListener("DOMContentLoaded", () => {
-  const userNameSpan = document.getElementById("userName");
-  const orderTableBody = document.getElementById("orderTableBody");
-  const orderModal = document.getElementById("orderModal");
-  const modalContent = document.getElementById("modalContent");
-  const saveBtn = document.getElementById("saveBtn");
-  const pageSize = 10;
-
-  const firebaseConfig = {
-    apiKey: "AIzaSyDdTPmpaIPWSDWOmR-fXgvAb7hoxZUawcc",
-    authDomain: "e-commerce-39c74.firebaseapp.com",
-    projectId: "e-commerce-39c74",
-    storageBucket: "e-commerce-39c74.firebasestorage.app",
-    messagingSenderId: "863375033754",
-    appId: "1:863375033754:web:7ba248c8dbb1566c83e623"
-  };
-  firebase.initializeApp(firebaseConfig);
-  const auth = firebase.auth();
-  const db = firebase.firestore();
-
-  let currentUser = null, allOrders = [], currentFilter = "All", currentPage = 1, ordersUnsub = null;
-
-  auth.onAuthStateChanged(user => {
-    currentUser = user;
-    if(user){
-      const firstName = user.displayName ? user.displayName.split(" ")[0] : user.email.split("@")[0];
-      userNameSpan.textContent = firstName.charAt(0).toUpperCase() + firstName.slice(1);
-      startOrdersListener();
-    } else { stopOrdersListener(); renderOrders([]); userNameSpan.textContent = "Customer"; }
-  });
-
-  function startOrdersListener() {
-    stopOrdersListener();
-    if(!currentUser) return;
-    const ordersRef = db.collection("orders").where("userId","==",currentUser.uid);
-    ordersUnsub = ordersRef.onSnapshot(snapshot=>{
-      allOrders = snapshot.docs.map(doc=>{
-        const data = doc.data();
-        const status = data.shipmentStatus||data.status||"Pending";
-        return {id:doc.id,total:data.total||0,items:data.items||[],status,createdAt:data.createdAt||data.timestamp,name:data.name||'',phone:data.phone||'',email:data.email||'',delivery:data.delivery||{}};
-      }).sort((a,b)=>{
-        let da=a.createdAt,bn=b.createdAt;
-        da=da?.toDate?da.toDate():new Date(da.seconds*1000);
-        bn=bn?.toDate?bn.toDate():new Date(bn.seconds*1000);
-        return bn-da;
-      });
-      applyOrderFilter(currentFilter);
-    });
-  }
-
-  function stopOrdersListener(){if(ordersUnsub) ordersUnsub(); ordersUnsub=null;}
-
-  window.filterOrders = (status)=>{
-    currentFilter=status;
-    document.querySelectorAll(".status-btn").forEach(btn=>{if(btn.dataset.status===status){btn.classList.add("bg-pink-500","text-white");btn.classList.remove("bg-pink-100");}else{btn.classList.remove("bg-pink-500","text-white");btn.classList.add("bg-pink-100");}});
-    applyOrderFilter(status);
-  };
-
-  function applyOrderFilter(status){
-    const filtered = status==="All"?allOrders:allOrders.filter(o=>o.status.toLowerCase()===status.toLowerCase());
-    currentPage=1;
-    renderPagination(filtered);
-    renderOrders(paginateOrders(filtered));
-  }
-
-  function paginateOrders(list){const start=(currentPage-1)*pageSize;return list.slice(start,start+pageSize);}
-  function renderPagination(list){
-    const totalPages=Math.ceil(list.length/pageSize);
-    let container=document.getElementById("paginationControls");
-    if(!container && orderTableBody){container=document.createElement("div");container.id="paginationControls";container.className="flex items-center gap-2 mt-3 justify-center";orderTableBody.parentElement.appendChild(container);}
-    if(!container)return;
-    if(totalPages<=1){container.innerHTML="";return;}
-    container.innerHTML=`<button onclick="changePage('prev')" class="px-3 py-1 rounded bg-pink-100 hover:bg-pink-200">Prev</button>
-    <span class="px-3">Page ${currentPage} of ${totalPages}</span>
-    <button onclick="changePage('next')" class="px-3 py-1 rounded bg-pink-100 hover:bg-pink-200">Next</button>`;
-  }
-
-  window.changePage=(dir)=>{
-    const filtered=currentFilter==="All"?allOrders:allOrders.filter(o=>o.status.toLowerCase()===currentFilter.toLowerCase());
-    const totalPages=Math.ceil(filtered.length/pageSize);
-    if(dir==="next"&&currentPage<totalPages) currentPage++;
-    if(dir==="prev"&&currentPage>1) currentPage--;
-    renderPagination(filtered);
-    renderOrders(paginateOrders(filtered));
-  }
-
-  function renderOrders(orders){
-    if(!orderTableBody)return;
-    orderTableBody.innerHTML="";
-    if(!orders.length){orderTableBody.innerHTML=`<tr><td colspan="4" class="text-center text-gray-500 p-2">No orders found.</td></tr>`;return;}
-    orders.forEach(order=>{
-      let dateStr="N/A";
-      const rawDate=order.createdAt;
-      if(rawDate){if(typeof rawDate.toDate==="function")dateStr=rawDate.toDate().toLocaleDateString();else if(rawDate.seconds)dateStr=new Date(rawDate.seconds*1000).toLocaleDateString();}
-      const totalStr=order.total?.toLocaleString()||"0";
-      const itemsCount=order.items?.length||0;
-      const statusColor=order.status.toLowerCase()==="pending"?"bg-yellow-300 text-yellow-800":order.status.toLowerCase()==="shipped"?"bg-blue-300 text-blue-800":order.status.toLowerCase()==="delivered"?"bg-green-300 text-green-800":"bg-gray-300 text-gray-800";
-      const tr=document.createElement("tr");
-      tr.className="border-b hover:bg-gray-50";
-      tr.innerHTML=`<td class="p-2 text-center">${dateStr}</td>
-        <td class="p-2 text-center">₦${totalStr}</td>
-        <td class="p-2 text-center">${itemsCount}</td>
-        <td class="p-2 text-center">
-          <span class="px-2 py-1 rounded ${statusColor} text-sm font-semibold">${order.status}</span>
-          <button onclick="viewOrder('${order.id}')" class="ml-2 text-blue-500 hover:underline">View</button>
-          <button onclick="editOrder('${order.id}')" class="ml-2 text-green-500 hover:underline" ${order.status!=="Pending"?"disabled class='opacity-50 cursor-not-allowed'":""}>Edit</button>
-        </td>`;
-      orderTableBody.appendChild(tr);
-    });
-  }
-
-  window.viewOrder=(id)=>{
-    const order=allOrders.find(o=>o.id===id); if(!order) return;
-    saveBtn.classList.add("hidden");
-    modalContent.innerHTML=generateModalContent(order,false);
-    orderModal.classList.remove("hidden");
-  };
-
-  window.editOrder=(id)=>{
-    const order=allOrders.find(o=>o.id===id); if(!order || order.status!=="Pending") return;
-    saveBtn.classList.remove("hidden");
-    modalContent.innerHTML=generateModalContent(order,true);
-    saveBtn.onclick=async ()=>{
-      const name=document.getElementById("editName").value;
-      const phone=document.getElementById("editPhone").value;
-      const email=document.getElementById("editEmail").value;
-      const address=document.getElementById("editAddress").value;
-      await db.collection("orders").doc(id).update({name,phone,email,"delivery.address":address});
-      alert("Order updated successfully!");
-      closeModal();
-    };
-    orderModal.classList.remove("hidden");
-  };
-
-  function generateModalContent(order,isEdit){
-    const editable=isEdit?"":"readonly class='bg-gray-100'";
-    const steps=["Pending","Shipped","Delivered"];
-    const index=steps.indexOf(order.status);
-    return `
-      <h3 class="font-semibold text-gray-700 mb-2">Order Status</h3>
-      <div class="flex items-center justify-between mb-4">
-        <div class="flex-1 flex items-center">
-          <div class="w-3 h-3 rounded-full timeline-step ${order.status==="Pending"?"bg-yellow-400":"bg-gray-300"}"></div>
-          <div class="flex-1 h-1 bg-gray-300 mx-2 timeline-line ${order.status==="Shipped"||order.status==="Delivered"?"bg-blue-400":""}"></div>
-          <div class="w-3 h-3 rounded-full timeline-step ${order.status==="Shipped"||order.status==="Delivered"?"bg-blue-400":"bg-gray-300"}"></div>
-          <div class="flex-1 h-1 bg-gray-300 mx-2 timeline-line ${order.status==="Delivered"?"bg-green-400":""}"></div>
-          <div class="w-3 h-3 rounded-full timeline-step ${order.status==="Delivered"?"bg-green-400":"bg-gray-300"}"></div>
-        </div>
-      </div>
-      <div class="flex justify-between text-xs text-gray-600 font-semibold">
-        <span>Pending</span><span>Shipped</span><span>Delivered</span>
       </div>
 
       <h3 class="font-semibold text-gray-700 mt-4">Edit Info</h3>
