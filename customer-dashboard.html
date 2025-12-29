@@ -1,113 +1,95 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Customer Dashboard</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <style>
-    /* ===== MOBILE DASHBOARD FIXES ===== */
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Customer Dashboard</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+<style>
+/* ===== MODAL & TIMELINE STYLES ===== */
+.modal-bg { background: rgba(0,0,0,0.5); }
+.timeline-step { transition: all 0.3s ease; }
+.timeline-line { transition: background-color 0.3s ease; }
+
+.timeline-step {
+    transition: background-color 0.5s ease;
+  }
+  .timeline-line {
+    transition: background-color 0.5s ease;
+    height: 4px;
+    border-radius: 2px;
+  }
+/* ===== MOBILE DASHBOARD FIXES ===== */
 @media (max-width: 640px) {
-
-  main {
-    padding: 1rem !important;
-  }
-
-  h2 {
-    font-size: 1rem !important;
-    text-align: center;
-  }
-
-  /* Reduce card spacing */
-  .dashboard-card {
-    padding: 1rem !important;
-  }
-
-  /* Status filter buttons scroll horizontally */
-  .status-filter-wrapper {
-    overflow-x: auto;
-    display: flex;
-    gap: 0.5rem;
-    padding-bottom: 5px;
-  }
-
-  .status-btn {
-    white-space: nowrap;
-    font-size: 0.75rem;
-    padding: 6px 10px !important;
-  }
-
-  /* Make table scroll sideways */
-  .table-wrapper {
-    overflow-x: auto;
-  }
-  
-  table {
-    min-width: 300px;
-  }
-
-  /* Modal: full screen on mobile */
-  #orderModal > div {
-    width: 95% !important;
-    max-height: 80vh !important;
-  }
+  main { padding: 1rem !important; }
+  h2 { font-size: 1rem !important; text-align: center; }
+  .dashboard-card { padding: 1rem !important; }
+  .status-filter-wrapper { overflow-x: auto; display: flex; gap: 0.5rem; padding-bottom: 5px; }
+  .status-btn { white-space: nowrap; font-size: 0.75rem; padding: 6px 10px !important; }
+  .table-wrapper { overflow-x: auto; }
+  table { min-width: 300px; }
+  #orderModal > div { width: 95% !important; max-height: 80vh !important; }
 }
-  </style>
+</style>
 </head>
 <body class="bg-gray-50 text-gray-900">
+
 <!-- Loader -->
-  <div id="dashboard-loader" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 z-50 hidden">
-    <svg xmlns="http://www.w3.org/2000/svg" class="fas fa-shopping-cart text-white w-12 h-12 animate-pulse" viewBox="0 0 16 16">
-      <path fill="currentColor" d="M0 2.5A.5.5 0 0 1 .5 2H2a.5.5 0 0 1 .485.379L2.89 4H14.5a.5.5 0 0 1 .485.621l-1.5 6A.5.5 0 0 1 13 11H4a.5.5 0 0 1-.485-.379L1.61 3H.5a.5.5 0 0 1-.5-.5M3.14 5l.5 2H5V5zM6 5v2h2V5zm3 0v2h2V5zm3 0v2h1.36l.5-2zm1.11 3H12v2h.61zM11 8H9v2h2zM8 8H6v2h2zM5 8H3.89l.5 2H5zm0 5a1 1 0 1 0 0 2a1 1 0 0 0 0-2m-2 1a2 2 0 1 1 4 0a2 2 0 0 1-4 0m9-1a1 1 0 1 0 0 2a1 1 0 0 0 0-2m-2 1a2 2 0 1 1 4 0a2 2 0 0 1-4 0"/>
-    </svg>
-  </div>
-
-  <header class="bg-gradient-to-r from-[#fbcfe8] to-[#f9a8d4] p-4 shadow-md flex justify-between items-center fixed top-0 w-full">
-    <button onclick="history.back()">
-    <h1 class="text-xl font-bold">👤 My Dashboard</h1>
-    </button>
-  </header>
-
-  <main class="max-w-4xl mx-auto p-6 mt-16">
-    <h2 class="text-lg font-semibold mb-4">Welcome, <span id="userName">Customer</span> 👋</h2>
-
-    <div class="bg-white p-6 rounded shadow">
-      <h3 class="text-md font-semibold mb-4">📦 Your Orders</h3>
-      <div class="fil mb-4 block gap-2 items-center">
-  <span class=" font-semibold">Filter by Status:</span>
-  <div>
-  <button onclick="filterOrders('All')" class="status-btn bg-pink-100 px-3 py-1 rounded hover:bg-pink-200" data-status="All">All</button>
-  <button onclick="filterOrders('Pending')" class="status-btn bg-pink-100 px-3 py-1 rounded hover:bg-pink-200" data-status="Pending">Pending</button>
-  <button onclick="filterOrders('Shipped')" class="status-btn bg-pink-100 px-3 py-1 rounded hover:bg-pink-200" data-status="Shipped">Shipped</button>
-  <button onclick="filterOrders('Delivered')" class="status-btn bg-pink-100 px-3 py-1 rounded hover:bg-pink-200" data-status="Delivered">Delivered</button>
-  </div>
+<div id="dashboard-loader" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 z-50 hidden">
+  <svg xmlns="http://www.w3.org/2000/svg" class="fas fa-shopping-cart text-white w-12 h-12 animate-pulse" viewBox="0 0 16 16">
+    <path fill="currentColor" d="M0 2.5A.5.5 0 0 1 .5 2H2a.5.5 0 0 1 .485.379L2.89 4H14.5a.5.5 0 0 1 .485.621l-1.5 6A.5.5 0 0 1 13 11H4a.5.5 0 0 1-.485-.379L1.61 3H.5a.5.5 0 0 1-.5-.5M3.14 5l.5 2H5V5zM6 5v2h2V5zm3 0v2h2V5zm3 0v2h1.36l.5-2zm1.11 3H12v2h.61zM11 8H9v2h2zM8 8H6v2h2zM5 8H3.89l.5 2H5zm0 5a1 1 0 1 0 0 2a1 1 0 0 0 0-2m-2 1a2 2 0 1 1 4 0a2 2 0 0 1-4 0m9-1a1 1 0 1 0 0 2a1 1 0 0 0 0-2m-2 1a2 2 0 1 1 4 0a2 2 0 0 1-4 0"/>
+  </svg>
 </div>
+
+<header class="bg-gradient-to-r from-pink-300 to-pink-400 p-4 shadow-md flex justify-between items-center fixed top-0 w-full">
+  <button onclick="history.back()">
+    <h1 class="text-xl font-bold">👤 My Dashboard</h1>
+  </button>
+</header>
+
+<main class="max-w-5xl mx-auto p-6 mt-20">
+  <h2 class="text-lg font-semibold mb-4">Welcome, <span id="userName">Customer</span> 👋</h2>
+
+  <div class="bg-white p-6 rounded shadow">
+    <h3 class="text-md font-semibold mb-4">📦 Your Orders</h3>
+    <div class="fil mb-4 block gap-2 items-center">
+      <span class="font-semibold">Filter by Status:</span>
+      <div class="flex gap-2 overflow-x-auto">
+        <button onclick="filterOrders('All')" class="status-btn bg-pink-100 px-3 py-1 rounded hover:bg-pink-200" data-status="All">All</button>
+        <button onclick="filterOrders('Pending')" class="status-btn bg-pink-100 px-3 py-1 rounded hover:bg-pink-200" data-status="Pending">Pending</button>
+        <button onclick="filterOrders('Shipped')" class="status-btn bg-pink-100 px-3 py-1 rounded hover:bg-pink-200" data-status="Shipped">Shipped</button>
+        <button onclick="filterOrders('Delivered')" class="status-btn bg-pink-100 px-3 py-1 rounded hover:bg-pink-200" data-status="Delivered">Delivered</button>
+      </div>
+    </div>
+    <div class="table-wrapper overflow-x-auto">
       <table class="w-full border text-sm">
         <thead class="bg-pink-100">
           <tr>
             <th class="p-2">Date</th>
             <th class="p-2">Total</th>
             <th class="p-2">Items</th>
-            <th class="p-2">Action</th>
+            <th class="p-2">Status / Action</th>
           </tr>
         </thead>
         <tbody id="orderTableBody"></tbody>
       </table>
     </div>
-  </main>
+    <div id="paginationControls" class="flex items-center gap-2 mt-3 justify-center"></div>
+  </div>
+</main>
 
-  <div id="overlay" class="hidden fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50">
-  <div class="loader w-12 h-12 border-4 border-pink-500 border-t-transparent rounded-full animate-spin"></div>
-</div>
-
-  <!-- Modal -->
-  <div id="orderModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center flex justify-center z-50">
-    <div class="bg-white w-11/12 max-w-lg p-6 rounded shadow-lg">
-      <h2 class="text-xl font-bold mb-4">Order Details</h2>
-      <div id="modalContent" class="space-y-2 max-h-[60vh] overflow-y-auto"></div>
-      <button onclick="closeModal()" class="mt-4 bg-pink-500 text-white px-4 py-2 rounded hover:bg-pink-600">Close</button>
+<!-- Modal -->
+<div id="orderModal" class="hidden fixed inset-0 flex items-center justify-center z-50 modal-bg">
+  <div class="bg-white w-11/12 max-w-lg p-6 rounded shadow-lg max-h-[80vh] overflow-y-auto">
+    <h2 class="text-xl font-bold mb-4">Order Details</h2>
+    <div id="modalContent" class="space-y-4"></div>
+    <div class="flex justify-end gap-2 mt-4">
+      <button onclick="closeModal()" class="bg-gray-300 px-4 py-2 rounded hover:bg-gray-400">Close</button>
+      <button id="saveBtn" class="bg-pink-500 px-4 py-2 rounded hover:bg-pink-600 text-white hidden">Save Changes</button>
     </div>
   </div>
+</div>
 
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
@@ -115,52 +97,42 @@
 
 <script>
 document.addEventListener("DOMContentLoaded", () => {
-  // ===== 0. Loader =====
-  let loader = document.getElementById("dashboard-loader");
-  if (!loader) {
-    loader = document.createElement("div");
-    loader.id = "dashboard-loader";
-    loader.className = "fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 z-50 hidden";
-    loader.innerHTML = `<i class="fas fa-spinner fa-pulse text-6xl text-white"></i>`;
-    document.body.appendChild(loader);
-  }
+  // ===== Loader JS =====
+let loader = document.getElementById("dashboard-loader");
+if (!loader) {
+  loader = document.createElement("div");
+  loader.id = "dashboard-loader";
+  loader.className = "fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 z-50 hidden";
+  loader.innerHTML = `<i class="fas fa-spinner fa-pulse text-6xl text-white"></i>`;
+  document.body.appendChild(loader);
+}
 
-  function showLoader() {
-    if (!loader) return;
-    loader.style.opacity = "1";
-    loader.classList.remove("hidden");
-    // Disable scroll & clicks
-    document.body.style.overflow = "hidden";
-    document.body.style.pointerEvents = "none";
-  }
+function showLoader() {
+  if (!loader) return;
+  loader.style.opacity = "1";
+  loader.classList.remove("hidden");
+  document.body.style.overflow = "hidden"; // Disable scroll
+  document.body.style.pointerEvents = "none"; // Disable clicks
+}
 
-  function hideLoader() {
-    if (!loader) return;
-    loader.style.opacity = "0";
-    loader.style.transition = "opacity 0.4s ease";
-    setTimeout(() => {
-      loader.classList.add("hidden");
-      // Re-enable scroll & clicks
-      document.body.style.overflow = "";
-      document.body.style.pointerEvents = "";
-    }, 400);
-  }
+function hideLoader() {
+  if (!loader) return;
+  loader.style.opacity = "0";
+  loader.style.transition = "opacity 0.4s ease";
+  setTimeout(() => {
+    loader.classList.add("hidden");
+    document.body.style.overflow = "";
+    document.body.style.pointerEvents = "";
+  }, 400);
+}
 
-  // ===== 1. Globals =====
-  const orderTableBody = document.getElementById("orderTableBody");
   const userNameSpan = document.getElementById("userName");
+  const orderTableBody = document.getElementById("orderTableBody");
   const orderModal = document.getElementById("orderModal");
   const modalContent = document.getElementById("modalContent");
-  const overlay = document.getElementById("overlay");
+  const saveBtn = document.getElementById("saveBtn");
   const pageSize = 10;
 
-  let currentUser = null;
-  let ordersUnsub = null;
-  let allOrders = [];
-  let currentFilter = "All";
-  let currentPage = 1;
-
-  // ===== 2. Firebase Config & Init =====
   const firebaseConfig = {
     apiKey: "AIzaSyDdTPmpaIPWSDWOmR-fXgvAb7hoxZUawcc",
     authDomain: "e-commerce-39c74.firebaseapp.com",
@@ -170,257 +142,264 @@ document.addEventListener("DOMContentLoaded", () => {
     appId: "1:863375033754:web:7ba248c8dbb1566c83e623"
   };
   firebase.initializeApp(firebaseConfig);
-  const userAuth = firebase.auth();
-  const userDb = firebase.firestore();
+  const auth = firebase.auth();
+  const db = firebase.firestore();
 
-  // ===== 3. Overlay Functions =====
-  function showOverlay() { if (overlay) overlay.classList.remove("hidden"); }
-  function hideOverlay() { if (overlay) overlay.classList.add("hidden"); }
+  let currentUser = null,
+      allOrders = [],
+      currentFilter = "All",
+      currentPage = 1,
+      ordersUnsub = null;
 
-  // ===== 4. Auth Listener =====
-  userAuth.onAuthStateChanged(user => {
+  auth.onAuthStateChanged(user => {
     currentUser = user;
-    if (user) {
-      const fullName = user.displayName || (user.email ? user.email.split("@")[0] : "Customer");
-      const firstName = fullName.charAt(0).toUpperCase() + fullName.slice(1).toLowerCase();
-      if (userNameSpan) userNameSpan.textContent = firstName;
+    if(user){
+      const firstName = user.displayName ? user.displayName.split(" ")[0] : user.email.split("@")[0];
+      userNameSpan.textContent = firstName.charAt(0).toUpperCase() + firstName.slice(1);
       startOrdersListener();
     } else {
       stopOrdersListener();
       renderOrders([]);
-      if (userNameSpan) userNameSpan.textContent = "Customer";
-      hideLoader();
+      userNameSpan.textContent = "Customer";
     }
   });
 
-  // ===== 5. Orders Listener =====
   function startOrdersListener() {
     stopOrdersListener();
-    if (!currentUser) return;
+    if(!currentUser) return;
 
-    showLoader();
+     showLoader(); // Show loader while fetching
+    
+    const ordersRef = db.collection("orders").where("userId","==",currentUser.uid);
+    ordersUnsub = ordersRef.onSnapshot(snapshot=>{
+      hideLoader(); // Hide after snapshot returns
 
-    // Skeleton loader
-    if (orderTableBody) {
-      orderTableBody.innerHTML = `${[...Array(3)].map(() => `
-        <tr class="animate-pulse">
-          <td class="p-2 bg-gray-200 h-4 rounded"></td>
-          <td class="p-2 bg-gray-200 h-4 rounded"></td>
-          <td class="p-2 bg-gray-200 h-4 rounded"></td>
-          <td class="p-2 bg-gray-200 h-4 rounded"></td>
-        </tr>`).join('')}`;
-    }
-
-    const ordersRef = userDb.collection("orders").where("userId", "==", currentUser.uid);
-
-    ordersUnsub = ordersRef.onSnapshot(snapshot => {
-      hideLoader();
-
-      if (!snapshot.empty) {
-        allOrders = snapshot.docs.map(doc => {
-          const data = doc.data();
-          const status = data.shipmentStatus || data.status || "Pending";
-          return {
-            id: doc.id,
-            total: data.total || 0,
-            items: data.items || [],
-            status: status,
-            createdAt: data.createdAt || data.timestamp
-          };
-        });
-
-        allOrders.sort((a, b) => {
-          let aDate = a.createdAt || a.timestamp;
-          let bDate = b.createdAt || b.timestamp;
-          try {
-            aDate = aDate?.toDate ? aDate.toDate() : new Date(aDate.seconds * 1000);
-            bDate = bDate?.toDate ? bDate.toDate() : new Date(bDate.seconds * 1000);
-          } catch {}
-          return bDate - aDate;
-        });
-      } else {
-        allOrders = [];
-      }
-
+      allOrders = snapshot.docs.map(doc=>{
+        const data = doc.data();
+        const status = (data.shipmentStatus || data.status || "Pending").trim();
+        return {
+          id: doc.id,
+          total: data.total || 0,
+          items: data.items || [],
+          status,
+          createdAt: data.createdAt || data.timestamp,
+          name: data.name || '',
+          phone: data.phone || '',
+          email: data.email || '',
+          delivery: data.delivery || {}
+        };
+      }).sort((a,b)=>{
+        let da=a.createdAt, bn=b.createdAt;
+        da = da?.toDate ? da.toDate() : new Date(da.seconds*1000);
+        bn = bn?.toDate ? bn.toDate() : new Date(bn.seconds*1000);
+        return bn - da;
+      });
       applyOrderFilter(currentFilter);
-    }, error => {
-      hideLoader();
-      console.error("Failed to fetch orders:", error);
-      if (orderTableBody) {
-        orderTableBody.innerHTML = `<tr><td colspan="4" class="text-center text-red-500 p-2">Failed to load orders</td></tr>`;
+
+      // Refresh modal timeline if open
+      if(!orderModal.classList.contains("hidden")){
+        const currentOrderId = modalContent.dataset.currentOrderId;
+        if(currentOrderId) refreshOrderModal(currentOrderId);
       }
     });
   }
 
-  function stopOrdersListener() {
-    if (ordersUnsub) ordersUnsub();
-    ordersUnsub = null;
-  }
+  function stopOrdersListener(){ if(ordersUnsub) ordersUnsub(); ordersUnsub=null; }
 
-  // ===== 6. Filter Buttons =====
-  function filterOrders(status) {
-    showLoader(); // Show loader during filtering
+  window.filterOrders = (status)=>{
+    showLoader();
     currentFilter = status;
-    document.querySelectorAll(".status-btn").forEach(btn => {
-      if (btn.dataset.status === status) {
-        btn.classList.add("bg-pink-500", "text-white");
+    document.querySelectorAll(".status-btn").forEach(btn=>{
+      if(btn.dataset.status===status){
+        btn.classList.add("bg-pink-500","text-white");
         btn.classList.remove("bg-pink-100");
       } else {
-        btn.classList.remove("bg-pink-500", "text-white");
+        btn.classList.remove("bg-pink-500","text-white");
         btn.classList.add("bg-pink-100");
       }
     });
     applyOrderFilter(status);
-    setTimeout(hideLoader, 400); // Small delay for UX
-  }
+    setTimeout(hideLoader, 400); // hide after filter animation
+  };
 
-  // ===== 7. Filter + Pagination =====
-  function applyOrderFilter(status) {
-    const filtered = status === "All" ? allOrders : allOrders.filter(o => o.status.toLowerCase() === status.toLowerCase());
+  function applyOrderFilter(status){
+    const filtered = status==="All" ? allOrders : allOrders.filter(o=>o.status.toLowerCase()===status.toLowerCase());
     currentPage = 1;
     renderPagination(filtered);
     renderOrders(paginateOrders(filtered));
   }
 
-  function paginateOrders(list) {
-    const start = (currentPage - 1) * pageSize;
-    return list.slice(start, start + pageSize);
-  }
+  function paginateOrders(list){ return list.slice((currentPage-1)*pageSize, currentPage*pageSize); }
 
-  function renderPagination(list) {
-    const totalPages = Math.ceil(list.length / pageSize);
+  function renderPagination(list){
     let container = document.getElementById("paginationControls");
-    if (!container && orderTableBody) {
+    if(!container && orderTableBody){
       container = document.createElement("div");
       container.id = "paginationControls";
-      container.className = "flex items-center gap-2 mt-3 justify-center";
+      container.className = "flex items-center justify-center gap-3 mt-4 text-sm";
       orderTableBody.parentElement.appendChild(container);
     }
+    if(!container) return;
 
-    if (!container) return;
+    const totalPages = Math.ceil(list.length / pageSize);
+    if(totalPages <= 1){ container.innerHTML=""; return; }
 
-    if (totalPages <= 1) {
-      container.innerHTML = "";
-      return;
-    }
+    const prevDisabled = currentPage === 1 ? "opacity-50 cursor-not-allowed" : "";
+    const nextDisabled = currentPage === totalPages ? "opacity-50 cursor-not-allowed" : "";
 
     container.innerHTML = `
-      <button onclick="changePage('prev')" class="px-3 py-1 rounded bg-pink-100 hover:bg-pink-200">Prev</button>
-      <span class="px-3">Page ${currentPage} of ${totalPages}</span>
-      <button onclick="changePage('next')" class="px-3 py-1 rounded bg-pink-100 hover:bg-pink-200">Next</button>
+      <button onclick="changePage('prev')" class="px-3 py-1 rounded bg-pink-100 hover:bg-pink-200 ${prevDisabled}">Prev</button>
+      <span>Page ${currentPage} of ${totalPages}</span>
+      <button onclick="changePage('next')" class="px-3 py-1 rounded bg-pink-100 hover:bg-pink-200 ${nextDisabled}">Next</button>
     `;
   }
 
-  function changePage(direction) {
-    showLoader(); // Show loader during page change
-    const filtered = currentFilter === "All" ? allOrders : allOrders.filter(o => o.status.toLowerCase() === currentFilter.toLowerCase());
-    const totalPages = Math.ceil(filtered.length / pageSize);
-
-    if (direction === "next" && currentPage < totalPages) currentPage++;
-    if (direction === "prev" && currentPage > 1) currentPage--;
-
+  window.changePage = (dir)=>{
+    showLoader();
+    const filtered = currentFilter==="All" ? allOrders : allOrders.filter(o=>o.status.toLowerCase()===currentFilter.toLowerCase());
+    const totalPages = Math.ceil(filtered.length/pageSize);
+    if(dir==="next" && currentPage < totalPages) currentPage++;
+    if(dir==="prev" && currentPage > 1) currentPage--;
     renderPagination(filtered);
     renderOrders(paginateOrders(filtered));
     setTimeout(hideLoader, 400);
+  };
+
+  function renderOrders(orders) {
+  if (!orderTableBody) return;
+  orderTableBody.innerHTML = "";
+
+  if (!orders.length) {
+    orderTableBody.innerHTML = `<tr><td colspan="4" class="text-center text-gray-500 p-2">No orders found.</td></tr>`;
+    return;
   }
 
-  // ===== 8. Render Orders Table =====
-  function renderOrders(orders) {
-    if (!orderTableBody) return;
-    if (!orders.length) {
-      orderTableBody.innerHTML = `<tr><td colspan="4" class="text-center text-gray-500 p-2">No orders found.</td></tr>`;
-      return;
+  orders.forEach(order => {
+    let dateStr = "N/A";
+    const rawDate = order.createdAt;
+    if (rawDate) {
+      if (typeof rawDate.toDate === "function") {
+        dateStr = rawDate.toDate().toLocaleDateString();
+      } else if (rawDate.seconds) {
+        dateStr = new Date(rawDate.seconds * 1000).toLocaleDateString();
+      }
     }
 
-    orderTableBody.innerHTML = "";
-    orders.forEach(order => {
-      let dateStr = "N/A";
-      const rawDate = order.createdAt || order.timestamp;
-      if (rawDate) {
-        if (typeof rawDate.toDate === "function") dateStr = rawDate.toDate().toLocaleDateString();
-        else if (rawDate.seconds) dateStr = new Date(rawDate.seconds * 1000).toLocaleDateString();
-        else {
-          const d = new Date(rawDate);
-          if (!isNaN(d)) dateStr = d.toLocaleDateString();
-        }
-      }
+    const totalStr = order.total?.toLocaleString() || "0";
+    const itemsCount = order.items?.length || 0;
 
-      const totalStr = order.total?.toLocaleString() || "0";
-      const itemsCount = order.items?.length || 0;
+    const statusLower = order.status?.toLowerCase() || "";
+    const statusColor =
+      statusLower === "pending" ? "bg-yellow-300 text-yellow-800" :
+      statusLower === "pending_confirmation" ? "bg-yellow-200 text-yellow-900" :
+      statusLower === "shipped" ? "bg-blue-300 text-blue-800" :
+      statusLower === "delivered" ? "bg-green-300 text-green-800" : "bg-gray-300 text-gray-800";
 
-      const statusColor =
-        order.status.toLowerCase() === "pending" ? "bg-yellow-300 text-yellow-800" :
-        order.status.toLowerCase() === "shipped" ? "bg-blue-300 text-blue-800" :
-        order.status.toLowerCase() === "delivered" ? "bg-green-300 text-green-800" :
-        "bg-gray-300 text-gray-800";
+    const isEditable = ["pending", "pending_confirmation"].includes(statusLower);
 
-      const tr = document.createElement("tr");
-      tr.className = "border-b hover:bg-gray-50";
-      tr.innerHTML = `
-        <td class="p-2 text-center">${dateStr}</td>
-        <td class="p-2 text-center">₦${totalStr}</td>
-        <td class="p-2 text-center">${itemsCount}</td>
-        <td class="p-2 text-center">
-          <span class="px-2 py-1 rounded ${statusColor} text-sm font-semibold">${order.status}</span>
-          <button onclick="viewOrder('${order.id}')" class="ml-2 text-blue-500 hover:underline">View</button>
-        </td>
-      `;
-      orderTableBody.appendChild(tr);
+    const tr = document.createElement("tr");
+    tr.className = "border-b hover:bg-gray-50";
+    tr.innerHTML = `
+      <td class="p-2 text-center">${dateStr}</td>
+      <td class="p-2 text-center">₦${totalStr}</td>
+      <td class="p-2 text-center">${itemsCount}</td>
+      <td class="p-2 text-center">
+        <span class="px-2 py-1 rounded ${statusColor} text-sm font-semibold">${order.status}</span>
+        <button onclick="viewOrder('${order.id}')" class="ml-2 text-blue-500 hover:underline">View</button>
+        <button onclick="editOrder('${order.id}')"
+          class="ml-2 text-green-500 hover:underline"
+          ${!isEditable ? "disabled" : ""}>
+          Edit
+        </button>
+      </td>
+    `;
+    orderTableBody.appendChild(tr);
+  });
+}
+
+window.editOrder = (id) => {
+  modalContent.dataset.currentOrderId = id;
+  const order = allOrders.find(o => o.id === id);
+  if (!order || !["pending", "pending_confirmation"].includes(order.status?.toLowerCase())) return;
+
+  saveBtn.classList.remove("hidden");
+  modalContent.innerHTML = generateModalContent(order, true);
+
+  saveBtn.onclick = async () => {
+    const name = document.getElementById("editName").value;
+    const phone = document.getElementById("editPhone").value;
+    const email = document.getElementById("editEmail").value;
+    const address = document.getElementById("editAddress").value;
+
+    await db.collection("orders").doc(id).update({
+      name,
+      phone,
+      email,
+      "delivery.address": address
     });
+
+    alert("Order updated successfully!");
+    closeModal();
+  };
+
+  orderModal.classList.remove("hidden");
+};
+
+  function refreshOrderModal(orderId){
+    const order = allOrders.find(o=>o.id===orderId);
+    if(!order) return;
+    if(!orderModal.classList.contains("hidden")){
+      modalContent.innerHTML = generateModalContent(order, false);
+    }
   }
 
-  // ===== 9. View Order Modal =====
-  window.viewOrder = function(orderId) {
-    if (!modalContent || !orderModal) return;
-    const order = allOrders.find(o => o.id === orderId);
-    if (!order) return;
-
-    const rawStatus = order.status.toLowerCase();
-    const normalized = rawStatus.includes("process") || rawStatus.includes("pending") ? "Pending" :
-                       rawStatus.includes("ship") ? "Shipped" :
-                       rawStatus.includes("deliver") ? "Delivered" : "Pending";
-
-    const steps = ["Pending", "Shipped", "Delivered"];
-    const index = steps.indexOf(normalized);
-
-    const timeline = steps.map((step, i) => `
-      <div class="flex items-center gap-2">
-        <div class="w-3 h-3 rounded-full ${i < index ? "bg-green-500" : i === index ? "bg-blue-500" : "bg-gray-300"}"></div>
-        <span class="${i === index ? 'font-bold text-blue-600' : ''}">${step}</span>
-      </div>
-    `).join("");
-
-    modalContent.innerHTML = `
-      <h3 class="font-semibold mb-3">Order Progress</h3>
-      <div class="space-y-2 mb-4">${timeline}</div>
-
-      <h3 class="font-semibold mb-2">Items</h3>
-      ${order.items.map(i => `
-        <div class="flex justify-between border-b py-2">
-          <div>${i.name}</div>
-          <div>${i.quantity} × ₦${i.price.toLocaleString()}</div>
-        </div>
-      `).join('')}
-
-      <div class="mt-3 text-right text-lg font-bold">
-        Total: ₦${order.total.toLocaleString()}
-      </div>
-    `;
-
+  window.viewOrder = (id)=>{
+    modalContent.dataset.currentOrderId = id;
+    const order = allOrders.find(o=>o.id===id); 
+    if(!order) return;
+    modalContent.innerHTML = generateModalContent(order,false);
     orderModal.classList.remove("hidden");
   };
 
-  window.closeModal = function() {
-    if (!orderModal) return;
-    orderModal.classList.add("hidden");
-  };
+  function generateModalContent(order,isEdit){
+    const editable=isEdit?"":"readonly class='bg-gray-100'";
+    const steps=["Pending","Shipped","Delivered"];
+    const normalizedStatus = steps.find(s => s.toLowerCase() === order.status.toLowerCase()) || "Pending";
+    const statusIndex = steps.indexOf(normalizedStatus);
 
-  // ===== Expose functions globally =====
-  window.filterOrders = filterOrders;
-  window.changePage = changePage;
+    return `
+      <h3 class="font-semibold text-gray-700 mb-2">Order Status</h3>
+      <div class="flex items-center justify-between mb-4">
+        <div class="flex-1 flex items-center">
+          ${steps.map((step,i)=>{
+            const isActive = i <= statusIndex;
+            const colorClass = step==="Pending"?"bg-yellow-400":step==="Shipped"?"bg-blue-400":"bg-green-400";
+            const dotColor = isActive ? colorClass : "bg-gray-300";
+            const lineColor = (i<statusIndex) ? (steps[i]==="Pending"?"bg-yellow-400":steps[i]==="Shipped"?"bg-blue-400":"bg-green-400") : "bg-gray-300";
+            return `<div class="w-3 h-3 rounded-full timeline-step ${dotColor}"></div>${i<steps.length-1?`<div class="flex-1 mx-2 timeline-line ${lineColor}"></div>`:""}`;
+          }).join('')}
+        </div>
+      </div>
+      <div class="flex justify-between text-xs text-gray-600 font-semibold">${steps.map(s=>`<span>${s}</span>`).join('')}</div>
 
-  // ===== Safety fallback loader =====
-  setTimeout(() => hideLoader(), 5000);
+      <h3 class="font-semibold text-gray-700 mt-4">Edit Info</h3>
+      <div class="space-y-2">
+        <input id="editName" value="${order.name||''}" ${editable} class="w-full border px-2 py-1 rounded"/>
+        <input id="editPhone" value="${order.phone||''}" ${editable} class="w-full border px-2 py-1 rounded"/>
+        <input id="editEmail" value="${order.email||''}" ${editable} class="w-full border px-2 py-1 rounded"/>
+        <input id="editAddress" value="${order.delivery?.address||''}" ${editable} class="w-full border px-2 py-1 rounded"/>
+      </div>
+
+      <h3 class="font-semibold text-gray-700 mt-4">Items</h3>
+      <div class="space-y-1">
+        ${order.items.map(i=>`<div class="flex justify-between">${i.name} <span>${i.quantity} × ₦${i.price.toLocaleString()}</span></div>`).join('')}
+      </div>
+
+      <div class="mt-2 text-right font-bold text-lg">Total: ₦${Number(order.total).toLocaleString()}</div>
+    `;
+  }
+
+  window.closeModal = ()=>orderModal.classList.add("hidden");
 });
 </script>
 </body>
