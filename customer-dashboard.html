@@ -151,6 +151,64 @@ function hideLoader() {
       currentPage = 1,
       ordersUnsub = null;
 
+      // ---------- Notifications ----------
+  const activeNotifications = new Set();
+  function showNotification(message, type="info", duration=3000){
+    let container = document.getElementById("notification-container");
+    if(!container){
+      container = document.createElement("div");
+      container.id = "notification-container";
+      container.className = "fixed top-4 right-4 z-50 flex flex-col gap-2";
+      document.body.appendChild(container);
+    }
+
+    if(activeNotifications.has(message)) return;
+    activeNotifications.add(message);
+
+    const notif = document.createElement("div");
+    notif.className = `
+      flex items-center justify-between gap-3 p-4 bg-white rounded-lg shadow-lg
+      border border-gray-200 min-w-[250px] max-w-sm
+      animate-slideIn
+    `;
+    const icon = document.createElement("span");
+    if(type==="success") icon.innerHTML=`<i class="fas fa-check-circle text-green-500 text-xl"></i>`;
+    else if(type==="error") icon.innerHTML=`<i class="fas fa-times-circle text-red-500 text-xl"></i>`;
+    else if(type==="warning") icon.innerHTML=`<i class="fas fa-exclamation-triangle text-yellow-500 text-xl"></i>`;
+    else icon.innerHTML=`<i class="fas fa-info-circle text-blue-500 text-xl"></i>`;
+    const text = document.createElement("span");
+    text.className="flex-1 text-gray-800 font-medium";
+    text.textContent = message;
+    const closeBtn = document.createElement("button");
+    closeBtn.innerHTML = "&times;";
+    closeBtn.className = "ml-4 text-gray-400 hover:text-gray-600 font-bold text-lg";
+    closeBtn.onclick = () => removeNotification(notif, message);
+    notif.appendChild(icon);
+    notif.appendChild(text);
+    notif.appendChild(closeBtn);
+    container.appendChild(notif);
+
+    setTimeout(()=> removeNotification(notif, message), duration);
+  }
+  function removeNotification(notif, message){
+    if(!notif) return;
+    notif.classList.remove("animate-slideIn");
+    notif.classList.add("animate-slideOut");
+    notif.addEventListener("animationend", ()=> notif.remove());
+    activeNotifications.delete(message);
+  }
+
+  // Notification Styles
+  const style = document.createElement("style");
+  style.textContent = `
+    #notification-container { display: flex; flex-direction: column; gap: 0.5rem; position: fixed; top: 1rem; right: 1rem; z-index: 9999; }
+    @keyframes slideIn { from {opacity:0; transform: translateX(50px);} to {opacity:1; transform:translateX(0);} }
+    .animate-slideIn { animation: slideIn 0.3s ease-out forwards; }
+    @keyframes slideOut { from {opacity:1; transform:translateX(0);} to {opacity:0; transform:translateX(50px);} }
+    .animate-slideOut { animation: slideOut 0.3s ease-in forwards; }
+  `;
+  document.head.appendChild(style);
+
   auth.onAuthStateChanged(user => {
     currentUser = user;
     if(user){
@@ -338,7 +396,7 @@ window.editOrder = (id) => {
       "delivery.address": address
     });
 
-    alert("Order updated successfully!");
+    showNotification("Order updated successfully!");
     closeModal();
   };
 
