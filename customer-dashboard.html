@@ -222,6 +222,7 @@ function hideLoader() {
     }
   });
 
+  // Start Order Listener
   function startOrdersListener() {
     stopOrdersListener();
     if(!currentUser) return;
@@ -244,7 +245,15 @@ function hideLoader() {
           name: data.name || '',
           phone: data.phone || '',
           email: data.email || '',
-          delivery: data.delivery || {}
+          delivery: data.delivery || {},
+
+          // Add these explicitly
+          paymentMethod: data.paymentMethod || "—",
+          paymentRef: data.paymentRef || "—",
+          createdAtClient: data.createdAtClient || null, // optional if you want
+          lga: data.lga || "—",
+          state: data.state || "—",
+          address: data.address || "—"
         };
       }).sort((a,b)=>{
         let da=a.createdAt, bn=b.createdAt;
@@ -255,15 +264,34 @@ function hideLoader() {
       applyOrderFilter(currentFilter);
 
       // Refresh modal timeline if open
-      if(!orderModal.classList.contains("hidden")){
-        const currentOrderId = modalContent.dataset.currentOrderId;
-        if(currentOrderId) refreshOrderModal(currentOrderId);
+      if (!orderModal.classList.contains("hidden")) {
+  const currentOrderId = modalContent.dataset.currentOrderId;
+  if (currentOrderId) {
+    const currentOrder = allOrders.find(o => o.id === currentOrderId);
+
+    if (currentOrder) {
+      // Automatically close modal if order is no longer editable
+      const statusLower = currentOrder.status?.toLowerCase();
+      if (!["pending", "pending_confirmation"].includes(statusLower)) {
+        closeModal(); // close the edit modal
+        showNotification("Order is no longer editable and the modal has been closed.");
+      } else {
+        refreshOrderModal(currentOrderId); // refresh modal if still editable
       }
+    }
+  }
+}
     });
   }
 
-  function stopOrdersListener(){ if(ordersUnsub) ordersUnsub(); ordersUnsub=null; }
+// Stop Oredr Listener
+  function stopOrdersListener(){ 
+    if(ordersUnsub) 
+    ordersUnsub(); 
+    ordersUnsub=null; 
+    }
 
+    // Filter Order
   window.filterOrders = (status)=>{
     showLoader();
     currentFilter = status;
@@ -280,6 +308,7 @@ function hideLoader() {
     setTimeout(hideLoader, 400); // hide after filter animation
   };
 
+  // Apply Order Filter
   function applyOrderFilter(status){
     const filtered = status==="All" ? allOrders : allOrders.filter(o=>o.status.toLowerCase()===status.toLowerCase());
     currentPage = 1;
@@ -287,8 +316,15 @@ function hideLoader() {
     renderOrders(paginateOrders(filtered));
   }
 
-  function paginateOrders(list){ return list.slice((currentPage-1)*pageSize, currentPage*pageSize); }
+// Pagination
+  function paginateOrders(list){ 
+    return list.slice(
+        (currentPage-1) * pageSize, 
+      currentPage * pageSize
+    ); 
+  }
 
+  // Render Pagination
   function renderPagination(list){
     let container = document.getElementById("paginationControls");
     if(!container && orderTableBody){
@@ -312,6 +348,7 @@ function hideLoader() {
     `;
   }
 
+  // Change Page
   window.changePage = (dir)=>{
     showLoader();
     const filtered = currentFilter==="All" ? allOrders : allOrders.filter(o=>o.status.toLowerCase()===currentFilter.toLowerCase());
@@ -323,6 +360,7 @@ function hideLoader() {
     setTimeout(hideLoader, 400);
   };
 
+  // Render Orders
   function renderOrders(orders) {
   if (!orderTableBody) return;
   orderTableBody.innerHTML = "";
@@ -375,6 +413,7 @@ function hideLoader() {
   });
 }
 
+// Edit Order
 window.editOrder = (id) => {
   modalContent.dataset.currentOrderId = id;
   const order = allOrders.find(o => o.id === id);
@@ -383,7 +422,12 @@ window.editOrder = (id) => {
   saveBtn.classList.remove("hidden");
   modalContent.innerHTML = generateModalContent(order, true);
 
+  // Save btn
   saveBtn.onclick = async () => {
+  showLoader();                // ✅ show loader
+  saveBtn.disabled = true;     // ✅ prevent double submit
+
+  try {
     const name = document.getElementById("editName").value;
     const phone = document.getElementById("editPhone").value;
     const email = document.getElementById("editEmail").value;
@@ -398,11 +442,18 @@ window.editOrder = (id) => {
 
     showNotification("Order updated successfully!");
     closeModal();
-  };
-
+  } catch (err) {
+    console.error(err);
+    showNotification("Failed to update order. Please try again.");
+  } finally {
+    hideLoader();              // ✅ always hide loader
+    saveBtn.disabled = false;
+  }
+};
   orderModal.classList.remove("hidden");
 };
 
+// Refresh Order Modal
   function refreshOrderModal(orderId){
     const order = allOrders.find(o=>o.id===orderId);
     if(!order) return;
@@ -411,53 +462,175 @@ window.editOrder = (id) => {
     }
   }
 
+  // View Order
   window.viewOrder = (id)=>{
     modalContent.dataset.currentOrderId = id;
     const order = allOrders.find(o=>o.id===id); 
     if(!order) return;
+
+    // 🔧 RESET EDIT STATE
+  saveBtn.classList.add("hidden");
+  saveBtn.onclick = null;
+
     modalContent.innerHTML = generateModalContent(order,false);
     orderModal.classList.remove("hidden");
   };
 
-  function generateModalContent(order,isEdit){
-    const editable=isEdit?"":"readonly class='bg-gray-100'";
-    const steps=["Pending","Shipped","Delivered"];
-    const normalizedStatus = steps.find(s => s.toLowerCase() === order.status.toLowerCase()) || "Pending";
-    const statusIndex = steps.indexOf(normalizedStatus);
+  // ----- Modal Utility -----
+function openModal() {
+  orderModal.classList.remove("hidden");
+  document.body.style.overflow = "hidden";      // Disable scrolling
+  document.body.style.pointerEvents = "none";   // Disable background clicks
+  orderModal.style.pointerEvents = "auto";      // Keep modal clickable
+}
 
+window.closeModal = () => {
+  orderModal.classList.add("hidden");
+  document.body.style.overflow = "";            // Re-enable scrolling
+  document.body.style.pointerEvents = "";       // Re-enable background clicks
+
+  // 🔧 Reset edit state
+  saveBtn.classList.add("hidden");
+  saveBtn.onclick = null;
+};
+
+  // Generate Modal Content
+  function generateModalContent(order, isEdit) {
+  const steps = ["Pending", "Shipped", "Delivered"];
+  const normalizedStatus =
+    steps.find(s => s.toLowerCase() === order.status.toLowerCase()) || "Pending";
+  const statusIndex = steps.indexOf(normalizedStatus);
+
+  // ===== Timeline / Status Bar =====
+  const timelineHTML = `
+    <h3 class="font-semibold text-gray-700 mb-2">Order Status</h3>
+    <div class="flex items-center justify-between mb-4">
+      <div class="flex-1 flex items-center">
+        ${steps.map((step, i) => {
+          const isActive = i <= statusIndex;
+          const colorClass =
+            step === "Pending" ? "bg-yellow-400" :
+            step === "Shipped" ? "bg-blue-400" : "bg-green-400";
+          const dotColor = isActive ? colorClass : "bg-gray-300";
+          const lineColor = i < statusIndex ? colorClass : "bg-gray-300";
+          return `
+            <div class="w-3 h-3 rounded-full ${dotColor}"></div>
+            ${i < steps.length - 1 ? `<div class="flex-1 mx-2 h-1 rounded ${lineColor}"></div>` : ""}
+          `;
+        }).join("")}
+      </div>
+    </div>
+    <div class="flex justify-between text-xs text-gray-600 font-semibold mb-4">
+      ${steps.map(s => `<span>${s}</span>`).join("")}
+    </div>
+  `;
+
+  if (isEdit) {
+    // ===== EDIT MODE =====
     return `
-      <h3 class="font-semibold text-gray-700 mb-2">Order Status</h3>
-      <div class="flex items-center justify-between mb-4">
-        <div class="flex-1 flex items-center">
-          ${steps.map((step,i)=>{
-            const isActive = i <= statusIndex;
-            const colorClass = step==="Pending"?"bg-yellow-400":step==="Shipped"?"bg-blue-400":"bg-green-400";
-            const dotColor = isActive ? colorClass : "bg-gray-300";
-            const lineColor = (i<statusIndex) ? (steps[i]==="Pending"?"bg-yellow-400":steps[i]==="Shipped"?"bg-blue-400":"bg-green-400") : "bg-gray-300";
-            return `<div class="w-3 h-3 rounded-full timeline-step ${dotColor}"></div>${i<steps.length-1?`<div class="flex-1 mx-2 timeline-line ${lineColor}"></div>`:""}`;
-          }).join('')}
+      ${timelineHTML}
+      <h3 class="font-semibold text-gray-700 mb-3">Edit Customer Info</h3>
+      <div class="grid grid-cols-1 gap-4">
+        <div>
+          <label class="block text-gray-600 text-sm mb-1" for="editName">Name</label>
+          <input id="editName" value="${order.name || ''}" class="w-full border rounded-md px-3 py-2 shadow-sm focus:outline-none focus:ring-2 focus:ring-pink-500"/>
+        </div>
+        <div>
+          <label class="block text-gray-600 text-sm mb-1" for="editPhone">Phone</label>
+          <input id="editPhone" value="${order.phone || ''}" class="w-full border rounded-md px-3 py-2 shadow-sm focus:outline-none focus:ring-2 focus:ring-pink-500"/>
+        </div>
+        <div>
+          <label class="block text-gray-600 text-sm mb-1" for="editEmail">Email</label>
+          <input id="editEmail" value="${order.email || ''}" class="w-full border rounded-md px-3 py-2 shadow-sm focus:outline-none focus:ring-2 focus:ring-pink-500"/>
+        </div>
+        <div>
+          <label class="block text-gray-600 text-sm mb-1" for="editAddress">Address</label>
+          <input id="editAddress" value="${order.delivery?.address || ''}" class="w-full border rounded-md px-3 py-2 shadow-sm focus:outline-none focus:ring-2 focus:ring-pink-500"/>
+        </div>
+        <div>
+          <label class="block text-gray-600 text-sm mb-1" for="editLGA">LGA</label>
+          <input id="editLGA" value="${order.delivery?.lga || ''}" class="w-full border rounded-md px-3 py-2 shadow-sm focus:outline-none focus:ring-2 focus:ring-pink-500"/>
+        </div>
+        <div>
+          <label class="block text-gray-600 text-sm mb-1" for="editState">State</label>
+          <input id="editState" value="${order.delivery?.state || ''}" class="w-full border rounded-md px-3 py-2 shadow-sm focus:outline-none focus:ring-2 focus:ring-pink-500"/>
         </div>
       </div>
-      <div class="flex justify-between text-xs text-gray-600 font-semibold">${steps.map(s=>`<span>${s}</span>`).join('')}</div>
 
-      <h3 class="font-semibold text-gray-700 mt-4">Edit Info</h3>
-      <div class="space-y-2">
-        <input id="editName" value="${order.name||''}" ${editable} class="w-full border px-2 py-1 rounded"/>
-        <input id="editPhone" value="${order.phone||''}" ${editable} class="w-full border px-2 py-1 rounded"/>
-        <input id="editEmail" value="${order.email||''}" ${editable} class="w-full border px-2 py-1 rounded"/>
-        <input id="editAddress" value="${order.delivery?.address||''}" ${editable} class="w-full border px-2 py-1 rounded"/>
+      <h3 class="font-semibold text-gray-700 mt-4 mb-2">Items</h3>
+      <div class="space-y-1 text-sm">
+        ${order.items.map(i => `
+          <div class="flex justify-between border-b py-1">
+            <span>${i.name}</span>
+            <span>${i.quantity} × ₦${i.price.toLocaleString()}</span>
+          </div>
+        `).join("")}
+      </div>
+
+      <div class="mt-4 flex justify-between items-center">
+        <div class="font-bold text-lg">Total: ₦${Number(order.total).toLocaleString()}</div>
+      </div>
+    `;
+  } else {
+    // ===== VIEW MODE =====
+    return `
+      ${timelineHTML}
+      <h3 class="font-semibold text-gray-700 mb-2">Customer Details</h3>
+      <div class="space-y-1 text-sm text-gray-700">
+        <p><strong>Name:</strong> ${order.name || "—"}</p>
+        <p><strong>Phone:</strong> ${order.phone || "—"}</p>
+        <p><strong>Email:</strong> ${order.email || "—"}</p>
+      </div>
+
+      <h3 class="font-semibold text-gray-700 mt-4 mb-2">Delivery Details</h3>
+      <div class="space-y-1 text-sm text-gray-700">
+        <p><strong>Country:</strong> ${order.delivery?.country || "—"}</p>
+        <p><strong>State:</strong> ${order.delivery?.state || "—"}</p>
+        <p><strong>LGA:</strong> ${order.delivery?.lga || "—"}</p>
+        <p><strong>Address:</strong> ${order.delivery?.address || "—"}</p>
+        <p><strong>Delivery Type:</strong> ${order.delivery?.type || "—"}</p>
+        <p><strong>Delivery Company:</strong> ${order.delivery?.company || "—"}</p>
+      </div>
+
+      <h3 class="font-semibold text-gray-700 mt-4 mb-2">Order Info</h3>
+      <div class="space-y-1 text-sm text-gray-700">
+        <p><strong>Status:</strong> ${order.status}</p>
+        <p><strong>Payment Method:</strong> ${order.paymentMethod || "—"}</p>
+        <p><strong>Payment Ref:</strong> ${order.paymentRef || "—"}</p>
+        <p><strong>Order Date:</strong> ${
+          order.createdAt?.toDate
+            ? order.createdAt.toDate().toLocaleString()
+            : order.createdAt?.seconds
+              ? new Date(order.createdAt.seconds * 1000).toLocaleString()
+              : "—"
+        }</p>
       </div>
 
       <h3 class="font-semibold text-gray-700 mt-4">Items</h3>
-      <div class="space-y-1">
-        ${order.items.map(i=>`<div class="flex justify-between">${i.name} <span>${i.quantity} × ₦${i.price.toLocaleString()}</span></div>`).join('')}
+      <div class="space-y-1 text-sm">
+        ${order.items.map(i => `
+          <div class="flex justify-between border-b py-1">
+            <span>${i.name}</span>
+            <span>${i.quantity} × ₦${i.price.toLocaleString()}</span>
+          </div>
+        `).join("")}
       </div>
 
-      <div class="mt-2 text-right font-bold text-lg">Total: ₦${Number(order.total).toLocaleString()}</div>
+      <div class="mt-3 text-right font-bold text-lg">
+        Total: ₦${Number(order.total).toLocaleString()}
+      </div>
     `;
   }
+}
 
-  window.closeModal = ()=>orderModal.classList.add("hidden");
+  // Close Modal
+  window.closeModal = ()=>{
+  orderModal.classList.add("hidden");
+
+  // 🔧 RESET EDIT STATE
+  saveBtn.classList.add("hidden");
+  saveBtn.onclick = null;
+};
 });
 </script>
 </body>
