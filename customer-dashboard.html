@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Customer Dashboard</title>
+<title>Dashboard</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
 <style>
@@ -208,6 +208,11 @@ function hideLoader() {
     .animate-slideOut { animation: slideOut 0.3s ease-in forwards; }
   `;
   document.head.appendChild(style);
+
+// Close modal if user clicks outside the modal content
+orderModal.addEventListener("click", (e) => {
+  if (e.target === orderModal) closeModal();
+});
 
   auth.onAuthStateChanged(user => {
     currentUser = user;
@@ -450,7 +455,7 @@ window.editOrder = (id) => {
     saveBtn.disabled = false;
   }
 };
-  orderModal.classList.remove("hidden");
+  openModal();
 };
 
 // Refresh Order Modal
@@ -473,26 +478,21 @@ window.editOrder = (id) => {
   saveBtn.onclick = null;
 
     modalContent.innerHTML = generateModalContent(order,false);
-    orderModal.classList.remove("hidden");
+    openModal();
   };
 
   // ----- Modal Utility -----
+  // Open Modal
 function openModal() {
   orderModal.classList.remove("hidden");
-  document.body.style.overflow = "hidden";      // Disable scrolling
-  document.body.style.pointerEvents = "none";   // Disable background clicks
-  orderModal.style.pointerEvents = "auto";      // Keep modal clickable
+
+  // Disable background scroll
+  document.body.style.overflow = "hidden";
+
+  // Disable clicks on background but allow modal interaction
+  document.body.style.pointerEvents = "none";
+  orderModal.style.pointerEvents = "auto"; // allow clicks inside modal
 }
-
-window.closeModal = () => {
-  orderModal.classList.add("hidden");
-  document.body.style.overflow = "";            // Re-enable scrolling
-  document.body.style.pointerEvents = "";       // Re-enable background clicks
-
-  // 🔧 Reset edit state
-  saveBtn.classList.add("hidden");
-  saveBtn.onclick = null;
-};
 
   // Generate Modal Content
   function generateModalContent(order, isEdit) {
@@ -626,6 +626,10 @@ window.closeModal = () => {
   // Close Modal
   window.closeModal = ()=>{
   orderModal.classList.add("hidden");
+
+  // Re-enable scroll & background clicks
+  document.body.style.overflow = "";
+  document.body.style.pointerEvents = "";
 
   // 🔧 RESET EDIT STATE
   saveBtn.classList.add("hidden");

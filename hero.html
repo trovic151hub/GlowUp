@@ -1,14 +1,29 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hero Slider</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+  <meta charset="UTF-8" />
+  <title>Hero Slider</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 </head>
-<body>
-    <header class="bg-pink-600 text-white p-4">
+
+<body class="bg-gray-100 text-gray-900">
+    <!-- Alert/Confirm Modal --> 
+  <div id="modalOverlay" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50"> 
+    <div class="bg-white rounded shadow-lg max-w-sm w-full p-6"> 
+      <h3 id="modalTitle" class="text-lg font-bold mb-4">Title</h3> 
+      <p id="modalMessage" class="mb-6">Message</p> 
+      <div class="flex justify-end space-x-2"> 
+        <button id="modalCancelBtn" class="bg-gray-300 text-gray-800 px-4 py-2 rounded hover:bg-gray-400 hidden">Cancel</button> 
+        <button id="modalOkBtn" class="bg-pink-600 text-white px-4 py-2 rounded hover:bg-pink-700">OK</button> 
+      </div> 
+    </div> 
+  </div> 
+
+  <header class="bg-pink-600 text-white p-4 fixed w-full top-0 z-50">
   <div class="max-w-6xl mx-auto flex items-center justify-between">
     <div class="flex space-x-2">
       <button onclick="history.back()">
@@ -19,160 +34,337 @@
   </div>
 </header>
 
-    <div class="max-w-3xl mx-auto p-4">
+    <div class="max-w-3xl mx-auto p-4 mt-16">
   <h2 class="text-2xl font-bold mb-4">Hero Slider Admin</h2>
 
-  <!-- Slide Form -->
-  <form id="slideForm" class="mb-6 bg-white p-4 rounded shadow">
-    <div class="mb-3">
-      <label class="font-semibold">Slide Image</label>
-      <input type="file" id="slideImage" accept="image/*" class="w-full border p-2 rounded">
-    </div>
-    <div class="mb-3">
-      <label class="font-semibold">Headline</label>
-      <input type="text" id="slideHeadline" class="w-full border p-2 rounded" placeholder="Glow Naturally">
-    </div>
-    <div class="mb-3">
-      <label class="font-semibold">Subtext</label>
-      <input type="text" id="slideSubtext" class="w-full border p-2 rounded" placeholder="Discover our skincare products">
-    </div>
-    <div class="mb-3">
-      <label class="font-semibold">Order</label>
-      <input type="number" id="slideOrder" class="w-full border p-2 rounded" value="1">
-    </div>
-    <div class="mb-3">
-      <label class="font-semibold">Link</label>
-      <input type="text" id="slideLink" class="w-full border p-2 rounded" placeholder="/products">
-    </div>
-    <div class="mb-3 flex items-center gap-2">
-      <input type="checkbox" id="slideActive" checked>
-      <label class="font-semibold">Active</label>
-    </div>
-    <button type="submit" class="bg-pink-500 text-white px-4 py-2 rounded">Add Slide</button>
-  </form>
+  <!-- ===== UPLOAD FORM ===== -->
+  <div class="bg-white p-6 rounded-lg shadow mb-8">
+    <h2 class="text-lg font-semibold mb-4">Upload New Slide</h2>
 
-  <!-- Existing Slides -->
-  <h3 class="text-xl font-bold mb-2">Existing Slides</h3>
-  <div id="slidesList" class="space-y-3"></div>
-</div>
+    <form id="heroForm" class="space-y-4">
+  <label>
+    Upload image from file:
+    <input type="file" id="heroImage" accept="image/*" />
+  </label>
 
-<!-- Firebase compat -->
-  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
-<script>
-    // ===== Firebase Config =====
-  const firebaseConfig = {
-    apiKey: "AIzaSyDdTPmpaIPWSDWOmR-fXgvAb7hoxZUawcc",
-    authDomain: "e-commerce-39c74.firebaseapp.com",
-    projectId: "e-commerce-39c74",
-    storageBucket: "e-commerce-39c74.firebasestorage.app",
-    messagingSenderId: "863375033754",
-    appId: "1:863375033754:web:7ba248c8dbb1566c83e623"
-  };
-  firebase.initializeApp(firebaseConfig);
-  const db = firebase.firestore();
+  <label>
+    Or provide an image URL:
+    <input type="url" id="heroImageURL" placeholder="https://example.com/image.jpg" class="w-full border px-3 py-2 rounded" />
+  </label>
 
-// Cloudinary Settings
-const CLOUDINARY_URL = "https://api.cloudinary.com/v1_1/YOUR_CLOUD_NAME/image/upload";
-const CLOUDINARY_UPLOAD_PRESET = "YOUR_UPLOAD_PRESET";
+  <input
+    type="text"
+    id="heroTitle"
+    placeholder="Slide title"
+    class="w-full border px-3 py-2 rounded"
+  />
 
-// DOM Elements
-const slideForm = document.getElementById("slideForm");
-const slideImage = document.getElementById("slideImage");
-const slideHeadline = document.getElementById("slideHeadline");
-const slideSubtext = document.getElementById("slideSubtext");
-const slideOrder = document.getElementById("slideOrder");
-const slideLink = document.getElementById("slideLink");
-const slideActive = document.getElementById("slideActive");
-const slidesList = document.getElementById("slidesList");
+  <input
+    type="text"
+    id="heroSubtitle"
+    placeholder="Slide subtitle"
+    class="w-full border px-3 py-2 rounded"
+  />
 
-// ===== Upload to Cloudinary =====
-async function uploadImage(file) {
-  const formData = new FormData();
-  formData.append("file", file);
-  formData.append("upload_preset", CLOUDINARY_UPLOAD_PRESET);
+  <input
+    type="text"
+    id="heroLink"
+    placeholder="Button link (optional)"
+    class="w-full border px-3 py-2 rounded"
+  />
 
-  const res = await fetch(CLOUDINARY_URL, {
-    method: "POST",
-    body: formData
-  });
+  <input
+    type="number"
+    id="heroOrder"
+    placeholder="Order (1, 2, 3...)"
+    class="w-full border px-3 py-2 rounded"
+  />
 
-  const data = await res.json();
-  return data.secure_url;
+  <button
+    type="submit"
+    class="bg-pink-500 text-white px-6 py-2 rounded hover:bg-pink-600"
+  >
+    Upload Slide
+  </button>
+</form>
+  </div>
+
+  <!-- ===== SLIDES LIST ===== -->
+  <div class="bg-white p-6 rounded-lg shadow">
+    <h2 class="text-lg font-semibold mb-4">Existing Slides</h2>
+
+    <div id="slidesList" class="space-y-4"></div>
+  </div>
+
+  <!-- ===== LOADER ===== -->
+  <div
+    id="dashboard-loader"
+    class="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center hidden z-50"
+  >
+    <i class="fas fa-spinner fa-spin text-white text-5xl"></i>
+  </div>
+  </div>
+
+  <script>
+  // ===== FIREBASE CONFIG =====
+const firebaseConfig = {
+  apiKey: "AIzaSyDdTPmpaIPWSDWOmR-fXgvAb7hoxZUawcc",
+  authDomain: "e-commerce-39c74.firebaseapp.com",
+  projectId: "e-commerce-39c74",
+  storageBucket: "e-commerce-39c74.firebasestorage.app",
+  messagingSenderId: "863375033754",
+  appId: "1:863375033754:web:7ba248c8dbb1566c83e623"
+};
+
+firebase.initializeApp(firebaseConfig);
+
+const auth = firebase.auth();
+const db = firebase.firestore();
+
+const modalOverlay = document.getElementById("modalOverlay");
+  const modalTitle = document.getElementById("modalTitle");
+  const modalMessage = document.getElementById("modalMessage");
+  const modalOkBtn = document.getElementById("modalOkBtn");
+  const modalCancelBtn = document.getElementById("modalCancelBtn");
+
+  function showAlert(message, title="Alert") {
+    modalTitle.textContent = title;
+    modalMessage.textContent = message;
+    modalCancelBtn.classList.add("hidden");
+    modalOverlay.classList.remove("hidden");
+    return new Promise(resolve => {
+      modalOkBtn.onclick = () => {
+        modalOverlay.classList.add("hidden");
+        resolve(true);
+      };
+    });
+  }
+
+  function showConfirm(message, title="Confirm") {
+    modalTitle.textContent = title;
+    modalMessage.textContent = message;
+    modalCancelBtn.classList.remove("hidden");
+    modalOverlay.classList.remove("hidden");
+    return new Promise(resolve => {
+      modalOkBtn.onclick = () => { modalOverlay.classList.add("hidden"); resolve(true); };
+      modalCancelBtn.onclick = () => { modalOverlay.classList.add("hidden"); resolve(false); };
+    });
+  }
+
+// ===== LOADER =====
+const loader = document.getElementById("dashboard-loader");
+
+function showLoader() {
+  loader.classList.remove("hidden");
+  document.body.style.overflow = "hidden";
 }
 
-// ===== Add Slide =====
-slideForm.addEventListener("submit", async e => {
-  e.preventDefault();
-  if (!slideImage.files[0]) return alert("Select an image!");
+function hideLoader() {
+  loader.classList.add("hidden");
+  document.body.style.overflow = "";
+}
 
-  const imageUrl = await uploadImage(slideImage.files[0]);
+// ===== REQUIRE ADMIN =====
+async function requireAdmin(user) {
+  const adminRef = db.collection("admins").doc(user.uid);
+  const snap = await adminRef.get();
+  if (!snap.exists) {
+    showAlert("Access denied. Admins only.");
+    await auth.signOut();
+    goToLogin();
+    throw new Error("Not admin");
+  }
+  return snap.data();
+}
 
-  await db.collection("heroSlider").add({
-    imageURL: imageUrl,
-    headline: slideHeadline.value,
-    subText: slideSubtext.value,
-    order: Number(slideOrder.value),
-    link: slideLink.value,
-    active: slideActive.checked
-  });
+// ===== ADMIN CHECK & LOAD SLIDES =====
+let editingSlideId = null;
 
-  slideForm.reset();
-  loadSlides();
+auth.onAuthStateChanged(async (user) => {
+  if (!user) return goToLogin();
+
+  try {
+    await requireAdmin(user);
+    loadSlides();
+  } catch (err) {
+    console.error("Admin check failed:", err);
+  }
 });
 
-// ===== Load Slides =====
-async function loadSlides() {
-  slidesList.innerHTML = "";
-  const snapshot = await db.collection("heroSlider").orderBy("order").get();
-  snapshot.forEach(doc => {
-    const data = doc.data();
-    const div = document.createElement("div");
-    div.className = "flex justify-between bg-gray-50 p-3 rounded shadow items-center";
-    div.innerHTML = `
-      <div class="flex items-center gap-3">
-        <img src="${data.imageURL}" class="w-20 h-12 object-cover rounded">
-        <div>
-          <div class="font-semibold">${data.headline}</div>
-          <div class="text-sm text-gray-600">${data.subText}</div>
-          <div class="text-xs text-gray-500">Order: ${data.order}</div>
-        </div>
-      </div>
-      <div class="flex gap-2">
-        <button data-id="${doc.id}" class="bg-red-500 text-white px-2 py-1 rounded deleteBtn">Delete</button>
-        <button data-id="${doc.id}" class="bg-green-500 text-white px-2 py-1 rounded toggleBtn">
-          ${data.active ? "Deactivate" : "Activate"}
-        </button>
-      </div>
-    `;
-    slidesList.appendChild(div);
-  });
+// ===== UPLOAD / EDIT HERO SLIDE =====
+// let editingSlideId = null;
+document.getElementById("heroForm").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  showLoader();
 
-  // Delete Slide
-  document.querySelectorAll(".deleteBtn").forEach(btn => {
-    btn.addEventListener("click", async () => {
-      await db.collection("heroSlider").doc(btn.dataset.id).delete();
-      loadSlides();
-    });
-  });
+  try {
+    const file = document.getElementById("heroImage").files[0];
+    const imageLinkInput = document.getElementById("heroImageURL")?.value?.trim();
+    const title = document.getElementById("heroTitle").value.trim();
+    const orderValue = document.getElementById("heroOrder").value.trim();
 
-  // Toggle Active
-  document.querySelectorAll(".toggleBtn").forEach(btn => {
-    btn.addEventListener("click", async () => {
-      const docRef = db.collection("heroSlider").doc(btn.dataset.id);
-      const docSnap = await docRef.get();
-      const active = docSnap.data().active;
-      await docRef.update({ active: !active });
-      loadSlides();
+    // ===== VALIDATION =====
+    if (!file && !imageLinkInput && !editingSlideId) {
+      showAlert("Please select a file or provide an image URL.");
+      return;
+    }
+
+    if (!title) {
+      showAlert("Slide title cannot be empty.");
+      return;
+    }
+
+    if (!orderValue || isNaN(orderValue)) {
+      showAlert("Slide order must be a valid number.");
+      return;
+    }
+
+    let finalImageURL = null;
+
+    // ===== IMAGE UPLOAD =====
+    if (file) {
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("upload_preset", "products");
+
+      const res = await fetch("https://api.cloudinary.com/v1_1/dut2dpxuc/image/upload", {
+        method: "POST",
+        body: formData
+      });
+      const data = await res.json();
+      if (!data.secure_url) throw new Error("File upload failed");
+      finalImageURL = data.secure_url;
+
+    } else if (imageLinkInput) {
+      const formData = new FormData();
+      formData.append("file", imageLinkInput);
+      formData.append("upload_preset", "products");
+
+      const res = await fetch("https://api.cloudinary.com/v1_1/dut2dpxuc/image/upload", {
+        method: "POST",
+        body: formData
+      });
+      const data = await res.json();
+      if (!data.secure_url) throw new Error("URL upload failed");
+      finalImageURL = data.secure_url;
+    }
+
+    // ===== BUILD DATA =====
+    const slideData = {
+      title,
+      subtitle: document.getElementById("heroSubtitle").value.trim() || "",
+      link: document.getElementById("heroLink").value.trim() || "",
+      order: Number(orderValue)
+    };
+
+    if (finalImageURL) slideData.imageUrl = finalImageURL;
+
+    // ===== ADD OR UPDATE =====
+    if (editingSlideId) {
+      await db.collection("heroSliders").doc(editingSlideId).update(slideData);
+      showAlert("Slide updated successfully");
+    } else {
+      slideData.active = true;
+      slideData.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+      await db.collection("heroSliders").add(slideData);
+      showAlert("Slide uploaded successfully");
+    }
+
+    document.getElementById("heroForm").reset();
+    document.querySelector("#heroForm button[type='submit']").textContent = "Upload Slide";
+    editingSlideId = null;
+
+  } catch (err) {
+    console.error(err);
+    showAlert("Upload failed");
+  } finally {
+    hideLoader();
+  }
+});
+
+// ===== LOAD SLIDES =====
+function loadSlides() {
+  db.collection("heroSliders")
+    .orderBy("order", "asc")
+    .onSnapshot(snapshot => {
+      const container = document.getElementById("slidesList");
+      container.innerHTML = "";
+
+      snapshot.forEach(doc => {
+        const s = doc.data();
+        container.innerHTML += `
+          <div class="flex items-center gap-4 border p-3 rounded">
+            <img src="${s.imageUrl}" class="w-32 h-20 object-cover rounded" />
+            <div class="flex-1">
+              <p class="font-semibold">${s.title || "—"}</p>
+              <p class="text-sm text-gray-600">${s.subtitle || ""}</p>
+              <p class="text-xs text-gray-400">Order: ${s.order}</p>
+            </div>
+
+            <button onclick="toggleSlide('${doc.id}', ${s.active})" class="px-3 py-1 rounded text-white ${s.active ? "bg-green-500" : "bg-gray-400"}">
+              ${s.active ? "Active" : "Disabled"}
+            </button>
+
+            <button onclick="editSlide('${doc.id}')" class="px-3 py-1 bg-blue-500 text-white rounded">
+              Edit
+            </button>
+
+            <button onclick="deleteSlide('${doc.id}')" class="px-3 py-1 bg-red-500 text-white rounded">
+              Delete
+            </button>
+          </div>
+        `;
+      });
     });
+}
+
+// ===== EDIT SLIDE =====
+async function editSlide(id) {
+  const docRef = db.collection("heroSliders").doc(id);
+  const snap = await docRef.get();
+  if (!snap.exists) return alert("Slide not found");
+
+  const data = snap.data();
+
+  // Populate form
+  document.getElementById("heroTitle").value = data.title || "";
+  document.getElementById("heroSubtitle").value = data.subtitle || "";
+  document.getElementById("heroLink").value = data.link || "";
+  document.getElementById("heroOrder").value = data.order || 0;
+
+  document.querySelector("#heroForm button[type='submit']").textContent = "Update Slide";
+  editingSlideId = id;
+}
+
+// ===== TOGGLE ACTIVE =====
+async function toggleSlide(id, current) {
+  await db.collection("heroSliders").doc(id).update({
+    active: !current
   });
 }
 
-// Initial Load
-loadSlides();
+// ===== DELETE SLIDE =====
+async function deleteSlide(id) {
+  // showConfirm should return a Promise that resolves true/false
+  const confirmed = await showConfirm("Delete this slide?");
+  if (!confirmed) return;
 
+  try {
+    showLoader();
+    await db.collection("heroSliders").doc(id).delete();
+    showAlert("Slide deleted successfully");
+  } catch (err) {
+    console.error(err);
+    showAlert("Failed to delete slide");
+  } finally {
+    hideLoader();
+  }
+}
+
+// ===== ADMIN UTILS =====
+function goToLogin() {
+  window.location.href = "/admin-login.html";
+}
 </script>
 </body>
 </html>

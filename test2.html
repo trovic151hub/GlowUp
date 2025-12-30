@@ -61,7 +61,7 @@
         <option value="all">All payment</option>
         <option value="Paystack">Paystack</option>
         <option value="Flutterwave">Flutterwave</option>
-        <option value="Cash">Cash</option>
+        <option value="Cash">WhatsApp</option>
       </select>
     </div>
 
@@ -122,8 +122,8 @@
       <button id="emailReceiptBtn" class="bg-blue-600 text-white px-4 py-2 rounded opacity-50 cursor-not-allowed" disabled>Email Receipt</button>
       <div id="modalStatusControls" class="ml-auto flex gap-2"></div>
     </div>
-    <!-- International Order Control
-    <div id="internationalControls" class="mt-3"></div> -->
+    <!-- International Order Control -->
+    <!-- <div id="internationalControls" class="mt-3"></div> -->
   </div>
 </div>
 
@@ -249,7 +249,11 @@ firebase.auth().onAuthStateChanged(async (user) => {
     return q.limit(pageSize);
   }
 
-  async function clearAndLoad() { ordersTbody.innerHTML=''; lastDoc=null; await loadMore(true); }
+  async function clearAndLoad() { 
+    ordersTbody.innerHTML=''; 
+    lastDoc=null; 
+    await loadMore(true); 
+  }
 
   function updateSummary() {
     const rows = Array.from(ordersTbody.children).filter(r => r.__order);
@@ -376,7 +380,7 @@ async function confirmInternationalPayment(orderId) {
   const orderRef = firebase.firestore().collection('orders').doc(orderId);
   await orderRef.update({
     'delivery.fulfilled': true,
-    'shipmentStatus': 'processing' // optionally reset shipment status
+    'shipmentStatus': 'pending' // optionally reset shipment status
   });
 }
 
@@ -786,103 +790,6 @@ async function sendReceiptEmail(order) {
     throw new Error(err.text || "Failed to send email via EmailJS");
   }
 }
-
-// // Email Receipt
-// async function sendReceiptEmail(order) {
-//   if (!window.isAdmin) throw new Error("Only admins can send emails.");
-
-//   try {
-//     // Generate the items HTML
-//     const orderItemsHTML = (order.items || [])
-//       .map(i => `
-//         <div class="item">
-//           <span>${i.name}</span>
-//           <span>${i.quantity} × ₦${Number(i.price).toLocaleString()}</span>
-//           <span>₦${(i.price * i.quantity).toLocaleString()}</span>
-//         </div>
-//       `)
-//       .join("");
-
-//     // Optional: Determine delivery info safely
-//     const delivery = order.delivery || {};
-//     const deliveryFee = order.deliveryFee || 0;
-//     const weight = order.totalWeight || 0;
-//     const orderItems = (order.items || []).map(i => `
-//   <tr>
-//     <td>${i.name}</td>
-//     <td align="center">${i.quantity}</td>
-//     <td align="right">₦${Number(i.price).toLocaleString()}</td>
-//     <td align="right">₦${(i.price * i.quantity).toLocaleString()}</td>
-//   </tr>
-// `).join("");
-
-//     // Template params for EmailJS
-//     const templateParams = {
-//       to_email: order.email,
-//       customer_name: order.name || "Customer",
-//       order_id: order.paymentRef || order.id,
-//       logo_url: "https://res.cloudinary.com/dut2dpxuc/image/upload/v1764188839/e1232d47-ee66-47c9-97fa-b9b86232fb80_n35lqo.png",
-//       order_name: order.name || "—",
-//       order_email: order.email || "—",
-//       order_phone: order.phone || "—",
-//       payment_method: order.paymentMethod || "—",
-//       payment_ref: order.paymentRef || "—",
-//       order_items: orderItemsHTML,
-//       order_total: Number(order.total || 0).toLocaleString(),
-//       delivery_company: delivery.company || "—",
-//       delivery_type: delivery.type || "—",
-//       delivery_terminal: delivery.terminal || "—",
-//       delivery_state: delivery.state || "—",
-//       delivery_lga: delivery.lga || "—",
-//       delivery_address: delivery.address || "—",
-//       delivery_fee: Number(deliveryFee).toLocaleString(),
-//       total_weight: weight
-//     };
-
-//     // Send email via EmailJS
-//     const result = await emailjs.send(
-//       "service_k1xpqh8",      // EmailJS service ID
-//       "template_nlno322",     // EmailJS template ID (the Order Receipt HTML template)
-//       templateParams
-//     );
-
-//     return result;
-//   } catch (err) {
-//     console.error("EmailJS error:", err);
-//     throw new Error(err.text || "Failed to send email via EmailJS");
-//   }
-// }
-
-// // Email Receipt
-//   async function sendReceiptEmail(order) {
-//   if (!window.isAdmin) throw new Error("Only admins can send emails.");
-
-//   try {
-//     const orderItems = (order.items || [])
-//       .map(i => `${i.name} × ${i.quantity} = ₦${i.price * i.quantity}`)
-//       .join('<br>');
-
-//     const templateParams = {
-//       to_email: order.email,
-//       customer_name: order.name || "Customer",
-//       order_id: order.paymentRef || order.id,
-//       order_items: orderItems,
-//       order_total: Number(order.total || 0).toLocaleString()
-//     };
-
-//     // Use the new SDK
-//     const result = await emailjs.send(
-//       "service_k1xpqh8",      // EmailJS service ID
-//       "template_nlno322",     // EmailJS template ID (the Order Receipt template)
-//       templateParams
-//     );
-
-//     return result;
-//   } catch (err) {
-//     console.error("EmailJS error:", err);
-//     throw new Error(err.text || "Failed to send email via EmailJS");
-//   }
-// }
 
   // ===== DOWNLOAD PDF =====
 async function downloadPdf(order) {

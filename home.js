@@ -17,6 +17,9 @@
   const userDb = firebase.firestore();
   const adminDb = firebase.firestore();
 
+  // Use this as the database reference for hero slides
+  const db = userDb;
+
   // ---------- PAGE LOADER ----------
   let pageLoader = document.getElementById("pageLoader");
   if(!pageLoader){
@@ -161,48 +164,60 @@
   rotateTipsFade();
   setInterval(rotateTipsFade, 5000);
 
-  // ---------- SLIDER ----------
-  const slides = [
-  {
-    image: "https://res.cloudinary.com/dut2dpxuc/image/upload/v1766092576/portrait-beautiful-black-woman-with-mysterious-shadows_23-2149095701_h8hxtc.jpg",
-    title: "Glow Your Skin Naturally",
-    text: "Premium skincare supplements for radiant beauty"
-  },
-  {
-    image: "https://res.cloudinary.com/dut2dpxuc/image/upload/v1766092250/hand-holding-pills-1200x628-facebook-1200x628_lpqgua.jpg",
-    title: "Healthy Skin Starts Inside",
-    text: "Scientifically formulated supplements"
-  },
-  {
-    image: "https://res.cloudinary.com/dut2dpxuc/image/upload/v1766092744/beauty-spa-therapy-cosmetics-wellness-260nw-2656528113_vnxuq9.jpg",
-    title: "Feel Confident Every Day",
-    text: "Trusted by thousands of customers"
-  }
-];
-
-let currentSlide = 0;
-let interval;
-let startX = 0;
-
+  // ===== HERO SLIDER ELEMENTS =====
 const heroSlider = document.querySelector(".hero-slider");
 const heroImage = document.getElementById("heroImage");
 const heroTitle = document.getElementById("heroTitle");
 const heroText = document.getElementById("heroText");
 const dotsContainer = document.getElementById("heroDots");
 
-/* ---------- Create dots ---------- */
-slides.forEach((_, index) => {
-  const dot = document.createElement("span");
-  dot.addEventListener("click", () => {
-    currentSlide = index;
-    showSlide(index);
-    resetAutoSlide();
-  });
-  dotsContainer.appendChild(dot);
-});
+let slides = [];
+let currentSlide = 0;
+let interval;
+let startX = 0;
 
-/* ---------- Render slide ---------- */
+// ===== FETCH SLIDES FROM FIRESTORE (REAL-TIME) =====
+  function loadHeroSlides() {
+    db.collection("heroSliders")
+      .where("active", "==", true)
+      .orderBy("order", "asc")
+      .onSnapshot(snapshot => {
+        slides = snapshot.docs.map(doc => ({
+          image: doc.data().imageUrl,
+          title: doc.data().title,
+          text: doc.data().subtitle
+        }));
+
+        createDots();
+
+        // Reset to first slide if currentSlide exceeds length
+        if (currentSlide >= slides.length) currentSlide = 0;
+
+        showSlide(currentSlide);
+        resetAutoSlide();
+      }, err => {
+        console.error("Error loading hero slides:", err);
+      });
+  } 
+
+// ===== CREATE DOTS =====
+function createDots() {
+  dotsContainer.innerHTML = "";
+  slides.forEach((_, index) => {
+    const dot = document.createElement("span");
+    dot.addEventListener("click", () => {
+      currentSlide = index;
+      showSlide(index);
+      resetAutoSlide();
+    });
+    dotsContainer.appendChild(dot);
+  });
+}
+
+// ===== SHOW SLIDE =====
 function showSlide(index) {
+  if (slides.length === 0) return;
+
   heroImage.classList.add("fade-out");
 
   setTimeout(() => {
@@ -210,7 +225,6 @@ function showSlide(index) {
     heroTitle.textContent = slides[index].title;
     heroText.textContent = slides[index].text;
 
-    // Restart text animation
     heroTitle.style.animation = "none";
     heroText.style.animation = "none";
     heroTitle.offsetHeight; // force reflow
@@ -226,7 +240,7 @@ function showSlide(index) {
   });
 }
 
-/* ---------- Auto slide ---------- */
+// ===== AUTO SLIDE =====
 function startAutoSlide() {
   interval = setInterval(() => {
     currentSlide = (currentSlide + 1) % slides.length;
@@ -243,11 +257,11 @@ function resetAutoSlide() {
   startAutoSlide();
 }
 
-/* ---------- Pause on hover ---------- */
+// ===== PAUSE ON HOVER =====
 heroSlider.addEventListener("mouseenter", stopAutoSlide);
 heroSlider.addEventListener("mouseleave", startAutoSlide);
 
-/* ---------- Swipe support (mobile) ---------- */
+// ===== SWIPE SUPPORT =====
 heroSlider.addEventListener("touchstart", e => {
   startX = e.touches[0].clientX;
 });
@@ -267,9 +281,8 @@ heroSlider.addEventListener("touchend", e => {
   }
 });
 
-/* ---------- Init ---------- */
-showSlide(currentSlide);
-startAutoSlide();
+// ===== INIT HERO SLIDER =====
+loadHeroSlides();
 
     // ---------- Header Scroll ----------
 const header = document.getElementById("mainHeader");
