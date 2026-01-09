@@ -185,6 +185,11 @@ let startX = 0;
 
 // ===== FETCH SLIDES FROM FIRESTORE (REAL-TIME) =====
   function loadHeroSlides() {
+    const skeleton = document.getElementById("heroSkeleton");
+
+  // Show skeleton while fetching
+  skeleton.classList.remove("hidden");
+
     db.collection("heroSliders")
       .where("active", "==", true)
       .orderBy("order", "asc")
@@ -202,6 +207,10 @@ let startX = 0;
 
         showSlide(currentSlide);
         resetAutoSlide();
+
+             // Hide skeleton once slides are ready
+      skeleton.classList.add("hidden");
+      
       }, err => {
         console.error("Error loading hero slides:", err);
       });
@@ -723,6 +732,8 @@ updateCartCount();
   function escapeHtml(text){ if(text==null) return ''; return String(text).replace(/[&<>"']/g, m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
   function showLoader(el){ if(!el) return null; const original=el.innerHTML; el.disabled=true; el.innerHTML=`<span class="animate-spin border-2 border-white border-t-transparent rounded-full w-4 h-4 inline-block mr-2"></span> Loading...`; return ()=>{ el.disabled=false; el.innerHTML=original; }; }
 
+  // WhatsApp 
+  
   // Hamburger Menu
 const menuToggle = document.getElementById("menuToggle");
 const mobileMenu = document.getElementById("mobileMenu");

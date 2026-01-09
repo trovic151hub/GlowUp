@@ -120,6 +120,72 @@
     to { opacity: 1; transform: translateY(0); }
   }
   .animate-fadeIn { animation: fadeIn 0.5s ease-out; }
+
+  /* Custom Media Queries for Footer */
+@media (max-width: 768px) {
+  footer {
+    text-align: left;
+  }
+
+  footer .mx-6 {
+    margin-left: 1rem;
+    margin-right: 1rem;
+  }
+
+  footer input {
+    width: 100% !important;
+    margin-bottom: 0.5rem;
+  }
+
+  footer button {
+    /* width: 100%; */
+  }
+
+  footer .flex-col {
+    flex-direction: column !important;
+    gap: 1.5rem !important;
+  }
+
+  footer .text-left {
+    text-align: center !important;
+  }
+}
+
+  .powered-btn {
+    display: block;
+    text-align: left;
+  }
+
+@media (max-width: 480px) {
+  footer h4 {
+    font-size: 1rem;
+  }
+
+  footer p {
+    font-size: 0.875rem;
+  }
+
+  footer .fixed.bottom-6.right-6 {
+    width: 3rem;
+    height: 3rem;
+    font-size: 1.5rem;
+  }
+}
+
+@keyframes ripple {
+  0% {
+    transform: scale(0.8);
+    opacity: 0.6;
+  }
+  100% {
+    transform: scale(2.5);
+    opacity: 0;
+  }
+}
+
+.ripple-effect {
+  animation: ripple 1.5s infinite;
+}
   </style>
 </head>
 <body class="bg-gray-50 text-gray-900">
@@ -249,18 +315,18 @@
 </div>
 
 <!-- Footer -->
-<footer class="bg-[#cccccc] text-gray-800 relative">
+<footer class="bg-pink-100 text-gray-800 relative">
   <div class="mx-6 md:mx-10 px-4 md:px-6 py-8 md:py-12 flex flex-col md:flex-row justify-between gap-8 md:gap-40">
     
     <!-- Contact Info -->
-    <div class="flex-1">
+    <div class="flex-1 border-b md:border-b-0 pb-4 md:pb-0 border-gray-300">
       <h4 class="text-lg font-semibold mb-4">CONTACT US</h4>
       <p class="mb-2 flex items-center gap-2">
-        <i class="fas fa-phone-alt"></i> +2349079534440
+        <i class="fas fa-phone-alt"></i> +2349053380773
       </p>
       <p class="flex items-start gap-2">
         <i class="fas fa-map-marker-alt mt-1"></i>
-        No 5 Olalere Oludunjoye Street, Laisu Road Idimu, Alimosho, Lagos, Nigeria
+        No 17 Oloruntimilehin Street, Cacatin Rd Mosan Bus Stop Ipaja Rd, Alimosho, Lagos, Nigeria
       </p>
     </div>
 
@@ -278,17 +344,41 @@
   </div>
 
   <!-- Powered By -->
-  <div class="text-left text-sm text-gray-800 mx-6 md:mx-10 px-4 md:px-6 py-4 border-t border-gray-300">
-    <button class="p-4 bg-gray-500">
-      POWERED BY BUMPA
+  <div class="btn text-left text-sm text-white mx-6 md:mx-10 px-4 md:px-6 py-4 border-t border-gray-300">
+    <button class="text-left block p-4 bg-pink-500">
+      POWERED BY VTec
     </button>
   </div>
 
   <!-- WhatsApp Button -->
-  <a href="https://wa.me/2349079534440" target="_blank" 
-     class="fixed bottom-6 right-6 bg-green-500 hover:bg-green-600 text-white w-14 h-14 rounded-full flex items-center justify-center shadow-lg z-50 text-2xl">
-    <i class="fab fa-whatsapp"></i>
-  </a>
+<button id="openWhatsappModal" class="fixed bottom-6 right-6 z-50">
+  <div class="relative w-14 h-14">
+    <!-- Ripple circles -->
+    <span class="absolute inset-0 rounded-full bg-green-400 opacity-50 animate-ping"></span>
+    <span class="absolute inset-0 rounded-full bg-green-400 opacity-50 animate-ping delay-200"></span>
+    <span class="absolute inset-0 rounded-full bg-green-400 opacity-50 animate-ping delay-400"></span>
+
+    <!-- Main Button -->
+    <div class="relative w-14 h-14 rounded-full bg-green-500 hover:bg-green-600 text-white flex items-center justify-center shadow-lg text-2xl">
+      <i class="fab fa-whatsapp"></i>
+    </div>
+  </div>
+</button>
+
+  <!-- WhatsApp Button -->
+<a href="https://wa.me/2349053380773" target="_blank" class="fixed bottom-6 right-6 z-50">
+  <div class="relative w-14 h-14">
+    <!-- Ripple circles -->
+    <span class="absolute inset-0 rounded-full bg-green-400 opacity-50 animate-ping"></span>
+    <span class="absolute inset-0 rounded-full bg-green-400 opacity-50 animate-ping delay-200"></span>
+    <span class="absolute inset-0 rounded-full bg-green-400 opacity-50 animate-ping delay-400"></span>
+
+    <!-- Main Button -->
+    <div class="relative w-14 h-14 rounded-full bg-green-500 hover:bg-green-600 text-white flex items-center justify-center shadow-lg text-2xl">
+      <i class="fab fa-whatsapp"></i>
+    </div>
+  </div>
+</a>
 </footer>
 
 <script>
@@ -307,7 +397,6 @@ document.addEventListener("DOMContentLoaded", () => {
   function generateWhatsappPaymentRef() {
   return "WA-" + Date.now() + "-" + Math.floor(Math.random() * 1000);
 }
-// whatsappBtn.addEventListener("click", sendWhatsAppOrder);
 
   // ===== DOM References =====
   const stateInput=document.getElementById("state");
@@ -666,7 +755,10 @@ function updateTerminal() {
     messagingSenderId: "863375033754",
     appId: "1:863375033754:web:7ba248c8dbb1566c83e623"
   };
+  if (!firebase.apps.length) {
   firebase.initializeApp(firebaseConfig);
+}
+  // firebase.initializeApp(firebaseConfig);
   const db = firebase.firestore();
   const auth = firebase.auth();
 
@@ -794,26 +886,64 @@ console.log("Guest ID READY:", window.guestId);
   let subtotal = 0;
   totalWeight = 0;
 
-  // ===== Render Cart Items =====
-  cartItems.forEach(item => {
+  cartItems.forEach((item, index) => {
     const itemTotal = item.price * item.quantity;
     subtotal += itemTotal;
     totalWeight += (item.weight || 1) * item.quantity;
 
     const div = document.createElement("div");
-    div.className = "flex justify-between bg-white p-4 rounded shadow mb-3";
+    div.className = "flex justify-between bg-white p-4 rounded shadow mb-3 items-center";
     div.innerHTML = `
       <div class="flex items-center gap-4">
         <img src="${item.image || 'https://via.placeholder.com/64'}" class="w-16 h-16 object-cover rounded">
         <div>
           <h4 class="font-semibold">${item.name}</h4>
           <p class="text-pink-500 font-bold">₦${item.price.toLocaleString()}</p>
-          <p>Qty: ${item.quantity}</p>
+          <div class="flex items-center gap-2 mt-1">
+            <button class="qty-decrease px-2 py-1 bg-gray-200 rounded">-</button>
+            <span class="qty">${item.quantity}</span>
+            <button class="qty-increase px-2 py-1 bg-gray-200 rounded">+</button>
+          </div>
         </div>
       </div>
-      <p class="font-semibold">₦${itemTotal.toLocaleString()}</p>
+      <div class="flex flex-col items-end">
+        <p class="font-semibold mb-2">₦${itemTotal.toLocaleString()}</p>
+        <button class="delete-item text-red-500 font-bold text-lg">×</button>
+      </div>
     `;
     orderContainer.appendChild(div);
+
+    // ===== Event Listeners =====
+    const increaseBtn = div.querySelector(".qty-increase");
+    const decreaseBtn = div.querySelector(".qty-decrease");
+    const deleteBtn = div.querySelector(".delete-item");
+    const qtySpan = div.querySelector(".qty");
+
+    increaseBtn.addEventListener("click", () => {
+      item.quantity++;
+      qtySpan.textContent = item.quantity;
+      updateCartAndFirestore();
+      showNotification(`${item.name} quantity increased to ${item.quantity}`);
+    });
+
+    decreaseBtn.addEventListener("click", () => {
+      if (item.quantity > 1) {
+        item.quantity--;
+        qtySpan.textContent = item.quantity;
+        updateCartAndFirestore();
+        showNotification(`${item.name} quantity decreased to ${item.quantity}`);
+      } else {
+        cartItems.splice(index, 1);
+        updateCartAndFirestore();
+        showNotification(`${item.name} removed from cart`);
+      }
+    });
+
+    deleteBtn.addEventListener("click", () => {
+      cartItems.splice(index, 1);
+      updateCartAndFirestore();
+      showNotification(`${item.name} removed from cart`);
+    });
   });
 
   // ===== Build Delivery Info =====
@@ -827,12 +957,10 @@ console.log("Guest ID READY:", window.guestId);
     address: document.getElementById("address").value || ""
   };
 
-  // ===== Calculate Delivery Fee =====
   deliveryFee = calculateDeliveryFee(deliveryInfo);
 
-  // ===== Delivery Info Block HTML =====
+  // ===== Delivery Info Block =====
   let deliveryDescHtml = "";
-
   const stateLower = deliveryInfo.state.toLowerCase();
   const isInternational = deliveryInfo.country.toLowerCase() !== "nigeria";
 
@@ -856,7 +984,6 @@ console.log("Guest ID READY:", window.guestId);
       <div>State: ${deliveryInfo.state || '—'}</div>
     `;
   } else {
-    // fallback for other home deliveries outside Lagos
     deliveryDescHtml = `
       <div>Company: ${deliveryInfo.company || '—'}</div>
       <div>Type: ${deliveryInfo.type || '—'}</div>
@@ -873,7 +1000,6 @@ console.log("Guest ID READY:", window.guestId);
     <div>Fee: ₦${deliveryFee.toLocaleString()}</div>
     <div>Weight: ${totalWeight} kg</div>
   `;
-
   orderContainer.appendChild(feeDiv);
 
   // ===== Update Totals =====
@@ -882,6 +1008,23 @@ console.log("Guest ID READY:", window.guestId);
 
   orderSkeleton?.classList.add("hidden");
   orderContainer?.classList.remove("hidden");
+
+  // ===== Helper to update localStorage & Firestore =====
+  function updateCartAndFirestore() {
+    localStorage.setItem("cart", JSON.stringify(cartItems));
+    renderOrderWithDelivery(); // re-render UI
+
+    // ===== Firestore Update =====
+    const guestId = localStorage.getItem("guestId");
+    if (!guestId) return;
+    db.collection("guestCarts").doc(guestId).set({
+      guestId,
+      items: cartItems,
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    })
+    .then(() => console.log("🛒 Guest cart updated in Firestore"))
+    .catch(err => console.error("❌ Failed to update guest cart:", err));
+  }
 }
 
 // ===== Save Order =====
@@ -925,11 +1068,19 @@ async function saveOrder(order) {
     };
   }
 
+  const user = auth.currentUser;
+  const guestId = getGuestId();
+
   showLoader(true);
   try {
     // ===== Save order in Firestore =====
     const orderRef = await db.collection("orders").add({
       ...order,
+
+      // 🔐 IDENTITY (THIS IS THE IMPORTANT PART)
+      userId: user ? user.uid : null,
+      guestId: user ? null : guestId,
+
       delivery,
       totalWeight,
       deliveryFee: order.deliveryFee || 0,
@@ -938,56 +1089,20 @@ async function saveOrder(order) {
       createdAtClient: new Date(),
       fulfilled: false
     });
-    // When saving a guest order:
-function saveGuestEmail(email) {
-  let guestEmails = JSON.parse(localStorage.getItem("guestEmails")) || [];
-
-  // Only add if not already in the array
-  if (!guestEmails.includes(email)) {
-    guestEmails.push(email);
-    localStorage.setItem("guestEmails", JSON.stringify(guestEmails));
-  }
-
-  // Also save last email separately if you still need it
-  localStorage.setItem("guestEmail", email);
-}
-
-//     // Get the existing guest emails
-// let guestEmails = JSON.parse(localStorage.getItem("guestEmails")) || [];
-
-// // Add this email if not already in the list
-// if (!guestEmails.includes(email)) {
-//   guestEmails.push(email);
-// }
-
-// // Save back to localStorage
-// localStorage.setItem("guestEmails", JSON.stringify(guestEmails));
-
-//     if (!auth.currentUser) {
-//   // Get current array of guest emails or initialize
-//   let guestEmails = JSON.parse(localStorage.getItem("guestEmails")) || [];
-
-//   const emailToSave = order.email || billing.email;
-//   if (emailToSave && !guestEmails.includes(emailToSave)) {
-//     guestEmails.push(emailToSave); // add new email if not already in array
-//     localStorage.setItem("guestEmails", JSON.stringify(guestEmails));
-//     console.log("Guest emails updated:", guestEmails);
-//   }
-// }
-
+    
     console.log("Order saved with ID:", orderRef.id);
 
     // 2️⃣ CLEAR GUEST CART FIRST
-await clearGuestCart();
+    await clearGuestCart();
 
-// 3️⃣ Clear UI & local cart
-cartItems = [];
-localStorage.removeItem("cart");
-renderOrderWithDelivery();
-clearCheckoutInputs();
+    // 3️⃣ Clear UI & local cart
+    cartItems = [];
+    localStorage.removeItem("cart");
+    renderOrderWithDelivery();
+    clearCheckoutInputs();
 
-// 4️⃣ Show success UI
-showNotification("Order placed successfully!", "success");
+    // 4️⃣ Show success UI
+    showNotification("Order placed successfully!", "success");
     
     // ===== Show Success Modal =====
     const successModal = document.getElementById("orderSuccessModal");

@@ -790,49 +790,6 @@ async function sendReceiptEmail(order) {
     throw new Error(err.text || "Failed to send email via EmailJS");
   }
 }
-//   // Email Receipt
-//   async function sendReceiptEmail(orderId, customerEmail) {
-//   // Example: send request to your server or Firebase function
-//   const res = await fetch("/api/send-receipt", {
-//     method: "POST",
-//     headers: {"Content-Type": "application/json"},
-//     body: JSON.stringify({orderId, email: customerEmail})
-//   });
-
-//   if (!res.ok) throw new Error("Failed to send email");
-//   return res.json();
-// }
-
-// // Email Receipt
-//   async function sendReceiptEmail(order) {
-//   if (!window.isAdmin) throw new Error("Only admins can send emails.");
-
-//   try {
-//     const orderItems = (order.items || [])
-//       .map(i => `${i.name} × ${i.quantity} = ₦${i.price * i.quantity}`)
-//       .join('<br>');
-
-//     const templateParams = {
-//       to_email: order.email,
-//       customer_name: order.name || "Customer",
-//       order_id: order.paymentRef || order.id,
-//       order_items: orderItems,
-//       order_total: Number(order.total || 0).toLocaleString()
-//     };
-
-//     // Use the new SDK
-//     const result = await emailjs.send(
-//       "service_k1xpqh8",      // EmailJS service ID
-//       "template_nlno322",     // EmailJS template ID (the Order Receipt template)
-//       templateParams
-//     );
-
-//     return result;
-//   } catch (err) {
-//     console.error("EmailJS error:", err);
-//     throw new Error(err.text || "Failed to send email via EmailJS");
-//   }
-// }
 
   // ===== DOWNLOAD PDF =====
 async function downloadPdf(order) {

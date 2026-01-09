@@ -1,250 +1,93 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Checkout</title>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Dashboard</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
-  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
-  <script src="https://js.paystack.co/v1/inline.js"></script>
-  <style>
-  *{
-        font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
-    }
-    @import url('https://fonts.googleapis.com/css2?family=Lora:wght@700&family=Montserrat:wght@500&display=swap');
-    /* ----------------------------------- */
-/* 📱 MOBILE FIRST: max-width 640px    */
-/* ----------------------------------- */
+<style>
+/* ===== MODAL & TIMELINE STYLES ===== */
+.modal-bg { background: rgba(0,0,0,0.5); }
+.timeline-step { transition: all 0.3s ease; }
+.timeline-line { transition: background-color 0.3s ease; }
+
+.timeline-step {
+    transition: background-color 0.5s ease;
+  }
+  .timeline-line {
+    transition: background-color 0.5s ease;
+    height: 4px;
+    border-radius: 2px;
+  }
+/* ===== MOBILE DASHBOARD FIXES ===== */
 @media (max-width: 640px) {
-  *{
-        font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
-    }
-    @import url('https://fonts.googleapis.com/css2?family=Lora:wght@700&family=Montserrat:wght@500&display=swap');
-
-  /* Main grid stacks vertically */
-  main {
-    grid-template-columns: 1fr !important;
-    gap: 16px !important;
-    padding: 1rem !important;
-  }
-
-  header h1 {
-    font-size: 1.2rem !important;
-  }
-
-  header a {
-    font-size: 1rem !important;
-  }
-
-  /* Billing form & order summary full width */
-  .bg-white {
-    width: 100% !important;
-    padding: 1rem !important;
-  }
-
-  /* Inputs full width and slightly smaller text */
-  input {
-    width: 100% !important;
-    font-size: 0.95rem !important;
-  }
-
-  /* Payment buttons stacked vertically */
-  #checkoutForm .flex {
-    /* flex-direction: column !important; */
-    gap: 12px !important;
-  }
-
-  /* Order summary items spacing */
-  #summaryList > div {
-    flex-direction: column !important;
-    gap: 8px !important;
-  }
-
-  /* Total text smaller */
-  #checkoutTotal {
-    font-size: 1.1rem !important;
-  }
+  main { padding: 1rem !important; }
+  h2 { font-size: 1rem !important; text-align: center; }
+  .dashboard-card { padding: 1rem !important; }
+  .status-filter-wrapper { overflow-x: auto; display: flex; gap: 0.5rem; padding-bottom: 5px; }
+  .status-btn { white-space: nowrap; font-size: 0.75rem; padding: 6px 10px !important; }
+  .table-wrapper { overflow-x: auto; }
+  table { min-width: 300px; }
+  #orderModal > div { width: 95% !important; max-height: 80vh !important; }
 }
-
-/* ----------------------------------- */
-/* 📲 VERY SMALL SCREEN: max-width 380px */
-/* ----------------------------------- */
-@media (max-width: 380px) {
-  header h1 {
-    font-size: 1rem !important;
-  }
-
-  header a {
-    font-size: 0.9rem !important;
-  }
-
-  input {
-    font-size: 0.9rem !important;
-    padding: 0.5rem !important;
-  }
-
-  #checkoutForm button {
-    font-size: 0.9rem !important;
-    padding: 0.6rem !important;
-  }
-
-  #checkoutTotal {
-    font-size: 1rem !important;
-  }
-}
-#checkout-loader.fade-out {
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.4s ease;
-}
-
-/* Emoji Pulse */
-  @keyframes pulse { 
-    0%,100% { transform: scale(1); }
-    50% { transform: scale(1.2); }
-  }
-
-  .success-title::before {
-  content: '🎉 ';
-  display: inline-block;
-  animation: pulse 1.5s infinite;
-}
-
-  /* Fade-in Animation */
-  @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(10px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
-  .animate-fadeIn { animation: fadeIn 0.5s ease-out; }
-  </style>
+</style>
 </head>
 <body class="bg-gray-50 text-gray-900">
-  <!-- Notification Container -->
-<div id="notification-container" class="fixed top-4 right-4 z-50 flex flex-col gap-2"></div>
 
-  <header class="fixed top-0 w-full bg-gradient-to-r from-[#fbcfe8] to-[#f9a8d4] shadow-md z-40 p-4 shadow-md flex justify-between items-center">
-    <button onclick="history.back()">
-      <h1 class="text-xl font-bold">🧾 Checkout</h1>
-    </button>
-    <a href="cart.html" class="text-pink-600 font-bold">🛒 Back to Cart</a>
-  </header>
-
-  <main class="p-6 max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8 relative mt-16">
-
-    <!-- Billing Form -->
-    <div class="bg-white p-6 shadow rounded">
-      <h2 class="text-lg font-semibold mb-4">Billing Information</h2>
-      <form id="checkoutForm" class="space-y-4">
-        <input type="text" id="name" placeholder="Full Name" class="w-full border p-3 rounded-lg focus:ring-2 focus:ring-pink-300 focus:outline-none transition" required />
-        <input type="tel" id="phone" placeholder="Phone Number" class="w-full border p-3 rounded-lg focus:ring-2 focus:ring-pink-300 focus:outline-none transition" required />
-        <input type="email" id="email" placeholder="Email Address" class="w-full border p-3 rounded-lg focus:ring-2 focus:ring-pink-300 focus:outline-none transition" required />
-        <input type="text" id="address" placeholder="Home Address" class="w-full border p-3 rounded-lg focus:ring-2 focus:ring-pink-300 focus:outline-none transition" required />
-
-        <!-- Country -->
-<div class="space-y-2 relative">
-  <label class="font-semibold">Country</label>
-  <input id="countryInput" type="text" placeholder="Select country"
-    class="w-full border p-3 rounded-lg focus:ring-2 focus:ring-pink-300" />
-  <div id="countryDropdown"
-    class="absolute z-50 bg-white border w-full max-h-60 overflow-y-auto rounded shadow hidden"></div>
+<!-- Loader -->
+<div id="dashboard-loader" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 z-50 hidden">
+  <svg xmlns="http://www.w3.org/2000/svg" class="fas fa-shopping-cart text-white w-12 h-12 animate-pulse" viewBox="0 0 16 16">
+    <path fill="currentColor" d="M0 2.5A.5.5 0 0 1 .5 2H2a.5.5 0 0 1 .485.379L2.89 4H14.5a.5.5 0 0 1 .485.621l-1.5 6A.5.5 0 0 1 13 11H4a.5.5 0 0 1-.485-.379L1.61 3H.5a.5.5 0 0 1-.5-.5M3.14 5l.5 2H5V5zM6 5v2h2V5zm3 0v2h2V5zm3 0v2h1.36l.5-2zm1.11 3H12v2h.61zM11 8H9v2h2zM8 8H6v2h2zM5 8H3.89l.5 2H5zm0 5a1 1 0 1 0 0 2a1 1 0 0 0 0-2m-2 1a2 2 0 1 1 4 0a2 2 0 0 1-4 0m9-1a1 1 0 1 0 0 2a1 1 0 0 0 0-2m-2 1a2 2 0 1 1 4 0a2 2 0 0 1-4 0"/>
+  </svg>
 </div>
 
-        <!-- State & LGA -->
-        <div class="space-y-2 relative">
-          <label for="state" class="font-semibold">State</label>
-          <input type="text" id="state" placeholder="Enter your state" class="w-full border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-pink-300 focus:outline-none transition" required />
-          <div id="stateSuggestions" class="absolute border border-gray-300 bg-white z-50 w-full max-h-60 overflow-y-auto rounded shadow" style="display:none;"></div>
+<header class="bg-gradient-to-r from-pink-300 to-pink-400 p-4 shadow-md flex justify-between items-center fixed top-0 w-full">
+  <button onclick="history.back()">
+    <h1 class="text-xl font-bold">👤 My Dashboard</h1>
+  </button>
+</header>
 
-          <label for="lga" class="font-semibold mt-2" style="display:none;">LGA</label>
-          <select id="lga" class="w-full border p-3 rounded-lg focus:ring-2 focus:ring-pink-300 focus:outline-none transition" style="display:none;">
-            <option value="">Select LGA</option>
-          </select>
-        </div>
+<main class="max-w-5xl mx-auto p-6 mt-20">
+  <h2 class="text-lg font-semibold mb-4">Welcome, <span id="userName">Customer</span> 👋</h2>
 
-        <!-- Delivery Option -->
-         <div class="space-y-2">
-  <label for="deliveryOption" class="font-semibold">Delivery Option</label>
-  <select id="deliveryOption" class="w-full border p-3 rounded-lg focus:ring-2 focus:ring-pink-300 focus:outline-none transition">
-    <option value="">Delivery Option</option> <!-- placeholder -->
-    <option value="gig">GIG Delivery</option>
-    <option value="guo">GUO Delivery</option>
-  </select>
-
-  <label for="deliveryType" id="deliveryTypeLabel" class="font-semibold" style="display:none;">Delivery Type:</label>
-          <select id="deliveryType" class="w-full border p-3 rounded-lg focus:ring-2 focus:ring-pink-300 focus:outline-none transition" style="display:none;">
-            <option value="">Select</option>
-            <option value="home">Home Delivery</option>
-            <option value="terminal">Terminal Pickup</option>
-          </select>
-
-<label for="terminal" id="terminalLabel" class="font-semibold" style="display:none;">Select Terminal:</label>
-          <select id="terminal" class="w-full border p-3 rounded-lg focus:ring-2 focus:ring-pink-300 focus:outline-none transition" style="display:none;"></select>
-</div>
-        </div>
-      </form>
+  <div class="bg-white p-6 rounded shadow">
+    <h3 class="text-md font-semibold mb-4">📦 Your Orders</h3>
+    <div class="fil mb-4 block gap-2 items-center">
+      <span class="font-semibold">Filter by Status:</span>
+      <div class="flex gap-2 overflow-x-auto">
+        <button onclick="filterOrders('All')" class="status-btn bg-pink-100 px-3 py-1 rounded hover:bg-pink-200" data-status="All">All</button>
+        <button onclick="filterOrders('Pending')" class="status-btn bg-pink-100 px-3 py-1 rounded hover:bg-pink-200" data-status="Pending">Pending</button>
+        <button onclick="filterOrders('Shipped')" class="status-btn bg-pink-100 px-3 py-1 rounded hover:bg-pink-200" data-status="Shipped">Shipped</button>
+        <button onclick="filterOrders('Delivered')" class="status-btn bg-pink-100 px-3 py-1 rounded hover:bg-pink-200" data-status="Delivered">Delivered</button>
+      </div>
     </div>
-
-    <div id="orderSkeleton" class="space-y-4">
-  <div class="h-20 bg-gray-200 rounded animate-pulse"></div>
-  <div class="h-20 bg-gray-200 rounded animate-pulse"></div>
-  <div class="h-20 bg-gray-200 rounded animate-pulse"></div>
-</div>
-
-    <!-- Order Summary -->
-    <div class="bg-white p-6 shadow rounded">
-      <h2 class="text-lg font-semibold mb-4">Order Summary</h2>
-      <!-- <div id="orderContainer" class="space-y-4"></div> -->
-       <!-- Scrollable container -->
-  <div id="orderContainer" class="space-y-4 max-h-64 overflow-y-auto">
-    <!-- Order items will go here -->
+    <div class="table-wrapper overflow-x-auto">
+      <table class="w-full border text-sm">
+        <thead class="bg-pink-100">
+          <tr>
+            <th class="p-2">Date</th>
+            <th class="p-2">Total</th>
+            <th class="p-2">Items</th>
+            <th class="p-2">Status / Action</th>
+          </tr>
+        </thead>
+        <tbody id="orderTableBody"></tbody>
+      </table>
+    </div>
+    <div id="paginationControls" class="flex items-center gap-2 mt-3 justify-center"></div>
   </div>
-      <hr class="my-4" />
-      <div class="text-right text-lg font-bold">
-        <p>Delivery Fee: ₦<span id="deliveryFee">0</span></p>
-        Total: ₦<span id="checkoutTotal">0</span>
-      </div>
-      <hr class="my-4" />
-      <div>
-        <h2 class="text-xl text-center font-semibold mb-2">Choose Payment Method</h2>
-        <div class="text-center">
-          <button id="payWithPaystack" type="button" class="px-10 py-2 border-2 rounded">
-            <img class="w-14 h-6" src="https://cdn.brandfetch.io/idM5mrwtDs/theme/dark/logo.svg?c=1bxid64Mup7aczewSAYMX&t=1667559828449" alt="Paystack">
-          </button>
-          <button id="payWithWhatsApp" type="button" class="hidden text-black px-4 py-2 border-2 rounded"><i class="fab fa-whatsapp text-green-800"></i> WhatsApp</button>
-      </div>
-      <p id="internationalNotice"
-        class="hidden mt-3 text-sm text-gray-700 bg-yellow-50 border border-yellow-200 p-3 rounded">
-        International orders are confirmed via WhatsApp. Final delivery cost will be shared.
-        </p>
-    </div>
-  </main>
+</main>
 
-  <div id="overlaySpinner" class="hidden fixed inset-0 bg-black/30 flex items-center justify-center z-50">
-    <div class="loader border-4 border-pink-500 border-t-transparent rounded-full w-12 h-12 animate-spin"></div>
-  </div>
-
-  <!-- Order Success Modal -->
-<div id="orderSuccessModal" class="hidden fixed inset-0 flex items-center justify-center bg-gradient-to-br from-pink-100 via-pink-200 to-pink-300 z-50">
-  <div class="bg-white/90 backdrop-blur-lg p-8 rounded-2xl shadow-xl max-w-md w-full text-center animate-fadeIn border border-pink-200">
-    <div class="flex justify-center mb-4">
-      <div class="w-20 h-20 bg-pink-100 rounded-full flex items-center justify-center shadow-inner">
-        <i class="fas fa-check text-pink-600 text-4xl"></i>
-      </div>
+<!-- Modal -->
+<div id="orderModal" class="hidden fixed inset-0 flex items-center justify-center z-40 modal-bg">
+  <div class="bg-white w-11/12 max-w-lg p-6 rounded shadow-lg max-h-[80vh] overflow-y-auto">
+    <h2 class="text-xl font-bold mb-4">Order Details</h2>
+    <div id="modalContent" class="space-y-4"></div>
+    <div class="flex justify-end gap-2 mt-4">
+      <button onclick="closeModal()" class="bg-gray-300 px-4 py-2 rounded hover:bg-gray-400">Close</button>
+      <button id="saveBtn" class="bg-pink-500 px-4 py-2 rounded hover:bg-pink-600 text-white hidden">Save Changes</button>
     </div>
-    <h1 class="success-title text-3xl font-bold text-pink-600 mb-2">Order Successful!</h1>
-    <p id="successMessage" class="mb-6 text-gray-700 text-base"></p>
-    <a href="customer-dashboard.html" 
-       class="block bg-pink-600 text-white px-4 py-2 rounded-lg mb-3 hover:bg-pink-700 transition">
-      View Orders
-    </a>
-    <a href="index.html" 
-       class="block text-pink-700 font-medium">
-       Back to Home
-    </a>
   </div>
 </div>
 
@@ -291,373 +134,35 @@
   </a>
 </footer>
 
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+
 <script>
-// ===== LocalStorage Cart Helper =====
-function getCheckoutCart() {
-  try {
-    return JSON.parse(localStorage.getItem("cart")) || [];
-  } catch (err) {
-    console.error("Error reading cart from localStorage:", err);
-    return [];
-  }
-}
-
 document.addEventListener("DOMContentLoaded", () => {
-  const WHATSAPP_NUMBER = "2349053380773"; // your number
-  function generateWhatsappPaymentRef() {
-  return "WA-" + Date.now() + "-" + Math.floor(Math.random() * 1000);
-}
-// whatsappBtn.addEventListener("click", sendWhatsAppOrder);
-
-  // ===== DOM References =====
-  const stateInput=document.getElementById("state");
-  const lgaInput=document.getElementById("lga");
-  const orderContainer=document.getElementById("orderContainer");
-  const totalSpan=document.getElementById("checkoutTotal");
-  const paystackBtn=document.getElementById("payWithPaystack");
-  const whatsappBtn = document.getElementById("payWithWhatsApp"); // ← Add this
-  const deliverySelect=document.getElementById("deliveryOption");
-  const deliveryType=document.getElementById("deliveryType");
-  const terminal=document.getElementById("terminal");
-  const terminalLabel=document.getElementById("terminalLabel");
-  const deliveryTypeLabel=document.getElementById("deliveryTypeLabel");
-  const deliveryFeeEl=document.getElementById("deliveryFee");
-  const orderSkeleton=document.getElementById("orderSkeleton");
-  const suggestionsContainer=document.getElementById("stateSuggestions");
-
-   // ===== Helper to clear checkout form inputs =====
-  function clearCheckoutInputs() {
-    const inputs = [
-      name,
-      phone,
-      email,
-      address,
-      state,
-      lga,
-      countryInput,
-      deliveryType,
-      deliveryTypeLabel,
-      terminalLabel
-    ];
-    inputs.forEach(input => {
-      if (input) input.value = ""; // reset each input
-    });
+  // ===== Loader =====
+  let loader = document.getElementById("dashboard-loader");
+  if (!loader) {
+    loader = document.createElement("div");
+    loader.id = "dashboard-loader";
+    loader.className = "fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 z-50 hidden";
+    loader.innerHTML = `<i class="fas fa-spinner fa-pulse text-6xl text-white"></i>`;
+    document.body.appendChild(loader);
   }
 
-/* ================= COUNTRY (GLOBAL) ================= */
-const countryInput = document.getElementById("countryInput");
-const countryDropdown = document.getElementById("countryDropdown");
-
-const countries = [
-  { name:"Afghanistan", flag:"🇦🇫" },{ name:"Albania", flag:"🇦🇱" },
-  { name:"Algeria", flag:"🇩🇿" },{ name:"Argentina", flag:"🇦🇷" },
-  { name:"Australia", flag:"🇦🇺" },{ name:"Austria", flag:"🇦🇹" },
-  { name:"Belgium", flag:"🇧🇪" },{ name:"Brazil", flag:"🇧🇷" },
-  { name:"Canada", flag:"🇨🇦" },{ name:"China", flag:"🇨🇳" },
-  { name:"Egypt", flag:"🇪🇬" },{ name:"France", flag:"🇫🇷" },
-  { name:"Germany", flag:"🇩🇪" },{ name:"Ghana", flag:"🇬🇭" },
-  { name:"India", flag:"🇮🇳" },{ name:"Ireland", flag:"🇮🇪" },
-  { name:"Italy", flag:"🇮🇹" },{ name:"Japan", flag:"🇯🇵" },
-  { name:"Kenya", flag:"🇰🇪" },{ name:"Mexico", flag:"🇲🇽" },
-  { name:"Netherlands", flag:"🇳🇱" },{ name:"Nigeria", flag:"🇳🇬" },
-  { name:"Norway", flag:"🇳🇴" },{ name:"Pakistan", flag:"🇵🇰" },
-  { name:"Portugal", flag:"🇵🇹" },{ name:"Qatar", flag:"🇶🇦" },
-  { name:"Saudi Arabia", flag:"🇸🇦" },{ name:"South Africa", flag:"🇿🇦" },
-  { name:"Spain", flag:"🇪🇸" },{ name:"Sweden", flag:"🇸🇪" },
-  { name:"Switzerland", flag:"🇨🇭" },{ name:"Turkey", flag:"🇹🇷" },
-  { name:"United Arab Emirates", flag:"🇦🇪" },
-  { name:"United Kingdom", flag:"🇬🇧" },
-  { name:"United States", flag:"🇺🇸" },
-  { name:"Zimbabwe", flag:"🇿🇼" }
-].sort((a,b)=>a.name.localeCompare(b.name));
-
-function renderCountries(filter=""){
-  countryDropdown.innerHTML="";
-  const list = countries.filter(c=>c.name.toLowerCase().includes(filter.toLowerCase()));
-
-  list.forEach(c=>{
-    const div=document.createElement("div");
-    div.className="p-3 cursor-pointer hover:bg-pink-50 flex gap-3";
-    div.innerHTML=`<span>${c.flag}</span><span>${c.name}</span>`;
-    div.onclick=()=>{
-      countryInput.value=c.name;
-      countryInput.dataset.flag=c.flag;
-      countryDropdown.classList.add("hidden");
-      togglePaymentByCountry();
-    };
-    countryDropdown.appendChild(div);
-  });
-}
-
-countryInput.addEventListener("focus",()=>{
-  countryDropdown.classList.remove("hidden");
-  renderCountries(countryInput.value);
-});
-
-countryInput.addEventListener("input",()=>{
-  countryDropdown.classList.remove("hidden");
-  renderCountries(countryInput.value);
-});
-
-document.addEventListener("click",e=>{
-  if(!countryInput.contains(e.target)&&!countryDropdown.contains(e.target)){
-    countryDropdown.classList.add("hidden");
-  }
-});
-
-// ===== Payment toggle by country =====
-function togglePaymentByCountry() {
-  const selectedCountry = countryInput.value.trim().toLowerCase();
-  const notice = document.getElementById("internationalNotice");
-
-  if (!selectedCountry || selectedCountry === "nigeria") {
-    // 🇳🇬 Local
-    paystackBtn.style.display = "inline-block";
-    whatsappBtn.classList.add("hidden");
-    notice.classList.add("hidden");
-
-    // Enable delivery options for Nigeria
-    deliverySelect.disabled = false;
-    deliveryType.disabled = false;
-    terminal.disabled = false;
-    deliverySelect.parentElement.style.display = "inline-block";
-    deliveryType.parentElement.style.display = "inline-block";
-    terminal.parentElement.style.display = "inline-block";
-  } else {
-    // 🌍 International
-    paystackBtn.style.display = "none";
-    whatsappBtn.classList.remove("hidden");
-    notice.classList.remove("hidden");
-    deliverySelect.disabled = true;
-
-    // ✅ Only show notification for non-Nigeria countries
-    showNotification(
-      "International orders are completed via WhatsApp.",
-      "info",
-      4000
-    );
+  function showLoader() {
+    loader.classList.remove("hidden");
+    document.body.style.overflow = "hidden";
+    document.body.style.pointerEvents = "none";
   }
 
-  // ✅ Render order so yellow international block shows
-  if (cartItems && cartItems.length > 0) {
-    renderOrderWithDelivery();
-  }
-}
-
-  // ===== Data =====
-  const lagosLGAFees={"Agege":3000,"Ajeromi-Ifelodun":3000,
-  "Alimosho":3000,"Amuwo-Odofin":3000,"Apapa":3000,"Epe":6000,
-  "Eti-Osa":5000,"Ibeju-Lekki":5000,"Lekki Phase":4000,"Sangotedo":4000,
-  "Ajah":4000,"Ifako-Ijaiye":3000,"Ikeja":3000,"Ikorodu":4000,"Kosofe":4000,
-  "Lagos Island":4000,"Lagos Mainland":4000,"Mushin":3000,"Ojo":3000,
-  "Oshodi-Isolo":3000,"Shomolu":3000,"Surulere":3000
-};
-
-  const guoSupportedStates=["lagos","abuja","abia","anambra",
-  "benin","enugu","imo","rivers","delta","edo","benue","kaduna","kano",
-  "benin","ebonyi","plateau","warri","asaba"
-];
-
-  const states=["Abia","Adamawa","Akwa Ibom","Anambra","Benin",
-  "Bauchi","Bayelsa","Benue","Borno","Cross River","Delta",
-  "Ebonyi","Edo","Ekiti","Enugu","Gombe","Imo","Jigawa",
-  "Kaduna","Kano","Katsina","Kebbi","Kogi","Kwara","Lagos",
-  "Nasarawa","Niger","Ogun","Ondo","Osun","Oyo","Plateau",
-  "Rivers","Sokoto","Taraba","Yobe","Zamfara","Abuja"
-];
-
-  const lagosLGAs=Object.keys(lagosLGAFees);
-
-  // GUO Terminal
-  const GUOTerminals = {
-  abuja: ["Kubwa", "Utako"],
-  abia: ["Aba", "Umuahia"],
-  anambra: ["Awka", "Awkuzu", "Ihiala", "Nnewi", "Onitsha", "Umunze"],
-  enugu: ["Enugu (Holy Ghost / Ogbete)"],
-  imo: ["Akokwa", "Orlu", "Owerri", "Umuaka"],
-  rivers: ["Port Harcourt (Aba Road)"],
-  delta: ["Asaba (Head Bridge, Okpanam Road)"],
-  edo: ["Benin City (Ugbowo–Lagos Road)"],
-  kaduna: ["Kaduna", "Zaria"],
-  kano: ["Kano (Sabon Gari)"],
-  ebonyi: ["Abakaliki", "Afikpo"],
-  plateau: ["Jos (Old Railway Station)"]
-};
-
-// GIG Terminals
-const GIGTerminals = {
-  abia: ["Aba", "Umuahia"],
-  adamawa: ["Yola"],
-  akwaIbom: ["Uyo"],
-  anambra: ["Awka", "Onitsha", "Nnewi"],
-  bauchi: ["Bauchi"],
-  bayelsa: ["Yenagoa"],
-  benue: ["Makurdi"],
-  borno: ["Maiduguri"],
-  crossRiver: ["Calabar"],
-  delta: ["Asaba", "Warri"],
-  ebonyi: ["Abakaliki"],
-  edo: ["Benin City"],
-  ekiti: ["Ado-Ekiti"],
-  enugu: ["Enugu"],
-  gombe: ["Gombe"],
-  imo: ["Owerri"],
-  jigawa: ["Dutse"],
-  kaduna: ["Kaduna"],
-  kano: ["Kano"],
-  katsina: ["Katsina"],
-  kebbi: ["Birnin Kebbi"],
-  kogi: ["Lokoja"],
-  kwara: ["Ilorin"],
-  lagos: ["Ikeja", "Ajah", "Lekki", "Yaba"],
-  nasarawa: ["Lafia"],
-  niger: ["Minna"],
-  ogun: ["Abeokuta", "Ijebu-Ode", "Ota"],
-  ondo: ["Akure"],
-  osun: ["Osogbo"],
-  oyo: ["Ibadan"],
-  plateau: ["Jos"],
-  rivers: ["Port Harcourt"],
-  sokoto: ["Sokoto"],
-  taraba: ["Jalingo"],
-  yobe: ["Damaturu"],
-  zamfara: ["Gusau"],
-  abuja: ["Garki", "Utako"]
-};
-
-  let currentUser=null;
-  let deliveryFee=0;
-  let totalWeight=0;
-
-//   showLoader(true);
-
-  // ===== State Autocomplete =====
-  stateInput.addEventListener("input",()=>{
-    const input=stateInput.value.trim().toLowerCase();
-    suggestionsContainer.innerHTML="";
-    if(!input){ suggestionsContainer.style.display="none"; return; }
-    const matched=states.filter(s=>s.toLowerCase().startsWith(input));
-    matched.forEach(sName=>{
-      const div=document.createElement("div");
-      div.textContent=sName;
-      div.className="p-2 cursor-pointer hover:bg-pink-100";
-      div.addEventListener("click",()=>{
-        stateInput.value=sName;
-        suggestionsContainer.style.display="none";
-        updateDeliveryOptions();
-        renderOrderWithDelivery();
-      });
-      suggestionsContainer.appendChild(div);
-    });
-    suggestionsContainer.style.display=matched.length?"block":"none";
-  });
-  document.addEventListener("click",e=>{
-    if(!stateInput.contains(e.target)&&!suggestionsContainer.contains(e.target)) suggestionsContainer.style.display="none";
-  });
-
-  // ===== Dynamic Delivery Options =====
-  lgaInput.addEventListener("change", renderOrderWithDelivery);
-  deliverySelect.addEventListener("change", updateDeliveryType);
-  deliveryType.addEventListener("change", updateTerminal);
-
-  function updateDeliveryOptions(){
-    const state=stateInput.value.trim().toLowerCase();
-    if(state==="lagos"){
-      lgaInput.style.display="block";
-      lgaInput.innerHTML='<option value="">Select LGA</option>'+lagosLGAs.map(l=>`<option value="${l}">${l}</option>`).join("");
-      deliverySelect.disabled=true;
-      deliverySelect.value="";
-      resetDeliveryType();
-    } else {
-      lgaInput.style.display="none";
-      deliverySelect.disabled=false;
-      deliverySelect.value="";
-      resetDeliveryType();
-      // GUO availability
-      const guoOption=deliverySelect.querySelector('option[value="guo"]');
-      if(guoOption){
-        if(guoSupportedStates.includes(state)){ guoOption.disabled=false; guoOption.textContent="GUO Delivery"; }
-        else { guoOption.disabled=true; guoOption.textContent="GUO Delivery (Not available)"; }
-      }
-    }
+  function hideLoader() {
+    loader.classList.add("hidden");
+    document.body.style.overflow = "";
+    document.body.style.pointerEvents = "";
   }
 
-  // Update Terminal
-  function updateDeliveryType(){
-    resetDeliveryType();
-    if(deliverySelect.value){
-      deliveryType.style.display="inline-block"; deliveryTypeLabel.style.display="inline-block";
-    }
-    renderOrderWithDelivery();
-  }
-
-  terminal.onchange = () => renderOrderWithDelivery();
-
-function updateTerminal() {
-  terminal.innerHTML = "";
-  terminal.disabled = false;
-
-  if (deliveryType.value !== "terminal") {
-    renderOrderWithDelivery();
-    return;
-  }
-
-  const company = deliverySelect.value.toUpperCase();
-  const state = stateInput.value.trim().toLowerCase();
-
-  let terminals = [];
-  if (company === "GUO") terminals = GUOTerminals[state] || [];
-  else if (company === "GIG") terminals = GIGTerminals[state] || [];
-
-  if (!terminals.length) {
-    const opt = document.createElement("option");
-    opt.value = "";
-    opt.textContent = "No terminal available for selected state";
-    terminal.appendChild(opt);
-    terminal.disabled = true;
-  } else {
-    const placeholder = document.createElement("option");
-    placeholder.value = "";
-    placeholder.textContent = "Select Terminal";
-    terminal.appendChild(placeholder);
-
-    terminals.forEach(name => {
-      const opt = document.createElement("option");
-      opt.value = name;
-      opt.textContent = `${company} – ${name}`;
-      terminal.appendChild(opt);
-    });
-
-    // Optional: preselect first terminal
-    terminal.value = terminals[0];
-  }
-
-  terminal.style.display = "block";
-  terminalLabel.style.display = "block";
-
-  renderOrderWithDelivery();
-}
-
-  function resetDeliveryType(){ deliveryType.value=""; deliveryType.style.display="none"; deliveryTypeLabel.style.display="none"; resetTerminal(); }
-  function resetTerminal(){ terminal.innerHTML=""; terminal.style.display="none"; terminalLabel.style.display="none"; }
-
-//   ===== Loader =====
-  const loaderHTML = `
-    <div id="checkout-loader" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-      <svg xmlns="http://www.w3.org/2000/svg" class="fas fa-shopping-cart text-white w-12 h-12 animate-pulse" viewBox="0 0 16 16">
-        <path fill="currentColor" d="M0 2.5A.5.5 0 0 1 .5 2H2a.5.5 0 0 1 .485.379L2.89 4H14.5a.5.5 0 0 1 .485.621l-1.5 6A.5.5 0 0 1 13 11H4a.5.5 0 0 1-.485-.379L1.61 3H.5a.5.5 0 0 1-.5-.5M3.14 5l.5 2H5V5zM6 5v2h2V5zm3 0v2h2V5zm3 0v2h1.36l.5-2zm1.11 3H12v2h.61zM11 8H9v2h2zM8 8H6v2h2zM5 8H3.89l.5 2H5zm0 5a1 1 0 1 0 0 2a1 1 0 0 0 0-2m-2 1a2 2 0 1 1 4 0a2 2 0 0 1-4 0m9-1a1 1 0 1 0 0 2a1 1 0 0 0 0-2m-2 1a2 2 0 1 1 4 0a2 2 0 0 1-4 0"/>
-      </svg>
-    </div>
-  `;
-  document.body.insertAdjacentHTML('afterbegin', loaderHTML);
-  const loader = document.getElementById("checkout-loader");
-  function showLoader(show = true){
-    if(!loader) return;
-    if(show){ loader.classList.remove("fade-out"); loader.style.display = "flex"; }
-    else { loader.classList.add("fade-out"); setTimeout(()=>loader.style.display="none",400); }
-  }
-
-  // ===== Firebase Init =====
+  // ===== Firebase =====
   const firebaseConfig = {
     apiKey: "AIzaSyDdTPmpaIPWSDWOmR-fXgvAb7hoxZUawcc",
     authDomain: "e-commerce-39c74.firebaseapp.com",
@@ -667,594 +172,466 @@ function updateTerminal() {
     appId: "1:863375033754:web:7ba248c8dbb1566c83e623"
   };
   firebase.initializeApp(firebaseConfig);
-  const db = firebase.firestore();
   const auth = firebase.auth();
+  const db = firebase.firestore();
 
-  // ===== Guest ID (MUST be before saveOrder runs) =====
-function getGuestId() {
-  let id = localStorage.getItem("guestId");
-  if (!id) {
-    id = "guest_" + crypto.randomUUID();
-    localStorage.setItem("guestId", id);
+  // ===== Guest ID =====
+  function getGuestId() {
+    let id = localStorage.getItem("guestId");
+    if (!id) {
+      id = "guest_" + crypto.randomUUID();
+      localStorage.setItem("guestId", id);
+    }
+    return id;
   }
-  return id;
-}
+  const guestId = getGuestId();
+  console.log("Dashboard guestId:", guestId);
+  console.log("Dashboard guestId (should match DevTools):", guestId);
 
-window.guestId = getGuestId();
-console.log("Guest ID READY:", window.guestId);
+  // ===== DOM Elements =====
+  const userNameSpan = document.getElementById("userName");
+  const orderTableBody = document.getElementById("orderTableBody");
+  const orderModal = document.getElementById("orderModal");
+  const modalContent = document.getElementById("modalContent");
+  const saveBtn = document.getElementById("saveBtn");
+  const pageSize = 10;
+  const NON_EDITABLE_STATUSES = ["processing", "shipped", "delivered"];
 
-  // Clear Guest Cart
-  async function clearGuestCart() {
-  const guestId = localStorage.getItem("guestId");
-  if (!guestId) return;
+  let currentUser = null;
+  let allOrders = [];
+  let currentFilter = "All";
+  let currentPage = 1;
+  let ordersUnsub = null;
+  let openedOrderId = null;
+  let openedOrderMode = "view";
 
-  try {
-    await db.collection("guestCarts").doc(guestId).set({
-      guestId,
-      items: [],
-      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-    });
-
-    console.log("🧹 Guest cart emptied:", guestId);
-  } catch (err) {
-    console.error("❌ Failed to clear guest cart:", err);
-  }
-
-  // ✅ ONLY clear cart items, NOT guestId
-  localStorage.removeItem("cart");
-}
 
   // ===== Notifications =====
   const activeNotifications = new Set();
-  function showNotification(message,type="info",duration=3000){
-    let container=document.getElementById("notification-container");
+  function showNotification(message, type="info", duration=3000) {
+    let container = document.getElementById("notification-container");
     if(!container){
-      container=document.createElement("div");
-      container.id="notification-container";
-      container.className="fixed top-20 right-4 z-[9999] flex flex-col gap-2";
+      container = document.createElement("div");
+      container.id = "notification-container";
+      container.className = "fixed top-4 right-4 z-50 flex flex-col gap-2";
       document.body.appendChild(container);
     }
     if(activeNotifications.has(message)) return;
     activeNotifications.add(message);
 
-    const notif=document.createElement("div");
-    notif.className="flex items-center justify-between gap-3 p-4 bg-white rounded-lg shadow-lg border border-gray-200 min-w-[250px] max-w-sm animate-slideIn";
-
-    const icon=document.createElement("span");
+    const notif = document.createElement("div");
+    notif.className = `flex items-center justify-between gap-3 p-4 bg-white rounded-lg shadow-lg border border-gray-200 min-w-[250px] max-w-sm animate-slideIn`;
+    const icon = document.createElement("span");
     if(type==="success") icon.innerHTML=`<i class="fas fa-check-circle text-green-500 text-xl"></i>`;
     else if(type==="error") icon.innerHTML=`<i class="fas fa-times-circle text-red-500 text-xl"></i>`;
     else if(type==="warning") icon.innerHTML=`<i class="fas fa-exclamation-triangle text-yellow-500 text-xl"></i>`;
     else icon.innerHTML=`<i class="fas fa-info-circle text-blue-500 text-xl"></i>`;
-
-    const text=document.createElement("span");
+    const text = document.createElement("span");
     text.className="flex-1 text-gray-800 font-medium";
-    text.textContent=message;
-
-    const closeBtn=document.createElement("button");
-    closeBtn.innerHTML="&times;";
-    closeBtn.className="ml-4 text-gray-400 hover:text-gray-600 font-bold text-lg";
-    closeBtn.onclick=()=>removeNotification(notif,message);
-
+    text.textContent = message;
+    const closeBtn = document.createElement("button");
+    closeBtn.innerHTML = "&times;";
+    closeBtn.className = "ml-4 text-gray-400 hover:text-gray-600 font-bold text-lg";
+    closeBtn.onclick = () => removeNotification(notif, message);
     notif.appendChild(icon);
     notif.appendChild(text);
     notif.appendChild(closeBtn);
     container.appendChild(notif);
-
-    setTimeout(()=>removeNotification(notif,message),duration);
+    setTimeout(()=> removeNotification(notif, message), duration);
   }
-  function removeNotification(notif,message){
+
+  function removeNotification(notif, message){
     if(!notif) return;
-    notif.classList.remove("animate-slideIn");
-    notif.classList.add("animate-slideOut");
-    notif.addEventListener("animationend",()=>notif.remove());
+    notif.remove();
     activeNotifications.delete(message);
   }
-  const notifStyle=document.createElement("style");
-  notifStyle.textContent=`
-    @keyframes slideIn { from {opacity:0; transform:translateX(50px);} to {opacity:1; transform:translateX(0);} }
-    @keyframes slideOut { from {opacity:1; transform:translateX(0);} to {opacity:0; transform:translateX(50px);} }
-    .animate-slideIn { animation: slideIn 0.3s ease-out forwards; }
-    .animate-slideOut { animation: slideOut 0.3s ease-in forwards; }
-  `;
-  document.head.appendChild(notifStyle);
 
-  // ===== Calculate Delivery Fee =====
-  function calculateDeliveryFee(deliveryInfo) {
-    let fee = 0;
-    const stateLower = (deliveryInfo.state || "").toLowerCase();
-    const company = (deliveryInfo.company || "").toUpperCase();
-
-    if (deliveryInfo.country?.toLowerCase() !== "nigeria") return 0; // Intl
-
-    if (stateLower === "lagos" && deliveryInfo.lga) {
-      fee = lagosLGAFees[deliveryInfo.lga] || 0;
-    } else if (company === "GIG") {
-      fee = 6700 + Math.max(totalWeight - 1, 0) * 800;
-    } else if (company === "GUO" && guoSupportedStates.includes(stateLower)) {
-      fee = 3500 + Math.max(totalWeight - 1, 0) * 700;
-    }
-
-    if (deliveryInfo.type === "home") fee += 800;
-
-    return fee;
-  }
-
-  // ===== Render Cart & Delivery =====
-  function renderOrderWithDelivery() {
-  orderContainer.innerHTML = "";
-  if (!cartItems.length) {
-    orderContainer.innerHTML = "<p class='text-gray-500'>Your cart is empty.</p>";
-    totalSpan.textContent = "0";
-    deliveryFeeEl.textContent = "0";
-    orderSkeleton?.classList.add("hidden");
-    orderContainer?.classList.remove("hidden");
-    return;
-  }
-
-  let subtotal = 0;
-  totalWeight = 0;
-
-  // ===== Render Cart Items =====
-  cartItems.forEach(item => {
-    const itemTotal = item.price * item.quantity;
-    subtotal += itemTotal;
-    totalWeight += (item.weight || 1) * item.quantity;
-
-    const div = document.createElement("div");
-    div.className = "flex justify-between bg-white p-4 rounded shadow mb-3";
-    div.innerHTML = `
-      <div class="flex items-center gap-4">
-        <img src="${item.image || 'https://via.placeholder.com/64'}" class="w-16 h-16 object-cover rounded">
-        <div>
-          <h4 class="font-semibold">${item.name}</h4>
-          <p class="text-pink-500 font-bold">₦${item.price.toLocaleString()}</p>
-          <p>Qty: ${item.quantity}</p>
-        </div>
-      </div>
-      <p class="font-semibold">₦${itemTotal.toLocaleString()}</p>
-    `;
-    orderContainer.appendChild(div);
+  // ===== Auth Listener =====
+  auth.onAuthStateChanged(user => {
+    currentUser = user || null;
+    userNameSpan.textContent = user ? (user.displayName || user.email) : "Guest";
+    startOrdersListener();
   });
 
-  // ===== Build Delivery Info =====
-  const deliveryInfo = {
-    state: stateInput.value || "",
-    lga: lgaInput.value || "",
-    type: deliveryType.value || "",
-    company: deliverySelect.value || "",
-    terminal: terminal.value || "",
-    country: countryInput.value || "Nigeria",
-    address: document.getElementById("address").value || ""
-  };
+  // ===== Real-time Orders Listener =====
+  function startOrdersListener() {
+    stopOrdersListener();
+    showLoader();
 
-  // ===== Calculate Delivery Fee =====
-  deliveryFee = calculateDeliveryFee(deliveryInfo);
+    const ordersRef = db.collection("orders");
+    let query = currentUser
+      ? ordersRef.where("userId", "==", currentUser.uid).orderBy("createdAt", "desc")
+      : ordersRef.where("guestId", "==", guestId).orderBy("createdAt", "desc");
 
-  // ===== Delivery Info Block HTML =====
-  let deliveryDescHtml = "";
+    ordersUnsub = query.onSnapshot(snapshot => {
+      allOrders = [];
+      snapshot.forEach(doc => {
+        const data = doc.data();
+        const status = (data.shipmentStatus || data.status || "Pending").trim();
+        allOrders.push({
+          id: doc.id,
+          total: data.total || 0,
+          items: data.items || [],
+          status,
+          createdAt: data.createdAt || data.timestamp,
+          name: data.name || "",
+          phone: data.phone || "",
+          email: data.email || "",
+          delivery: data.delivery || {},
+          paymentMethod: data.paymentMethod || "—",
+          paymentRef: data.paymentRef || "—"
+        });
+      });
 
-  const stateLower = deliveryInfo.state.toLowerCase();
-  const isInternational = deliveryInfo.country.toLowerCase() !== "nigeria";
+      // ✅ HANDLE OPEN MODAL ON REAL-TIME UPDATE
+if (!orderModal.classList.contains("hidden") && openedOrderId) {
+  const updatedOrder = allOrders.find(o => o.id === openedOrderId);
 
-  if (isInternational) {
-    deliveryDescHtml = `
-      <div>🌍 International Delivery</div>
-      <div>Country: ${deliveryInfo.country}</div>
-      <div class="text-sm text-gray-700">Delivery fee will be confirmed via WhatsApp</div>
-    `;
-  } else if (deliveryInfo.type === "home" && stateLower === "lagos") {
-    deliveryDescHtml = `
-      <div>Home Delivery</div>
-      <div>LGA: ${deliveryInfo.lga || '—'}</div>
-      <div>Address: ${deliveryInfo.address || '—'}</div>
-    `;
-  } else if (deliveryInfo.type === "terminal") {
-    deliveryDescHtml = `
-      <div>Company: ${deliveryInfo.company || '—'}</div>
-      <div>Type: Terminal Pickup</div>
-      <div>Terminal: ${deliveryInfo.terminal || '—'}</div>
-      <div>State: ${deliveryInfo.state || '—'}</div>
-    `;
-  } else {
-    // fallback for other home deliveries outside Lagos
-    deliveryDescHtml = `
-      <div>Company: ${deliveryInfo.company || '—'}</div>
-      <div>Type: ${deliveryInfo.type || '—'}</div>
-      <div>State: ${deliveryInfo.state || '—'}</div>
-      <div>Address: ${deliveryInfo.address || '—'}</div>
-    `;
-  }
+  if (updatedOrder) {
+    const statusLower = updatedOrder.status.toLowerCase();
 
-  const feeDiv = document.createElement("div");
-  feeDiv.className = "mt-4 p-3 bg-gray-50 rounded shadow-sm";
-  feeDiv.innerHTML = `
-    <div class="font-semibold mb-1">Delivery Info</div>
-    ${deliveryDescHtml}
-    <div>Fee: ₦${deliveryFee.toLocaleString()}</div>
-    <div>Weight: ${totalWeight} kg</div>
-  `;
-
-  orderContainer.appendChild(feeDiv);
-
-  // ===== Update Totals =====
-  deliveryFeeEl.textContent = deliveryFee.toLocaleString();
-  totalSpan.textContent = (subtotal + deliveryFee).toLocaleString();
-
-  orderSkeleton?.classList.add("hidden");
-  orderContainer?.classList.remove("hidden");
-}
-
-// ===== Save Order =====
-async function saveOrder(order) {
-  // ===== Build structured delivery object ===
-  let delivery = {};
-  const stateLower = stateInput.value.trim().toLowerCase();
-  const countryLower = countryInput.value?.trim().toLowerCase() || "nigeria";
-
-  if (countryLower === "nigeria") {
-    if (stateLower === "lagos") {
-      delivery = {
-        company: "LOCAL",
-        type: "home",
-        terminal: "—",
-        state: stateInput.value || "Lagos",
-        lga: lgaInput.value || "—",
-        address: document.getElementById("address").value || "—",
-        country: "Nigeria"
-      };
-    } else {
-      delivery = {
-        company: deliverySelect.value?.toUpperCase() || "—",
-        type: deliveryType.value || "—",
-        terminal: terminal.value || "—",
-        state: stateInput.value || "—",
-        lga: "—",
-        address: document.getElementById("address").value || "—",
-        country: "Nigeria"
-      };
-    }
-  } else {
-    delivery = {
-      company: "International",
-      type: deliveryType.value || "—",
-      state: stateInput.value || "—",
-      lga: "—",
-      address: document.getElementById("address").value || "—",
-      country: countryInput.value || "—",
-      isInternational: true
-    };
-  }
-
-  showLoader(true);
-  try {
-    // ===== Save order in Firestore =====
-    const orderRef = await db.collection("orders").add({
-      ...order,
-      delivery,
-      totalWeight,
-      deliveryFee: order.deliveryFee || 0,
-      timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-      createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-      createdAtClient: new Date(),
-      fulfilled: false
-    });
-    // When saving a guest order:
-function saveGuestEmail(email) {
-  let guestEmails = JSON.parse(localStorage.getItem("guestEmails")) || [];
-
-  // Only add if not already in the array
-  if (!guestEmails.includes(email)) {
-    guestEmails.push(email);
-    localStorage.setItem("guestEmails", JSON.stringify(guestEmails));
-  }
-
-  // Also save last email separately if you still need it
-  localStorage.setItem("guestEmail", email);
-}
-
-//     // Get the existing guest emails
-// let guestEmails = JSON.parse(localStorage.getItem("guestEmails")) || [];
-
-// // Add this email if not already in the list
-// if (!guestEmails.includes(email)) {
-//   guestEmails.push(email);
-// }
-
-// // Save back to localStorage
-// localStorage.setItem("guestEmails", JSON.stringify(guestEmails));
-
-//     if (!auth.currentUser) {
-//   // Get current array of guest emails or initialize
-//   let guestEmails = JSON.parse(localStorage.getItem("guestEmails")) || [];
-
-//   const emailToSave = order.email || billing.email;
-//   if (emailToSave && !guestEmails.includes(emailToSave)) {
-//     guestEmails.push(emailToSave); // add new email if not already in array
-//     localStorage.setItem("guestEmails", JSON.stringify(guestEmails));
-//     console.log("Guest emails updated:", guestEmails);
-//   }
-// }
-
-    console.log("Order saved with ID:", orderRef.id);
-
-    // 2️⃣ CLEAR GUEST CART FIRST
-await clearGuestCart();
-
-// 3️⃣ Clear UI & local cart
-cartItems = [];
-localStorage.removeItem("cart");
-renderOrderWithDelivery();
-clearCheckoutInputs();
-
-// 4️⃣ Show success UI
-showNotification("Order placed successfully!", "success");
-    
-    // ===== Show Success Modal =====
-    const successModal = document.getElementById("orderSuccessModal");
-    const successMsg = document.getElementById("successMessage");
-
-    if (successModal && successMsg) {
-      const isInternational = !!delivery.isInternational;
-
-      if (order.paymentMethod === "Paystack") {
-        successMsg.textContent = "Thank you for your purchase. Your order has been confirmed.";
-
-        setTimeout(() => {
-          successMsg.innerHTML = `
-            Thank you, <strong>${order.name}</strong>!<br>
-            Your order total is <strong>₦${order.total?.toLocaleString()}</strong>.<br>
-            Payment Method: <strong>${order.paymentMethod}</strong><br>
-            Reference: <strong>${order.paymentRef}</strong>
-          `;
-        }, 3000);
-
-      } else if (isInternational) {
-        successMsg.innerHTML = `
-          Thank you, <strong>${order.name}</strong>!<br>
-          <div class="mt-2 text-yellow-700 font-semibold">
-            🌍 International order – delivery cost will be confirmed via WhatsApp.
-          </div>
-          Payment Method: <strong>${order.paymentMethod}</strong><br>
-          Reference: <strong>${order.paymentRef}</strong>
-        `;
-      }
-
-      successModal.classList.remove("hidden");
-    }
-    if (window.destroyCartListener) {
-  window.destroyCartListener();
-  console.log("🛑 Cart listener stopped");
-}
-
-    return orderRef;
-
-  } catch (err) {
-    console.error(err);
-    showNotification("Failed to save order. Try again.", "error", 4000);
-    throw err;
-  } finally {
-    showLoader(false);
-  }
-}
-
-// ===== Payment Handler =====
-  function handlePayment(){
-    const billing=validateBilling();
-    if(!billing || !cartItems.length){
-      showNotification("Cannot proceed: check billing or cart.","error");
+    // 🔒 AUTO-CLOSE EDIT MODAL IF STATUS CHANGES TO NON-EDITABLE
+    if (
+      openedOrderMode === "edit" &&
+      NON_EDITABLE_STATUSES.includes(statusLower)
+    ) {
+      closeModal();
+      showNotification(
+        `Order moved to "${updatedOrder.status}". Edit mode closed.`,
+        "warning"
+      );
       return;
     }
 
-    let subtotal=0,totalWeight=0;
-    cartItems.forEach(i=>{ subtotal += i.price*i.quantity; totalWeight += (i.weight||1)*i.quantity; });
-
-    let fee=0;
-    const state = billing.state.toLowerCase();
-    const option = deliverySelect.value.toLowerCase();
-    if(state==="lagos" && billing.lga) fee = lagosLGAFees[billing.lga]||0;
-    else if(option==="gig") fee = 6700 + Math.max(totalWeight-1,0)*800;
-    else if(option==="guo" && guoSupportedStates.includes(state)) fee = 3500 + Math.max(totalWeight-1,0)*700;
-    if(deliveryType.value==="home") fee += 800;
-
-    const total = subtotal + fee;
-    if(total <= 0){ showNotification("Total amount is zero. Cannot proceed.","error"); return; }
-
-    const handler = PaystackPop.setup({
-      key: "pk_test_0ed65a8011643dd303600706cb990c9ba067f199",
-      email: billing.email,
-      amount: total*100,
-      ref: "REF_"+Date.now(),
-      metadata:{custom_fields:[{display_name:"Name",value:billing.name},{display_name:"Phone",value:billing.phone},{display_name:"Address",value:billing.address}]},
-      callback:function(response){
-        
-        saveOrder({
-          ...billing,
-          items: cartItems,
-          total,
-          deliveryFee: fee,
-          totalWeight,
-          paymentRef: response.reference,
-          paymentMethod: "Paystack",
-          createdAt: firebase.firestore.FieldValue.serverTimestamp()
-        });
-      },
-      onClose:function(){ showNotification("Payment window closed before completion.","warning"); }
-    });
-    handler.openIframe();
+    // 🔄 OTHERWISE, JUST UPDATE THE MODAL CONTENT
+    modalContent.innerHTML = generateModalContent(
+      updatedOrder,
+      openedOrderMode === "edit"
+    );
   }
-
-  // Vallidate Billing
-  function validateBilling() {
-  const name = document.getElementById("name")?.value.trim();
-  const email = document.getElementById("email")?.value.trim();
-  const phone = document.getElementById("phone")?.value.trim();
-  const address = document.getElementById("address")?.value.trim();
-  const state = stateInput.value.trim();
-  const lga = lgaInput.value.trim();
-  const country = countryInput.value.trim() || "Nigeria";
-
-  if (!name || !email || !phone || !address || !state) {
-    showNotification("Please fill in all required billing details.", "error");
-    return null;
-  }
-
-  return { name, email, phone, address, state, lga, country };
 }
-
-  // Send WhatsApp Order (iOS-safe)
-async function sendWhatsAppOrder() {
-  const billing = validateBilling();
-  if (!billing || !cartItems.length) {
-    showNotification("Please complete billing details.", "error");
-    return;
+      applyOrderFilter(currentFilter);
+      hideLoader();
+    }, err => {
+      console.error("Failed to load orders:", err);
+      showNotification("Failed to load orders.", "error");
+      hideLoader();
+    });
   }
 
-  const whatsappPaymentRef = generateWhatsappPaymentRef();
+  function stopOrdersListener() {
+    if(ordersUnsub) ordersUnsub();
+    ordersUnsub = null;
+  }
 
-  const country = countryInput.value?.trim() || "Nigeria";
-  const isInternational = country.toLowerCase() !== "nigeria";
-
-  const delivery = {
-    company: isInternational ? "INTERNATIONAL" : deliveryCompany?.value || "—",
-    type: deliveryType.value || "_",
-    state: stateInput?.value || "—",
-    lga: "—",
-    address: billing.address,
-    country,
-    isInternational
+  // ===== Filtering =====
+  window.filterOrders = status => {
+    currentFilter = status;
+    applyOrderFilter(status);
   };
 
-  let subtotal = 0;
-  cartItems.forEach(item => subtotal += item.price * item.quantity);
-
-  const deliveryFee = isInternational ? 0 : calculateDeliveryFee(delivery);
-  const total = subtotal + deliveryFee;
-
-  // ================================
-  // 1️⃣ BUILD WHATSAPP MESSAGE
-  // ================================
-  const itemsText = cartItems
-    .map((item, index) =>
-      `${index + 1}. ${item.name}
-Qty: ${item.quantity}
-Price: ₦${item.price.toLocaleString()}
-Subtotal: ₦${(item.price * item.quantity).toLocaleString()}`
-    )
-    .join("\n\n");
-
-  const message = `
-*🛒 New ${isInternational ? "International" : "Local"} Order*
-*🧾 Payment Ref:* ${whatsappPaymentRef}
-
-*👤 Customer Details*
-- Name: ${billing.name}
-- Phone: ${billing.phone}
-- Email: ${billing.email}
-
-*🌍 Delivery Info*
-- Country: ${delivery.country}
-- Address: ${delivery.address}
-- Delivery Type: ${delivery.type}
-
-*📦 Order Items*
-${itemsText}
-
-*💰 Payment Summary*
-- Subtotal: ₦${subtotal.toLocaleString()}
-- Delivery Fee: ${isInternational ? "To be confirmed" : `₦${deliveryFee.toLocaleString()}`}
-- Total: ₦${total.toLocaleString()}
-
-⚠️ Please confirm stock availability and delivery cost with the customer.
-Thank you! 🙏
-`;
-
-  const url = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
-
-  // ================================
-  // 2️⃣ OPEN WHATSAPP IN NEW TAB (iOS SAFE)
-  // ================================
-  window.open(url, "_blank");
-
-  // 3️⃣ SAVE ORDER ASYNC
-  showLoader(true);
-
-  try {
-    
-    await saveOrder({
-      ...billing,
-      items: cartItems,
-      deliveryFee,
-      total,
-      totalWeight,
-      paymentRef: whatsappPaymentRef,
-      paymentMethod: "WhatsApp",
-      status: "pending_confirmation"
-    });
-  } catch (err) {
-    console.error("Error saving order:", err);
-    showNotification("Failed to save order. Please try again.", "error");
+  function applyOrderFilter(status) {
+    const filtered = status==="All" ? allOrders : allOrders.filter(o => o.status.toLowerCase() === status.toLowerCase());
+    currentPage = 1;
+    renderPagination(filtered);
+    renderOrders(paginateOrders(filtered));
   }
 
-  showLoader(false);
+  function paginateOrders(list){ 
+    return list.slice((currentPage-1)*pageSize, currentPage*pageSize); 
+  }
 
-  // 4️⃣ SHOW SUCCESS MODAL
-  const successModal = document.getElementById("orderSuccessModal");
-  const successMessage = document.getElementById("successMessage");
-
-  successMessage.innerHTML = `
-    Thank you, <strong>${billing.name}</strong>!<br><br>
-    ${
-      isInternational
-        ? `<div class="text-yellow-700 font-semibold">
-             🌍 International order – delivery cost will be confirmed via WhatsApp.
-           </div>`
-        : `Your total payment is <strong>₦${total.toLocaleString()}</strong>.`
+  function renderPagination(list){
+    let container = document.getElementById("paginationControls");
+    if(!container && orderTableBody){
+      container = document.createElement("div");
+      container.id = "paginationControls";
+      container.className = "flex items-center justify-center gap-3 mt-4 text-sm";
+      orderTableBody.parentElement.appendChild(container);
     }
-    <br>
-    Payment Method: <strong>WhatsApp</strong><br>
-    Reference: <strong>${whatsappPaymentRef}</strong>
+    if(!container) return;
+
+    const totalPages = Math.ceil(list.length / pageSize);
+    if(totalPages <= 1){ container.innerHTML=""; return; }
+
+    const prevDisabled = currentPage===1?"opacity-50 cursor-not-allowed":"";
+    const nextDisabled = currentPage===totalPages?"opacity-50 cursor-not-allowed":"";
+
+    container.innerHTML = `
+      <button onclick="changePage('prev')" class="px-3 py-1 rounded bg-pink-100 hover:bg-pink-200 ${prevDisabled}">Prev</button>
+      <span>Page ${currentPage} of ${totalPages}</span>
+      <button onclick="changePage('next')" class="px-3 py-1 rounded bg-pink-100 hover:bg-pink-200 ${nextDisabled}">Next</button>
+    `;
+  }
+
+  window.changePage = dir => {
+    const filtered = currentFilter==="All"?allOrders:allOrders.filter(o=>o.status.toLowerCase()===currentFilter.toLowerCase());
+    const totalPages = Math.ceil(filtered.length / pageSize);
+    if(dir==="next" && currentPage<totalPages) currentPage++;
+    if(dir==="prev" && currentPage>1) currentPage--;
+    renderPagination(filtered);
+    renderOrders(paginateOrders(filtered));
+  };
+
+  // ===== Render Orders Table =====
+  function renderOrders(orders){
+    if(!orderTableBody) return;
+    orderTableBody.innerHTML = "";
+
+    if(!orders.length){
+      orderTableBody.innerHTML = `<tr><td colspan="7" class="text-center text-gray-500 p-2">No orders found.</td></tr>`;
+      return;
+    }
+
+    orders.forEach(order => {
+      const dateStr = order.createdAt?.toDate ? order.createdAt.toDate().toLocaleString() 
+        : order.createdAt?.seconds ? new Date(order.createdAt.seconds*1000).toLocaleString() 
+        : "N/A";
+      const totalStr = order.total?.toLocaleString() || "0";
+      const itemsCount = order.items?.length || 0;
+      const statusLower = order.status?.toLowerCase() || "";
+      const statusColor = statusLower==="pending"?"bg-yellow-300 text-yellow-800":
+        statusLower==="pending_confirmation"?"bg-yellow-200 text-yellow-900":
+        statusLower==="shipped"?"bg-blue-300 text-blue-800":
+        statusLower==="delivered"?"bg-green-300 text-green-800":"bg-gray-300 text-gray-800";
+      const isEditable = ["pending","pending_confirmation"].includes(statusLower);
+
+      const tr = document.createElement("tr");
+      tr.className = "border-b hover:bg-gray-50";
+      tr.innerHTML = `
+        <td class="p-2 text-center">${dateStr}</td>
+        <td class="p-2 text-center">₦${totalStr}</td>
+        <td class="p-2 text-center">${itemsCount}</td>
+        <td class="p-2 text-center">
+          <span class="px-2 py-1 rounded ${statusColor} text-sm font-semibold">${order.status}</span>
+          <button onclick="viewOrder('${order.id}')" class="ml-2 text-blue-500 hover:underline">View</button>
+          <button onclick="editOrder('${order.id}')" class="ml-2 text-green-500 hover:underline" ${!isEditable?"disabled":""}>Edit</button>
+        </td>
+      `;
+      orderTableBody.appendChild(tr);
+    });
+  }
+
+  // ===== Modal =====
+  window.closeModal = () => {
+  orderModal.classList.add("hidden");
+  document.body.style.overflow = "";
+  document.body.style.pointerEvents = "";
+
+  openedOrderId = null;
+  openedOrderMode = "view";
+
+  saveBtn.classList.add("hidden");
+  saveBtn.onclick = null;
+};
+
+  orderModal.addEventListener("click",(e)=>{
+    if(e.target===orderModal) closeModal();
+  });
+
+  window.viewOrder = (id) => {
+  const order = allOrders.find(o => o.id === id);
+  if (!order) return;
+
+  openedOrderId = id;
+  openedOrderMode = "view";
+
+  saveBtn.classList.add("hidden");
+  saveBtn.onclick = null;
+
+  modalContent.innerHTML = generateModalContent(order, false);
+  openModal();
+};
+
+  function openModal(){
+    orderModal.classList.remove("hidden");
+    document.body.style.overflow = "hidden";
+    document.body.style.pointerEvents = "none";
+    orderModal.style.pointerEvents = "auto";
+  }
+
+  // ===== Edit Order =====
+window.editOrder = (id) => {
+  const order = allOrders.find(o => o.id === id);
+  if (!order || !["pending", "pending_confirmation"].includes(order.status?.toLowerCase())) return;
+
+  openedOrderId = id;
+  openedOrderMode = "edit";
+
+  // Render modal in edit mode
+  modalContent.innerHTML = generateModalContent(order, true);
+  saveBtn.classList.remove("hidden");
+  saveBtn.disabled = false;
+
+  saveBtn.onclick = async () => {
+    showLoader();
+    saveBtn.disabled = true;
+
+    try {
+      // Get values from modal inputs
+      const name = document.getElementById("editName").value;
+      const phone = document.getElementById("editPhone").value;
+      const email = document.getElementById("editEmail").value;
+      const address = document.getElementById("editAddress").value;
+      const lga = document.getElementById("editLGA").value;
+      const state = document.getElementById("editState").value;
+
+      // Update Firestore
+      await db.collection("orders").doc(id).update({
+        name,
+        phone,
+        email,
+        delivery: {
+          ...order.delivery,
+          address,
+          lga,
+          state
+        }
+      });
+
+      showNotification("Order updated successfully!");
+      closeModal();
+
+    } catch (err) {
+      console.error(err);
+      showNotification("Failed to update order.", "error");
+    } finally {
+      hideLoader();
+      saveBtn.disabled = false;
+    }
+  };
+
+  openModal();
+};
+
+  // Generate Modal Content
+  function generateModalContent(order, isEdit) {
+  const steps = ["Pending", "Shipped", "Delivered"];
+  const normalizedStatus =
+    steps.find(s => s.toLowerCase() === order.status.toLowerCase()) || "Pending";
+  const statusIndex = steps.indexOf(normalizedStatus);
+
+  // ===== Timeline / Status Bar =====
+  const timelineHTML = `
+    <h3 class="font-semibold text-gray-700 mb-2">Order Status</h3>
+    <div class="flex items-center justify-between mb-4">
+      <div class="flex-1 flex items-center">
+        ${steps.map((step, i) => {
+          const isActive = i <= statusIndex;
+          const colorClass =
+            step === "Pending" ? "bg-yellow-400" :
+            step === "Shipped" ? "bg-blue-400" : "bg-green-400";
+          const dotColor = isActive ? colorClass : "bg-gray-300";
+          const lineColor = i < statusIndex ? colorClass : "bg-gray-300";
+          return `
+            <div class="w-3 h-3 rounded-full ${dotColor}"></div>
+            ${i < steps.length - 1 ? `<div class="flex-1 mx-2 h-1 rounded ${lineColor}"></div>` : ""}
+          `;
+        }).join("")}
+      </div>
+    </div>
+    <div class="flex justify-between text-xs text-gray-600 font-semibold mb-4">
+      ${steps.map(s => `<span>${s}</span>`).join("")}
+    </div>
   `;
 
-  successModal.classList.remove("hidden");
+  if (isEdit) {
+    // ===== EDIT MODE =====
+    return `
+      ${timelineHTML}
+      <h3 class="font-semibold text-gray-700 mb-3">Edit Customer Info</h3>
+      <div class="grid grid-cols-1 gap-4">
+        <div>
+          <label class="block text-gray-600 text-sm mb-1" for="editName">Name</label>
+          <input id="editName" value="${order.name || ''}" class="w-full border rounded-md px-3 py-2 shadow-sm focus:outline-none focus:ring-2 focus:ring-pink-500"/>
+        </div>
+        <div>
+          <label class="block text-gray-600 text-sm mb-1" for="editPhone">Phone</label>
+          <input id="editPhone" value="${order.phone || ''}" class="w-full border rounded-md px-3 py-2 shadow-sm focus:outline-none focus:ring-2 focus:ring-pink-500"/>
+        </div>
+        <div>
+          <label class="block text-gray-600 text-sm mb-1" for="editEmail">Email</label>
+          <input id="editEmail" value="${order.email || ''}" class="w-full border rounded-md px-3 py-2 shadow-sm focus:outline-none focus:ring-2 focus:ring-pink-500"/>
+        </div>
+        <div>
+          <label class="block text-gray-600 text-sm mb-1" for="editAddress">Address</label>
+          <input id="editAddress" value="${order.delivery?.address || ''}" class="w-full border rounded-md px-3 py-2 shadow-sm focus:outline-none focus:ring-2 focus:ring-pink-500"/>
+        </div>
+        <div>
+          <label class="block text-gray-600 text-sm mb-1" for="editLGA">LGA</label>
+          <input id="editLGA" value="${order.delivery?.lga || ''}" class="w-full border rounded-md px-3 py-2 shadow-sm focus:outline-none focus:ring-2 focus:ring-pink-500"/>
+        </div>
+        <div>
+          <label class="block text-gray-600 text-sm mb-1" for="editState">State</label>
+          <input id="editState" value="${order.delivery?.state || ''}" class="w-full border rounded-md px-3 py-2 shadow-sm focus:outline-none focus:ring-2 focus:ring-pink-500"/>
+        </div>
+      </div>
+
+      <h3 class="font-semibold text-gray-700 mt-4 mb-2">Items</h3>
+      <div class="space-y-1 text-sm">
+        ${order.items.map(i => `
+          <div class="flex justify-between border-b py-1">
+            <span>${i.name}</span>
+            <span>${i.quantity} × ₦${i.price.toLocaleString()}</span>
+          </div>
+        `).join("")}
+      </div>
+
+      <div class="mt-4 flex justify-between items-center">
+        <div class="font-bold text-lg">Total: ₦${Number(order.total).toLocaleString()}</div>
+      </div>
+    `;
+  } else {
+    // ===== VIEW MODE =====
+    return `
+      ${timelineHTML}
+      <h3 class="font-semibold text-gray-700 mb-2">Customer Details</h3>
+      <div class="space-y-1 text-sm text-gray-700">
+        <p><strong>Name:</strong> ${order.name || "—"}</p>
+        <p><strong>Phone:</strong> ${order.phone || "—"}</p>
+        <p><strong>Email:</strong> ${order.email || "—"}</p>
+      </div>
+
+      <h3 class="font-semibold text-gray-700 mt-4 mb-2">Delivery Details</h3>
+      <div class="space-y-1 text-sm text-gray-700">
+        <p><strong>Country:</strong> ${order.delivery?.country || "—"}</p>
+        <p><strong>State:</strong> ${order.delivery?.state || "—"}</p>
+        <p><strong>LGA:</strong> ${order.delivery?.lga || "—"}</p>
+        <p><strong>Address:</strong> ${order.delivery?.address || "—"}</p>
+        <p><strong>Delivery Type:</strong> ${order.delivery?.type || "—"}</p>
+        <p><strong>Delivery Company:</strong> ${order.delivery?.company || "—"}</p>
+      </div>
+
+      <h3 class="font-semibold text-gray-700 mt-4 mb-2">Order Info</h3>
+      <div class="space-y-1 text-sm text-gray-700">
+        <p><strong>Status:</strong> ${order.status}</p>
+        <p><strong>Payment Method:</strong> ${order.paymentMethod || "—"}</p>
+        <p><strong>Payment Ref:</strong> ${order.paymentRef || "—"}</p>
+        <p><strong>Order Date:</strong> ${
+          order.createdAt?.toDate
+            ? order.createdAt.toDate().toLocaleString()
+            : order.createdAt?.seconds
+              ? new Date(order.createdAt.seconds * 1000).toLocaleString()
+              : "—"
+        }</p>
+      </div>
+
+      <h3 class="font-semibold text-gray-700 mt-4">Items</h3>
+      <div class="space-y-1 text-sm">
+        ${order.items.map(i => `
+          <div class="flex justify-between border-b py-1">
+            <span>${i.name}</span>
+            <span>${i.quantity} × ₦${i.price.toLocaleString()}</span>
+          </div>
+        `).join("")}
+      </div>
+
+      <div class="mt-3 text-right font-bold text-lg">
+        Total: ₦${Number(order.total).toLocaleString()}
+      </div>
+    `;
+  }
 }
-
-// Show Success Modal
-function showOrderSuccess(messageHtml) {
-  const modal = document.getElementById("orderSuccess");
-  const msg = document.getElementById("successMessage");
-
-  console.log("Cart cleared:", cartItems);
-console.log("Inputs cleared:", name.value, email.value, countryInput.value);
-
-  msg.innerHTML = messageHtml;
-  modal.classList.remove("hidden");
-}
-
-function closeSuccess() {
-  document.getElementById("orderSuccess").classList.add("hidden");
-}
-
-function goToDashboard() {
-  window.location.href = "customer-dashboard.html";
-}
-
-  // ===== Initialize =====
-  showLoader(true);
-  cartItems = getCheckoutCart();
-  renderOrderWithDelivery();
-  showLoader(false);
-
-  // ===== Event Listeners =====
-  paystackBtn.addEventListener("click", handlePayment);
-  whatsappBtn.addEventListener("click", sendWhatsAppOrder);
-  terminal.onchange = () => renderOrderWithDelivery();
-  deliveryType.onchange = () => renderOrderWithDelivery();
-  deliverySelect.onchange = () => renderOrderWithDelivery();
-  stateInput.onchange = () => renderOrderWithDelivery();
-  lgaInput.onchange = () => renderOrderWithDelivery();
-
-  window.showLoader = showLoader;
-  window.sendWhatsAppOrder = sendWhatsAppOrder;
 });
 </script>
 </body>

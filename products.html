@@ -132,6 +132,72 @@
     transition: opacity 0.4s ease;
     pointer-events: none;
   }
+
+  /* Custom Media Queries for Footer */
+@media (max-width: 768px) {
+  footer {
+    text-align: left;
+  }
+
+  footer .mx-6 {
+    margin-left: 1rem;
+    margin-right: 1rem;
+  }
+
+  footer input {
+    width: 100% !important;
+    margin-bottom: 0.5rem;
+  }
+
+  footer button {
+    /* width: 100%; */
+  }
+
+  footer .flex-col {
+    flex-direction: column !important;
+    gap: 1.5rem !important;
+  }
+
+  footer .text-left {
+    text-align: center !important;
+  }
+}
+
+  .powered-btn {
+    display: block;
+    text-align: left;
+  }
+
+@media (max-width: 480px) {
+  footer h4 {
+    font-size: 1rem;
+  }
+
+  footer p {
+    font-size: 0.875rem;
+  }
+
+  footer .fixed.bottom-6.right-6 {
+    width: 3rem;
+    height: 3rem;
+    font-size: 1.5rem;
+  }
+}
+
+@keyframes ripple {
+  0% {
+    transform: scale(0.8);
+    opacity: 0.6;
+  }
+  100% {
+    transform: scale(2.5);
+    opacity: 0;
+  }
+}
+
+.ripple-effect {
+  animation: ripple 1.5s infinite;
+}
 </style>
 <body class="bg-white text-gray-800">
   <!-- PLACE AT TOP OF BODY -->
@@ -225,18 +291,18 @@
   </p>
 
   <!-- Footer -->
-<footer class="bg-[#cccccc] text-gray-800 relative">
+<footer class="bg-pink-100 text-gray-800 relative">
   <div class="mx-6 md:mx-10 px-4 md:px-6 py-8 md:py-12 flex flex-col md:flex-row justify-between gap-8 md:gap-40">
     
     <!-- Contact Info -->
-    <div class="flex-1">
+    <div class="flex-1 border-b md:border-b-0 pb-4 md:pb-0 border-gray-300">
       <h4 class="text-lg font-semibold mb-4">CONTACT US</h4>
       <p class="mb-2 flex items-center gap-2">
-        <i class="fas fa-phone-alt"></i> +2349079534440
+        <i class="fas fa-phone-alt"></i> +2349053380773
       </p>
       <p class="flex items-start gap-2">
         <i class="fas fa-map-marker-alt mt-1"></i>
-        No 5 Olalere Oludunjoye Street, Laisu Road Idimu, Alimosho, Lagos, Nigeria
+        No 17 Oloruntimilehin Street, Cacatin Rd Mosan Bus Stop Ipaja Rd, Alimosho, Lagos, Nigeria
       </p>
     </div>
 
@@ -254,17 +320,41 @@
   </div>
 
   <!-- Powered By -->
-  <div class="text-left text-sm text-gray-800 mx-6 md:mx-10 px-4 md:px-6 py-4 border-t border-gray-300">
-    <button class="p-4 bg-gray-500">
-      POWERED BY BUMPA
+  <div class="btn text-left text-sm text-white mx-6 md:mx-10 px-4 md:px-6 py-4 border-t border-gray-300">
+    <button class="text-left block p-4 bg-pink-500">
+      POWERED BY VTec
     </button>
   </div>
 
   <!-- WhatsApp Button -->
-  <a href="https://wa.me/2349079534440" target="_blank" 
-     class="fixed bottom-6 right-6 bg-green-500 hover:bg-green-600 text-white w-14 h-14 rounded-full flex items-center justify-center shadow-lg z-50 text-2xl">
-    <i class="fab fa-whatsapp"></i>
-  </a>
+<button id="openWhatsappModal" class="fixed bottom-6 right-6 z-50">
+  <div class="relative w-14 h-14">
+    <!-- Ripple circles -->
+    <span class="absolute inset-0 rounded-full bg-green-400 opacity-50 animate-ping"></span>
+    <span class="absolute inset-0 rounded-full bg-green-400 opacity-50 animate-ping delay-200"></span>
+    <span class="absolute inset-0 rounded-full bg-green-400 opacity-50 animate-ping delay-400"></span>
+
+    <!-- Main Button -->
+    <div class="relative w-14 h-14 rounded-full bg-green-500 hover:bg-green-600 text-white flex items-center justify-center shadow-lg text-2xl">
+      <i class="fab fa-whatsapp"></i>
+    </div>
+  </div>
+</button>
+
+  <!-- WhatsApp Button -->
+<a href="https://wa.me/2349053380773" target="_blank" class="fixed bottom-6 right-6 z-50">
+  <div class="relative w-14 h-14">
+    <!-- Ripple circles -->
+    <span class="absolute inset-0 rounded-full bg-green-400 opacity-50 animate-ping"></span>
+    <span class="absolute inset-0 rounded-full bg-green-400 opacity-50 animate-ping delay-200"></span>
+    <span class="absolute inset-0 rounded-full bg-green-400 opacity-50 animate-ping delay-400"></span>
+
+    <!-- Main Button -->
+    <div class="relative w-14 h-14 rounded-full bg-green-500 hover:bg-green-600 text-white flex items-center justify-center shadow-lg text-2xl">
+      <i class="fab fa-whatsapp"></i>
+    </div>
+  </div>
+</a>
 </footer>
 
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
