@@ -871,6 +871,21 @@ console.log("Guest ID READY:", window.guestId);
     return fee;
   }
 
+  // ===== Prevent notification spam =====
+const notificationCooldown = new Map(); // key -> timeoutId
+
+function showNotificationOnce(key, message, type = "info", delay = 800) {
+  if (notificationCooldown.has(key)) return;
+
+  showNotification(message, type);
+
+  const timeout = setTimeout(() => {
+    notificationCooldown.delete(key);
+  }, delay);
+
+  notificationCooldown.set(key, timeout);
+}
+
   // ===== Render Cart & Delivery =====
   function renderOrderWithDelivery() {
   orderContainer.innerHTML = "";
@@ -923,7 +938,12 @@ console.log("Guest ID READY:", window.guestId);
       item.quantity++;
       qtySpan.textContent = item.quantity;
       updateCartAndFirestore();
-      showNotification(`${item.name} quantity increased to ${item.quantity}`);
+      showNotificationOnce(
+    `inc-${item.name}`,
+    `${item.name} quantity increased`,
+    "info"
+  );
+      // showNotification(`${item.name} quantity increased to ${item.quantity}`);
     });
 
     decreaseBtn.addEventListener("click", () => {
@@ -931,18 +951,33 @@ console.log("Guest ID READY:", window.guestId);
         item.quantity--;
         qtySpan.textContent = item.quantity;
         updateCartAndFirestore();
-        showNotification(`${item.name} quantity decreased to ${item.quantity}`);
+        showNotificationOnce(
+      `dec-${item.name}`,
+      `${item.name} quantity decreased`,
+      "info"
+    );
+        // showNotification(`${item.name} quantity decreased to ${item.quantity}`);
       } else {
         cartItems.splice(index, 1);
         updateCartAndFirestore();
-        showNotification(`${item.name} removed from cart`);
+        showNotificationOnce(
+      `del-${item.name}`,
+      `${item.name} removed from cart`,
+      "warning"
+    );
+        // showNotification(`${item.name} removed from cart`);
       }
     });
 
     deleteBtn.addEventListener("click", () => {
       cartItems.splice(index, 1);
       updateCartAndFirestore();
-      showNotification(`${item.name} removed from cart`);
+      showNotificationOnce(
+    `del-${item.name}`,
+    `${item.name} removed from cart`,
+    "warning"
+  );
+      // showNotification(`${item.name} removed from cart`);
     });
   });
 
