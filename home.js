@@ -466,6 +466,28 @@ async function filterProducts(category="All"){
   window.filterProducts = filterProducts;
 
     // ---------- RENDER PRODUCTS ----------
+
+    // ===== Featured Product Search =====
+const openSearchBtn = document.getElementById("openSearchBtn");
+const closeSearchBtn = document.getElementById("closeSearchBtn");
+const searchWrapper = document.getElementById("featuredSearchWrapper");
+const searchInput = document.getElementById("featuredSearchInput");
+
+// Open search
+openSearchBtn.addEventListener("click", () => {
+  openSearchBtn.classList.add("hidden");
+  searchWrapper.classList.remove("hidden");
+  searchInput.focus();
+});
+
+// Close search
+closeSearchBtn.addEventListener("click", () => {
+  searchWrapper.classList.add("hidden");
+  openSearchBtn.classList.remove("hidden");
+  searchInput.value = "";
+  // filterFeaturedProducts("");
+});
+
   function renderProducts(reset=false){
     const productList = document.getElementById("product-list");
     if(!productList) return;

@@ -68,6 +68,10 @@
       </a>
 
       <!-- Navbar Links -->
+       <!-- Search Icon -->
+<button id="openSearchBtn" class="openSearchBtn text-gray-700 hover:text-pink-500">
+  <i class="fas fa-search text-xl"></i>
+</button>
       <a href="#" class="main-head hover:text-pink-600 nav-link"><i class="fa fa-home"></i> Home</a>
       <a href="products.html" class="main-head hover:text-pink-600 nav-link"><i class="fa fa-shop"></i> Shop</a>
       <a href="#categories" class="main-head hover:text-pink-600 nav-link"><i class="fa fa-layer-group"></i> Categories</a>
@@ -233,6 +237,25 @@
     <p id="heroText"></p>
   </div>
   <div class="hero-dots" id="heroDots"></div>
+</div>
+
+<!-- Featured Search Bar (Hidden by default) -->
+<div id="featuredSearchWrapper"
+     class="hidden sticky search top-16 px-4 py-3 z-40 bg-white shadow-md mb-2">
+
+  <div class="flex items-center gap-3">
+    <input
+      id="featuredSearchInput"
+      type="text"
+      placeholder="Search featured products..."
+      class="flex-1 border rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-pink-500"
+    />
+
+    <button id="closeSearchBtn"
+            class="absolute top-4 right-6 text-gray-500 hover:text-pink-500 text-xl font-bold">
+      &times;
+    </button>
+  </div>
 </div>
 
   <!-- Featured Products -->
