@@ -135,7 +135,8 @@
             <th class="p-2">Date</th>
             <th class="p-2">Total</th>
             <th class="p-2">Items</th>
-            <th class="p-2">Status / Action</th>
+            <th class="p-2">Status</th>
+            <th class="p-2">Action</th>
           </tr>
         </thead>
         <tbody id="orderTableBody"></tbody>
@@ -514,6 +515,8 @@ if (!orderModal.classList.contains("hidden") && openedOrderId) {
         <td class="p-2 text-center">${itemsCount}</td>
         <td class="p-2 text-center">
           <span class="px-2 py-1 rounded ${statusColor} text-sm font-semibold">${order.status}</span>
+        </td>
+        <td class="p-2 text-center">
           <button onclick="viewOrder('${order.id}')" class="ml-2 text-blue-500 hover:underline">View</button>
           <button onclick="editOrder('${order.id}')" class="ml-2 text-green-500 hover:underline" ${!isEditable?"disabled":""}>Edit</button>
         </td>
