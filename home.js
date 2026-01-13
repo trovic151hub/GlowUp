@@ -912,6 +912,20 @@ function closeMenuFunc() {
     window.scrollTo(0, scrollPosition); // Restore scroll
 }
 
+const filterSection = document.getElementById("filterSection");
+const toggleFilterBtn = document.getElementById("toggleFilterBtn");
+const closeFilterBtn = document.getElementById("closeFilterBtn");
+
+// Open on mobile
+toggleFilterBtn?.addEventListener("click", () => {
+  filterSection.classList.remove("hidden");
+});
+
+// Close on mobile
+closeFilterBtn?.addEventListener("click", () => {
+  filterSection.classList.add("hidden");
+});
+
 menuToggle.addEventListener("click", openMenu);
 closeMenu.addEventListener("click", closeMenuFunc);
 menuOverlay.addEventListener("click", closeMenuFunc);

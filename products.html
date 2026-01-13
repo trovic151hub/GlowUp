@@ -211,23 +211,36 @@
   <div id="notification-container" class="fixed top-4 right-4 z-50 flex flex-col gap-2"></div>
 
   <!-- Header -->
-  <header class="bg-gradient-to-r from-[#fbcfe8] to-[#f9a8d4] shadow-md p-4 flex justify-between items-center fixed top-0 w-full">
+  <header class="bg-gradient-to-r from-[#fbcfe8] to-[#f9a8d4] z-40 shadow-md p-4 flex justify-between items-center fixed top-0 w-full">
     <div class="flex space-x-2">
         <button onclick="history.back()">
           <i class="fas fa-arrow-left"></i>
         </button>
       <h1 class="text-xl font-bold">All Products</h1>
     </div>
+    <!-- Filter icon (mobile only) -->
+     <div class="flex space-x-2">
+    <button id="openFilterSort" class="md:hidden mt-1 text-gray-700"><i class="fas fa-search text-xl"></i></button>
     <a href="cart.html" class="relative inline-block text-pink-600 text-2xl">
       🛒
       <span id="cartCount"
         class="absolute -top-2 -right-2 bg-red-500 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center">0</span>
     </a>
+    </div>
   </header>
 
   <!-- Filter and Sort -->
-  <section class="p-6 mt-16">
+  <!-- <section id="filterSortSection" class="p-6 mt-16"> -->
+    <section id="filterSortSection" class="p-6 mt-16 hidden md:block relative">
     <div class="flex flex-col md:flex-row md:justify-between gap-4">
+
+      <!-- Close button (mobile only) -->
+    <button
+      id="closeFilterSort"
+      class="md:hidden absolute top-2 right-2 text-gray-500 hover:text-pink-500 text-2xl font-bold">
+      &times;
+    </button>
+    
       <div>
         <label class="font-semibold mr-2">Filter by Category:</label>
         <select id="categoryFilter" class="border p-2 rounded">
@@ -253,7 +266,7 @@
     </div>
   </section>
 
-  <div id="skeletonContainer" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mt-4 hidden">
+  <div id="skeletonContainer" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mt-14 hidden">
     <!-- 8 skeletons -->
     <div class="animate-pulse p-4 border rounded-xl">
       <div class="h-32 bg-gray-300 rounded mb-3"></div>
@@ -269,7 +282,7 @@
   </div>
 
   <!-- Product Grid -->
-  <section class="p-6">
+  <section class="p-6 mt-14">
     <div id="productGrid" class="grid grid-cols-2 md:grid-cols-4 gap-6">
     </div>
     <div class="text-center p-6 flex justify-center">
@@ -302,7 +315,7 @@
       </p>
       <p class="flex items-start gap-2">
         <i class="fas fa-map-marker-alt mt-1"></i>
-        No 17 Oloruntimilehin Street, Cacatin Rd Mosan Bus Stop Ipaja Rd, Alimosho, Lagos, Nigeria
+        Lagos, Nigeria
       </p>
     </div>
 
@@ -740,6 +753,22 @@ updateCartCount();
     showLoadMoreSpinner(false);
     showLoader(false);
   });
+
+  const openFilterSort = document.getElementById("openFilterSort");
+const closeFilterSort = document.getElementById("closeFilterSort");
+const filterSortSection = document.getElementById("filterSortSection");
+
+// Open (mobile)
+openFilterSort.addEventListener("click", () => {
+  filterSortSection.classList.remove("hidden");
+  openFilterSort.classList.add("hidden");
+});
+
+// Close (mobile)
+closeFilterSort.addEventListener("click", () => {
+  filterSortSection.classList.add("hidden");
+  openFilterSort.classList.remove("hidden");
+});
 
   document.addEventListener("DOMContentLoaded",()=>{ fetchAllProducts(); });
 
