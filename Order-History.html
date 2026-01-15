@@ -118,7 +118,7 @@
     <div id="internationalControls" class="mt-3"></div>
     <div id="detailContent" class="mt-4 space-y-3 text-sm text-gray-800"></div>
     <div class="mt-4 flex gap-2 ">
-      <button id="downloadPdfBtn" class="bg-pink-600 text-white px-4 py-2 rounded">Download PDF</button>
+      <button id="downloadPdfBtn" class="bg-pink-600 text-white px-4 py-2 rounded">Download Receipt</button>
       <button id="emailReceiptBtn" class="bg-blue-600 text-white px-4 py-2 rounded opacity-50 cursor-not-allowed" disabled>Email Receipt</button>
       <div id="modalStatusControls" class="ml-auto flex gap-2"></div>
     </div>
@@ -791,7 +791,7 @@ async function sendReceiptEmail(order) {
   }
 }
 
-  // ===== DOWNLOAD PDF =====
+  // ===== DOWNLOAD Receipt =====
 async function downloadPdf(order) {
   if (!order) return;
 
