@@ -283,40 +283,102 @@ document.getElementById("heroForm").addEventListener("submit", async (e) => {
 });
 
 // ===== LOAD SLIDES =====
+// ===== LOAD SLIDES (WITH LOADER) =====
 function loadSlides() {
+  showLoader();
+
+  const container = document.getElementById("slidesList");
+  let firstLoad = true; // 👈 track initial snapshot
+
   db.collection("heroSliders")
     .orderBy("order", "asc")
     .onSnapshot(snapshot => {
-      const container = document.getElementById("slidesList");
       container.innerHTML = "";
 
       snapshot.forEach(doc => {
         const s = doc.data();
+
         container.innerHTML += `
           <div class="flex items-center gap-4 border p-3 rounded">
             <img src="${s.imageUrl}" class="w-32 h-20 object-cover rounded" />
+
             <div class="flex-1">
               <p class="font-semibold">${s.title || "—"}</p>
               <p class="text-sm text-gray-600">${s.subtitle || ""}</p>
               <p class="text-xs text-gray-400">Order: ${s.order}</p>
             </div>
 
-            <button onclick="toggleSlide('${doc.id}', ${s.active})" class="px-3 py-1 rounded text-white ${s.active ? "bg-green-500" : "bg-gray-400"}">
+            <button
+              onclick="toggleSlide('${doc.id}', ${s.active})"
+              class="px-3 py-1 rounded text-white ${
+                s.active ? "bg-green-500" : "bg-gray-400"
+              }">
               ${s.active ? "Active" : "Disabled"}
             </button>
 
-            <button onclick="editSlide('${doc.id}')" class="px-3 py-1 bg-blue-500 text-white rounded">
+            <button
+              onclick="editSlide('${doc.id}')"
+              class="px-3 py-1 bg-blue-500 text-white rounded">
               Edit
             </button>
 
-            <button onclick="deleteSlide('${doc.id}')" class="px-3 py-1 bg-red-500 text-white rounded">
+            <button
+              onclick="deleteSlide('${doc.id}')"
+              class="px-3 py-1 bg-red-500 text-white rounded">
               Delete
             </button>
           </div>
         `;
       });
+
+      // 👇 Hide loader ONLY after first snapshot renders
+      if (firstLoad) {
+        hideLoader();
+        firstLoad = false;
+      }
+    }, error => {
+      console.error("Failed to load slides:", error);
+      hideLoader();
+      showAlert("Failed to load slides");
     });
 }
+
+// function loadSlides() {
+//   showLoader();
+  
+//   db.collection("heroSliders")
+//     .orderBy("order", "asc")
+//     .onSnapshot(snapshot => {
+//       const container = document.getElementById("slidesList");
+//       container.innerHTML = "";
+
+//       snapshot.forEach(doc => {
+//         const s = doc.data();
+//         container.innerHTML += `
+//           <div class="flex items-center gap-4 border p-3 rounded">
+//             <img src="${s.imageUrl}" class="w-32 h-20 object-cover rounded" />
+//             <div class="flex-1">
+//               <p class="font-semibold">${s.title || "—"}</p>
+//               <p class="text-sm text-gray-600">${s.subtitle || ""}</p>
+//               <p class="text-xs text-gray-400">Order: ${s.order}</p>
+//             </div>
+
+//             <button onclick="toggleSlide('${doc.id}', ${s.active})" class="px-3 py-1 rounded text-white ${s.active ? "bg-green-500" : "bg-gray-400"}">
+//               ${s.active ? "Active" : "Disabled"}
+//             </button>
+
+//             <button onclick="editSlide('${doc.id}')" class="px-3 py-1 bg-blue-500 text-white rounded">
+//               Edit
+//             </button>
+
+//             <button onclick="deleteSlide('${doc.id}')" class="px-3 py-1 bg-red-500 text-white rounded">
+//               Delete
+//             </button>
+//           </div>
+//         `;
+//       });
+//     });
+// }
 
 // ===== EDIT SLIDE =====
 async function editSlide(id) {

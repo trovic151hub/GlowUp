@@ -8,6 +8,12 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
 <!-- Cloudinary Upload Widget -->
 <script src="https://widget.cloudinary.com/v2.0/global/all.js" type="text/javascript"></script>
+<style>
+  table {
+  table-layout: fixed;
+  width: 100%;
+}
+</style>
 </head>
 <body class="bg-gray-100 text-gray-900">
 
@@ -92,6 +98,14 @@
     </div> 
   </main> 
 
+  <!-- ===== LOADER ===== -->
+<div
+  id="dashboard-loader"
+  class="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center hidden z-50"
+>
+  <i class="fas fa-spinner fa-spin text-white text-5xl"></i>
+</div>
+
   <!-- Firebase -->
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script> 
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script> 
@@ -122,6 +136,7 @@ window.addEventListener("load", () => {
   const modalMessage = document.getElementById("modalMessage");
   const modalOkBtn = document.getElementById("modalOkBtn");
   const modalCancelBtn = document.getElementById("modalCancelBtn");
+  const loader = document.getElementById("dashboard-loader");
 
   function showAlert(message, title="Alert") {
     modalTitle.textContent = title;
@@ -146,6 +161,17 @@ window.addEventListener("load", () => {
       modalCancelBtn.onclick = () => { modalOverlay.classList.add("hidden"); resolve(false); };
     });
   }
+
+  // Loader
+function showLoader() {
+  loader.classList.remove("hidden");
+  document.body.style.overflow = "hidden";
+}
+
+function hideLoader() {
+  loader.classList.add("hidden");
+  document.body.style.overflow = "";
+}
 
   auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
 
@@ -207,10 +233,18 @@ auth.onAuthStateChanged(async (user) => {
     return snap.docs.map(d => ({id:d.id, ...d.data()}));
   }
 
-  async function renderTable(append=false) {
-    const tbody = document.getElementById("productTableBody");
-    if(!append) tbody.innerHTML = "";
+//   // Render Table
+// Render Table
+async function renderTable(append = false) {
+  const tbody = document.getElementById("productTableBody");
+  const loadMoreBtn = document.getElementById("loadMoreProductsBtn");
 
+  if (!append) {
+    tbody.innerHTML = "";
+    showLoader(); // 👈 show loader before Firestore fetch
+  }
+
+  try {
     const products = await loadProducts(append ? lastVisibleProduct : null);
 
     products.forEach(p => {
@@ -224,7 +258,9 @@ auth.onAuthStateChanged(async (user) => {
           <td class="p-2">₦${p.price.toLocaleString()}</td>
           <td class="p-2">${p.category}</td>
           <td class="p-2">${p.weight || 0} kg</td>
-          <td class="p-2"><img src="${imgUrl}" class="w-12 h-12 object-cover rounded"/></td>
+          <td class="p-2">
+            <img src="${imgUrl}" class="w-12 h-12 object-cover rounded"/>
+          </td>
           <td class="p-2 text-sm max-w-xs truncate">${p.description}</td>
           <td class="p-2">
             <button onclick="editProduct('${p.id}')" class="text-blue-600 text-sm">Edit</button>
@@ -233,12 +269,72 @@ auth.onAuthStateChanged(async (user) => {
         </tr>`;
     });
 
-    if(!append && products.length===0) {
-      tbody.innerHTML = `<tr><td class="p-4 text-center text-gray-500" colspan="7">No products found.</td></tr>`;
+    if (!append && products.length === 0) {
+      tbody.innerHTML = `
+        <tr>
+          <td class="p-4 text-center text-gray-500" colspan="7">
+            No products found.
+          </td>
+        </tr>`;
     }
 
-    document.getElementById("loadMoreProductsBtn").disabled = products.length < PRODUCTS_PER_PAGE;
+    // ✅ Hide Load More button if no more products
+    if (products.length < PRODUCTS_PER_PAGE) {
+      loadMoreBtn.classList.add("hidden");
+    } else {
+      loadMoreBtn.classList.remove("hidden");
+    }
+
+  } catch (err) {
+    console.error("Error loading products:", err);
+    showAlert("Failed to load products.", "Error");
+  } finally {
+    hideLoader(); // 👈 ALWAYS hide loader
   }
+}
+
+//   async function renderTable(append=false) {
+//     const tbody = document.getElementById("productTableBody");
+//     if(!append) {
+//       tbody.innerHTML = "";
+//       showLoader(); // 👈 show loader on first load
+//     }
+
+//     const products = await loadProducts(append ? lastVisibleProduct : null);
+
+//     products.forEach(p => {
+//       let imgUrl = p.image && p.image.includes("res.cloudinary.com")
+//         ? p.image.replace("/upload/", "/upload/w_300,h_300,c_fill/")
+//         : p.image || "https://via.placeholder.com/300";
+
+//       tbody.innerHTML += `
+//         <tr class="border-b">
+//           <td class="p-2">${p.name}</td>
+//           <td class="p-2">₦${p.price.toLocaleString()}</td>
+//           <td class="p-2">${p.category}</td>
+//           <td class="p-2">${p.weight || 0} kg</td>
+//           <td class="p-2"><img src="${imgUrl}" class="w-12 h-12 object-cover rounded"/></td>
+//           <td class="p-2 text-sm max-w-xs truncate">${p.description}</td>
+//           <td class="p-2">
+//             <button onclick="editProduct('${p.id}')" class="text-blue-600 text-sm">Edit</button>
+//             <button onclick="deleteProduct('${p.id}')" class="text-red-600 text-sm ml-2">Delete</button>
+//           </td>
+//         </tr>`;
+//     });
+
+//     if(!append && products.length===0) {
+//       tbody.innerHTML = `<tr><td class="p-4 text-center text-gray-500" colspan="7">No products found.</td></tr>`;
+//     }
+
+//     // document.getElementById("loadMoreProductsBtn").disabled = products.length < PRODUCTS_PER_PAGE;
+//     const loadMoreBtn = document.getElementById("loadMoreProductsBtn");
+
+// if (products.length < PRODUCTS_PER_PAGE) {
+//   loadMoreBtn.classList.add("hidden");   // hide completely
+// } else {
+//   loadMoreBtn.classList.remove("hidden"); // show if more exists
+// }
+//   }
 
   // ===== Save Product =====
   const saveBtnText = document.getElementById("saveBtnText");
@@ -320,20 +416,13 @@ async function waitForAdminDoc(uid) {
   }
 }
 
-  // // ===== Logout =====
-  // window.logoutAdmin = async ()=>{
-  //   await auth.signOut();
-  //   localStorage.removeItem("isAdminLoggedIn");
-  //   window.location.href = "admin-login.html";
-  // };
-
   // ===== Load More =====
   document.getElementById("loadMoreProductsBtn").addEventListener("click", ()=>renderTable(true));
 
   // ===== Initial Load =====
   renderTable();
 
-}); // window load
+});
 </script>
 </body>
 </html>

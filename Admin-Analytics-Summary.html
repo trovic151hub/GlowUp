@@ -149,6 +149,11 @@
     </div>
   </div>
 
+  <div id="dashboard-loader"
+  class="fixed inset-0 flex items-center justify-center bg-black/40 z-50 hidden">
+  <i class="fas fa-spinner fa-spin text-white text-5xl"></i>
+</div>
+
   <script>
   // ===== Firebase Config =====
   const firebaseConfig = {
@@ -203,6 +208,18 @@ firebase.auth().onAuthStateChanged(async user => {
   const modal=document.getElementById('detailModal');
   const modalTitle=document.getElementById('modalTitle');
   const modalContent=document.getElementById('modalContent');
+  let loader = document.getElementById("dashboard-loader");
+
+  // ===== Global Loader =====
+function showLoader() {
+  loader.classList.remove("hidden");
+  document.body.style.pointerEvents = "none";
+}
+
+function hideLoader() {
+  loader.classList.add("hidden");
+  document.body.style.pointerEvents = "";
+}
 
   // ===== Button Event Listeners =====
   applyFilters.addEventListener('click', ()=>{
@@ -272,6 +289,8 @@ firebase.auth().onAuthStateChanged(async user => {
 
   // ===== Load Analytics =====
   async function loadAllAnalytics(){
+    showLoader(); // 👈 START loader
+
     totalSalesEl.textContent='Loading...';
     totalOrdersEl.textContent='…';
     aovEl.textContent='…';
@@ -312,7 +331,9 @@ firebase.auth().onAuthStateChanged(async user => {
       totalOrdersEl.textContent='Error';
       aovEl.textContent='Error';
       totalCustomersEl.textContent='Error';
-    }
+    }finally {
+    hideLoader(); // 👈 STOP loader (always)
+  }
   }
 
   // ===== Compute Summaries =====
