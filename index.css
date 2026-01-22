@@ -43,14 +43,14 @@
       opacity: 1;
     }
 
-    .hero-slider img {
+    /* .hero-slider img {
   transition: opacity 0.6s ease-in-out;
   opacity: 1;
 }
 
 .hero-slider img.fade-out {
   opacity: 0;
-}
+} */
 
     .spinner {
       width: 50px;
@@ -205,12 +205,129 @@
   animation: fadeIn 0.3s ease-out;
 }
 
+/* Hero slider */
 .hero-slider {
+  position: relative;
+  height: 520px;
+  width: 100%;
+  overflow: hidden;
+  perspective: 1400px;
+  background: #000;
+}
+
+/* ===== Skeleton ===== */
+.hero-skeleton {
+  position: absolute;
+  inset: 0;
+  background: #e5e7eb;
+  animation: pulse 1.5s infinite;
+  z-index: 20;
+}
+
+@keyframes pulse {
+  0%,100% { opacity: 1 }
+  50% { opacity: .5 }
+}
+
+/* ===== Image Motion ===== */
+.hero-image-wrapper {
+  width: 100%;
+  height: 100%;
+  transform-style: preserve-3d;
+}
+
+.hero-image-wrapper img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transform-origin: center bottom;
+  transition: transform 1.2s cubic-bezier(.22,.61,.36,1),
+              opacity .8s ease;
+}
+
+/* Subtle enterprise rotate */
+.hero-image-wrapper img.fade-out {
+  transform: rotateX(10deg) scale(1.05);
+  opacity: 0;
+}
+
+/* ===== Overlay ===== */
+.hero-overlay {
+  position: absolute;
+  inset: 0;
+  padding: 40px;
+  background: linear-gradient(
+    to right,
+    rgba(0,0,0,.55) 0%,
+    rgba(0,0,0,.35) 35%,
+    transparent 70%
+  );
+  color: white;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  z-index: 5;
+}
+
+.hero-overlay h1 {
+  /* font-size: clamp(2.5rem, 4vw, 4rem); */
+  font-size: 2.5rem;
+  font-weight: 600;
+  /* max-width: 520px; */
+  /* line-height: 1.1; */
+}
+
+.hero-overlay p {
+
+}
+
+.hero-link {
+  margin-top: 24px;
+  font-size: 1rem;
+  color: #fff;
+  text-decoration: none;
+  opacity: .9;
+}
+
+/* ===== Bottom Tabs (LIKE IMAGE) ===== */
+.hero-tabs {
+  position: absolute;
+  bottom: 32px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 12px;
+  z-index: 10; 
+}
+
+.hero-tabs-track {
+    display: flex;
+    gap: 12px;
+    transition: transform 0.4s ease;
+    will-change: transform;
+  }
+
+.hero-tabs span {
+  padding: 14px 22px;
+  background: rgba(50,50,50,.9);
+  color: #fff;
+  /* border-radius: 10px; */
+  font-size: .95rem;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all .35s ease;
+}
+
+.hero-tabs span.active {
+  background: #fff;
+  color: #ec4899;
+}
+
+/* .hero-slider {
   position: relative;
   width: 100%;
   height: 400px;
   overflow: hidden;
-  /* border-radius: 12px; */
 }
 
 .hero-slider img {
@@ -233,10 +350,10 @@
 .hero-overlay h1 {
   font-size: 2.5rem;
   margin-bottom: 10px;
-}
+} */
 
 /* Dots */
-.hero-dots {
+/* .hero-dots {
   position: absolute;
   bottom: 15px;
   left: 50%;
@@ -257,19 +374,19 @@
 .hero-dots span.active {
   background: #ec4899;
   transform: scale(1.3);
-}
+} */
 /* Fade animation */
-.hero-slider img {
+/* .hero-slider img {
   transition: opacity 0.6s ease;
   opacity: 1;
 }
 
 .hero-slider img.fade-out {
   opacity: 0;
-}
+} */
 
 /* Text animation */
-.hero-overlay h1,
+/* .hero-overlay h1,
 .hero-overlay p {
   opacity: 0;
   transform: translateY(20px);
@@ -278,7 +395,7 @@
 
 .hero-overlay p {
   animation-delay: 0.15s;
-}
+} */
 
 @keyframes textFadeUp {
   to {
@@ -453,15 +570,40 @@
 
 /* ===== Mobile Responsive ===== */
 @media (max-width: 768px) {
-  .hero-slider {
-    height: 300px !important; /* shorter slider on mobile */
+    .hero-slider {
+    height: 50vh !important; /* 👈 HALF of viewport height */
+    min-height: 280px;       /* safety for very small phones */
+    max-height: 520px;       /* prevents it being too tall */
   }
+
+  .hero-image-wrapper {
+    height: 100%;
+  }
+
+  .hero-image-wrapper img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  /* .hero-slider {
+    height: 300px !important;
+  }
+
+  .hero-image-wrapper {
+    height: 100%;
+  }
+
+   .hero-image-wrapper img {
+    height: 100%;
+    object-fit: cover;
+  } */
 
   .hero-overlay {
     bottom: 20px !important;
     left: 20px !important;
     max-width: 80% !important;
     background: none !important;
+    padding: 10px;
   }
 
   .hero-overlay h1 {
@@ -485,6 +627,7 @@
 
   .hero-overlay h1 {
     font-size: 1.2rem !important;
+    font-weight: 600 !important;
   }
 
   .hero-overlay p {
@@ -492,7 +635,102 @@
   }
 }
 
+/* Tablet */
+@media (max-width: 1024px) {
+  .hero-control {
+    font-size: 4rem; /* smaller play/pause buttons */
+  }
 
+  .hero-tabs span {
+    padding: 0.75rem 1.5rem; /* smaller tab size */
+    font-size: 0.9rem;
+  }
+
+  .hero-slide h1 {
+    font-size: 1.8rem; /* smaller slide title */
+    bottom: 16px;
+    left: 16px;
+  }
+}
+
+/* Mobile */
+@media (max-width: 640px) {
+  .hero-control {
+    font-size: 3rem; /* even smaller play/pause */
+  }
+
+  .hero-tabs {
+    gap: 0.5rem;
+    bottom: 8px !important;
+    width: 100%;
+    overflow: hidden;
+    left:50% !important;
+    padding-left: 20px;
+    transform: translateX(-50%) !important;
+  }
+
+  .hero-tabs span {
+    padding: 12px 20px !important;
+    font-size: 0.8rem;
+    min-width: 120px;
+    text-align: center;
+    white-space: nowrap;
+    color: #9ca3af;
+  }
+
+  .hero-slide h1 {
+    font-size: 1.4rem;
+    bottom: 12px;
+    left: 12px;
+  }
+
+  .hero-tabs span.active {
+    color: #ec4899 !important;
+    font-weight: 600;
+  }
+
+  .hero-tabs-track {
+    display: flex;
+    gap: 12px;
+    transition: transform 0.4s ease;
+    will-change: transform;
+  }
+
+  .hero-control {
+  position: absolute;
+  top: 60% !important;
+  right: 45% !important;
+  font-size: 3rem !important;
+}
+}
+
+/* ===== Mobile Sliding Tabs (Non-breaking) ===== */
+/* @media (max-width: 640px) {
+  .hero-tabs {
+    width: 100%;
+    overflow: hidden;
+    left: 50% !important;
+    transform: translateX(-50%) !important;
+  }
+
+  .hero-tabs-track {
+    display: flex;
+    transition: transform 0.4s ease;
+    will-change: transform;
+  }
+
+  .hero-tabs span {
+    min-width: 120px;
+    text-align: center;
+    white-space: nowrap;
+    color: #9ca3af;
+  }
+
+  .hero-tabs span.active {
+    color: #ec4899 !important;
+    font-weight: 600;
+  }
+} */
 
 /* Custom Media Queries for Footer */
 @media (max-width: 768px) {
