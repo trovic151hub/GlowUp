@@ -205,6 +205,7 @@ function loadHeroSlides() {
       }));
 
       createTabs();
+      createImages();
       showSlide(0);
       startAutoSlide();
       updateHeroControls();
@@ -237,24 +238,70 @@ function createTabs() {
   });
 }
 
-// ===== Slide Switch =====
+const heroImageTrack = document.getElementById("heroImageTrack");
+
+function createImages() {
+  heroImageTrack.innerHTML = "";
+
+  if (slides.length === 0) return;
+
+  // clone last slide for seamless loop
+  const lastClone = document.createElement("img");
+  lastClone.src = slides[slides.length - 1].image;
+  lastClone.alt = slides[slides.length - 1].title;
+  heroImageTrack.appendChild(lastClone);
+
+  // original slides
+  slides.forEach(slide => {
+    const img = document.createElement("img");
+    img.src = slide.image;
+    img.alt = slide.title;
+    heroImageTrack.appendChild(img);
+  });
+
+  // clone first slide for seamless loop
+  const firstClone = document.createElement("img");
+  firstClone.src = slides[0].image;
+  firstClone.alt = slides[0].title;
+  heroImageTrack.appendChild(firstClone);
+}
+
+// Current slide index for JS (includes clones)
+let trackIndex = 1;
+
 function showSlide(index) {
-  heroImage.classList.add("fade-out");
+  trackIndex = index + 1; // +1 because first is lastClone
+  const width = heroImageTrack.offsetWidth / heroImageTrack.children.length;
+  heroImageTrack.style.transition = "transform 0.8s cubic-bezier(0.22,0.61,0.36,1)";
+  heroImageTrack.style.transform = `translateX(-${trackIndex * 100}%)`;
 
-  setTimeout(() => {
-    heroImage.src = slides[index].image;
-    heroTitle.textContent = slides[index].title;
-    heroText.textContent = slides[index].text;
-    heroText.textContent = slides[index].text || "";
-    heroImage.classList.remove("fade-out");
-  }, 400);
+  // update title/text
+  heroTitle.textContent = slides[index].title;
+  heroText.textContent = slides[index].text || "";
 
+  // highlight active tab
   document.querySelectorAll(".hero-tabs span").forEach((tab, i) => {
     tab.classList.toggle("active", i === index);
   });
+
   centerActiveTab(index);
   resetProgress();
 }
+
+// After transition ends, jump if on clone
+heroImageTrack.addEventListener("transitionend", () => {
+  if (trackIndex === 0) {
+    // jumped to last real slide
+    heroImageTrack.style.transition = "none";
+    trackIndex = slides.length;
+    heroImageTrack.style.transform = `translateX(-${trackIndex * 100}%)`;
+  } else if (trackIndex === slides.length + 1) {
+    // jumped to first real slide
+    heroImageTrack.style.transition = "none";
+    trackIndex = 1;
+    heroImageTrack.style.transform = `translateX(-${trackIndex * 100}%)`;
+  }
+});
 
 // ===== Auto Rotate with Progress =====
 function startAutoSlide() {
@@ -302,6 +349,8 @@ function updateProgress(value) {
   });
 }
 
+let controlsTimeout;
+
 // ===== Play/Pause Buttons =====
 function updateHeroControls() {
   if (isPlaying) {
@@ -344,18 +393,24 @@ function centerActiveTab(index) {
 
   const tabs = document.querySelectorAll(".hero-tabs span");
   const track = document.querySelector(".hero-tabs-track");
+  const container = document.getElementById("heroDots");
 
-  if (!tabs[index]) return;
+  if (!tabs[index] || !container) return;
+
+  // ✅ RESET when looping back to first tab
+  if (index === 0) {
+    track.style.transform = "translateX(0px)";
+    return;
+  }
 
   const tabWidth = tabs[index].offsetWidth;
-  const containerWidth = document.getElementById("heroDots").offsetWidth;
+  const containerWidth = container.offsetWidth;
 
   const offset =
     tabs[index].offsetLeft - (containerWidth / 2) + (tabWidth / 2);
 
-  track.style.transform = `translateX(-${offset}px)`;
+  track.style.transform = `translateX(${Math.max(offset, 0) * -1}px)`;
 }
-
 
 loadHeroSlides();
 

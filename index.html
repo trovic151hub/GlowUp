@@ -9,58 +9,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Poppins:wght@700&family=Great+Vibes&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
   <style>
-  .hero-slider {
-  position: relative;
-  overflow: hidden;
-} 
 
-.hero-control {
-  position: absolute;
-  top: 50%;
-  right: 50%;
-  transform: translateY(-50%);
-  font-size: 6rem;
-  color: white;
-  padding: 0.5rem;
-  border-radius: 50%;
-  cursor: pointer;
-  transition: opacity 0.3s;
-  opacity: 0; /* hidden by default */
-  z-index: 30;
-}
-
-.hero-slider:hover .hero-control {
-  opacity: 1;
-}
-
-.hero-tabs span {
-  position: relative;
-  padding: 1rem 2rem;
-  border-radius: 5px;
-  cursor: pointer;
-  font-weight: 500;
-}
-
-.hero-tabs span.active::after {
-  content: '';
-  position: absolute;
-  bottom: -4px;
-  left: 0;
-  height: 3px;
-  width: 0%;
-  background: #ec4899;
-  transition: width 0s linear;
-}
-
-.hero-tabs span.active {
-  color: #ec4899;
-}
-
-.progress-bar {
-  transition: width 0.03s linear;
-  border-radius: 2px;
-  background-color: #ec4899;
-}
   </style>
 </head>
 <body class="bg-white text-gray-800">
@@ -286,8 +235,15 @@
   <div id="heroSkeleton" class="hero-skeleton"></div>
 
   <div class="hero-image-wrapper">
+  <div class="hero-image-track" id="heroImageTrack"></div>
+</div>
+
+  <!-- <div class="hero-image-wrapper">
     <img id="heroImage" src="" alt="Hero banner">
-  </div>
+  </div> -->
+
+  <!-- NEW: Dark overlay -->
+  <div class="hero-dark-overlay"></div>
 
   <div class="hero-overlay">
     <h1 id="heroTitle"></h1>
