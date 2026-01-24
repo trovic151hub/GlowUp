@@ -1,0 +1,1446 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Checkout</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+  <script src="https://js.paystack.co/v1/inline.js"></script>
+  <style>
+  *{
+        font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+    }
+    @import url('https://fonts.googleapis.com/css2?family=Lora:wght@700&family=Montserrat:wght@500&display=swap');
+    /* ----------------------------------- */
+/* 📱 MOBILE FIRST: max-width 640px    */
+/* ----------------------------------- */
+@media (max-width: 640px) {
+  *{
+        font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+    }
+    @import url('https://fonts.googleapis.com/css2?family=Lora:wght@700&family=Montserrat:wght@500&display=swap');
+
+  /* Main grid stacks vertically */
+  main {
+    grid-template-columns: 1fr !important;
+    gap: 16px !important;
+    padding: 1rem !important;
+  }
+
+  header h1 {
+    font-size: 1.2rem !important;
+  }
+
+  header a {
+    font-size: 1rem !important;
+  }
+
+  /* Billing form & order summary full width */
+  .bg-white {
+    width: 100% !important;
+    padding: 1rem !important;
+  }
+
+  /* Inputs full width and slightly smaller text */
+  input {
+    width: 100% !important;
+    font-size: 0.95rem !important;
+  }
+
+  /* Payment buttons stacked vertically */
+  #checkoutForm .flex {
+    /* flex-direction: column !important; */
+    gap: 12px !important;
+  }
+
+  /* Order summary items spacing */
+  #summaryList > div {
+    flex-direction: column !important;
+    gap: 8px !important;
+  }
+
+  /* Total text smaller */
+  #checkoutTotal {
+    font-size: 1.1rem !important;
+  }
+}
+
+/* ----------------------------------- */
+/* 📲 VERY SMALL SCREEN: max-width 380px */
+/* ----------------------------------- */
+@media (max-width: 380px) {
+  header h1 {
+    font-size: 1rem !important;
+  }
+
+  header a {
+    font-size: 0.9rem !important;
+  }
+
+  input {
+    font-size: 0.9rem !important;
+    padding: 0.5rem !important;
+  }
+
+  #checkoutForm button {
+    font-size: 0.9rem !important;
+    padding: 0.6rem !important;
+  }
+
+  #checkoutTotal {
+    font-size: 1rem !important;
+  }
+}
+#checkout-loader.fade-out {
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.4s ease;
+}
+
+/* Emoji Pulse */
+  @keyframes pulse { 
+    0%,100% { transform: scale(1); }
+    50% { transform: scale(1.2); }
+  }
+
+  .success-title::before {
+  content: '🎉 ';
+  display: inline-block;
+  animation: pulse 1.5s infinite;
+}
+
+  /* Fade-in Animation */
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .animate-fadeIn { animation: fadeIn 0.5s ease-out; }
+
+  /* Custom Media Queries for Footer */
+@media (max-width: 768px) {
+  footer {
+    text-align: left;
+  }
+
+  footer .mx-6 {
+    margin-left: 1rem;
+    margin-right: 1rem;
+  }
+
+  footer input {
+    width: 100% !important;
+    margin-bottom: 0.5rem;
+  }
+
+  footer button {
+    /* width: 100%; */
+  }
+
+  footer .flex-col {
+    flex-direction: column !important;
+    gap: 1.5rem !important;
+  }
+
+  footer .text-left {
+    text-align: center !important;
+  }
+}
+
+  .powered-btn {
+    display: block;
+    text-align: left;
+  }
+
+@media (max-width: 480px) {
+  footer h4 {
+    font-size: 1rem;
+  }
+
+  footer p {
+    font-size: 0.875rem;
+  }
+
+  footer .fixed.bottom-6.right-6 {
+    width: 3rem;
+    height: 3rem;
+    font-size: 1.5rem;
+  }
+}
+
+@keyframes ripple {
+  0% {
+    transform: scale(0.8);
+    opacity: 0.6;
+  }
+  100% {
+    transform: scale(2.5);
+    opacity: 0;
+  }
+}
+
+.ripple-effect {
+  animation: ripple 1.5s infinite;
+}
+  </style>
+</head>
+<body class="bg-gray-50 text-gray-900">
+  <!-- Notification Container -->
+<div id="notification-container" class="fixed top-4 right-4 z-50 flex flex-col gap-2"></div>
+
+  <header class="fixed top-0 w-full bg-gradient-to-r from-[#fbcfe8] to-[#f9a8d4] shadow-md z-40 p-4 shadow-md flex justify-between items-center">
+    <button onclick="history.back()">
+      <h1 class="text-xl font-bold">🧾 Checkout</h1>
+    </button>
+    <a href="index.html" class=" font-bold"><i class="fas fa-shop mt-1"></i> Home</a>
+  </header>
+
+  <main class="p-6 max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8 relative mt-16">
+
+    <!-- Billing Form -->
+    <div class="bg-white p-6 shadow rounded">
+      <h2 class="text-lg font-semibold mb-4">Billing Information</h2>
+      <form id="checkoutForm" class="space-y-4">
+        <input type="text" id="name" placeholder="Full Name" class="w-full border p-3 rounded-lg focus:ring-2 focus:ring-pink-300 focus:outline-none transition" required />
+        <input type="tel" id="phone" placeholder="Phone Number" class="w-full border p-3 rounded-lg focus:ring-2 focus:ring-pink-300 focus:outline-none transition" required />
+        <input type="email" id="email" placeholder="Email Address" class="w-full border p-3 rounded-lg focus:ring-2 focus:ring-pink-300 focus:outline-none transition" required />
+        <input type="text" id="address" placeholder="Home Address" class="w-full border p-3 rounded-lg focus:ring-2 focus:ring-pink-300 focus:outline-none transition" required />
+
+        <!-- Country -->
+<div class="space-y-2 relative">
+  <label class="font-semibold">Country</label>
+  <input id="countryInput" type="text" placeholder="Select country"
+    class="w-full border p-3 rounded-lg focus:ring-2 focus:ring-pink-300" />
+  <div id="countryDropdown"
+    class="absolute z-50 bg-white border w-full max-h-60 overflow-y-auto rounded shadow hidden"></div>
+</div>
+
+        <!-- State & LGA -->
+        <div class="space-y-2 relative">
+          <label for="state" class="font-semibold">State</label>
+          <input type="text" id="state" placeholder="Enter your state" class="w-full border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-pink-300 focus:outline-none transition" required />
+          <div id="stateSuggestions" class="absolute border border-gray-300 bg-white z-50 w-full max-h-60 overflow-y-auto rounded shadow" style="display:none;"></div>
+
+          <label for="lga" class="font-semibold mt-2" style="display:none;">LGA</label>
+          <select id="lga" class="w-full border p-3 rounded-lg focus:ring-2 focus:ring-pink-300 focus:outline-none transition" style="display:none;">
+            <option value="">Select LGA</option>
+          </select>
+        </div>
+
+        <!-- Delivery Option -->
+         <div class="space-y-2">
+  <label for="deliveryOption" class="font-semibold">Delivery Option</label>
+  <select id="deliveryOption" class="w-full border p-3 rounded-lg focus:ring-2 focus:ring-pink-300 focus:outline-none transition">
+    <option value="">Delivery Option</option> <!-- placeholder -->
+    <option value="gig">GIG Delivery</option>
+    <option value="guo">GUO Delivery</option>
+  </select>
+
+  <label for="deliveryType" id="deliveryTypeLabel" class="font-semibold" style="display:none;">Delivery Type:</label>
+          <select id="deliveryType" class="w-full border p-3 rounded-lg focus:ring-2 focus:ring-pink-300 focus:outline-none transition" style="display:none;">
+            <option value="">Select</option>
+            <option value="home">Home Delivery</option>
+            <option value="terminal">Terminal Pickup</option>
+          </select>
+
+<label for="terminal" id="terminalLabel" class="font-semibold" style="display:none;">Select Terminal:</label>
+          <select id="terminal" class="w-full border p-3 rounded-lg focus:ring-2 focus:ring-pink-300 focus:outline-none transition" style="display:none;"></select>
+</div>
+        </div>
+      </form>
+    </div>
+
+    <div id="orderSkeleton" class="space-y-4">
+  <div class="h-20 bg-gray-200 rounded animate-pulse"></div>
+  <div class="h-20 bg-gray-200 rounded animate-pulse"></div>
+  <div class="h-20 bg-gray-200 rounded animate-pulse"></div>
+</div>
+
+    <!-- Order Summary -->
+    <div class="bg-white p-6 shadow rounded">
+      <h2 class="text-lg font-semibold mb-4">Order Summary</h2>
+      <!-- <div id="orderContainer" class="space-y-4"></div> -->
+       <!-- Scrollable container -->
+  <div id="orderContainer" class="space-y-4 max-h-64 overflow-y-auto">
+    <!-- Order items will go here -->
+  </div>
+      <hr class="my-4" />
+      <div class="text-right text-lg font-bold">
+        <p>Delivery Fee: ₦<span id="deliveryFee">0</span></p>
+        Total: ₦<span id="checkoutTotal">0</span>
+      </div>
+      <hr class="my-4" />
+      <div>
+        <h2 class="text-xl text-center font-semibold mb-2">Choose Payment Method</h2>
+        <div class="text-center">
+          <button id="payWithPaystack" type="button" class="px-10 py-2 border-2 rounded">
+            <img class="w-14 h-6" src="https://cdn.brandfetch.io/idM5mrwtDs/theme/dark/logo.svg?c=1bxid64Mup7aczewSAYMX&t=1667559828449" alt="Paystack">
+          </button>
+          <button id="payWithWhatsApp" type="button" class="hidden text-black px-4 py-2 border-2 rounded"><i class="fab fa-whatsapp text-green-800"></i> WhatsApp</button>
+      </div>
+      <p id="internationalNotice"
+        class="hidden mt-3 text-sm text-gray-700 bg-yellow-50 border border-yellow-200 p-3 rounded">
+        International orders are confirmed via WhatsApp. Final delivery cost will be shared.
+        </p>
+    </div>
+  </main>
+
+  <div id="overlaySpinner" class="hidden fixed inset-0 bg-black/30 flex items-center justify-center z-50">
+    <div class="loader border-4 border-pink-500 border-t-transparent rounded-full w-12 h-12 animate-spin"></div>
+  </div>
+
+  <!-- Order Success Modal -->
+<div id="orderSuccessModal" class="hidden fixed inset-0 flex items-center justify-center bg-gradient-to-br from-pink-100 via-pink-200 to-pink-300 z-50">
+  <div class="bg-white/90 backdrop-blur-lg p-8 rounded-2xl shadow-xl max-w-md w-full text-center animate-fadeIn border border-pink-200">
+    <div class="flex justify-center mb-4">
+      <div class="w-20 h-20 bg-pink-100 rounded-full flex items-center justify-center shadow-inner">
+        <i class="fas fa-check text-pink-600 text-4xl"></i>
+      </div>
+    </div>
+    <h1 class="success-title text-3xl font-bold text-pink-600 mb-2">Order Successful!</h1>
+    <p id="successMessage" class="mb-6 text-gray-700 text-base"></p>
+    <a href="customer-dashboard.html" 
+       class="block bg-pink-600 text-white px-4 py-2 rounded-lg mb-3 hover:bg-pink-700 transition">
+      View Orders
+    </a>
+    <a href="index.html" 
+       class="block text-pink-700 font-medium">
+       Back to Home
+    </a>
+  </div>
+</div>
+
+<!-- Delivery Fee Disclaimer Modal -->
+<div id="deliveryModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+  <div class="bg-white rounded-lg shadow-lg max-w-md w-full p-6 relative">
+    <h3 class="text-lg font-bold mb-4 text-yellow-700">⚠️ Delivery Fee Notice</h3>
+    <p class="mb-4 text-gray-700">
+      Delivery fees for states outside Lagos may vary. Any additional charges will be communicated before shipment.
+    </p>
+    <button id="ackDeliveryFee" class="px-4 py-2 bg-pink-500 text-white rounded hover:bg-pink-600">
+      I Understand
+    </button>
+  </div>
+</div>
+
+<!-- Footer -->
+<footer class="bg-pink-100 text-gray-800 relative">
+  <div class="mx-6 md:mx-10 px-4 md:px-6 py-8 md:py-12 flex flex-col md:flex-row justify-between gap-8 md:gap-40">
+    
+    <!-- Contact Info -->
+    <div class="flex-1 border-b md:border-b-0 pb-4 md:pb-0 border-gray-300">
+      <h4 class="text-lg font-semibold mb-4">CONTACT US</h4>
+      <p class="mb-2 flex items-center gap-2">
+        <i class="fas fa-phone-alt"></i> +2349053380773
+      </p>
+      <p class="flex items-start gap-2">
+        <i class="fas fa-map-marker-alt mt-1"></i>
+        Lagos, Nigeria
+      </p>
+    </div>
+
+    <!-- Newsletter -->
+    <div class="flex-1">
+      <h4 class="text-lg font-semibold mb-3">SIGN UP FOR DISCOUNTS & UPDATES</h4>
+      <div class="block flex-col md:flex-row gap-2 md:gap-4 items-start md:items-center">
+        <input type="text" placeholder="Enter your phone number or email address" 
+               class="w-full md:w-[100%] px-4 py-2 rounded border border-gray-300 focus:outline-none">
+        <button class="mt-3 bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">
+          Subscribe
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Powered By -->
+  <div class="btn text-left text-sm text-white mx-6 md:mx-10 px-4 md:px-6 py-4 border-t border-gray-300">
+    <button class="text-left block p-4 bg-pink-500">
+      POWERED BY VTec
+    </button>
+  </div>
+
+  <!-- WhatsApp Button -->
+<button id="openWhatsappModal" class="fixed bottom-6 right-6 z-50">
+  <div class="relative w-14 h-14">
+    <!-- Ripple circles -->
+    <span class="absolute inset-0 rounded-full bg-green-400 opacity-50 animate-ping"></span>
+    <span class="absolute inset-0 rounded-full bg-green-400 opacity-50 animate-ping delay-200"></span>
+    <span class="absolute inset-0 rounded-full bg-green-400 opacity-50 animate-ping delay-400"></span>
+
+    <!-- Main Button -->
+    <div class="relative w-14 h-14 rounded-full bg-green-500 hover:bg-green-600 text-white flex items-center justify-center shadow-lg text-2xl">
+      <i class="fab fa-whatsapp"></i>
+    </div>
+  </div>
+</button>
+
+  <!-- WhatsApp Button -->
+<a href="https://wa.me/2349053380773" target="_blank" class="fixed bottom-6 right-6 z-50">
+  <div class="relative w-14 h-14">
+    <!-- Ripple circles -->
+    <span class="absolute inset-0 rounded-full bg-green-400 opacity-50 animate-ping"></span>
+    <span class="absolute inset-0 rounded-full bg-green-400 opacity-50 animate-ping delay-200"></span>
+    <span class="absolute inset-0 rounded-full bg-green-400 opacity-50 animate-ping delay-400"></span>
+
+    <!-- Main Button -->
+    <div class="relative w-14 h-14 rounded-full bg-green-500 hover:bg-green-600 text-white flex items-center justify-center shadow-lg text-2xl">
+      <i class="fab fa-whatsapp"></i>
+    </div>
+  </div>
+</a>
+</footer>
+
+<script>
+// ===== LocalStorage Cart Helper =====
+function getCheckoutCart() {
+  try {
+    return JSON.parse(localStorage.getItem("cart")) || [];
+  } catch (err) {
+    console.error("Error reading cart from localStorage:", err);
+    return [];
+  }
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  const WHATSAPP_NUMBER = "2349053380773"; // your number
+  function generateWhatsappPaymentRef() {
+  return "WA-" + Date.now() + "-" + Math.floor(Math.random() * 1000);
+}
+
+  // ===== DOM References =====
+  const stateInput=document.getElementById("state");
+  const lgaInput=document.getElementById("lga");
+  const orderContainer=document.getElementById("orderContainer");
+  const totalSpan=document.getElementById("checkoutTotal");
+  const paystackBtn=document.getElementById("payWithPaystack");
+  const whatsappBtn = document.getElementById("payWithWhatsApp"); // ← Add this
+  const deliverySelect=document.getElementById("deliveryOption");
+  const deliveryType=document.getElementById("deliveryType");
+  const terminal=document.getElementById("terminal");
+  const terminalLabel=document.getElementById("terminalLabel");
+  const deliveryTypeLabel=document.getElementById("deliveryTypeLabel");
+  const deliveryFeeEl=document.getElementById("deliveryFee");
+  const orderSkeleton=document.getElementById("orderSkeleton");
+  const suggestionsContainer=document.getElementById("stateSuggestions");
+
+   // ===== Helper to clear checkout form inputs =====
+  function clearCheckoutInputs() {
+    const inputs = [
+      name,
+      phone,
+      email,
+      address,
+      state,
+      lga,
+      countryInput,
+      deliveryType,
+      deliveryTypeLabel,
+      terminalLabel
+    ];
+    inputs.forEach(input => {
+      if (input) input.value = ""; // reset each input
+    });
+  }
+
+/* ================= COUNTRY (GLOBAL) ================= */
+const countryInput = document.getElementById("countryInput");
+const countryDropdown = document.getElementById("countryDropdown");
+
+const countries = [
+  { name:"Afghanistan", flag:"🇦🇫" },{ name:"Albania", flag:"🇦🇱" },
+  { name:"Algeria", flag:"🇩🇿" },{ name:"Argentina", flag:"🇦🇷" },
+  { name:"Australia", flag:"🇦🇺" },{ name:"Austria", flag:"🇦🇹" },
+  { name:"Belgium", flag:"🇧🇪" },{ name:"Brazil", flag:"🇧🇷" },
+  { name:"Canada", flag:"🇨🇦" },{ name:"China", flag:"🇨🇳" },
+  { name:"Egypt", flag:"🇪🇬" },{ name:"France", flag:"🇫🇷" },
+  { name:"Germany", flag:"🇩🇪" },{ name:"Ghana", flag:"🇬🇭" },
+  { name:"India", flag:"🇮🇳" },{ name:"Ireland", flag:"🇮🇪" },
+  { name:"Italy", flag:"🇮🇹" },{ name:"Japan", flag:"🇯🇵" },
+  { name:"Kenya", flag:"🇰🇪" },{ name:"Mexico", flag:"🇲🇽" },
+  { name:"Netherlands", flag:"🇳🇱" },{ name:"Nigeria", flag:"🇳🇬" },
+  { name:"Norway", flag:"🇳🇴" },{ name:"Pakistan", flag:"🇵🇰" },
+  { name:"Portugal", flag:"🇵🇹" },{ name:"Qatar", flag:"🇶🇦" },
+  { name:"Saudi Arabia", flag:"🇸🇦" },{ name:"South Africa", flag:"🇿🇦" },
+  { name:"Spain", flag:"🇪🇸" },{ name:"Sweden", flag:"🇸🇪" },
+  { name:"Switzerland", flag:"🇨🇭" },{ name:"Turkey", flag:"🇹🇷" },
+  { name:"United Arab Emirates", flag:"🇦🇪" },
+  { name:"United Kingdom", flag:"🇬🇧" },
+  { name:"United States", flag:"🇺🇸" },
+  { name:"Zimbabwe", flag:"🇿🇼" }
+].sort((a,b)=>a.name.localeCompare(b.name));
+
+function renderCountries(filter=""){
+  countryDropdown.innerHTML="";
+  const list = countries.filter(c=>c.name.toLowerCase().includes(filter.toLowerCase()));
+
+  list.forEach(c=>{
+    const div=document.createElement("div");
+    div.className="p-3 cursor-pointer hover:bg-pink-50 flex gap-3";
+    div.innerHTML=`<span>${c.flag}</span><span>${c.name}</span>`;
+    div.onclick=()=>{
+      countryInput.value=c.name;
+      countryInput.dataset.flag=c.flag;
+      countryDropdown.classList.add("hidden");
+      togglePaymentByCountry();
+    };
+    countryDropdown.appendChild(div);
+  });
+}
+
+countryInput.addEventListener("focus",()=>{
+  countryDropdown.classList.remove("hidden");
+  renderCountries(countryInput.value);
+});
+
+countryInput.addEventListener("input",()=>{
+  countryDropdown.classList.remove("hidden");
+  renderCountries(countryInput.value);
+});
+
+document.addEventListener("click",e=>{
+  if(!countryInput.contains(e.target)&&!countryDropdown.contains(e.target)){
+    countryDropdown.classList.add("hidden");
+  }
+});
+
+// ===== Payment toggle by country =====
+function togglePaymentByCountry() {
+  const selectedCountry = countryInput.value.trim().toLowerCase();
+  const notice = document.getElementById("internationalNotice");
+
+  if (!selectedCountry || selectedCountry === "nigeria") {
+    // 🇳🇬 Local
+    paystackBtn.style.display = "inline-block";
+    whatsappBtn.classList.add("hidden");
+    notice.classList.add("hidden");
+
+    // Enable delivery options for Nigeria
+    deliverySelect.disabled = false;
+    deliveryType.disabled = false;
+    terminal.disabled = false;
+    deliverySelect.parentElement.style.display = "inline-block";
+    deliveryType.parentElement.style.display = "inline-block";
+    terminal.parentElement.style.display = "inline-block";
+  } else {
+    // 🌍 International
+    paystackBtn.style.display = "none";
+    whatsappBtn.classList.remove("hidden");
+    notice.classList.remove("hidden");
+    deliverySelect.disabled = true;
+
+    // ✅ Only show notification for non-Nigeria countries
+    showNotification(
+      "International orders are completed via WhatsApp.",
+      "info",
+      4000
+    );
+  }
+
+  // ✅ Render order so yellow international block shows
+  if (cartItems && cartItems.length > 0) {
+    renderOrderWithDelivery();
+  }
+}
+
+  // ===== Data =====
+  const lagosLGAFees={"Agege":3000,"Ajeromi-Ifelodun":3000,
+  "Alimosho":3000,"Amuwo-Odofin":3000,"Apapa":3000,"Epe":6000,
+  "Eti-Osa":5000,"Ibeju-Lekki":5000,"Lekki Phase":4000,"Sangotedo":4000,
+  "Ajah":4000,"Ifako-Ijaiye":3000,"Ikeja":3000,"Ikorodu":4000,"Kosofe":4000,
+  "Lagos Island":4000,"Lagos Mainland":4000,"Mushin":3000,"Ojo":3000,
+  "Oshodi-Isolo":3000,"Shomolu":3000,"Surulere":3000
+};
+
+  const guoSupportedStates=["lagos","abuja","abia","anambra",
+  "benin","enugu","imo","rivers","delta","edo","benue","kaduna","kano",
+  "benin","ebonyi","plateau","warri","asaba"
+];
+
+  const states=["Abia","Adamawa","Akwa Ibom","Anambra","Benin",
+  "Bauchi","Bayelsa","Benue","Borno","Cross River","Delta",
+  "Ebonyi","Edo","Ekiti","Enugu","Gombe","Imo","Jigawa",
+  "Kaduna","Kano","Katsina","Kebbi","Kogi","Kwara","Lagos",
+  "Nasarawa","Niger","Ogun","Ondo","Osun","Oyo","Plateau",
+  "Rivers","Sokoto","Taraba","Yobe","Zamfara","Abuja"
+];
+
+  const lagosLGAs=Object.keys(lagosLGAFees);
+
+  // GUO Terminal
+  const GUOTerminals = {
+  abuja: ["Kubwa", "Utako"],
+  abia: ["Aba", "Umuahia"],
+  anambra: ["Awka", "Awkuzu", "Ihiala", "Nnewi", "Onitsha", "Umunze"],
+  enugu: ["Enugu (Holy Ghost / Ogbete)"],
+  imo: ["Akokwa", "Orlu", "Owerri", "Umuaka"],
+  rivers: ["Port Harcourt (Aba Road)"],
+  delta: ["Asaba (Head Bridge, Okpanam Road)"],
+  edo: ["Benin City (Ugbowo–Lagos Road)"],
+  kaduna: ["Kaduna", "Zaria"],
+  kano: ["Kano (Sabon Gari)"],
+  ebonyi: ["Abakaliki", "Afikpo"],
+  plateau: ["Jos (Old Railway Station)"]
+};
+
+// GIG Terminals
+const GIGTerminals = {
+  abia: ["Aba", "Umuahia"],
+  adamawa: ["Yola"],
+  akwaIbom: ["Uyo"],
+  anambra: ["Awka", "Onitsha", "Nnewi"],
+  bauchi: ["Bauchi"],
+  bayelsa: ["Yenagoa"],
+  benue: ["Makurdi"],
+  borno: ["Maiduguri"],
+  crossRiver: ["Calabar"],
+  delta: ["Asaba", "Warri"],
+  ebonyi: ["Abakaliki"],
+  edo: ["Benin City"],
+  ekiti: ["Ado-Ekiti"],
+  enugu: ["Enugu"],
+  gombe: ["Gombe"],
+  imo: ["Owerri"],
+  jigawa: ["Dutse"],
+  kaduna: ["Kaduna"],
+  kano: ["Kano"],
+  katsina: ["Katsina"],
+  kebbi: ["Birnin Kebbi"],
+  kogi: ["Lokoja"],
+  kwara: ["Ilorin"],
+  lagos: ["Ikeja", "Ajah", "Lekki", "Yaba"],
+  nasarawa: ["Lafia"],
+  niger: ["Minna"],
+  ogun: ["Abeokuta", "Ijebu-Ode", "Ota"],
+  ondo: ["Akure"],
+  osun: ["Osogbo"],
+  oyo: ["Ibadan"],
+  plateau: ["Jos"],
+  rivers: ["Port Harcourt"],
+  sokoto: ["Sokoto"],
+  taraba: ["Jalingo"],
+  yobe: ["Damaturu"],
+  zamfara: ["Gusau"],
+  abuja: ["Garki", "Utako"]
+};
+
+  let currentUser=null;
+  let deliveryFee=0;
+  let totalWeight=0;
+
+//   showLoader(true);
+
+  // ===== State Autocomplete =====
+  stateInput.addEventListener("input",()=>{
+    const input=stateInput.value.trim().toLowerCase();
+    suggestionsContainer.innerHTML="";
+    if(!input){ suggestionsContainer.style.display="none"; return; }
+    const matched=states.filter(s=>s.toLowerCase().startsWith(input));
+    matched.forEach(sName=>{
+      const div=document.createElement("div");
+      div.textContent=sName;
+      div.className="p-2 cursor-pointer hover:bg-pink-100";
+      div.addEventListener("click",()=>{
+        stateInput.value=sName;
+        suggestionsContainer.style.display="none";
+        updateDeliveryOptions();
+        renderOrderWithDelivery();
+        showDeliveryModalIfNeeded();
+      });
+      suggestionsContainer.appendChild(div);
+    });
+    suggestionsContainer.style.display=matched.length?"block":"none";
+  });
+  document.addEventListener("click",e=>{
+    if(!stateInput.contains(e.target)&&!suggestionsContainer.contains(e.target)) suggestionsContainer.style.display="none";
+  });
+
+  // ===== Dynamic Delivery Options =====
+  lgaInput.addEventListener("change", renderOrderWithDelivery);
+  deliverySelect.addEventListener("change", updateDeliveryType);
+  deliveryType.addEventListener("change", updateTerminal);
+
+  function updateDeliveryOptions(){
+    const state=stateInput.value.trim().toLowerCase();
+    if(state==="lagos"){
+      lgaInput.style.display="block";
+      lgaInput.innerHTML='<option value="">Select LGA</option>'+lagosLGAs.map(l=>`<option value="${l}">${l}</option>`).join("");
+      deliverySelect.disabled=true;
+      deliverySelect.value="";
+      resetDeliveryType();
+    } else {
+      lgaInput.style.display="none";
+      deliverySelect.disabled=false;
+      deliverySelect.value="";
+      resetDeliveryType();
+      // GUO availability
+      const guoOption=deliverySelect.querySelector('option[value="guo"]');
+      if(guoOption){
+        if(guoSupportedStates.includes(state)){ guoOption.disabled=false; guoOption.textContent="GUO Delivery"; }
+        else { guoOption.disabled=true; guoOption.textContent="GUO Delivery (Not available)"; }
+      }
+    }
+  }
+
+  // Update Terminal
+  function updateDeliveryType(){
+    resetDeliveryType();
+    if(deliverySelect.value){
+      deliveryType.style.display="inline-block"; deliveryTypeLabel.style.display="inline-block";
+    }
+    renderOrderWithDelivery();
+  }
+
+  terminal.onchange = () => renderOrderWithDelivery();
+
+function updateTerminal() {
+  terminal.innerHTML = "";
+  terminal.disabled = false;
+
+  if (deliveryType.value !== "terminal") {
+    renderOrderWithDelivery();
+    return;
+  }
+
+  const company = deliverySelect.value.toUpperCase();
+  const state = stateInput.value.trim().toLowerCase();
+
+  let terminals = [];
+  if (company === "GUO") terminals = GUOTerminals[state] || [];
+  else if (company === "GIG") terminals = GIGTerminals[state] || [];
+
+  if (!terminals.length) {
+    const opt = document.createElement("option");
+    opt.value = "";
+    opt.textContent = "No terminal available for selected state";
+    terminal.appendChild(opt);
+    terminal.disabled = true;
+  } else {
+    const placeholder = document.createElement("option");
+    placeholder.value = "";
+    placeholder.textContent = "Select Terminal";
+    terminal.appendChild(placeholder);
+
+    terminals.forEach(name => {
+      const opt = document.createElement("option");
+      opt.value = name;
+      opt.textContent = `${company} – ${name}`;
+      terminal.appendChild(opt);
+    });
+
+    // Optional: preselect first terminal
+    terminal.value = terminals[0];
+  }
+
+  terminal.style.display = "block";
+  terminalLabel.style.display = "block";
+
+  renderOrderWithDelivery();
+}
+
+  function resetDeliveryType(){ deliveryType.value=""; deliveryType.style.display="none"; deliveryTypeLabel.style.display="none"; resetTerminal(); }
+  function resetTerminal(){ terminal.innerHTML=""; terminal.style.display="none"; terminalLabel.style.display="none"; }
+
+//   ===== Loader =====
+  const loaderHTML = `
+    <div id="checkout-loader" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+      <svg xmlns="http://www.w3.org/2000/svg" class="fas fa-shopping-cart text-white w-12 h-12 animate-pulse" viewBox="0 0 16 16">
+        <path fill="currentColor" d="M0 2.5A.5.5 0 0 1 .5 2H2a.5.5 0 0 1 .485.379L2.89 4H14.5a.5.5 0 0 1 .485.621l-1.5 6A.5.5 0 0 1 13 11H4a.5.5 0 0 1-.485-.379L1.61 3H.5a.5.5 0 0 1-.5-.5M3.14 5l.5 2H5V5zM6 5v2h2V5zm3 0v2h2V5zm3 0v2h1.36l.5-2zm1.11 3H12v2h.61zM11 8H9v2h2zM8 8H6v2h2zM5 8H3.89l.5 2H5zm0 5a1 1 0 1 0 0 2a1 1 0 0 0 0-2m-2 1a2 2 0 1 1 4 0a2 2 0 0 1-4 0m9-1a1 1 0 1 0 0 2a1 1 0 0 0 0-2m-2 1a2 2 0 1 1 4 0a2 2 0 0 1-4 0"/>
+      </svg>
+    </div>
+  `;
+  document.body.insertAdjacentHTML('afterbegin', loaderHTML);
+  const loader = document.getElementById("checkout-loader");
+  function showLoader(show = true){
+    if(!loader) return;
+    if(show){ loader.classList.remove("fade-out"); loader.style.display = "flex"; }
+    else { loader.classList.add("fade-out"); setTimeout(()=>loader.style.display="none",400); }
+  }
+
+  // ===== Firebase Init =====
+  const firebaseConfig = {
+    apiKey: "AIzaSyDdTPmpaIPWSDWOmR-fXgvAb7hoxZUawcc",
+    authDomain: "e-commerce-39c74.firebaseapp.com",
+    projectId: "e-commerce-39c74",
+    storageBucket: "e-commerce-39c74.firebasestorage.app",
+    messagingSenderId: "863375033754",
+    appId: "1:863375033754:web:7ba248c8dbb1566c83e623"
+  };
+  if (!firebase.apps.length) {
+  firebase.initializeApp(firebaseConfig);
+}
+  // firebase.initializeApp(firebaseConfig);
+  const db = firebase.firestore();
+  const auth = firebase.auth();
+
+  // ===== Guest ID (MUST be before saveOrder runs) =====
+function getGuestId() {
+  let id = localStorage.getItem("guestId");
+  if (!id) {
+    id = "guest_" + crypto.randomUUID();
+    localStorage.setItem("guestId", id);
+  }
+  return id;
+}
+
+window.guestId = getGuestId();
+console.log("Guest ID READY:", window.guestId);
+
+  // Clear Guest Cart
+  async function clearGuestCart() {
+  const guestId = localStorage.getItem("guestId");
+  if (!guestId) return;
+
+  try {
+    await db.collection("guestCarts").doc(guestId).set({
+      guestId,
+      items: [],
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+
+    console.log("🧹 Guest cart emptied:", guestId);
+  } catch (err) {
+    console.error("❌ Failed to clear guest cart:", err);
+  }
+
+  // ✅ ONLY clear cart items, NOT guestId
+  localStorage.removeItem("cart");
+}
+
+  // ===== Notifications =====
+  const activeNotifications = new Set();
+  function showNotification(message,type="info",duration=3000){
+    let container=document.getElementById("notification-container");
+    if(!container){
+      container=document.createElement("div");
+      container.id="notification-container";
+      container.className="fixed top-20 right-4 z-[9999] flex flex-col gap-2";
+      document.body.appendChild(container);
+    }
+    if(activeNotifications.has(message)) return;
+    activeNotifications.add(message);
+
+    const notif=document.createElement("div");
+    notif.className="flex items-center justify-between gap-3 p-4 bg-white rounded-lg shadow-lg border border-gray-200 min-w-[250px] max-w-sm animate-slideIn";
+
+    const icon=document.createElement("span");
+    if(type==="success") icon.innerHTML=`<i class="fas fa-check-circle text-green-500 text-xl"></i>`;
+    else if(type==="error") icon.innerHTML=`<i class="fas fa-times-circle text-red-500 text-xl"></i>`;
+    else if(type==="warning") icon.innerHTML=`<i class="fas fa-exclamation-triangle text-yellow-500 text-xl"></i>`;
+    else icon.innerHTML=`<i class="fas fa-info-circle text-blue-500 text-xl"></i>`;
+
+    const text=document.createElement("span");
+    text.className="flex-1 text-gray-800 font-medium";
+    text.textContent=message;
+
+    const closeBtn=document.createElement("button");
+    closeBtn.innerHTML="&times;";
+    closeBtn.className="ml-4 text-gray-400 hover:text-gray-600 font-bold text-lg";
+    closeBtn.onclick=()=>removeNotification(notif,message);
+
+    notif.appendChild(icon);
+    notif.appendChild(text);
+    notif.appendChild(closeBtn);
+    container.appendChild(notif);
+
+    setTimeout(()=>removeNotification(notif,message),duration);
+  }
+  function removeNotification(notif,message){
+    if(!notif) return;
+    notif.classList.remove("animate-slideIn");
+    notif.classList.add("animate-slideOut");
+    notif.addEventListener("animationend",()=>notif.remove());
+    activeNotifications.delete(message);
+  }
+  const notifStyle=document.createElement("style");
+  notifStyle.textContent=`
+    @keyframes slideIn { from {opacity:0; transform:translateX(50px);} to {opacity:1; transform:translateX(0);} }
+    @keyframes slideOut { from {opacity:1; transform:translateX(0);} to {opacity:0; transform:translateX(50px);} }
+    .animate-slideIn { animation: slideIn 0.3s ease-out forwards; }
+    .animate-slideOut { animation: slideOut 0.3s ease-in forwards; }
+  `;
+  document.head.appendChild(notifStyle);
+
+  // ===== Calculate Delivery Fee =====
+  function calculateDeliveryFee(deliveryInfo) {
+    let fee = 0;
+    const stateLower = (deliveryInfo.state || "").toLowerCase();
+    const company = (deliveryInfo.company || "").toUpperCase();
+
+    if (deliveryInfo.country?.toLowerCase() !== "nigeria") return 0; // Intl
+
+    if (stateLower === "lagos" && deliveryInfo.lga) {
+      fee = lagosLGAFees[deliveryInfo.lga] || 0;
+    } else if (company === "GIG") {
+      fee = 6700 + Math.max(totalWeight - 1, 0) * 800;
+    } else if (company === "GUO" && guoSupportedStates.includes(stateLower)) {
+      fee = 3500 + Math.max(totalWeight - 1, 0) * 700;
+    }
+
+    if (deliveryInfo.type === "home") fee += 800;
+
+    return fee;
+  }
+
+  // ===== Prevent notification spam =====
+const notificationCooldown = new Map(); // key -> timeoutId
+
+function showNotificationOnce(key, message, type = "info", delay = 800) {
+  if (notificationCooldown.has(key)) return;
+
+  showNotification(message, type);
+
+  const timeout = setTimeout(() => {
+    notificationCooldown.delete(key);
+  }, delay);
+
+  notificationCooldown.set(key, timeout);
+}
+
+// ===== DELIVERY DISCLAIMER LOGIC =====
+const deliveryModal = document.getElementById("deliveryModal");
+const ackDeliveryFee = document.getElementById("ackDeliveryFee");
+
+function showDeliveryModalIfNeeded() {
+  const state = stateInput.value.trim().toLowerCase();
+  const country = countryInput.value.trim().toLowerCase();
+
+  // Only trigger for Nigerian states outside Lagos
+  if (state && state !== "lagos" && country === "nigeria") {
+    deliveryModal.classList.remove("hidden");
+  } else {
+    deliveryModal.classList.add("hidden");
+  }
+}
+
+// Close modal when user acknowledges
+ackDeliveryFee.addEventListener("click", () => {
+  deliveryModal.classList.add("hidden");
+});
+
+  // ===== Render Cart & Delivery =====
+  function renderOrderWithDelivery() {
+  orderContainer.innerHTML = "";
+  if (!cartItems.length) {
+    orderContainer.innerHTML = "<p class='text-gray-500'>Your cart is empty.</p>";
+    totalSpan.textContent = "0";
+    deliveryFeeEl.textContent = "0";
+    orderSkeleton?.classList.add("hidden");
+    orderContainer?.classList.remove("hidden");
+    return;
+  }
+
+  let subtotal = 0;
+  totalWeight = 0;
+
+  cartItems.forEach((item, index) => {
+    const itemTotal = item.price * item.quantity;
+    subtotal += itemTotal;
+    totalWeight += (item.weight || 1) * item.quantity;
+
+    const div = document.createElement("div");
+    div.className = "flex justify-between bg-white p-4 rounded shadow mb-3 items-center";
+    div.innerHTML = `
+      <div class="flex items-center gap-4">
+        <img src="${item.image || 'https://via.placeholder.com/64'}" class="w-16 h-16 object-cover rounded">
+        <div>
+          <h4 class="font-semibold">${item.name}</h4>
+          <p class="text-pink-500 font-bold">₦${item.price.toLocaleString()}</p>
+          <div class="flex items-center gap-2 mt-1">
+            <button class="qty-decrease px-2 py-1 bg-gray-200 rounded hover:bg-pink-500 hover:text-white">-</button>
+            <span class="qty">${item.quantity}</span>
+            <button class="qty-increase px-2 py-1 bg-gray-200 rounded hover:bg-pink-500 hover:text-white">+</button>
+          </div>
+        </div>
+      </div>
+      <div class="flex flex-col items-end">
+        <p class="font-semibold mb-2">₦${itemTotal.toLocaleString()}</p>
+        <button class="delete-item text-red-500 text-ls font-semibold"><i class="fas fa-trash-alt mt-4 text-lg"></i> Delete</button>
+      </div>
+    `;
+    orderContainer.appendChild(div);
+
+    // ===== Event Listeners =====
+    const increaseBtn = div.querySelector(".qty-increase");
+    const decreaseBtn = div.querySelector(".qty-decrease");
+    const deleteBtn = div.querySelector(".delete-item");
+    const qtySpan = div.querySelector(".qty");
+
+    increaseBtn.addEventListener("click", () => {
+      item.quantity++;
+      qtySpan.textContent = item.quantity;
+      updateCartAndFirestore();
+      showNotificationOnce(
+    `inc-${item.name}`,
+    `${item.name} quantity increased`,
+    "info"
+  );
+      // showNotification(`${item.name} quantity increased to ${item.quantity}`);
+    });
+
+    decreaseBtn.addEventListener("click", () => {
+      if (item.quantity > 1) {
+        item.quantity--;
+        qtySpan.textContent = item.quantity;
+        updateCartAndFirestore();
+        showNotificationOnce(
+      `dec-${item.name}`,
+      `${item.name} quantity decreased`,
+      "info"
+    );
+        // showNotification(`${item.name} quantity decreased to ${item.quantity}`);
+      } else {
+        cartItems.splice(index, 1);
+        updateCartAndFirestore();
+        showNotificationOnce(
+      `del-${item.name}`,
+      `${item.name} removed from cart`,
+      "warning"
+    );
+        // showNotification(`${item.name} removed from cart`);
+      }
+    });
+
+    deleteBtn.addEventListener("click", () => {
+      cartItems.splice(index, 1);
+      updateCartAndFirestore();
+      showNotificationOnce(
+    `del-${item.name}`,
+    `${item.name} removed from cart`,
+    "warning"
+  );
+      // showNotification(`${item.name} removed from cart`);
+    });
+  });
+
+  // ===== Build Delivery Info =====
+  const deliveryInfo = {
+    state: stateInput.value || "",
+    lga: lgaInput.value || "",
+    type: deliveryType.value || "",
+    company: deliverySelect.value || "",
+    terminal: terminal.value || "",
+    country: countryInput.value || "Nigeria",
+    address: document.getElementById("address").value || ""
+  };
+
+  deliveryFee = calculateDeliveryFee(deliveryInfo);
+
+  // ===== Delivery Info Block =====
+  let deliveryDescHtml = "";
+  const stateLower = deliveryInfo.state.toLowerCase();
+  const isInternational = deliveryInfo.country.toLowerCase() !== "nigeria";
+
+  if (isInternational) {
+    deliveryDescHtml = `
+      <div>🌍 International Delivery</div>
+      <div>Country: ${deliveryInfo.country}</div>
+      <div class="text-sm text-gray-700">Delivery fee will be confirmed via WhatsApp</div>
+    `;
+  } else if (deliveryInfo.type === "home" && stateLower === "lagos") {
+    deliveryDescHtml = `
+      <div>Home Delivery</div>
+      <div>LGA: ${deliveryInfo.lga || '—'}</div>
+      <div>Address: ${deliveryInfo.address || '—'}</div>
+    `;
+  } else if (deliveryInfo.type === "terminal") {
+    deliveryDescHtml = `
+      <div>Company: ${deliveryInfo.company || '—'}</div>
+      <div>Type: Terminal Pickup</div>
+      <div>Terminal: ${deliveryInfo.terminal || '—'}</div>
+      <div>State: ${deliveryInfo.state || '—'}</div>
+    `;
+  } else {
+    deliveryDescHtml = `
+      <div>Company: ${deliveryInfo.company || '—'}</div>
+      <div>Type: ${deliveryInfo.type || '—'}</div>
+      <div>State: ${deliveryInfo.state || '—'}</div>
+      <div>Address: ${deliveryInfo.address || '—'}</div>
+    `;
+  }
+
+  const feeDiv = document.createElement("div");
+  feeDiv.className = "mt-4 p-3 bg-gray-50 rounded shadow-sm";
+  feeDiv.innerHTML = `
+    <div class="font-semibold mb-1">Delivery Info</div>
+    ${deliveryDescHtml}
+    <div>Fee: ₦${deliveryFee.toLocaleString()}</div>
+    <div>Weight: ${totalWeight} kg</div>
+  `;
+  orderContainer.appendChild(feeDiv);
+
+  // ===== Update Totals =====
+  deliveryFeeEl.textContent = deliveryFee.toLocaleString();
+  totalSpan.textContent = (subtotal + deliveryFee).toLocaleString();
+
+  orderSkeleton?.classList.add("hidden");
+  orderContainer?.classList.remove("hidden");
+
+  // ===== Helper to update localStorage & Firestore =====
+  function updateCartAndFirestore() {
+    localStorage.setItem("cart", JSON.stringify(cartItems));
+    renderOrderWithDelivery(); // re-render UI
+
+    // ===== Firestore Update =====
+    const guestId = localStorage.getItem("guestId");
+    if (!guestId) return;
+    db.collection("guestCarts").doc(guestId).set({
+      guestId,
+      items: cartItems,
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    })
+    .then(() => console.log("🛒 Guest cart updated in Firestore"))
+    .catch(err => console.error("❌ Failed to update guest cart:", err));
+  }
+}
+
+// ===== Save Order =====
+async function saveOrder(order) {
+  // ===== Build structured delivery object ===
+  let delivery = {};
+  const stateLower = stateInput.value.trim().toLowerCase();
+  const countryLower = countryInput.value?.trim().toLowerCase() || "nigeria";
+
+  if (countryLower === "nigeria") {
+    if (stateLower === "lagos") {
+      delivery = {
+        company: "LOCAL",
+        type: "home",
+        terminal: "—",
+        state: stateInput.value || "Lagos",
+        lga: lgaInput.value || "—",
+        address: document.getElementById("address").value || "—",
+        country: "Nigeria"
+      };
+    } else {
+      delivery = {
+        company: deliverySelect.value?.toUpperCase() || "—",
+        type: deliveryType.value || "—",
+        terminal: terminal.value || "—",
+        state: stateInput.value || "—",
+        lga: "—",
+        address: document.getElementById("address").value || "—",
+        country: "Nigeria"
+      };
+    }
+  } else {
+    delivery = {
+      company: "International",
+      type: deliveryType.value || "—",
+      state: stateInput.value || "—",
+      lga: "—",
+      address: document.getElementById("address").value || "—",
+      country: countryInput.value || "—",
+      isInternational: true
+    };
+  }
+
+  const user = auth.currentUser;
+  const guestId = getGuestId();
+
+  showLoader(true);
+  try {
+    // ===== Save order in Firestore =====
+    const orderRef = await db.collection("orders").add({
+      ...order,
+
+      // 🔐 IDENTITY (THIS IS THE IMPORTANT PART)
+      userId: user ? user.uid : null,
+      guestId: user ? null : guestId,
+
+      delivery,
+      totalWeight,
+      deliveryFee: order.deliveryFee || 0,
+      timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+      createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+      createdAtClient: new Date(),
+      fulfilled: false
+    });
+    
+    console.log("Order saved with ID:", orderRef.id);
+
+    // 2️⃣ CLEAR GUEST CART FIRST
+    await clearGuestCart();
+
+    // 3️⃣ Clear UI & local cart
+    cartItems = [];
+    localStorage.removeItem("cart");
+    renderOrderWithDelivery();
+    clearCheckoutInputs();
+
+    // 4️⃣ Show success UI
+    showNotification("Order placed successfully!", "success");
+    
+    // ===== Show Success Modal =====
+    const successModal = document.getElementById("orderSuccessModal");
+    const successMsg = document.getElementById("successMessage");
+
+    if (successModal && successMsg) {
+      const isInternational = !!delivery.isInternational;
+
+      if (order.paymentMethod === "Paystack") {
+        successMsg.textContent = "Thank you for your purchase. Your order has been confirmed.";
+
+        setTimeout(() => {
+          successMsg.innerHTML = `
+            Thank you, <strong>${order.name}</strong>!<br>
+            Your order total is <strong>₦${order.total?.toLocaleString()}</strong>.<br>
+            Payment Method: <strong>${order.paymentMethod}</strong><br>
+            Reference: <strong>${order.paymentRef}</strong>
+          `;
+        }, 3000);
+
+      } else if (isInternational) {
+        successMsg.innerHTML = `
+          Thank you, <strong>${order.name}</strong>!<br>
+          <div class="mt-2 text-yellow-700 font-semibold">
+            🌍 International order – delivery cost will be confirmed via WhatsApp.
+          </div>
+          Payment Method: <strong>${order.paymentMethod}</strong><br>
+          Reference: <strong>${order.paymentRef}</strong>
+        `;
+      }
+
+      successModal.classList.remove("hidden");
+    }
+    if (window.destroyCartListener) {
+  window.destroyCartListener();
+  console.log("🛑 Cart listener stopped");
+}
+
+    return orderRef;
+
+  } catch (err) {
+    console.error(err);
+    showNotification("Failed to save order. Try again.", "error", 4000);
+    throw err;
+  } finally {
+    showLoader(false);
+  }
+}
+
+// ===== Payment Handler =====
+  function handlePayment(){
+    const billing=validateBilling();
+    if(!billing || !cartItems.length){
+      showNotification("Cannot proceed: check billing or cart.","error");
+      return;
+    }
+
+    let subtotal=0,totalWeight=0;
+    cartItems.forEach(i=>{ subtotal += i.price*i.quantity; totalWeight += (i.weight||1)*i.quantity; });
+
+    let fee=0;
+    const state = billing.state.toLowerCase();
+    const option = deliverySelect.value.toLowerCase();
+    if(state==="lagos" && billing.lga) fee = lagosLGAFees[billing.lga]||0;
+    else if(option==="gig") fee = 6700 + Math.max(totalWeight-1,0)*800;
+    else if(option==="guo" && guoSupportedStates.includes(state)) fee = 3500 + Math.max(totalWeight-1,0)*700;
+    if(deliveryType.value==="home") fee += 800;
+
+    const total = subtotal + fee;
+    if(total <= 0){ showNotification("Total amount is zero. Cannot proceed.","error"); return; }
+
+    const handler = PaystackPop.setup({
+      key: "pk_test_0ed65a8011643dd303600706cb990c9ba067f199",
+      email: billing.email,
+      amount: total*100,
+      ref: "REF_"+Date.now(),
+      metadata:{custom_fields:[{display_name:"Name",value:billing.name},{display_name:"Phone",value:billing.phone},{display_name:"Address",value:billing.address}]},
+      callback:function(response){
+        
+        saveOrder({
+          ...billing,
+          items: cartItems,
+          total,
+          deliveryFee: fee,
+          totalWeight,
+          paymentRef: response.reference,
+          paymentMethod: "Paystack",
+          createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+      },
+      onClose:function(){ showNotification("Payment window closed before completion.","warning"); }
+    });
+    handler.openIframe();
+  }
+
+  // Vallidate Billing
+  function validateBilling() {
+  const name = document.getElementById("name")?.value.trim();
+  const email = document.getElementById("email")?.value.trim();
+  const phone = document.getElementById("phone")?.value.trim();
+  const address = document.getElementById("address")?.value.trim();
+  const state = stateInput.value.trim();
+  const lga = lgaInput.value.trim();
+  const country = countryInput.value.trim() || "Nigeria";
+
+  if (!name || !email || !phone || !address || !state) {
+    showNotification("Please fill in all required billing details.", "error");
+    return null;
+  }
+
+  return { name, email, phone, address, state, lga, country };
+}
+
+  // Send WhatsApp Order (iOS-safe)
+async function sendWhatsAppOrder() {
+  const billing = validateBilling();
+  if (!billing || !cartItems.length) {
+    showNotification("Please complete billing details.", "error");
+    return;
+  }
+
+  const whatsappPaymentRef = generateWhatsappPaymentRef();
+
+  const country = countryInput.value?.trim() || "Nigeria";
+  const isInternational = country.toLowerCase() !== "nigeria";
+
+  const delivery = {
+    company: isInternational ? "INTERNATIONAL" : deliveryCompany?.value || "—",
+    type: deliveryType.value || "_",
+    state: stateInput?.value || "—",
+    lga: "—",
+    address: billing.address,
+    country,
+    isInternational
+  };
+
+  let subtotal = 0;
+  cartItems.forEach(item => subtotal += item.price * item.quantity);
+
+  const deliveryFee = isInternational ? 0 : calculateDeliveryFee(delivery);
+  const total = subtotal + deliveryFee;
+
+  // ================================
+  // 1️⃣ BUILD WHATSAPP MESSAGE
+  // ================================
+  const itemsText = cartItems
+    .map((item, index) =>
+      `${index + 1}. ${item.name}
+Qty: ${item.quantity}
+Price: ₦${item.price.toLocaleString()}
+Subtotal: ₦${(item.price * item.quantity).toLocaleString()}`
+    )
+    .join("\n\n");
+
+  const message = `
+*🛒 New ${isInternational ? "International" : "Local"} Order*
+*🧾 Payment Ref:* ${whatsappPaymentRef}
+
+*👤 Customer Details*
+- Name: ${billing.name}
+- Phone: ${billing.phone}
+- Email: ${billing.email}
+
+*🌍 Delivery Info*
+- Country: ${delivery.country}
+- Address: ${delivery.address}
+- Delivery Type: ${delivery.type}
+
+*📦 Order Items*
+${itemsText}
+
+*💰 Payment Summary*
+- Subtotal: ₦${subtotal.toLocaleString()}
+- Delivery Fee: ${isInternational ? "To be confirmed" : `₦${deliveryFee.toLocaleString()}`}
+- Total: ₦${total.toLocaleString()}
+
+⚠️ Please confirm stock availability and delivery cost with the customer.
+Thank you! 🙏
+`;
+
+  const url = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
+
+  // ================================
+  // 2️⃣ OPEN WHATSAPP IN NEW TAB (iOS SAFE)
+  // ================================
+  window.open(url, "_blank");
+
+  // 3️⃣ SAVE ORDER ASYNC
+  showLoader(true);
+
+  try {
+    
+    await saveOrder({
+      ...billing,
+      items: cartItems,
+      deliveryFee,
+      total,
+      totalWeight,
+      paymentRef: whatsappPaymentRef,
+      paymentMethod: "WhatsApp",
+      status: "pending_confirmation"
+    });
+  } catch (err) {
+    console.error("Error saving order:", err);
+    showNotification("Failed to save order. Please try again.", "error");
+  }
+
+  showLoader(false);
+
+  // 4️⃣ SHOW SUCCESS MODAL
+  const successModal = document.getElementById("orderSuccessModal");
+  const successMessage = document.getElementById("successMessage");
+
+  successMessage.innerHTML = `
+    Thank you, <strong>${billing.name}</strong>!<br><br>
+    ${
+      isInternational
+        ? `<div class="text-yellow-700 font-semibold">
+             🌍 International order – delivery cost will be confirmed via WhatsApp.
+           </div>`
+        : `Your total payment is <strong>₦${total.toLocaleString()}</strong>.`
+    }
+    <br>
+    Payment Method: <strong>WhatsApp</strong><br>
+    Reference: <strong>${whatsappPaymentRef}</strong>
+  `;
+
+  successModal.classList.remove("hidden");
+}
+
+// Show Success Modal
+function showOrderSuccess(messageHtml) {
+  const modal = document.getElementById("orderSuccess");
+  const msg = document.getElementById("successMessage");
+
+  console.log("Cart cleared:", cartItems);
+console.log("Inputs cleared:", name.value, email.value, countryInput.value);
+
+  msg.innerHTML = messageHtml;
+  modal.classList.remove("hidden");
+}
+
+function closeSuccess() {
+  document.getElementById("orderSuccess").classList.add("hidden");
+}
+
+function goToDashboard() {
+  window.location.href = "customer-dashboard.html";
+}
+
+  // ===== Initialize =====
+  showLoader(true);
+  cartItems = getCheckoutCart();
+  renderOrderWithDelivery();
+  showLoader(false);
+
+  // ===== Event Listeners =====
+  paystackBtn.addEventListener("click", handlePayment);
+  whatsappBtn.addEventListener("click", sendWhatsAppOrder);
+  terminal.onchange = () => renderOrderWithDelivery();
+  deliveryType.onchange = () => renderOrderWithDelivery();
+  deliverySelect.onchange = () => renderOrderWithDelivery();
+  stateInput.onchange = () => renderOrderWithDelivery();
+  lgaInput.onchange = () => renderOrderWithDelivery();
+
+  window.showLoader = showLoader;
+  window.sendWhatsAppOrder = sendWhatsAppOrder;
+});
+</script>
+</body>
+</html>
