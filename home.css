@@ -219,6 +219,34 @@ body {
   transition: width 0.03s linear;
 }
 
+.hero-slider {
+  touch-action: pan-y;
+  cursor: grab;
+}
+
+.hero-slider:active {
+  cursor: grabbing;
+}
+
+.hero-tabs-track {
+  scrollbar-width: none;
+}
+
+.hero-tabs-track::-webkit-scrollbar {
+  display: none;
+}
+
+.hero-controls {
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+
+.hero-controls.show {
+  opacity: 1;
+  pointer-events: auto;
+}
+
 /* ================= ANIMATIONS ================= */
 @keyframes fadeIn {
   from { opacity: 0; transform: translateX(50px); }
