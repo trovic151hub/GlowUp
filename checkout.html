@@ -885,6 +885,27 @@ console.log("Guest ID READY:", window.guestId);
     return fee;
   }
 
+  // Format Deleivery Fee Display
+  function formatDeliveryFeeDisplay(fee, deliveryInfo) {
+  const state = deliveryInfo.state?.toLowerCase() || "";
+  const country = deliveryInfo.country?.toLowerCase() || "nigeria";
+
+  if (country !== "nigeria") {
+    return "To be confirmed after dispatch";
+  }
+
+  if (state !== "lagos") {
+    const min = fee;
+    const max = fee + 4000; // safe buffer
+    return `Estimated: ₦${min.toLocaleString()} – ₦${max.toLocaleString()}
+    <div class="text-xs text-gray-500 mt-1">
+      Delivery fees are estimated. Final cost is determined by the courier after package processing.
+    </div>`;
+  }
+
+  return `₦${fee.toLocaleString()}`;
+}
+
   // ===== Prevent notification spam =====
 const notificationCooldown = new Map(); // key -> timeoutId
 
@@ -1067,7 +1088,10 @@ ackDeliveryFee.addEventListener("click", () => {
   feeDiv.innerHTML = `
     <div class="font-semibold mb-1">Delivery Info</div>
     ${deliveryDescHtml}
-    <div>Fee: ₦${deliveryFee.toLocaleString()}</div>
+    <div>
+  <strong>Delivery Fee:</strong><br>
+  ${formatDeliveryFeeDisplay(deliveryFee, deliveryInfo)}
+</div>
     <div>Weight: ${totalWeight} kg</div>
   `;
   orderContainer.appendChild(feeDiv);
