@@ -319,7 +319,8 @@
   <div class="bg-white rounded-lg shadow-lg max-w-md w-full p-6 relative">
     <h3 class="text-lg font-bold mb-4 text-yellow-700">⚠️ Delivery Fee Notice</h3>
     <p class="mb-4 text-gray-700">
-      Delivery fees for states outside Lagos may vary. Any additional charges will be communicated before shipment.
+      Delivery fees are estimated. Final cost is determined by the courier after package processing.
+      <!-- Delivery fees for states outside Lagos may vary. Any additional charges will be communicated before shipment. -->
     </p>
     <button id="ackDeliveryFee" class="px-4 py-2 bg-pink-500 text-white rounded hover:bg-pink-600">
       I Understand
@@ -555,53 +556,59 @@ function togglePaymentByCountry() {
   "Oshodi-Isolo":3000,"Shomolu":3000,"Surulere":3000
 };
 
-  const guoSupportedStates=["lagos","abuja","abia","anambra",
+  const guoSupportedStates=["lagos","abuja","abia", "Aba", "anambra",
   "benin","enugu","imo","rivers","delta","edo","benue","kaduna","kano",
-  "benin","ebonyi","plateau","warri","asaba"
+  "benin","ebonyi","plateau","warri","asaba", "Umuahia", "Yola", "Awka",
+  "Bauchi"
 ];
 
-  const states=["Abia","Adamawa","Akwa Ibom","Anambra","Benin",
+  const states=["Abia", "Aba","Adamawa","Akwa Ibom", "Awka","Anambra","Benin",
   "Bauchi","Bayelsa","Benue","Borno","Cross River","Delta",
   "Ebonyi","Edo","Ekiti","Enugu","Gombe","Imo","Jigawa",
   "Kaduna","Kano","Katsina","Kebbi","Kogi","Kwara","Lagos",
   "Nasarawa","Niger","Ogun","Ondo","Osun","Oyo","Plateau",
-  "Rivers","Sokoto","Taraba","Yobe","Zamfara","Abuja"
+  "Rivers","Sokoto","Taraba", "Umuahia","Yobe", "Yola","Zamfara","Abuja"
 ];
 
   const lagosLGAs=Object.keys(lagosLGAFees);
 
   // GUO Terminal
   const GUOTerminals = {
-  abuja: ["Kubwa", "Utako"],
+  abuja: ["Kubwa", "Utako", "Gwarinpa", "Mararaba", "Wuse2", "Zuba"],
   abia: ["Aba", "Umuahia"],
-  anambra: ["Awka", "Awkuzu", "Ihiala", "Nnewi", "Onitsha", "Umunze"],
+  aba: ["Aba"],
+  anambra: ["Awka", "Awkuzu", "Ihiala", "Nnewi", "Onitsha", "Umunze", "Ekwulobia"],
+  awka: ["Unizik junction", "Ifite-Awka"],
   enugu: ["Enugu (Holy Ghost / Ogbete)"],
   imo: ["Akokwa", "Orlu", "Owerri", "Umuaka"],
   rivers: ["Port Harcourt (Aba Road)"],
   delta: ["Asaba (Head Bridge, Okpanam Road)"],
   edo: ["Benin City (Ugbowo–Lagos Road)"],
-  kaduna: ["Kaduna", "Zaria"],
+  kaduna: ["Kaduna", "Zaria", "Mando"],
   kano: ["Kano (Sabon Gari)"],
   ebonyi: ["Abakaliki", "Afikpo"],
-  plateau: ["Jos (Old Railway Station)"]
+  plateau: ["Jos (Old Railway Station)"],
+  umuahia: ["Umuahia"],
+  yola: ["Jambutu Park"],
+  bauchi: ["Bauchi"],
 };
 
 // GIG Terminals
 const GIGTerminals = {
-  abia: ["Aba", "Umuahia"],
+  abia: ["Aba 1", "Aba 2", "Umuahia-1", "Umuahia-2"],
   adamawa: ["Yola"],
-  akwaIbom: ["Uyo"],
+  akwaIbom: ["Uyo 1", "Uyo 2", "Eket"],
   anambra: ["Awka", "Onitsha", "Nnewi"],
   bauchi: ["Bauchi"],
   bayelsa: ["Yenagoa"],
   benue: ["Makurdi"],
   borno: ["Maiduguri"],
   crossRiver: ["Calabar"],
-  delta: ["Asaba", "Warri"],
+  delta: ["Asaba", "Warri", "Ughelli"],
   ebonyi: ["Abakaliki"],
-  edo: ["Benin City"],
+  edo: ["Airport Road Benin", "Auchi", "Akpakpava", "Ekpoma"],
   ekiti: ["Ado-Ekiti"],
-  enugu: ["Enugu"],
+  enugu: ["Enugu", "Nsukka"],
   gombe: ["Gombe"],
   imo: ["Owerri"],
   jigawa: ["Dutse"],
@@ -611,20 +618,22 @@ const GIGTerminals = {
   kebbi: ["Birnin Kebbi"],
   kogi: ["Lokoja"],
   kwara: ["Ilorin"],
-  lagos: ["Ikeja", "Ajah", "Lekki", "Yaba"],
+  lagos: ["Ikeja", "Ajah", "Lekki", "Yaba", "Ikotun", ],
   nasarawa: ["Lafia"],
   niger: ["Minna"],
-  ogun: ["Abeokuta", "Ijebu-Ode", "Ota"],
-  ondo: ["Akure"],
-  osun: ["Osogbo"],
-  oyo: ["Ibadan"],
+  ogun: ["Abeokuta FUNAAB", "Ijebu-Ode", "Ota"],
+  ondo: ["Akure", "Ondo Town"],
+  osun: ["Osogbo", "Ile-Ife"],
+  oyo: ["Ibadan", "Ogbomosho"],
   plateau: ["Jos"],
-  rivers: ["Port Harcourt"],
+  rivers: ["Ada George", "Alakahia", "Elelenwon", "Woji", "Artillery", "Aliozu", "Olu Obasanjo", "Peter odili", "Stadium Road", "Tombia"],
   sokoto: ["Sokoto"],
   taraba: ["Jalingo"],
   yobe: ["Damaturu"],
   zamfara: ["Gusau"],
-  abuja: ["Garki", "Utako"]
+  abuja: ["Garki", "Utako 1", "Utako 2", "Wuse 1", "Wuse 2", "Gwagwaglada", "Garki", "Gudu", "Gwarinpa 1", "Gwarinpa 2", "Kubwa 1", "Kubwa 2", "Kubwa 3",
+    "Lugbe", "Mararaba", "Madalla", "Zuba"
+  ]
 };
 
   let currentUser=null;
