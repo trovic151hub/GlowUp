@@ -106,6 +106,17 @@
   <i class="fas fa-spinner fa-spin text-white text-5xl"></i>
 </div>
 
+<!-- Toast Container -->
+<!-- <div id="toastContainer" style="
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+"></div> -->
+
   <!-- Firebase -->
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script> 
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script> 
@@ -127,9 +138,146 @@ window.addEventListener("load", () => {
   const auth = app.auth();
   const db = app.firestore();
 
+  // ===== Admin: Listen for new orders =====
+let firstLoadOrders = true; // skip existing orders on first load
+
+db.collection("orders")
+  .orderBy("timestamp", "desc")
+  .onSnapshot((snapshot) => {
+    if (firstLoadOrders) {
+      firstLoadOrders = false; // ignore existing orders
+      return;
+    }
+
+    snapshot.docChanges().forEach((change) => {
+      if (change.type === "added") {
+        const orderData = change.doc.data();
+        const orderId = change.doc.id;
+
+        // Show notification
+        showAdminOrderNotification(orderId, orderData);
+
+        // Play sound
+        playNewOrderSound();
+      }
+    });
+  });
+
   let editId = null;
   let lastVisibleProduct = null;
   const PRODUCTS_PER_PAGE = 5;
+
+  // Simple alert or replace with toast UI
+  function showAdminOrderNotification(orderId, order) {
+  // Build a prettier HTML message
+  const message = `
+    <div style="font-family: Inter, sans-serif;">
+      <h2 style="margin:0 0 8px 0; color:#1F2937;">🛒 NEW ORDER</h2>
+      <p style="margin:2px 0;"><strong>Order ID:</strong> ${orderId}</p>
+      <p style="margin:2px 0;"><strong>Name:</strong>👤 ${order.name}</p>
+      <p style="margin:2px 0;"><strong>Phone:</strong>📞 ${order.phone}</p>
+      <p style="margin:2px 0;"><strong>Total:</strong>💰 ₦${order.total?.toLocaleString() || 0}</p>
+      <p style="margin:2px 0;"><strong>Items:</strong>📦 ${order.items?.length || 0}</p>
+    </div>
+  `;
+
+  // Use showConfirm but customize buttons
+  showConfirm(message, "New Order Received").then((viewOrder) => {
+    if (viewOrder) {
+      // Go to the admin order page or highlight the new order in your list
+      highlightOrder(orderId);
+    }
+  });
+}
+// function showAdminOrderNotification(orderId, order) {
+//     showAdminToast({ 
+//         id: orderId,
+//         name: order.name,
+//         phone: order.phone,
+//         total: order.total,
+//         items: order.items,
+//         paymentMethod: order.paymentMethod || "—",
+//         isInternational: !!order.delivery?.isInternational
+//     });
+// }
+
+function highlightOrder(orderId) {
+  const row = document.querySelector(`#order-${orderId}`);
+  if (!row) return;
+
+  // Add a temporary highlight
+  row.style.backgroundColor = "#FEF3C7"; // light yellow
+  row.scrollIntoView({ behavior: "smooth", block: "center" });
+
+  setTimeout(() => {
+    row.style.transition = "background-color 1s";
+    row.style.backgroundColor = "";
+  }, 3000);
+}
+
+function playNewOrderSound() {
+  const ctx = new (window.AudioContext || window.webkitAudioContext)();
+  const oscillator = ctx.createOscillator();
+  oscillator.type = "square";
+  oscillator.frequency.setValueAtTime(440, ctx.currentTime); // 440 Hz
+  oscillator.connect(ctx.destination);
+  oscillator.start();
+  oscillator.stop(ctx.currentTime + 0.2); // 0.2s beep
+}
+
+// function playNewOrderSound() {
+//   const audio = new Audio("sounds/new-order.mp3"); 
+//   audio.play().catch(err => console.warn("Sound play failed:", err));
+// }
+
+// function showAdminToast(order) {
+//     const toastContainer = document.getElementById("toastContainer");
+//     if (!toastContainer) return;
+
+//     const toast = document.createElement("div");
+//     toast.innerHTML = `
+//         <h4 style="margin:0 0 5px 0; font-size:16px; color:#fff;">🛒 NEW ORDER</h4>
+//         <p style="margin:2px 0; color:#fff;"><strong>Order ID:</strong> ${order.id}</p>
+//         <p style="margin:2px 0; color:#fff;"><strong>Name:</strong> ${order.name}</p>
+//         <p style="margin:2px 0; color:#fff;"><strong>Phone:</strong> ${order.phone}</p>
+//         <p style="margin:2px 0; color:#fff;"><strong>Total:</strong> ₦${order.total?.toLocaleString() || 0}</p>
+//         <p style="margin:2px 0; color:#fff;"><strong>Items:</strong> ${order.items?.length || 0}</p>
+//         <p style="margin:2px 0; color:#fff;"><strong>Payment:</strong> ${order.paymentMethod}</p>
+//         ${order.isInternational ? '<span style="color:#FBBF24; font-weight:bold;">🌍 International</span>' : ''}
+//     `;
+//     toast.style.cssText = `
+//         background: #1f2937;
+//         color: #fff;
+//         padding: 12px 16px;
+//         border-radius: 8px;
+//         box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+//         min-width: 250px;
+//         max-width: 300px;
+//         opacity: 0;
+//         transform: translateX(100%);
+//         transition: transform 0.4s ease, opacity 0.4s ease;
+//         font-family: Inter, sans-serif;
+//     `;
+
+//     toastContainer.appendChild(toast);
+
+//     // Animate in
+//     requestAnimationFrame(() => {
+//         toast.style.opacity = "1";
+//         toast.style.transform = "translateX(0)";
+//     });
+
+//     // Play notification sound
+//     const audio = new Audio("sounds/new-order.mp3");
+//     audio.play().catch(err => console.warn("Sound failed:", err));
+
+//     // Auto-remove after 5s
+//     setTimeout(() => {
+//         toast.style.opacity = "0";
+//         toast.style.transform = "translateX(100%)";
+//         setTimeout(() => toast.remove(), 400);
+//     }, 5000);
+// }
 
   const modalOverlay = document.getElementById("modalOverlay");
   const modalTitle = document.getElementById("modalTitle");
@@ -152,15 +300,37 @@ window.addEventListener("load", () => {
   }
 
   function showConfirm(message, title="Confirm") {
+    // Set the title
     modalTitle.textContent = title;
-    modalMessage.textContent = message;
+
+    // Render message as HTML instead of plain text
+    modalMessage.innerHTML = message;
+
+    // Show cancel button and overlay
     modalCancelBtn.classList.remove("hidden");
     modalOverlay.classList.remove("hidden");
+
     return new Promise(resolve => {
-      modalOkBtn.onclick = () => { modalOverlay.classList.add("hidden"); resolve(true); };
-      modalCancelBtn.onclick = () => { modalOverlay.classList.add("hidden"); resolve(false); };
+        modalOkBtn.onclick = () => { 
+            modalOverlay.classList.add("hidden"); 
+            resolve(true); 
+        };
+        modalCancelBtn.onclick = () => { 
+            modalOverlay.classList.add("hidden"); 
+            resolve(false); 
+        };
     });
-  }
+}
+  // function showConfirm(message, title="Confirm") {
+  //   modalTitle.textContent = title;
+  //   modalMessage.textContent = message;
+  //   modalCancelBtn.classList.remove("hidden");
+  //   modalOverlay.classList.remove("hidden");
+  //   return new Promise(resolve => {
+  //     modalOkBtn.onclick = () => { modalOverlay.classList.add("hidden"); resolve(true); };
+  //     modalCancelBtn.onclick = () => { modalOverlay.classList.add("hidden"); resolve(false); };
+  //   });
+  // }
 
   // Loader
 function showLoader() {
@@ -292,49 +462,6 @@ async function renderTable(append = false) {
     hideLoader(); // 👈 ALWAYS hide loader
   }
 }
-
-//   async function renderTable(append=false) {
-//     const tbody = document.getElementById("productTableBody");
-//     if(!append) {
-//       tbody.innerHTML = "";
-//       showLoader(); // 👈 show loader on first load
-//     }
-
-//     const products = await loadProducts(append ? lastVisibleProduct : null);
-
-//     products.forEach(p => {
-//       let imgUrl = p.image && p.image.includes("res.cloudinary.com")
-//         ? p.image.replace("/upload/", "/upload/w_300,h_300,c_fill/")
-//         : p.image || "https://via.placeholder.com/300";
-
-//       tbody.innerHTML += `
-//         <tr class="border-b">
-//           <td class="p-2">${p.name}</td>
-//           <td class="p-2">₦${p.price.toLocaleString()}</td>
-//           <td class="p-2">${p.category}</td>
-//           <td class="p-2">${p.weight || 0} kg</td>
-//           <td class="p-2"><img src="${imgUrl}" class="w-12 h-12 object-cover rounded"/></td>
-//           <td class="p-2 text-sm max-w-xs truncate">${p.description}</td>
-//           <td class="p-2">
-//             <button onclick="editProduct('${p.id}')" class="text-blue-600 text-sm">Edit</button>
-//             <button onclick="deleteProduct('${p.id}')" class="text-red-600 text-sm ml-2">Delete</button>
-//           </td>
-//         </tr>`;
-//     });
-
-//     if(!append && products.length===0) {
-//       tbody.innerHTML = `<tr><td class="p-4 text-center text-gray-500" colspan="7">No products found.</td></tr>`;
-//     }
-
-//     // document.getElementById("loadMoreProductsBtn").disabled = products.length < PRODUCTS_PER_PAGE;
-//     const loadMoreBtn = document.getElementById("loadMoreProductsBtn");
-
-// if (products.length < PRODUCTS_PER_PAGE) {
-//   loadMoreBtn.classList.add("hidden");   // hide completely
-// } else {
-//   loadMoreBtn.classList.remove("hidden"); // show if more exists
-// }
-//   }
 
   // ===== Save Product =====
   const saveBtnText = document.getElementById("saveBtnText");

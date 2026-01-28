@@ -1190,9 +1190,11 @@ async function saveOrder(order) {
       timestamp: firebase.firestore.FieldValue.serverTimestamp(),
       createdAt: firebase.firestore.FieldValue.serverTimestamp(),
       createdAtClient: new Date(),
-      fulfilled: false
+      fulfilled: false,
+      status: "new", // 👈 IMPORTANT
     });
     
+    // notifyAdminOnWhatsApp(orderRef.id, { ...order, delivery });
     console.log("Order saved with ID:", orderRef.id);
 
     // 2️⃣ CLEAR GUEST CART FIRST
@@ -1254,6 +1256,33 @@ async function saveOrder(order) {
     showLoader(false);
   }
 }
+
+// // Notify Admin On WhatsApp
+// const ADMIN_WHATSAPP = "2349053380773"; // Admin number
+
+// function notifyAdminOnWhatsApp(orderId, order) {
+//   const isInternational = order.delivery?.isInternational;
+
+//   const message = `
+// 🛒 *NEW ORDER RECEIVED*
+// 🆔 Order ID: ${orderId}
+
+// 👤 Name: ${order.name}
+// 📞 Phone: ${order.phone}
+// 📧 Email: ${order.email}
+
+// 📦 Items: ${order.items?.length || 0}
+// 💰 Total: ₦${order.total?.toLocaleString() || "0"}
+// 🚚 Delivery: ${isInternational ? "International" : "Local"}
+
+// ⏰ Time: ${new Date().toLocaleString()}
+
+// ⚠️ Please review in admin panel.
+// `;
+
+//   const url = `https://wa.me/${ADMIN_WHATSAPP}?text=${encodeURIComponent(message)}`;
+//   window.open(url, "_blank");
+// }
 
 // ===== Payment Handler =====
   function handlePayment(){
