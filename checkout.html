@@ -1191,7 +1191,6 @@ async function saveOrder(order) {
       createdAt: firebase.firestore.FieldValue.serverTimestamp(),
       createdAtClient: new Date(),
       fulfilled: false,
-      status: "new", // 👈 IMPORTANT
     });
     
     // notifyAdminOnWhatsApp(orderRef.id, { ...order, delivery });
