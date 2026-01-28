@@ -106,17 +106,6 @@
   <i class="fas fa-spinner fa-spin text-white text-5xl"></i>
 </div>
 
-<!-- Toast Container -->
-<!-- <div id="toastContainer" style="
-    position: fixed;
-    top: 20px;
-    right: 20px;
-    z-index: 9999;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-"></div> -->
-
   <!-- Firebase -->
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script> 
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script> 
@@ -138,146 +127,237 @@ window.addEventListener("load", () => {
   const auth = app.auth();
   const db = app.firestore();
 
-  // ===== Admin: Listen for new orders =====
-let firstLoadOrders = true; // skip existing orders on first load
+    // ===== Firestore & state =====
+  let newOrdersCount = Number(localStorage.getItem("newOrdersCount")) || 0;
+  let seenOrders = JSON.parse(localStorage.getItem("seenOrders") || "[]");
+  let firstLoadOrders = true;
 
-db.collection("orders")
-  .orderBy("timestamp", "desc")
-  .onSnapshot((snapshot) => {
-    if (firstLoadOrders) {
-      firstLoadOrders = false; // ignore existing orders
-      return;
+  // ===== Create notification div dynamically =====
+  const notification = document.createElement("div");
+  notification.id = "orderNotification";
+  Object.assign(notification.style, {
+    background: "#FEF3C7",
+    color: "#92400E",
+    padding: "10px 14px",
+    borderRadius: "8px",
+    display: "flex",
+    alignItems: "center",
+    gap: "10px",
+    fontSize: "14px",
+    position: "fixed",
+    top: "20px",
+    right: "20px",
+    zIndex: "9999",
+    opacity: "0",
+    transition: "opacity 0.5s ease",
+    pointerEvents: "none", // avoid blocking clicks
+  });
+
+  const icon = document.createTextNode("🔔");
+  const text = document.createElement("span");
+  text.id = "newOrderCountText";
+
+  const link = document.createElement("a");
+  link.href = "order-history.html";
+  link.textContent = "View orders";
+  Object.assign(link.style, {
+    fontWeight: "600",
+    textDecoration: "underline",
+    color: "#92400E",
+  });
+
+  link.addEventListener("click", () => {
+    newOrdersCount = 0;
+    localStorage.setItem("newOrdersCount", 0);
+    updateOrderNotification();
+  });
+
+  notification.appendChild(icon);
+  notification.appendChild(text);
+  notification.appendChild(link);
+  document.body.prepend(notification);
+
+  // ===== Update UI =====
+  function updateOrderNotification() {
+    if (newOrdersCount > 0) {
+      text.textContent =
+        newOrdersCount === 1
+          ? "You have 1 new order"
+          : `You have ${newOrdersCount} new orders`;
+      notification.style.pointerEvents = "auto";
+      notification.style.opacity = "1";
+    } else {
+      notification.style.opacity = "0";
+      notification.style.pointerEvents = "none";
     }
+  }
 
-    snapshot.docChanges().forEach((change) => {
-      if (change.type === "added") {
-        const orderData = change.doc.data();
+  // ===== Play sound (your old working code) =====
+  function playNewOrderSound() {
+    try {
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      if (ctx.state === "suspended") ctx.resume();
+      const oscillator = ctx.createOscillator();
+      oscillator.type = "square";
+      oscillator.frequency.setValueAtTime(440, ctx.currentTime);
+      oscillator.connect(ctx.destination);
+      oscillator.start();
+      oscillator.stop(ctx.currentTime + 0.15);
+    } catch (err) {
+      console.warn("Sound blocked by browser");
+    }
+  }
+
+  // ===== Firestore listener for new orders =====
+  db.collection("orders")
+    .orderBy("timestamp", "desc")
+    .onSnapshot((snapshot) => {
+      snapshot.docChanges().forEach((change) => {
         const orderId = change.doc.id;
 
-        // Show notification
-        showAdminOrderNotification(orderId, orderData);
+        if (change.type === "added" && !seenOrders.includes(orderId)) {
+          seenOrders.push(orderId);
+          localStorage.setItem("seenOrders", JSON.stringify(seenOrders));
 
-        // Play sound
-        playNewOrderSound();
-      }
+          if (!firstLoadOrders) {
+            newOrdersCount++;
+            localStorage.setItem("newOrdersCount", newOrdersCount);
+            updateOrderNotification();
+            playNewOrderSound(); // ✅ sound plays immediately
+          }
+        }
+      });
+
+      firstLoadOrders = false;
+      updateOrderNotification();
     });
-  });
+
+  // Show stored count on load
+  updateOrderNotification();
+//   let newOrdersCount = Number(localStorage.getItem("newOrdersCount")) || 0;
+//   let seenOrders = JSON.parse(localStorage.getItem("seenOrders") || "[]");
+//   let firstLoadOrders = true;
+
+//   // ===== Create notification div dynamically =====
+//   const notification = document.createElement("div");
+//   notification.id = "orderNotification";
+
+//   Object.assign(notification.style, {
+//     background: "#FEF3C7",
+//     color: "#92400E",
+//     padding: "10px 14px",
+//     borderRadius: "8px",
+//     display: "none", // start hidden
+//     alignItems: "center",
+//     gap: "10px",
+//     fontSize: "14px",
+//     marginBottom: "12px",
+//     position: "fixed",
+//     top: "10%",
+//     right: "7%",
+//     zIndex: "9999",
+//   });
+
+//   const icon = document.createTextNode("🔔");
+//   const text = document.createElement("span");
+//   text.id = "newOrderCountText";
+
+//   const link = document.createElement("a");
+//   link.href = "order-history.html";
+//   link.textContent = "View orders";
+//   Object.assign(link.style, {
+//     fontWeight: "600",
+//     textDecoration: "underline",
+//     color: "#92400E",
+//   });
+//   link.addEventListener("click", () => {
+//     newOrdersCount = 0;
+//     localStorage.setItem("newOrdersCount", 0);
+//     updateOrderNotification();
+//   });
+
+//   notification.appendChild(icon);
+//   notification.appendChild(text);
+//   notification.appendChild(link);
+
+//   const body = document.body || document.getElementsByTagName("body")[0];
+//   body.prepend(notification);
+
+//   // ===== Update UI =====
+//   function updateOrderNotification() {
+//     if (!notification || !text) return;
+
+//     if (newOrdersCount > 0) {
+//       text.textContent =
+//         newOrdersCount === 1
+//           ? "You have 1 new order"
+//           : `You have ${newOrdersCount} new orders`;
+//       notification.style.display = "flex";
+//     } else {
+//       notification.style.display = "none";
+//     }
+//   }
+
+//   function playNewOrderSound() {
+//   try {
+//     const ctx = new (window.AudioContext || window.webkitAudioContext)();
+//     if (ctx.state === "suspended") ctx.resume();
+//     const oscillator = ctx.createOscillator();
+//     oscillator.type = "square";
+//     oscillator.frequency.setValueAtTime(440, ctx.currentTime);
+//     oscillator.connect(ctx.destination);
+//     oscillator.start();
+//     oscillator.stop(ctx.currentTime + 0.15);
+//   } catch (err) {
+//     console.warn("Sound blocked by browser");
+//   }
+// }
+
+//   // function playNewOrderSound() {
+//   //   try {
+//   //     const ctx = new (window.AudioContext || window.webkitAudioContext)();
+//   //     if (ctx.state === "suspended") ctx.resume();
+//   //     const oscillator = ctx.createOscillator();
+//   //     oscillator.type = "square";
+//   //     oscillator.frequency.setValueAtTime(440, ctx.currentTime);
+//   //     oscillator.connect(ctx.destination);
+//   //     oscillator.start();
+//   //     oscillator.stop(ctx.currentTime + 0.15);
+//   //   } catch (err) {
+//   //     console.warn("Sound blocked by browser");
+//   //   }
+//   // }
+
+//   // ===== Firestore listener =====
+//   db.collection("orders")
+//     .orderBy("timestamp", "desc")
+//     .onSnapshot((snapshot) => {
+//       snapshot.docChanges().forEach((change) => {
+//         const orderId = change.doc.id;
+
+//         if (change.type === "added" && !seenOrders.includes(orderId)) {
+//           seenOrders.push(orderId);
+//           localStorage.setItem("seenOrders", JSON.stringify(seenOrders));
+
+//           if (!firstLoadOrders) {
+//             newOrdersCount++;
+//             localStorage.setItem("newOrdersCount", newOrdersCount);
+//             updateOrderNotification();
+//             playNewOrderSound();
+//           }
+//         }
+//       });
+
+//       firstLoadOrders = false;
+//       updateOrderNotification();
+//     });
+
+//   // Show stored count on load
+//   updateOrderNotification();
 
   let editId = null;
   let lastVisibleProduct = null;
   const PRODUCTS_PER_PAGE = 5;
-
-  // Simple alert or replace with toast UI
-  function showAdminOrderNotification(orderId, order) {
-  // Build a prettier HTML message
-  const message = `
-    <div style="font-family: Inter, sans-serif;">
-      <h2 style="margin:0 0 8px 0; color:#1F2937;">🛒 NEW ORDER</h2>
-      <p style="margin:2px 0;"><strong>Order ID:</strong> ${orderId}</p>
-      <p style="margin:2px 0;"><strong>Name:</strong>👤 ${order.name}</p>
-      <p style="margin:2px 0;"><strong>Phone:</strong>📞 ${order.phone}</p>
-      <p style="margin:2px 0;"><strong>Total:</strong>💰 ₦${order.total?.toLocaleString() || 0}</p>
-      <p style="margin:2px 0;"><strong>Items:</strong>📦 ${order.items?.length || 0}</p>
-    </div>
-  `;
-
-  // Use showConfirm but customize buttons
-  showConfirm(message, "New Order Received").then((viewOrder) => {
-    if (viewOrder) {
-      // Go to the admin order page or highlight the new order in your list
-      highlightOrder(orderId);
-    }
-  });
-}
-// function showAdminOrderNotification(orderId, order) {
-//     showAdminToast({ 
-//         id: orderId,
-//         name: order.name,
-//         phone: order.phone,
-//         total: order.total,
-//         items: order.items,
-//         paymentMethod: order.paymentMethod || "—",
-//         isInternational: !!order.delivery?.isInternational
-//     });
-// }
-
-function highlightOrder(orderId) {
-  const row = document.querySelector(`#order-${orderId}`);
-  if (!row) return;
-
-  // Add a temporary highlight
-  row.style.backgroundColor = "#FEF3C7"; // light yellow
-  row.scrollIntoView({ behavior: "smooth", block: "center" });
-
-  setTimeout(() => {
-    row.style.transition = "background-color 1s";
-    row.style.backgroundColor = "";
-  }, 3000);
-}
-
-function playNewOrderSound() {
-  const ctx = new (window.AudioContext || window.webkitAudioContext)();
-  const oscillator = ctx.createOscillator();
-  oscillator.type = "square";
-  oscillator.frequency.setValueAtTime(440, ctx.currentTime); // 440 Hz
-  oscillator.connect(ctx.destination);
-  oscillator.start();
-  oscillator.stop(ctx.currentTime + 0.2); // 0.2s beep
-}
-
-// function playNewOrderSound() {
-//   const audio = new Audio("sounds/new-order.mp3"); 
-//   audio.play().catch(err => console.warn("Sound play failed:", err));
-// }
-
-// function showAdminToast(order) {
-//     const toastContainer = document.getElementById("toastContainer");
-//     if (!toastContainer) return;
-
-//     const toast = document.createElement("div");
-//     toast.innerHTML = `
-//         <h4 style="margin:0 0 5px 0; font-size:16px; color:#fff;">🛒 NEW ORDER</h4>
-//         <p style="margin:2px 0; color:#fff;"><strong>Order ID:</strong> ${order.id}</p>
-//         <p style="margin:2px 0; color:#fff;"><strong>Name:</strong> ${order.name}</p>
-//         <p style="margin:2px 0; color:#fff;"><strong>Phone:</strong> ${order.phone}</p>
-//         <p style="margin:2px 0; color:#fff;"><strong>Total:</strong> ₦${order.total?.toLocaleString() || 0}</p>
-//         <p style="margin:2px 0; color:#fff;"><strong>Items:</strong> ${order.items?.length || 0}</p>
-//         <p style="margin:2px 0; color:#fff;"><strong>Payment:</strong> ${order.paymentMethod}</p>
-//         ${order.isInternational ? '<span style="color:#FBBF24; font-weight:bold;">🌍 International</span>' : ''}
-//     `;
-//     toast.style.cssText = `
-//         background: #1f2937;
-//         color: #fff;
-//         padding: 12px 16px;
-//         border-radius: 8px;
-//         box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-//         min-width: 250px;
-//         max-width: 300px;
-//         opacity: 0;
-//         transform: translateX(100%);
-//         transition: transform 0.4s ease, opacity 0.4s ease;
-//         font-family: Inter, sans-serif;
-//     `;
-
-//     toastContainer.appendChild(toast);
-
-//     // Animate in
-//     requestAnimationFrame(() => {
-//         toast.style.opacity = "1";
-//         toast.style.transform = "translateX(0)";
-//     });
-
-//     // Play notification sound
-//     const audio = new Audio("sounds/new-order.mp3");
-//     audio.play().catch(err => console.warn("Sound failed:", err));
-
-//     // Auto-remove after 5s
-//     setTimeout(() => {
-//         toast.style.opacity = "0";
-//         toast.style.transform = "translateX(100%)";
-//         setTimeout(() => toast.remove(), 400);
-//     }, 5000);
-// }
 
   const modalOverlay = document.getElementById("modalOverlay");
   const modalTitle = document.getElementById("modalTitle");
@@ -321,16 +401,6 @@ function playNewOrderSound() {
         };
     });
 }
-  // function showConfirm(message, title="Confirm") {
-  //   modalTitle.textContent = title;
-  //   modalMessage.textContent = message;
-  //   modalCancelBtn.classList.remove("hidden");
-  //   modalOverlay.classList.remove("hidden");
-  //   return new Promise(resolve => {
-  //     modalOkBtn.onclick = () => { modalOverlay.classList.add("hidden"); resolve(true); };
-  //     modalCancelBtn.onclick = () => { modalOverlay.classList.add("hidden"); resolve(false); };
-  //   });
-  // }
 
   // Loader
 function showLoader() {
