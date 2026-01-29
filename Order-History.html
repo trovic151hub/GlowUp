@@ -273,22 +273,16 @@ function hideLoader() {
   }
 
   async function clearAndLoad() { 
-  showLoader();                 // 👈 SHOW
+  showLoader(); 
   ordersTbody.innerHTML = ''; 
   lastDoc = null; 
 
   try {
     await loadMore(true);
   } finally {
-    hideLoader();               // 👈 ALWAYS HIDE
+    hideLoader();
   }
 }
-
-  // async function clearAndLoad() { 
-  //   ordersTbody.innerHTML=''; 
-  //   lastDoc=null; 
-  //   await loadMore(true); 
-  // }
 
   function updateSummary() {
     const rows = Array.from(ordersTbody.children).filter(r => r.__order);
@@ -800,7 +794,6 @@ async function sendReceiptEmail(order) {
       payment_method: order.paymentMethod || "—",
       payment_ref: order.paymentRef || "—",
 
-      // 👇 IMPORTANT: this must match {{{order_items}}} in EmailJS
       order_items: orderItems,
 
       order_total: Number(order.total || 0).toLocaleString(),
