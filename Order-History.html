@@ -228,17 +228,16 @@ firebase.auth().onAuthStateChanged(async (user) => {
   }
 
   // ===== Track viewed order details =====
-let viewedOrderDetails = JSON.parse(
-  localStorage.getItem("viewedOrderDetails") || "[]"
-);
+  async function markOrderAsViewed(orderId) {
+  const user = firebase.auth().currentUser;
+  if (!user) return;
 
-function markOrderAsViewed(orderId) {
-  if (!viewedOrderDetails.includes(orderId)) {
-    viewedOrderDetails.push(orderId);
-    localStorage.setItem(
-      "viewedOrderDetails",
-      JSON.stringify(viewedOrderDetails)
-    );
+  try {
+    await db.collection("orders").doc(orderId).update({
+      [`viewedBy.${user.uid}`]: true
+    });
+  } catch (err) {
+    console.error("Failed to mark order as viewed:", err);
   }
 }
 
@@ -350,10 +349,6 @@ if (snap.size < PAGE_SIZE) {
 } else {
   showLoadMore();
 }
-        // lastDoc = snap.docs[snap.docs.length-1];
-        // loadMoreBtn.style.display = snap.size < PAGE_SIZE ? 'none' : 'inline-block';
-      // } else if(isInitial){
-      //   ordersTbody.innerHTML = `<tr><td colspan="8" class="p-4 text-center text-gray-500">No orders found.</td></tr>`;
       } else if (isInitial) {
   ordersTbody.innerHTML = `
     <tr>
@@ -376,16 +371,16 @@ if (snap.size < PAGE_SIZE) {
   }
 
   function orderRow(order){
-    const tr=document.createElement('tr');
-    const when = order.timestamp?.toDate?.()?.toLocaleString() || new Date(order.timestamp||'').toLocaleString();
-    const deliveryFee = getDeliveryFee(order);
+  const tr = document.createElement('tr');
+  const when = order.timestamp?.toDate?.()?.toLocaleString() || '';
+  const deliveryFee = getDeliveryFee(order);
 
-    // ✅ Calculate total including fee only for international orders
   const totalWithFee = order.delivery?.isInternational
     ? Number(order.total || 0) + deliveryFee
     : Number(order.total || 0);
 
-    const isNew = !viewedOrderDetails.includes(order.id);
+  const adminId = firebase.auth().currentUser?.uid;
+  const isNew = !order.viewedBy || !order.viewedBy[adminId];
 
 tr.innerHTML = `
 <td class="p-2 align-top border border-gray-300">${when}</td>
@@ -439,25 +434,6 @@ tr.innerHTML = `
   </div>
 </td>
 `;
-
-//     tr.innerHTML=`<td class="p-2 align-top border border-gray-300">${when}</td>
-// <td class="p-2 align-top border border-gray-300">${order.name||''}</td>
-// <td class="p-2 align-top border border-gray-300">₦${totalWithFee.toLocaleString()}</td>
-// <td class="p-2 align-top border border-gray-300">${order.paymentMethod||''}</td>
-// <td class="p-2 align-top border border-gray-300">${order.shipmentStatus || 'processing'}</td>
-// <td class="p-2 align-top border border-gray-300">
-//   <span class="px-2 py-1 rounded text-xs ${order.fulfilled?'bg-green-200 text-green-800':'bg-yellow-200 text-yellow-800'}">
-//     ${order.fulfilled?'Completed':'Pending'}
-//   </span>
-// </td>
-// <td class="p-2 align-top border border-gray-300">
-//   <div class="flex flex-col md:flex-row gap-2">
-//     <button class="bg-blue-600 text-white px-3 py-1 rounded" onclick='openDetail("${order.id}")'>Detail</button>
-//     <button class="bg-pink-500 text-white px-3 py-1 rounded" onclick='toggleFulfilled("${order.id}", ${!!order.fulfilled})'>${order.fulfilled?'Mark Pending':'Mark Complete'}</button>
-//   </div>
-// </td>
-
-// `;
     tr.__order = order;
     return tr;
   }
@@ -512,13 +488,6 @@ tr.innerHTML = `
 
   renderModal(currentOpenOrder);
 };
-
-  // window.openDetail = function(orderId){
-  //   const row = Array.from(ordersTbody.children).find(r => r.__order?.id===orderId);
-  //   if(!row) return;
-  //   currentOpenOrder = row.__order;
-  //   renderModal(currentOpenOrder);
-  // };
 
   // ===== Confirm International Payment =====
 async function confirmInternationalPayment(orderId) {
