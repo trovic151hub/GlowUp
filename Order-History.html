@@ -227,6 +227,21 @@ firebase.auth().onAuthStateChanged(async (user) => {
     });
   }
 
+  // ===== Track viewed order details =====
+let viewedOrderDetails = JSON.parse(
+  localStorage.getItem("viewedOrderDetails") || "[]"
+);
+
+function markOrderAsViewed(orderId) {
+  if (!viewedOrderDetails.includes(orderId)) {
+    viewedOrderDetails.push(orderId);
+    localStorage.setItem(
+      "viewedOrderDetails",
+      JSON.stringify(viewedOrderDetails)
+    );
+  }
+}
+
   // ===== GLOBAL LOADER =====
 function showLoader() {
   loader.classList.remove("hidden");
@@ -272,10 +287,19 @@ function hideLoader() {
     return q.limit(pageSize);
   }
 
+  function hideLoadMore() {
+  loadMoreBtn.style.display = "none";
+}
+
+function showLoadMore() {
+  loadMoreBtn.style.display = "inline-block";
+}
+
   async function clearAndLoad() { 
   showLoader(); 
   ordersTbody.innerHTML = ''; 
-  lastDoc = null; 
+  lastDoc = null;
+  showLoadMore();
 
   try {
     await loadMore(true);
@@ -297,7 +321,7 @@ function hideLoader() {
     if(loadingMore) return;
     loadingMore = true; loadMoreBtn.disabled = true;
 
-    if (isInitial) showLoader();   // 👈 ONLY initial page load
+    if (isInitial) showLoader();
 
     for(let i=0;i<3;i++){
       const r = document.createElement('tr'); 
@@ -318,10 +342,27 @@ function hideLoader() {
         }) : docs;
 
         filteredDocs.forEach(order => ordersTbody.appendChild(orderRow(order)));
-        lastDoc = snap.docs[snap.docs.length-1];
-        loadMoreBtn.style.display = snap.size < PAGE_SIZE ? 'none' : 'inline-block';
-      } else if(isInitial){
-        ordersTbody.innerHTML = `<tr><td colspan="8" class="p-4 text-center text-gray-500">No orders found.</td></tr>`;
+        lastDoc = snap.docs[snap.docs.length - 1];
+
+// ✅ If fewer than PAGE_SIZE docs returned, no more orders exist
+if (snap.size < PAGE_SIZE) {
+  hideLoadMore();
+} else {
+  showLoadMore();
+}
+        // lastDoc = snap.docs[snap.docs.length-1];
+        // loadMoreBtn.style.display = snap.size < PAGE_SIZE ? 'none' : 'inline-block';
+      // } else if(isInitial){
+      //   ordersTbody.innerHTML = `<tr><td colspan="8" class="p-4 text-center text-gray-500">No orders found.</td></tr>`;
+      } else if (isInitial) {
+  ordersTbody.innerHTML = `
+    <tr>
+      <td colspan="8" class="p-4 text-center text-gray-500">
+        No orders found.
+      </td>
+    </tr>
+  `;
+  hideLoadMore();
         loadMoreBtn.style.display='none';
       }
     }catch(err){
@@ -344,24 +385,79 @@ function hideLoader() {
     ? Number(order.total || 0) + deliveryFee
     : Number(order.total || 0);
 
-    tr.innerHTML=`<td class="p-2 align-top border border-gray-300">${when}</td>
-<td class="p-2 align-top border border-gray-300">${order.name||''}</td>
-<td class="p-2 align-top border border-gray-300">₦${totalWithFee.toLocaleString()}</td>
-<td class="p-2 align-top border border-gray-300">${order.paymentMethod||''}</td>
-<td class="p-2 align-top border border-gray-300">${order.shipmentStatus || 'processing'}</td>
+    const isNew = !viewedOrderDetails.includes(order.id);
+
+tr.innerHTML = `
+<td class="p-2 align-top border border-gray-300">${when}</td>
+
 <td class="p-2 align-top border border-gray-300">
-  <span class="px-2 py-1 rounded text-xs ${order.fulfilled?'bg-green-200 text-green-800':'bg-yellow-200 text-yellow-800'}">
-    ${order.fulfilled?'Completed':'Pending'}
-  </span>
-</td>
-<td class="p-2 align-top border border-gray-300">
-  <div class="flex flex-col md:flex-row gap-2">
-    <button class="bg-blue-600 text-white px-3 py-1 rounded" onclick='openDetail("${order.id}")'>Detail</button>
-    <button class="bg-pink-500 text-white px-3 py-1 rounded" onclick='toggleFulfilled("${order.id}", ${!!order.fulfilled})'>${order.fulfilled?'Mark Pending':'Mark Complete'}</button>
+  <div class="flex items-center gap-2">
+    <span>${order.name || ""}</span>
+    ${
+      isNew
+        ? `<span class="px-2 py-0.5 text-xs font-semibold rounded-full
+             bg-red-600 text-white animate-pulse">
+             NEW
+           </span>`
+        : ""
+    }
   </div>
 </td>
 
+<td class="p-2 align-top border border-gray-300">
+  ₦${totalWithFee.toLocaleString()}
+</td>
+
+<td class="p-2 align-top border border-gray-300">
+  ${order.paymentMethod || ""}
+</td>
+
+<td class="p-2 align-top border border-gray-300">
+  ${order.shipmentStatus || "processing"}
+</td>
+
+<td class="p-2 align-top border border-gray-300">
+  <span class="px-2 py-1 rounded text-xs ${
+    order.fulfilled
+      ? "bg-green-200 text-green-800"
+      : "bg-yellow-200 text-yellow-800"
+  }">
+    ${order.fulfilled ? "Completed" : "Pending"}
+  </span>
+</td>
+
+<td class="p-2 align-top border border-gray-300">
+  <div class="flex flex-col md:flex-row gap-2">
+    <button class="bg-blue-600 text-white px-3 py-1 rounded"
+      onclick='openDetail("${order.id}")'>
+      Detail
+    </button>
+    <button class="bg-pink-500 text-white px-3 py-1 rounded"
+      onclick='toggleFulfilled("${order.id}", ${!!order.fulfilled})'>
+      ${order.fulfilled ? "Mark Pending" : "Mark Complete"}
+    </button>
+  </div>
+</td>
 `;
+
+//     tr.innerHTML=`<td class="p-2 align-top border border-gray-300">${when}</td>
+// <td class="p-2 align-top border border-gray-300">${order.name||''}</td>
+// <td class="p-2 align-top border border-gray-300">₦${totalWithFee.toLocaleString()}</td>
+// <td class="p-2 align-top border border-gray-300">${order.paymentMethod||''}</td>
+// <td class="p-2 align-top border border-gray-300">${order.shipmentStatus || 'processing'}</td>
+// <td class="p-2 align-top border border-gray-300">
+//   <span class="px-2 py-1 rounded text-xs ${order.fulfilled?'bg-green-200 text-green-800':'bg-yellow-200 text-yellow-800'}">
+//     ${order.fulfilled?'Completed':'Pending'}
+//   </span>
+// </td>
+// <td class="p-2 align-top border border-gray-300">
+//   <div class="flex flex-col md:flex-row gap-2">
+//     <button class="bg-blue-600 text-white px-3 py-1 rounded" onclick='openDetail("${order.id}")'>Detail</button>
+//     <button class="bg-pink-500 text-white px-3 py-1 rounded" onclick='toggleFulfilled("${order.id}", ${!!order.fulfilled})'>${order.fulfilled?'Mark Pending':'Mark Complete'}</button>
+//   </div>
+// </td>
+
+// `;
     tr.__order = order;
     return tr;
   }
@@ -399,12 +495,30 @@ function hideLoader() {
   }
 
   // ===== DETAIL MODAL =====
-  window.openDetail = function(orderId){
-    const row = Array.from(ordersTbody.children).find(r => r.__order?.id===orderId);
-    if(!row) return;
-    currentOpenOrder = row.__order;
-    renderModal(currentOpenOrder);
-  };
+  window.openDetail = function (orderId) {
+  const row = Array.from(ordersTbody.children).find(
+    (r) => r.__order?.id === orderId
+  );
+  if (!row) return;
+
+  currentOpenOrder = row.__order;
+
+  // ✅ Mark as viewed
+  markOrderAsViewed(orderId);
+
+  // 🔄 Refresh the row to remove badge
+  const newRow = orderRow(currentOpenOrder);
+  ordersTbody.replaceChild(newRow, row);
+
+  renderModal(currentOpenOrder);
+};
+
+  // window.openDetail = function(orderId){
+  //   const row = Array.from(ordersTbody.children).find(r => r.__order?.id===orderId);
+  //   if(!row) return;
+  //   currentOpenOrder = row.__order;
+  //   renderModal(currentOpenOrder);
+  // };
 
   // ===== Confirm International Payment =====
 async function confirmInternationalPayment(orderId) {
