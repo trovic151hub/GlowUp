@@ -474,6 +474,32 @@ loadHeroSlides();
 window.addEventListener("scroll", () => {
   if (!header) return;
 
+//   if (window.scrollY > 50) {
+//   // Remove semi-transparent black background
+//   header.classList.remove("bg-[#0000004D]");
+
+//   // Add gradient background
+//   header.classList.add("bg-gradient-to-r", "from-[#fbcfe8]/70", "to-[#f9a8d4]/70");
+
+//   // Add backdrop blur
+//   header.classList.add("backdrop-blur-md");
+
+//   // Make text dark
+//   header.classList.add("text-black");
+//   header.classList.remove("text-white");
+
+// } else {
+//   // Remove gradient background
+//   header.classList.remove("bg-gradient-to-r", "from-[#fbcfe8]/70", "to-[#f9a8d4]/70");
+
+//   // Add semi-transparent black background with blur
+//   header.classList.add("bg-[#0000004D]", "backdrop-blur-md");
+
+//   // Reset text color
+//   header.classList.remove("text-black");
+//   header.classList.add("text-white");
+// }
+
   if (window.scrollY > 50) {
     // Remove semi-transparent black background
     header.classList.remove("bg-[#0000004D]");
