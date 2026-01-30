@@ -23,91 +23,57 @@
 
   <!-- Navbar -->
   <header id="mainHeader"
-    class="fixed top-0 left-0 w-full text-white p-4 flex justify-between items-center flex-wrap gap-4 text-sm font-medium md:gap-6 z-50">
+    class="fixed top-0 left-0 w-full backdrop-blur-sm text-white p-4 flex justify-between items-center flex-wrap gap-4 text-sm font-medium md:gap-6 z-50">
     <h1 class="text-2xl font-bold main-head">Pearl Skin Care</h1>
     <nav class="nav-bar space-x-6 text-sm font-medium flex flex-wrap items-center gap-4">
 
       <!-- Hamburger + Mobile Menu -->
-<div class="mr-14 md:hidden">
-  <!-- Hamburger Button -->
-  <button id="menuToggle" class="text-2xl">
-    <i class="fas fa-bars"></i>
-  </button>
-
-  <!-- Overlay -->
-  <div id="menuOverlay"
-       class="fixed inset-0 bg-black bg-opacity-30 backdrop-blur-sm z-40 hidden"></div>
-
-  <!-- Mobile Menu -->
-  <div id="mobileMenu"
-       class="fixed top-0 left-0 w-64 h-full bg-white shadow-lg p-6 transform -translate-x-full transition-transform duration-300 z-50">
-    <!-- Close Button -->
-    <button id="closeMenu" class="text-3xl text-gray-600 hover:text-red-500 absolute top-4 right-4">&times;</button>
-
-    <!-- Menu Links -->
-    <div class="flex flex-col space-y-4 mt-12 text-lg font-medium">
-      <span id="welcomeTextMobile" class="text-sm text-gray-700 hidden"></span>
-
-      <a href="products.html" class="flex items-center gap-2 px-2 py-2 text-gray-700 hover:bg-pink-50 rounded">
-        <i class="fa fa-shop mt-1"></i> Shop
-      </a>
-
-      <a href="customer-dashboard.html" class="flex items-center gap-2 px-2 py-2 text-gray-700 hover:bg-pink-50 rounded">
-        <span class="text-[20px]">👤</span> Dashboard
-      </a>
-
-      <a href="mailto:@gmail.com" class="flex items-center gap-2 px-2 py-2 text-gray-700 hover:bg-pink-50 rounded">
-        <i class="fas fa-envelope text-[20px] text-pink-500"></i> Email Us
-      </a>
-
-      <a href="https://wa.me/2347053380773" target="_blank"
-         class="flex items-center gap-2 px-2 py-2 text-gray-700 hover:bg-pink-50 rounded">
-        <i class="fab fa-whatsapp text-green-500 text-[20px]"></i> WhatsApp
-      </a>
-
-      <a href="https://instagram.com/yourhandle" target="_blank"
-         class="flex items-center gap-2 px-2 py-2 text-gray-700 hover:bg-pink-50 rounded">
-        <i class="fab fa-instagram text-pink-600 text-[20px]"></i> Instagram
-      </a>
-    </div>
-  </div>
-</div>
-
-      <!-- Hamburger + Mobile Menu -->
-      <!-- <div class="mr-14 ham md:hidden">
-        <button id="menuToggle" class="text-xl md:hidden">
-          <i class="fas fa-bars md:hidden"></i>
-        </button> -->
+      <div class="mr-14 md:hidden">
+        <!-- Hamburger Button -->
+        <button id="menuToggle" class="text-2xl">
+          <i class="fas fa-bars"></i>
+        </button>
 
         <!-- Overlay -->
-        <!-- <div id="menuOverlay" class="fixed inset-0 bg-black bg-opacity-40 z-40 hidden md:hidden"></div> -->
+        <div id="menuOverlay" class="fixed inset-0 bg-black bg-opacity-30 backdrop-blur-sm z-40 hidden"></div>
 
         <!-- Mobile Menu -->
-        <!-- <div id="mobileMenu"
-          class="fixed top-0 left-0 w-64 h-full bg-white shadow-lg p-6 transform -translate-x-full transition-transform duration-300 z-50 md:hidden">
-          <button id="closeMenu" class="text-2xl text-gray-600 mb-6 hover:text-red-500">&times;</button>
-          <div class="flex flex-col space-y-4 text-lg font-medium">
+        <div id="mobileMenu"
+          class="fixed top-0 left-0 w-64 h-full bg-white shadow-lg p-6 transform -translate-x-full transition-transform duration-300 z-50">
+          <!-- Close Button -->
+          <button id="closeMenu"
+            class="text-3xl text-gray-600 hover:text-red-500 absolute top-4 right-4">&times;</button>
+
+          <!-- Menu Links -->
+          <div class="flex flex-col space-y-4 mt-12 text-lg font-medium">
             <span id="welcomeTextMobile" class="text-sm text-gray-700 hidden"></span>
-            <a href="products.html" class="hover:bg-pink-50 text-gray-700 px-2 py-2 flex items-left gap-2"><i
-                class="fa fa-shop mt-1"></i> Shop</a>
+
+            <a href="products.html" class="flex items-center gap-2 px-2 py-2 text-gray-700 hover:bg-pink-50 rounded">
+              <i class="fa fa-shop mt-1"></i> Shop
+            </a>
+
             <a href="customer-dashboard.html"
-              class="block px-2 py-2 text-sm text-gray-700 hover:bg-pink-50 rounded text-left -ml-1"><span
-                class="text-[20px]">👤</span> Dashboard</a>
+              class="flex items-center gap-2 px-2 py-2 text-gray-700 hover:bg-pink-50 rounded">
+              <span class="text-[20px]">👤</span> Dashboard
+            </a>
+
             <a href="mailto:@gmail.com"
-              class="block px-2 py-2 text-sm text-gray-700 hover:bg-pink-50 rounded flex text-left gap-2 -ml-1">
+              class="flex items-center gap-2 px-2 py-2 text-gray-700 hover:bg-pink-50 rounded">
               <i class="fas fa-envelope text-[20px] text-pink-500"></i> Email Us
             </a>
+
             <a href="https://wa.me/2347053380773" target="_blank"
-              class="block px-2 py-2 text-sm text-gray-700 hover:bg-pink-50 rounded flex text-center gap-2 -ml-1">
+              class="flex items-center gap-2 px-2 py-2 text-gray-700 hover:bg-pink-50 rounded">
               <i class="fab fa-whatsapp text-green-500 text-[20px]"></i> WhatsApp
             </a>
+
             <a href="https://instagram.com/yourhandle" target="_blank"
-              class="block px-2 py-2 text-sm text-gray-700 hover:bg-pink-50 rounded flex text-center gap-2 -ml-1">
+              class="flex items-center gap-2 px-2 py-2 text-gray-700 hover:bg-pink-50 rounded">
               <i class="fab fa-instagram text-pink-600 text-[20px]"></i> Instagram
             </a>
           </div>
         </div>
-      </div> -->
+      </div>
 
       <!-- Logo -->
       <div class="logo-con">
@@ -155,125 +121,8 @@
             Instagram</a>
         </div>
       </div>
-
-      <!-- Login / Logout -->
-      <!-- <div class="log-btn">
-        <span id="welcomeText" class="text-sm text-gray-700 hidden main-head"></span>
-        <button id="loginBtn"><i class="fas fa-user text-xl hover:underline text-sm"></i></button>
-        <button id="logoutBtn"><i class="fas fa-user-check text-pink-600 hover:underline ml-2 text-sm hidden"></i></button>
-      </div> -->
     </nav>
   </header>
-
-  <!-- Login Modal -->
-  <div id="loginModal" class="hidden fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center z-50">
-    <div class="bg-white p-6 rounded-xl shadow-xl w-full max-w-sm relative">
-      <h2 class="text-xl font-bold mb-4 text-center">Login</h2>
-
-      <input id="loginEmail" type="email" class="w-full border p-2 rounded mb-3" placeholder="Email" />
-
-      <div class="relative">
-        <input id="loginPassword" type="password" class="w-full border p-2 rounded mb-3" placeholder="Password" />
-
-        <i id="toggleLoginPassword" class="fa-solid fa-eye absolute right-3 top-3 cursor-pointer text-gray-400"></i>
-      </div>
-
-      <button id="loginSubmit" class="w-full bg-pink-600 text-white py-2 rounded hover:bg-pink-700">
-        Login
-      </button>
-
-      <p id="loginError" class="text-red-500 text-sm text-center mt-2 hidden"></p>
-
-      <p class="mt-2 text-center text-sm">
-        <a href="#" id="forgotPassword" class="text-pink-600">Forgot Password?</a>
-      </p>
-
-      <div class="my-4 flex items-center">
-        <div class="flex-grow border-t"></div>
-        <span class="mx-2 text-gray-500 text-sm">OR</span>
-        <div class="flex-grow border-t"></div>
-      </div>
-
-      <div class="text-center my-4">
-        <button id="googleLogin" class="w-full flex items-center justify-center border p-2 rounded hover:bg-gray-100">
-          <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" class="w-6 h-6 mr-2" />
-          Continue with Google
-        </button>
-      </div>
-
-      <p class="mt-4 text-center text-sm">
-        Don't have an account? <a href="register.html" class="text-pink-600">Register</a>
-      </p>
-    </div>
-
-    <button onclick="closeLoginModal()" class="absolute top-3 right-3 text-white text-xl font-bold">&times;</button>
-  </div>
-  </div>
-
-  <!-- Password Reset Email Modal -->
-  <div id="passwordEmailModal" class="fixed inset-0 hidden z-50 flex items-center justify-center bg-black-30 backdrop-blur-sm">
-    <div id="passwordEmailContent" class="bg-white/90 backdrop-blur-md p-6 rounded-2xl shadow-2xl w-full max-w-sm
-              transform scale-90 opacity-0 transition-all duration-300">
-
-      <h3 class="text-2xl font-bold text-pink-600 mb-3 text-center">
-        Reset Password
-      </h3>
-
-      <p class="text-sm text-gray-600 mb-4 text-center">
-        Enter your registered email to receive a password reset link.
-      </p>
-
-      <input type="email" id="resetEmailInput" placeholder="you@example.com"
-        class="w-full border border-gray-300 rounded-lg px-4 py-2 mb-4 focus:outline-none focus:ring-2 focus:ring-pink-500" />
-
-      <button id="sendResetLinkBtn" class="w-full bg-pink-600 text-white py-2 rounded-lg hover:bg-pink-700 transition">
-        Send Reset Link
-      </button>
-
-      <button id="cancelPasswordEmail" class="w-full mt-3 text-sm text-gray-500 hover:text-gray-800 transition">
-        Cancel
-      </button>
-    </div>
-  </div>
-
-  <!-- Password Reset Success Modal -->
-  <div id="passwordResetModal" class="fixed inset-0 hidden z-50 flex items-center justify-center bg-black-30 backdrop-blur-sm">
-    <div id="passwordResetContent" class="bg-white/90 backdrop-blur-md p-6 rounded-2xl shadow-2xl text-center
-              transform scale-90 opacity-0 transition-all duration-300 max-w-sm w-full">
-
-      <h3 class="text-2xl font-bold text-pink-600 mb-3">
-        Password Reset Sent
-      </h3>
-
-      <p class="text-sm text-gray-700 mb-5">
-        A password reset link has been sent to your email.
-        Please check your inbox and spam folder.
-      </p>
-
-      <button id="closePasswordResetBtn"
-        class="bg-pink-600 text-white px-6 py-2 rounded-lg hover:bg-pink-700 transition">
-        Okay
-      </button>
-    </div>
-  </div>
-
-  <!-- Password Reset Error Modal -->
-  <div id="passwordErrorModal" class="fixed inset-0 hidden z-50 flex items-center justify-center bg-black-30 backdrop-blur-sm">
-    <div class="bg-white p-6 rounded-2xl shadow-xl text-center max-w-sm w-full">
-
-      <h3 class="text-xl font-bold text-red-600 mb-3">
-        Reset Failed
-      </h3>
-
-      <p id="errorMessage" class="text-sm text-gray-700 mb-5">
-        Something went wrong.
-      </p>
-
-      <button id="closePasswordErrorBtn" class="bg-gray-800 text-white px-6 py-2 rounded-lg hover:bg-black transition">
-        Okay
-      </button>
-    </div>
-  </div>
 
   <!-- Hero Section -->
   <div class="hero-slider">
@@ -321,7 +170,8 @@
   </section>
 
   <!-- Product Detail Modal -->
-  <div id="productModal" class="hidden fixed inset-0 bg-black bg-opacity-30 backdrop-blur-sm flex items-center justify-center z-50">
+  <div id="productModal"
+    class="hidden fixed inset-0 bg-black bg-opacity-30 backdrop-blur-sm flex items-center justify-center z-50">
     <div class="bg-white w-11/12 max-w-md p-6 rounded shadow-lg relative">
       <button onclick="closeModal()" class="absolute top-2 right-2 text-gray-500 hover:text-red-600 text-xl">×</button>
       <h2 id="modalProductName" class="text-xl font-bold mb-2"></h2>
@@ -447,3 +297,435 @@
 </body>
 
 </html>
+
+
+
+<!-- <body class="bg-white text-gray-800"> -->
+
+<!-- Notification Container -->
+<!-- <div id="notification-container" class="fixed top-4 right-4 z-50 flex flex-col gap-2"></div> -->
+
+<!-- Navbar -->
+<!-- <header id="mainHeader"
+    class="fixed top-0 left-0 w-full text-white p-4 flex justify-between items-center flex-wrap gap-4 text-sm font-medium md:gap-6 z-50">
+    <h1 class="text-2xl font-bold main-head">Pearl Skin Care</h1>
+    <nav class="nav-bar space-x-6 text-sm font-medium flex flex-wrap items-center gap-4"> -->
+
+<!-- Hamburger + Mobile Menu -->
+<!-- <div class="mr-14 md:hidden"> -->
+<!-- Hamburger Button -->
+<!-- <button id="menuToggle" class="text-2xl">
+    <i class="fas fa-bars"></i>
+  </button> -->
+
+<!-- Overlay -->
+<!-- <div id="menuOverlay"
+       class="fixed inset-0 bg-black bg-opacity-30 backdrop-blur-sm z-40 hidden"></div> -->
+
+<!-- Mobile Menu -->
+<!-- <div id="mobileMenu"
+       class="fixed top-0 left-0 w-64 h-full bg-white shadow-lg p-6 transform -translate-x-full transition-transform duration-300 z-50"> -->
+<!-- Close Button -->
+<!-- <button id="closeMenu" class="text-3xl text-gray-600 hover:text-red-500 absolute top-4 right-4">&times;</button> -->
+
+<!-- Menu Links -->
+<!-- <div class="flex flex-col space-y-4 mt-12 text-lg font-medium">
+      <span id="welcomeTextMobile" class="text-sm text-gray-700 hidden"></span>
+
+      <a href="products.html" class="flex items-center gap-2 px-2 py-2 text-gray-700 hover:bg-pink-50 rounded">
+        <i class="fa fa-shop mt-1"></i> Shop
+      </a>
+
+      <a href="customer-dashboard.html" class="flex items-center gap-2 px-2 py-2 text-gray-700 hover:bg-pink-50 rounded">
+        <span class="text-[20px]">👤</span> Dashboard
+      </a>
+
+      <a href="mailto:@gmail.com" class="flex items-center gap-2 px-2 py-2 text-gray-700 hover:bg-pink-50 rounded">
+        <i class="fas fa-envelope text-[20px] text-pink-500"></i> Email Us
+      </a>
+
+      <a href="https://wa.me/2347053380773" target="_blank"
+         class="flex items-center gap-2 px-2 py-2 text-gray-700 hover:bg-pink-50 rounded">
+        <i class="fab fa-whatsapp text-green-500 text-[20px]"></i> WhatsApp
+      </a>
+
+      <a href="https://instagram.com/yourhandle" target="_blank"
+         class="flex items-center gap-2 px-2 py-2 text-gray-700 hover:bg-pink-50 rounded">
+        <i class="fab fa-instagram text-pink-600 text-[20px]"></i> Instagram
+      </a>
+    </div>
+  </div>
+</div> -->
+
+<!-- Hamburger + Mobile Menu -->
+<!-- <div class="mr-14 ham md:hidden">
+        <button id="menuToggle" class="text-xl md:hidden">
+          <i class="fas fa-bars md:hidden"></i>
+        </button> -->
+
+<!-- Overlay -->
+<!-- <div id="menuOverlay" class="fixed inset-0 bg-black bg-opacity-40 z-40 hidden md:hidden"></div> -->
+
+<!-- Mobile Menu -->
+<!-- <div id="mobileMenu"
+          class="fixed top-0 left-0 w-64 h-full bg-white shadow-lg p-6 transform -translate-x-full transition-transform duration-300 z-50 md:hidden">
+          <button id="closeMenu" class="text-2xl text-gray-600 mb-6 hover:text-red-500">&times;</button>
+          <div class="flex flex-col space-y-4 text-lg font-medium">
+            <span id="welcomeTextMobile" class="text-sm text-gray-700 hidden"></span>
+            <a href="products.html" class="hover:bg-pink-50 text-gray-700 px-2 py-2 flex items-left gap-2"><i
+                class="fa fa-shop mt-1"></i> Shop</a>
+            <a href="customer-dashboard.html"
+              class="block px-2 py-2 text-sm text-gray-700 hover:bg-pink-50 rounded text-left -ml-1"><span
+                class="text-[20px]">👤</span> Dashboard</a>
+            <a href="mailto:@gmail.com"
+              class="block px-2 py-2 text-sm text-gray-700 hover:bg-pink-50 rounded flex text-left gap-2 -ml-1">
+              <i class="fas fa-envelope text-[20px] text-pink-500"></i> Email Us
+            </a>
+            <a href="https://wa.me/2347053380773" target="_blank"
+              class="block px-2 py-2 text-sm text-gray-700 hover:bg-pink-50 rounded flex text-center gap-2 -ml-1">
+              <i class="fab fa-whatsapp text-green-500 text-[20px]"></i> WhatsApp
+            </a>
+            <a href="https://instagram.com/yourhandle" target="_blank"
+              class="block px-2 py-2 text-sm text-gray-700 hover:bg-pink-50 rounded flex text-center gap-2 -ml-1">
+              <i class="fab fa-instagram text-pink-600 text-[20px]"></i> Instagram
+            </a>
+          </div>
+        </div>
+      </div> -->
+
+<!-- Logo -->
+<!-- <div class="logo-con">
+        <div class="logo md:hidden text-center">
+          <h1 class="brand">Pearl</h1>
+          <p class="tagline">SKIN CARE</p>
+        </div>
+      </div> -->
+
+<!-- Cart -->
+<!-- <a href="cart.html" class="cart-tag relative inline-block">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 inline hover:text-pink-500 text-white" fill="none"
+          viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13l-1.35 2.7a1 1 0 001.85.9L7 13zm0 0H5m14 0v6a1 1 0 001 1h1a1 1 0 001-1v-6M7 19a2 2 0 104 0 2 2 0 00-4 0zm10 0a2 2 0 104 0 2 2 0 00-4 0z" />
+        </svg>
+        <span id="cartCount"
+          class="absolute -top-2 -right-2 bg-red-500 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center">0</span>
+      </a> -->
+
+<!-- Navbar Links -->
+<!-- Search Icon -->
+<!-- <button id="openSearchBtn" class="openSearchBtn text-white hover:text-pink-500">
+        <i class="fas fa-search text-xl"></i>
+      </button>
+      <a href="#" class="main-head hover:text-pink-600 nav-link"><i class="fa fa-home"></i> Home</a>
+      <a href="products.html" class="main-head hover:text-pink-600 nav-link"><i class="fa fa-shop"></i> Shop</a>
+      <a href="#categories" class="main-head hover:text-pink-600 nav-link"><i class="fa fa-layer-group"></i>
+        Categories</a> -->
+
+<!-- Contact Dropdown -->
+<!-- <div class="relative group inline-block main-head">
+        <button class="hover:text-pink-600"><i class="fa fa-phone"></i> Contact</button>
+        <div
+          class="absolute hidden group-hover:block bg-pink-100 shadow rounded mt-1 z-50 min-w-[150px] fixed top-5 right-[-10%] text-left">
+          <a href="customer-dashboard.html" class="block px-4 py-2 text-sm text-gray-700 hover:bg-white">👤
+            Dashboard</a>
+          <a href="mailto:victoradeyimika0@gmail.com" class="block px-4 py-2 text-sm text-gray-700 hover:bg-white"><i
+              class="fas fa-envelope text-pink-500"></i> Email Us</a>
+          <a href="https://wa.me/2349053380773" target="_blank"
+            class="block px-4 py-2 text-sm text-gray-700 hover:bg-white"><i class="fab fa-whatsapp text-green-500"></i>
+            WhatsApp</a>
+          <a href="https://instagram.com/yourhandle" target="_blank"
+            class="block px-4 py-2 text-sm text-gray-700 hover:bg-white"><i class="fab fa-instagram text-pink-600"></i>
+            Instagram</a>
+        </div>
+      </div> -->
+
+<!-- Login / Logout -->
+<!-- <div class="log-btn">
+        <span id="welcomeText" class="text-sm text-gray-700 hidden main-head"></span>
+        <button id="loginBtn"><i class="fas fa-user text-xl hover:underline text-sm"></i></button>
+        <button id="logoutBtn"><i class="fas fa-user-check text-pink-600 hover:underline ml-2 text-sm hidden"></i></button>
+      </div> -->
+</nav>
+</header>
+
+<!-- Login Modal -->
+<!-- <div id="loginModal" class="hidden fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center z-50">
+    <div class="bg-white p-6 rounded-xl shadow-xl w-full max-w-sm relative">
+      <h2 class="text-xl font-bold mb-4 text-center">Login</h2>
+
+      <input id="loginEmail" type="email" class="w-full border p-2 rounded mb-3" placeholder="Email" />
+
+      <div class="relative">
+        <input id="loginPassword" type="password" class="w-full border p-2 rounded mb-3" placeholder="Password" />
+
+        <i id="toggleLoginPassword" class="fa-solid fa-eye absolute right-3 top-3 cursor-pointer text-gray-400"></i>
+      </div>
+
+      <button id="loginSubmit" class="w-full bg-pink-600 text-white py-2 rounded hover:bg-pink-700">
+        Login
+      </button>
+
+      <p id="loginError" class="text-red-500 text-sm text-center mt-2 hidden"></p>
+
+      <p class="mt-2 text-center text-sm">
+        <a href="#" id="forgotPassword" class="text-pink-600">Forgot Password?</a>
+      </p>
+
+      <div class="my-4 flex items-center">
+        <div class="flex-grow border-t"></div>
+        <span class="mx-2 text-gray-500 text-sm">OR</span>
+        <div class="flex-grow border-t"></div>
+      </div>
+
+      <div class="text-center my-4">
+        <button id="googleLogin" class="w-full flex items-center justify-center border p-2 rounded hover:bg-gray-100">
+          <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" class="w-6 h-6 mr-2" />
+          Continue with Google
+        </button>
+      </div>
+
+      <p class="mt-4 text-center text-sm">
+        Don't have an account? <a href="register.html" class="text-pink-600">Register</a>
+      </p>
+    </div>
+
+    <button onclick="closeLoginModal()" class="absolute top-3 right-3 text-white text-xl font-bold">&times;</button>
+  </div>
+  </div> -->
+
+<!-- Password Reset Email Modal -->
+<!-- <div id="passwordEmailModal" class="fixed inset-0 hidden z-50 flex items-center justify-center bg-black-30 backdrop-blur-sm">
+    <div id="passwordEmailContent" class="bg-white/90 backdrop-blur-md p-6 rounded-2xl shadow-2xl w-full max-w-sm
+              transform scale-90 opacity-0 transition-all duration-300">
+
+      <h3 class="text-2xl font-bold text-pink-600 mb-3 text-center">
+        Reset Password
+      </h3>
+
+      <p class="text-sm text-gray-600 mb-4 text-center">
+        Enter your registered email to receive a password reset link.
+      </p>
+
+      <input type="email" id="resetEmailInput" placeholder="you@example.com"
+        class="w-full border border-gray-300 rounded-lg px-4 py-2 mb-4 focus:outline-none focus:ring-2 focus:ring-pink-500" />
+
+      <button id="sendResetLinkBtn" class="w-full bg-pink-600 text-white py-2 rounded-lg hover:bg-pink-700 transition">
+        Send Reset Link
+      </button>
+
+      <button id="cancelPasswordEmail" class="w-full mt-3 text-sm text-gray-500 hover:text-gray-800 transition">
+        Cancel
+      </button>
+    </div>
+  </div> -->
+
+<!-- Password Reset Success Modal -->
+<!-- <div id="passwordResetModal" class="fixed inset-0 hidden z-50 flex items-center justify-center bg-black-30 backdrop-blur-sm">
+    <div id="passwordResetContent" class="bg-white/90 backdrop-blur-md p-6 rounded-2xl shadow-2xl text-center
+              transform scale-90 opacity-0 transition-all duration-300 max-w-sm w-full">
+
+      <h3 class="text-2xl font-bold text-pink-600 mb-3">
+        Password Reset Sent
+      </h3>
+
+      <p class="text-sm text-gray-700 mb-5">
+        A password reset link has been sent to your email.
+        Please check your inbox and spam folder.
+      </p>
+
+      <button id="closePasswordResetBtn"
+        class="bg-pink-600 text-white px-6 py-2 rounded-lg hover:bg-pink-700 transition">
+        Okay
+      </button>
+    </div>
+  </div> -->
+
+<!-- Password Reset Error Modal -->
+<!-- <div id="passwordErrorModal" class="fixed inset-0 hidden z-50 flex items-center justify-center bg-black-30 backdrop-blur-sm">
+    <div class="bg-white p-6 rounded-2xl shadow-xl text-center max-w-sm w-full">
+
+      <h3 class="text-xl font-bold text-red-600 mb-3">
+        Reset Failed
+      </h3>
+
+      <p id="errorMessage" class="text-sm text-gray-700 mb-5">
+        Something went wrong.
+      </p>
+
+      <button id="closePasswordErrorBtn" class="bg-gray-800 text-white px-6 py-2 rounded-lg hover:bg-black transition">
+        Okay
+      </button>
+    </div>
+  </div> -->
+
+<!-- Hero Section -->
+<!-- <div class="hero-slider">
+    <div id="heroSkeleton" class="hero-skeleton"></div>
+
+    <div class="hero-image-wrapper">
+      <div class="hero-image-track" id="heroImageTrack"></div>
+    </div> -->
+
+<!-- NEW: Dark overlay -->
+<!-- <div class="hero-dark-overlay"></div>
+
+    <div class="hero-overlay">
+      <h1 id="heroTitle"></h1>
+      <p id="heroText"></p>
+    </div> -->
+
+<!-- Play/Pause Buttons -->
+<!-- <i id="heroPlay" class="fas fa-play hero-control"></i>
+    <i id="heroPause" class="fas fa-pause hero-control hidden"></i> -->
+
+<!-- Bottom Tabs -->
+<!-- <div id="heroDots" class="hero-tabs absolute bottom-4 left-1/2 transform -translate-x-1/2 z-20">
+      <div class="hero-tabs-track"></div>
+    </div>
+  </div> -->
+
+<!-- Featured Search Bar (Hidden by default) -->
+<!-- <div id="featuredSearchWrapper" class="hidden sticky search top-16 px-4 py-3 z-40 bg-white shadow-md mb-2">
+
+    <div class="flex items-center gap-3">
+      <input id="featuredSearchInput" type="text" placeholder="Search featured products..."
+        class="flex-1 border rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-pink-500" />
+
+      <button id="closeSearchBtn" class="absolute top-4 right-6 text-gray-500 hover:text-pink-500 text-xl font-bold">
+        &times;
+      </button>
+    </div>
+  </div> -->
+
+<!-- Featured Products -->
+<!-- <section class="p-6">
+    <h2 class="text-2xl font-semibold mb-4">Featured Products</h2>
+    <div id="product-list" class="grid grid-cols-2 md:grid-cols-4 gap-4 "></div>
+  </section> -->
+
+<!-- Product Detail Modal -->
+<!-- <div id="productModal" class="hidden fixed inset-0 bg-black bg-opacity-30 backdrop-blur-sm flex items-center justify-center z-50">
+    <div class="bg-white w-11/12 max-w-md p-6 rounded shadow-lg relative">
+      <button onclick="closeModal()" class="absolute top-2 right-2 text-gray-500 hover:text-red-600 text-xl">×</button>
+      <h2 id="modalProductName" class="text-xl font-bold mb-2"></h2>
+      <img id="modalProductImage" class="w-full h-48 object-cover rounded mb-2" />
+      <p id="modalProductPrice" class="text-pink-600 font-semibold text-lg mb-1"></p>
+      <p id="modalProductDescription" class="text-sm text-gray-700 mb-4"></p>
+      <button id="modalAddToCartBtn" class="bg-pink-600 text-white px-4 py-2 rounded hover:bg-pink-700 w-full">Add to
+        Cart</button>
+    </div>
+  </div> -->
+
+<!-- Promo Section -->
+<!-- <section class="bg-pink-50 p-6 my-6 rounded-xl text-center">
+    <h3 class="text-2xl font-semibold mb-4">💡 Skin Tips</h3>
+    <p id="skinTip" class="text-lg text-gray-700 font-medium">Loading tip...</p>
+  </section> -->
+
+<!-- Categories -->
+<!-- <section id="categories" class="p-6">
+    <h3 class="text-2xl font-semibold mb-4">Browse by Category</h3>
+    <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
+      <button onclick="filterProducts('All')" data-category="All"
+        class="category-btn bg-pink-100 p-4 rounded-xl text-center hover:bg-pink-200 cursor-pointer">
+        💧<br />All
+      </button>
+      <button onclick="filterProducts('Brightening')" data-category="Brightening"
+        class="category-btn bg-pink-100 p-4 rounded-xl text-center hover:bg-pink-200 cursor-pointer">
+        ✨<br />Brightening
+      </button>
+      <button onclick="filterProducts('Anti-Aging')" data-category="Anti-Aging"
+        class="category-btn bg-pink-100 p-4 rounded-xl text-center hover:bg-pink-200 cursor-pointer">
+        🔄<br />Anti-Aging
+      </button>
+      <button onclick="filterProducts('Hydration')" data-category="Hydration"
+        class="category-btn bg-pink-100 p-4 rounded-xl text-center hover:bg-pink-200 cursor-pointer">
+        💦<br />Hydration
+      </button>
+      <button onclick="filterProducts('Supplements')" data-category="Supplements"
+        class="category-btn bg-pink-100 p-4 rounded-xl text-center hover:bg-pink-200 cursor-pointer">
+        💊<br />Supplements
+      </button>
+    </div>
+  </section> -->
+
+<!-- ===== GLOBAL LEAVE LOADER ===== -->
+<!-- <div id="leaveLoader">
+    <div class="spinner"></div>
+  </div> -->
+
+<!-- Footer -->
+<!-- <footer class="bg-pink-100 text-gray-800 relative">
+    <div class="mx-6 md:mx-10 px-4 md:px-6 py-8 md:py-12 flex flex-col md:flex-row justify-between gap-8 md:gap-40"> -->
+
+<!-- Contact Info -->
+<!-- <div class="flex-1 border-b md:border-b-0 pb-4 md:pb-0 border-gray-300">
+        <h4 class="text-lg font-semibold mb-4">CONTACT US</h4>
+        <p class="mb-2 flex items-center gap-2">
+          <i class="fas fa-phone-alt"></i> +2347053380773
+        </p>
+        <p class="flex items-start gap-2">
+          <i class="fas fa-map-marker-alt mt-1"></i>
+          Lagos, Nigeria
+        </p>
+      </div> -->
+
+<!-- Newsletter -->
+<!-- <div class="flex-1">
+        <h4 class="text-lg font-semibold mb-3">SIGN UP FOR DISCOUNTS & UPDATES</h4>
+        <div class="block flex-col md:flex-row gap-2 md:gap-4 items-start md:items-center">
+          <input type="text" placeholder="Enter your phone number or email address"
+            class="w-full md:w-[100%] px-4 py-2 rounded border border-gray-300 focus:outline-none">
+          <button class="mt-3 bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">
+            Subscribe
+          </button>
+        </div>
+      </div>
+    </div> -->
+
+<!-- Powered By -->
+<!-- <div class="btn text-left text-sm text-white mx-6 md:mx-10 px-4 md:px-6 py-4 border-t border-gray-300">
+      <button class="text-left block p-4 bg-pink-500">
+        POWERED BY VTec
+      </button>
+    </div> -->
+
+<!-- WhatsApp Button -->
+<!-- <button id="openWhatsappModal" class="fixed bottom-6 right-6 z-50">
+      <div class="relative w-14 h-14"> -->
+<!-- Ripple circles -->
+<!-- <span class="absolute inset-0 rounded-full bg-green-400 opacity-50 animate-ping"></span>
+        <span class="absolute inset-0 rounded-full bg-green-400 opacity-50 animate-ping delay-200"></span>
+        <span class="absolute inset-0 rounded-full bg-green-400 opacity-50 animate-ping delay-400"></span> -->
+
+<!-- Main Button -->
+<!-- <div
+          class="relative w-14 h-14 rounded-full bg-green-500 hover:bg-green-600 text-white flex items-center justify-center shadow-lg text-2xl">
+          <i class="fab fa-whatsapp"></i>
+        </div>
+      </div>
+    </button> -->
+
+<!-- WhatsApp Button -->
+<!-- <a href="https://wa.me/2349053380773" target="_blank" class="fixed bottom-6 right-6 z-50">
+      <div class="relative w-14 h-14"> -->
+<!-- Ripple circles -->
+<!-- <span class="absolute inset-0 rounded-full bg-green-400 opacity-50 animate-ping"></span>
+        <span class="absolute inset-0 rounded-full bg-green-400 opacity-50 animate-ping delay-200"></span>
+        <span class="absolute inset-0 rounded-full bg-green-400 opacity-50 animate-ping delay-400"></span> -->
+
+<!-- Main Button -->
+<!-- <div
+          class="relative w-14 h-14 rounded-full bg-green-500 hover:bg-green-600 text-white flex items-center justify-center shadow-lg text-2xl">
+          <i class="fab fa-whatsapp"></i>
+        </div>
+      </div>
+    </a>
+  </footer>
+
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+  <script src="home.js"></script>
+</body> -->

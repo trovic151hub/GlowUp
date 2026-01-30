@@ -486,21 +486,12 @@
   }
 
   /* Featured Products grid */
-  #product-list {
-    grid-template-columns: repeat(2, 1fr) !important;
-    gap: 10px;
-  }
+   #product-list {
+  grid-template-columns: repeat(2, 1fr) !important;
+}
 
   #product-list > div {
     padding: 10px;
-  }
-
-  #product-list .view-btn {
-    padding: 4px 8px;
-  }
-
-  #product-list .add-btn {
-    padding: 4px 7px;
   }
 
   /* Category grid */

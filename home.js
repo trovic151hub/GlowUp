@@ -468,660 +468,6 @@ function centerActiveTab(index) {
 // ===== INIT =====
 loadHeroSlides();
 
-//   // ===== HERO SLIDER ELEMENTS =====
-// const heroSlider = document.querySelector(".hero-slider");
-// const heroImageTrack = document.getElementById("heroImageTrack");
-// const heroTitle = document.getElementById("heroTitle");
-// const heroText = document.getElementById("heroText");
-// const dotsContainer = document.querySelector(".hero-tabs-track");
-// const skeleton = document.getElementById("heroSkeleton");
-
-// const heroPlay = document.getElementById("heroPlay");
-// const heroPause = document.getElementById("heroPause");
-
-// // ===== STATE =====
-// let slides = [];
-// let currentSlide = 0;
-// let trackIndex = 1;
-// let currentProgress = 0;
-// let progressInterval = null;
-// let isPlaying = true;
-
-// // ===== SWIPE STATE =====
-// let startX = 0;
-// let currentX = 0;
-// let isDragging = false;
-// const dragThreshold = 50;
-
-// // ===== FIRESTORE =====
-// function loadHeroSlides() {
-//   skeleton.classList.remove("hidden");
-
-//   db.collection("heroSliders")
-//     .where("active", "==", true)
-//     .orderBy("order", "asc")
-//     .onSnapshot(snapshot => {
-//       slides = snapshot.docs.map(doc => ({
-//         image: doc.data().imageUrl,
-//         title: doc.data().title,
-//         text: doc.data().subtitle,
-//         tab: doc.data().tabLabel || doc.data().title
-//       }));
-
-//       createTabs();
-//       createImages();
-//       showSlide(0);
-
-//       if (isPlaying) startAutoSlide();
-//       updateHeroControls();
-
-//       skeleton.classList.add("hidden");
-//     });
-// }
-
-// // ===== TABS =====
-// function createTabs() {
-//   dotsContainer.innerHTML = "";
-
-//   slides.forEach((slide, index) => {
-//     const tab = document.createElement("span");
-//     tab.textContent = slide.tab;
-//     tab.style.position = "relative";
-
-//     const progressBar = document.createElement("div");
-//     progressBar.className =
-//       "progress-bar absolute bottom-0 left-0 h-1 bg-pink-500 w-0 rounded-br-lg";
-//     tab.appendChild(progressBar);
-
-//     tab.addEventListener("click", e => {
-//       e.stopPropagation();
-//       currentSlide = index;
-//       showSlide(index);
-//       if (isPlaying) startAutoSlide();
-//     });
-
-//     dotsContainer.appendChild(tab);
-//   });
-// }
-
-// // ===== IMAGES / CLONES =====
-// function createImages() {
-//   heroImageTrack.innerHTML = "";
-
-//   if (!slides.length) return;
-
-//   const lastClone = document.createElement("img");
-//   lastClone.src = slides[slides.length - 1].image;
-//   heroImageTrack.appendChild(lastClone);
-
-//   slides.forEach(slide => {
-//     const img = document.createElement("img");
-//     img.src = slide.image;
-//     heroImageTrack.appendChild(img);
-//   });
-
-//   const firstClone = document.createElement("img");
-//   firstClone.src = slides[0].image;
-//   heroImageTrack.appendChild(firstClone);
-// }
-
-// // ===== SHOW SLIDE =====
-// function showSlide(index) {
-//   trackIndex = index + 1;
-
-//   heroImageTrack.style.transition =
-//     "transform 0.8s cubic-bezier(0.22,0.61,0.36,1)";
-//   heroImageTrack.style.transform = `translateX(-${trackIndex * 100}%)`;
-
-//   heroTitle.textContent = slides[index].title;
-//   heroText.textContent = slides[index].text || "";
-
-//   document.querySelectorAll(".hero-tabs span").forEach((tab, i) => {
-//     tab.classList.toggle("active", i === index);
-//   });
-
-//   centerActiveTab(index);
-//   resetProgress();
-// }
-
-// // ===== CLONE JUMP FIX =====
-// heroImageTrack.addEventListener("transitionend", () => {
-//   if (trackIndex === 0) {
-//     heroImageTrack.style.transition = "none";
-//     trackIndex = slides.length;
-//     heroImageTrack.style.transform = `translateX(-${trackIndex * 100}%)`;
-//   }
-
-//   if (trackIndex === slides.length + 1) {
-//     heroImageTrack.style.transition = "none";
-//     trackIndex = 1;
-//     heroImageTrack.style.transform = `translateX(-${trackIndex * 100}%)`;
-//   }
-// });
-
-// // ===== AUTO SLIDE + PROGRESS =====
-// function startAutoSlide() {
-//   stopAutoSlide();
-
-//   const duration = 6000;
-//   const stepTime = 30;
-//   const increment = (stepTime / duration) * 100;
-
-//   progressInterval = setInterval(() => {
-//     currentProgress += increment;
-//     updateProgress(currentProgress);
-
-//     if (currentProgress >= 100) {
-//       currentSlide = (currentSlide + 1) % slides.length;
-//       showSlide(currentSlide);
-//       currentProgress = 0;
-//     }
-//   }, stepTime);
-// }
-
-// function stopAutoSlide() {
-//   clearInterval(progressInterval);
-// }
-
-// // ===== PROGRESS =====
-// function resetProgress() {
-//   currentProgress = 0;
-//   document.querySelectorAll(".progress-bar").forEach(bar => {
-//     bar.style.width = "0%";
-//   });
-// }
-
-// function updateProgress(value) {
-//   document.querySelectorAll(".hero-tabs span").forEach((tab, i) => {
-//     const bar = tab.querySelector(".progress-bar");
-//     bar.style.width = i === currentSlide ? value + "%" : "0%";
-//   });
-// }
-
-// // ===== PLAY / PAUSE =====
-// function updateHeroControls() {
-//   heroPlay.classList.toggle("hidden", isPlaying);
-//   heroPause.classList.toggle("hidden", !isPlaying);
-// }
-
-// heroPlay.addEventListener("click", e => {
-//   e.stopPropagation();
-//   isPlaying = true;
-//   startAutoSlide();
-//   updateHeroControls();
-// });
-
-// heroPause.addEventListener("click", e => {
-//   e.stopPropagation();
-//   isPlaying = false;
-//   stopAutoSlide();
-//   updateHeroControls();
-// });
-
-// // ===== SWIPE (TOUCH) =====
-// heroSlider.addEventListener("touchstart", e => {
-//   startX = e.touches[0].clientX;
-//   currentX = startX;
-//   isDragging = true;
-//   stopAutoSlide();
-// }, { passive: true });
-
-// heroSlider.addEventListener("touchmove", e => {
-//   if (!isDragging) return;
-//   currentX = e.touches[0].clientX;
-// }, { passive: true });
-
-// heroSlider.addEventListener("touchend", () => {
-//   if (!isDragging) return;
-
-//   const delta = currentX - startX;
-//   if (Math.abs(delta) > dragThreshold) {
-//     delta < 0 ? nextSlide() : prevSlide();
-//   }
-
-//   isDragging = false;
-//   if (isPlaying) startAutoSlide();
-// });
-
-// // ===== SWIPE (MOUSE) =====
-// heroSlider.addEventListener("mousedown", e => {
-//   startX = e.clientX;
-//   currentX = startX;
-//   isDragging = true;
-//   heroSlider.classList.add("dragging");
-//   stopAutoSlide();
-// });
-
-// heroSlider.addEventListener("mousemove", e => {
-//   if (isDragging) currentX = e.clientX;
-// });
-
-// heroSlider.addEventListener("mouseup", () => {
-//   if (!isDragging) return;
-
-//   const delta = currentX - startX;
-//   if (Math.abs(delta) > dragThreshold) {
-//     delta < 0 ? nextSlide() : prevSlide();
-//   }
-
-//   isDragging = false;
-//   heroSlider.classList.remove("dragging");
-//   if (isPlaying) startAutoSlide();
-// });
-
-// heroSlider.addEventListener("mouseleave", () => {
-//   isDragging = false;
-//   heroSlider.classList.remove("dragging");
-// });
-
-// // ===== NAV HELPERS =====
-// function nextSlide() {
-//   currentSlide = (currentSlide + 1) % slides.length;
-//   showSlide(currentSlide);
-// }
-
-// function prevSlide() {
-//   currentSlide = (currentSlide - 1 + slides.length) % slides.length;
-//   showSlide(currentSlide);
-// }
-
-// // ===== MOBILE TAB CENTERING =====
-// function centerActiveTab(index) {
-//   if (window.innerWidth > 640) return;
-
-//   const tabs = document.querySelectorAll(".hero-tabs span");
-//   const track = document.querySelector(".hero-tabs-track");
-//   const container = document.getElementById("heroDots");
-
-//   if (!tabs[index] || !container) return;
-
-//   if (index === 0) {
-//     track.style.transform = "translateX(0px)";
-//     return;
-//   }
-
-//   const offset =
-//     tabs[index].offsetLeft -
-//     container.offsetWidth / 2 +
-//     tabs[index].offsetWidth / 2;
-
-//   track.style.transform = `translateX(-${Math.max(offset, 0)}px)`;
-// }
-
-// // ===== INIT =====
-// loadHeroSlides();
-
-// // ===== HERO SLIDER ELEMENTS =====
-// const heroSlider = document.querySelector(".hero-slider");
-// const heroImage = document.getElementById("heroImage");
-// const heroTitle = document.getElementById("heroTitle");
-// const dotsContainer = document.querySelector(".hero-tabs-track");
-// const skeleton = document.getElementById("heroSkeleton");
-// const heroText = document.getElementById("heroText");
-
-// const heroPlay = document.getElementById("heroPlay");
-// const heroPause = document.getElementById("heroPause");
-
-// let slides = [];
-// let currentSlide = 0;
-// let currentProgress = 0;
-// let interval;
-// let progressInterval;
-// let isPlaying = true;
-
-// // ===== FIRESTORE =====
-// function loadHeroSlides() {
-//   skeleton.classList.remove("hidden");
-
-//   db.collection("heroSliders")
-//     .where("active", "==", true)
-//     .orderBy("order", "asc")
-//     .onSnapshot(snapshot => {
-//       slides = snapshot.docs.map(doc => ({
-//         image: doc.data().imageUrl,
-//         title: doc.data().title,
-//         text: doc.data().subtitle,
-//         tab: doc.data().tabLabel || doc.data().title
-//       }));
-
-//       createTabs();
-//       createImages();
-//       showSlide(0);
-//       startAutoSlide();
-//       updateHeroControls();
-//       skeleton.classList.add("hidden");
-//     });
-// }
-
-// // ===== Tabs =====
-// function createTabs() {
-//   dotsContainer.innerHTML = "";
-
-//   slides.forEach((slide, index) => {
-//     const tab = document.createElement("span");
-//     tab.textContent = slide.tab;
-//     tab.style.position = "relative";
-
-//     // Add progress bar element
-//     const progressBar = document.createElement("div");
-//     progressBar.className = "progress-bar absolute bottom-0 left-0 h-1 bg-pink-500 w-0 rounded-br-lg";
-//     tab.appendChild(progressBar);
-
-//     tab.addEventListener("click", e => {
-//       e.stopPropagation();
-//       currentSlide = index;
-//       showSlide(index);
-//       resetAutoSlide();
-//     });
-
-//     dotsContainer.appendChild(tab);
-//   });
-// }
-
-// const heroImageTrack = document.getElementById("heroImageTrack");
-
-// function createImages() {
-//   heroImageTrack.innerHTML = "";
-
-//   if (slides.length === 0) return;
-
-//   // clone last slide for seamless loop
-//   const lastClone = document.createElement("img");
-//   lastClone.src = slides[slides.length - 1].image;
-//   lastClone.alt = slides[slides.length - 1].title;
-//   heroImageTrack.appendChild(lastClone);
-
-//   // original slides
-//   slides.forEach(slide => {
-//     const img = document.createElement("img");
-//     img.src = slide.image;
-//     img.alt = slide.title;
-//     heroImageTrack.appendChild(img);
-//   });
-
-//   // clone first slide for seamless loop
-//   const firstClone = document.createElement("img");
-//   firstClone.src = slides[0].image;
-//   firstClone.alt = slides[0].title;
-//   heroImageTrack.appendChild(firstClone);
-// }
-
-// // Current slide index for JS (includes clones)
-// let trackIndex = 1;
-
-// function showSlide(index) {
-//   trackIndex = index + 1; // +1 because first is lastClone
-//   const width = heroImageTrack.offsetWidth / heroImageTrack.children.length;
-//   heroImageTrack.style.transition = "transform 0.8s cubic-bezier(0.22,0.61,0.36,1)";
-//   heroImageTrack.style.transform = `translateX(-${trackIndex * 100}%)`;
-
-//   // update title/text
-//   heroTitle.textContent = slides[index].title;
-//   heroText.textContent = slides[index].text || "";
-
-//   // highlight active tab
-//   document.querySelectorAll(".hero-tabs span").forEach((tab, i) => {
-//     tab.classList.toggle("active", i === index);
-//   });
-
-//   centerActiveTab(index);
-//   resetProgress();
-// }
-
-// // After transition ends, jump if on clone
-// heroImageTrack.addEventListener("transitionend", () => {
-//   if (trackIndex === 0) {
-//     // jumped to last real slide
-//     heroImageTrack.style.transition = "none";
-//     trackIndex = slides.length;
-//     heroImageTrack.style.transform = `translateX(-${trackIndex * 100}%)`;
-//   } else if (trackIndex === slides.length + 1) {
-//     // jumped to first real slide
-//     heroImageTrack.style.transition = "none";
-//     trackIndex = 1;
-//     heroImageTrack.style.transform = `translateX(-${trackIndex * 100}%)`;
-//   }
-// });
-
-// // ===== Auto Rotate with Progress =====
-// function startAutoSlide() {
-//   stopAutoSlide();
-
-//   const slideDuration = 6000;
-//   const stepTime = 30;
-//   const stepIncrement = (stepTime / slideDuration) * 100;
-
-//   progressInterval = setInterval(() => {
-//     currentProgress += stepIncrement;
-//     if (currentProgress > 100) currentProgress = 100;
-//     updateProgress(currentProgress);
-
-//     if (currentProgress >= 100) {
-//       currentSlide = (currentSlide + 1) % slides.length;
-//       showSlide(currentSlide);
-//       currentProgress = 0; // reset for next slide
-//     }
-//   }, stepTime);
-// }
-
-// function stopAutoSlide() {
-//   clearInterval(progressInterval);
-// }
-
-// // ===== Progress Helpers =====
-// function resetProgress() {
-//   currentProgress = 0; // reset only when switching slides
-//   document.querySelectorAll(".hero-tabs span").forEach(tab => {
-//     const bar = tab.querySelector(".progress-bar");
-//     if (bar) bar.style.width = "0%";
-//   });
-// }
-
-// function updateProgress(value) {
-//   const tabs = document.querySelectorAll(".hero-tabs span");
-//   tabs.forEach((tab, i) => {
-//     const bar = tab.querySelector(".progress-bar");
-//     if (i === currentSlide && bar) {
-//       bar.style.width = value + "%";
-//     } else if (bar) {
-//       bar.style.width = "0%";
-//     }
-//   });
-// }
-
-// let controlsTimeout;
-
-// // ===== Play/Pause Buttons =====
-// function updateHeroControls() {
-//   if (isPlaying) {
-//     heroPlay.classList.add("hidden");
-//     heroPause.classList.remove("hidden");
-//   } else {
-//     heroPlay.classList.remove("hidden");
-//     heroPause.classList.add("hidden");
-//   }
-// }
-
-// // Initial state
-// updateHeroControls();
-
-// // Play button click
-// heroPlay.addEventListener("click", e => {
-//   e.stopPropagation();
-//   isPlaying = true;
-//   startAutoSlide();
-//   updateHeroControls();
-// });
-
-// // Pause button click
-// heroPause.addEventListener("click", e => {
-//   e.stopPropagation();
-//   isPlaying = false;
-//   stopAutoSlide();
-//   updateHeroControls();
-// });
-
-// // Optional: Click on slider toggles play/pause
-// // heroSlider.addEventListener("click", () => {
-// //   isPlaying = !isPlaying;
-// //   isPlaying ? startAutoSlide() : stopAutoSlide();
-// //   updateHeroControls();
-// // });
-
-// function centerActiveTab(index) {
-//   if (window.innerWidth > 640) return;
-
-//   const tabs = document.querySelectorAll(".hero-tabs span");
-//   const track = document.querySelector(".hero-tabs-track");
-//   const container = document.getElementById("heroDots");
-
-//   if (!tabs[index] || !container) return;
-
-//   // ✅ RESET when looping back to first tab
-//   if (index === 0) {
-//     track.style.transform = "translateX(0px)";
-//     return;
-//   }
-
-//   const tabWidth = tabs[index].offsetWidth;
-//   const containerWidth = container.offsetWidth;
-
-//   const offset =
-//     tabs[index].offsetLeft - (containerWidth / 2) + (tabWidth / 2);
-
-//   track.style.transform = `translateX(${Math.max(offset, 0) * -1}px)`;
-// }
-
-// loadHeroSlides();
-
-// const heroSlider = document.querySelector(".hero-slider");
-// const heroImage = document.getElementById("heroImage");
-// const heroTitle = document.getElementById("heroTitle");
-// const heroText = document.getElementById("heroText");
-// const dotsContainer = document.getElementById("heroDots");
-
-// let slides = [];
-// let currentSlide = 0;
-// let interval;
-// let startX = 0;
-
-// // ===== FETCH SLIDES FROM FIRESTORE (REAL-TIME) =====
-//   function loadHeroSlides() {
-//     const skeleton = document.getElementById("heroSkeleton");
-
-//   // Show skeleton while fetching
-//   skeleton.classList.remove("hidden");
-
-//     db.collection("heroSliders")
-//       .where("active", "==", true)
-//       .orderBy("order", "asc")
-//       .onSnapshot(snapshot => {
-//         slides = snapshot.docs.map(doc => ({
-//           image: doc.data().imageUrl,
-//           title: doc.data().title,
-//           text: doc.data().subtitle
-//         }));
-
-//         createDots();
-
-//         // Reset to first slide if currentSlide exceeds length
-//         if (currentSlide >= slides.length) currentSlide = 0;
-
-//         showSlide(currentSlide);
-//         resetAutoSlide();
-
-//              // Hide skeleton once slides are ready
-//       skeleton.classList.add("hidden");
-      
-//       }, err => {
-//         console.error("Error loading hero slides:", err);
-//       });
-//   } 
-
-// // ===== CREATE DOTS =====
-// function createDots() {
-//   dotsContainer.innerHTML = "";
-//   slides.forEach((_, index) => {
-//     const dot = document.createElement("span");
-//     dot.addEventListener("click", () => {
-//       currentSlide = index;
-//       showSlide(index);
-//       resetAutoSlide();
-//     });
-//     dotsContainer.appendChild(dot);
-//   });
-// }
-
-// // ===== SHOW SLIDE =====
-// function showSlide(index) {
-//   if (slides.length === 0) return;
-
-//   heroImage.classList.add("fade-out");
-
-//   setTimeout(() => {
-//     heroImage.src = slides[index].image;
-//     heroTitle.textContent = slides[index].title;
-//     heroText.textContent = slides[index].text;
-
-//     heroTitle.style.animation = "none";
-//     heroText.style.animation = "none";
-//     heroTitle.offsetHeight; // force reflow
-//     heroText.offsetHeight;
-//     heroTitle.style.animation = "";
-//     heroText.style.animation = "";
-
-//     heroImage.classList.remove("fade-out");
-//   }, 300);
-
-//   document.querySelectorAll(".hero-dots span").forEach((dot, i) => {
-//     dot.classList.toggle("active", i === index);
-//   });
-// }
-
-// // ===== AUTO SLIDE =====
-// function startAutoSlide() {
-//   interval = setInterval(() => {
-//     currentSlide = (currentSlide + 1) % slides.length;
-//     showSlide(currentSlide);
-//   }, 5000);
-// }
-
-// function stopAutoSlide() {
-//   clearInterval(interval);
-// }
-
-// function resetAutoSlide() {
-//   stopAutoSlide();
-//   startAutoSlide();
-// }
-
-// // ===== PAUSE ON HOVER =====
-// heroSlider.addEventListener("mouseenter", stopAutoSlide);
-// heroSlider.addEventListener("mouseleave", startAutoSlide);
-
-// // ===== SWIPE SUPPORT =====
-// heroSlider.addEventListener("touchstart", e => {
-//   startX = e.touches[0].clientX;
-// });
-
-// heroSlider.addEventListener("touchend", e => {
-//   const endX = e.changedTouches[0].clientX;
-//   const diff = startX - endX;
-
-//   if (Math.abs(diff) > 50) {
-//     if (diff > 0) {
-//       currentSlide = (currentSlide + 1) % slides.length;
-//     } else {
-//       currentSlide = (currentSlide - 1 + slides.length) % slides.length;
-//     }
-//     showSlide(currentSlide);
-//     resetAutoSlide();
-//   }
-// });
-
-// // ===== INIT HERO SLIDER =====
-// loadHeroSlides();
-
     // ---------- Header Scroll ----------
     const header = document.getElementById("mainHeader");
 
@@ -1385,16 +731,37 @@ function renderProducts(reset=false){
   chunk.forEach(product=>{
       const image = product.image || 'https://via.placeholder.com/300x200?text=No+Image';
       const card = document.createElement('div');
-      card.className = "border rounded-xl p-4 text-center shadow opacity-0 transition-opacity duration-500";
+      // card.className = "border rounded-xl p-4 text-center shadow opacity-0 transition-opacity duration-500";
+      card.className = `
+  border rounded-xl p-4 shadow
+  flex flex-col
+  text-center
+  opacity-0 transition-opacity duration-500
+`;
       card.innerHTML = `
-          <img src="${image}" class="mx-auto mb-2 h-32 w-full object-cover rounded" />
-          <h4 class="font-semibold">${escapeHtml(product.name||'Untitled')}</h4>
-          <p class="text-pink-500 font-bold">₦${(Number(product.price||0)).toLocaleString()}</p>
-          <div class="mt-2 space-x-2">
-            <button data-id="${product.id}" class="view-btn text-sm px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600">View</button>
-            <button data-id="${product.id}" class="add-btn text-sm px-3 py-1 bg-pink-600 text-white rounded hover:bg-pink-700">Add to Cart</button>
-          </div>
-      `;
+  <img src="${image}" class="mx-auto mb-2 h-32 w-full object-cover rounded" />
+
+  <h4 class="font-semibold text-sm line-clamp-2 min-h-[2.5em]">
+    ${escapeHtml(product.name||'Untitled')}
+  </h4>
+
+  <p class="text-pink-500 font-bold mt-1">
+    ₦${(Number(product.price||0)).toLocaleString()}
+  </p>
+
+  <div class="mt-auto pt-2 flex justify-center gap-2">
+    <button data-id="${product.id}"
+      class="view-btn text-xs px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600">
+      View
+    </button>
+
+    <button data-id="${product.id}"
+      class="add-btn text-xs px-3 py-1 bg-pink-600 text-white rounded hover:bg-pink-700">
+      Cart
+    </button>
+  </div>
+`;
+
       productList.appendChild(card);
       requestAnimationFrame(()=> card.style.opacity="1");
   });
@@ -1438,6 +805,7 @@ function renderProducts(reset=false){
   } else if(existing) existing.remove();
 }
 
+// View Products
   function viewProduct(productId){
   const product = currentProducts.find(p=>p.id===productId);
   if(!product) return showNotification("Product not found","error");
@@ -1452,24 +820,40 @@ function renderProducts(reset=false){
   }
 
   modal.innerHTML = `
-    <div class="bg-white rounded-lg p-6 max-w-lg w-full relative">
-      <button id="closeProductModal" class="absolute top-2 right-2 text-gray-500 hover:text-gray-800">&times;</button>
-      <img id="modalProductImage" src="" class="w-full h-64 object-cover mb-4 rounded">
-      <h2 id="modalProductName" class="text-xl font-bold mb-2"></h2>
-      <p id="modalProductPrice" class="text-pink-500 font-semibold mb-4"></p>
-      <p id="modalProductDescription" class="text-gray-700 mb-4"></p>
+  <div class="
+    bg-white rounded-lg relative
+    w-11/12 max-w-lg
+    p-4 md:p-6
+    max-h-[85vh] overflow-y-auto
+  ">
+    <button id="closeProductModal"
+      class="absolute top-2 right-2 text-gray-500 hover:text-gray-800 text-xl">
+      &times;
+    </button>
 
-      <button id="modalAddToCartBtn"
-        class="w-full mb-2 px-4 py-2 bg-pink-600 text-white rounded hover:bg-pink-700">
-        Add to Cart
-      </button>
+    <img id="modalProductImage"
+      class="w-full h-40 md:h-64 object-cover mb-3 rounded">
 
-      <button id="buyNowBtn"
-        class="w-full px-4 py-2 border rounded hover:bg-gray-100">
-        Buy Now
-      </button>
-    </div>
-  `;
+    <h2 id="modalProductName"
+      class="text-lg md:text-xl font-bold mb-1"></h2>
+
+    <p id="modalProductPrice"
+      class="text-pink-500 font-semibold text-base md:text-lg mb-2"></p>
+
+    <p id="modalProductDescription"
+      class="text-sm text-gray-700 mb-3 line-clamp-3 md:line-clamp-none"></p>
+
+    <button id="modalAddToCartBtn"
+      class="w-full mb-2 px-4 py-2 text-sm md:text-base bg-pink-600 text-white rounded hover:bg-pink-700">
+      Add to Cart
+    </button>
+
+    <button id="buyNowBtn"
+      class="w-full px-4 py-2 text-sm md:text-base border rounded hover:bg-gray-100">
+      Buy Now
+    </button>
+  </div>
+`;
 
   // --- Populate modal content ---
   document.getElementById("modalProductImage").src = product.image || 'https://via.placeholder.com/300x200?text=No+Image';
