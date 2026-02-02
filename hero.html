@@ -209,10 +209,11 @@ document.getElementById("heroForm").addEventListener("submit", async (e) => {
       return;
     }
 
-    if (!title) {
-      showAlert("Slide title cannot be empty.");
-      return;
-    }
+    // if (!title) {
+    //   showAlert("Slide title cannot be empty.");
+    //   return;
+    // }
+    
 
     if (!orderValue || isNaN(orderValue)) {
       showAlert("Slide order must be a valid number.");

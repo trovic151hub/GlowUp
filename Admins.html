@@ -13,12 +13,169 @@
   table-layout: fixed;
   width: 100%;
 }
+
+  table {
+    table-layout: fixed;
+    width: 100%;
+  }
+
+  /* ===== MOBILE RESPONSIVENESS ===== */
+  @media (max-width: 768px) {
+
+    /* Header */
+    header {
+      /* flex-direction: column; */
+      gap: 6px;
+      text-align: center;
+    }
+
+    header h1,
+    header h2 {
+      font-size: 16px;
+    }
+
+    /* Nav */
+    nav {
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: center;
+      padding: 10px;
+    }
+
+    nav a,
+    nav button {
+      font-size: 13px;
+    }
+
+    nav button {
+      margin-left: 0 !important;
+    }
+
+    /* Main spacing (fix mt-32 feeling too big on mobile) */
+    main {
+      margin-top: 9rem !important;
+      padding: 16px;
+    }
+
+    /* Form card */
+    #productFormSection {
+      padding: 16px;
+    }
+
+    /* Image input + upload button stack */
+    #productFormSection .flex {
+      flex-direction: column;
+    }
+
+    #uploadImageBtn {
+      width: 100%;
+    }
+
+    /* Table */
+    table {
+      font-size: 13px;
+    }
+
+    th,
+    td {
+      padding: 8px 6px;
+      white-space: nowrap;
+    }
+
+    td img {
+      width: 40px;
+      height: 40px;
+    }
+
+    /* Action buttons */
+    td button {
+      display: block;
+      margin: 4px 0;
+      font-size: 12px;
+    }
+
+    /* Notification position */
+    #orderNotification {
+      right: 5%;
+      left: 5%;
+      width: auto;
+      top: 12%;
+      font-size: 13px;
+    }
+
+    /* Modal */
+    #modalOverlay > div {
+      margin: 0 12px;
+    }
+  }
+
+    table {
+    table-layout: fixed;
+    width: 100%;
+  }
+  th, td {
+    word-wrap: break-word;
+  }
+
+  /* ===== MOBILE RESPONSIVENESS ===== */
+  @media (max-width: 1024px) {
+    .overflow-auto { overflow-x: auto; }
+  }
+
+  @media (max-width: 640px) {
+
+    /* Stack table rows as cards */
+    table, thead, tbody, th, td, tr {
+      display: block;
+      width: 100%;
+    }
+
+    thead tr {
+      display: none; /* hide header row */
+    }
+
+    tbody tr {
+      margin-bottom: 1rem;
+      border: 1px solid #e5e7eb; /* tailwind gray-200 */
+      border-radius: 0.5rem;
+      padding: 0.5rem;
+      background: #fff;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+    }
+
+    tbody td {
+      display: flex;
+      justify-content: space-between;
+      padding: 0.5rem;
+      font-size: 0.85rem;
+    }
+
+    tbody td::before {
+      content: attr(data-label);
+      font-weight: 600;
+      color: #6b7280; /* Tailwind gray-500 */
+      margin-right: 0.5rem;
+    }
+
+    tbody td img {
+      width: 40px;
+      height: 40px;
+      object-fit: cover;
+      border-radius: 0.25rem;
+    }
+
+    td button {
+      display: block;
+      margin: 0.25rem 0;
+      font-size: 0.75rem;
+    }
+  }
 </style>
 </head>
 <body class="bg-gray-100 text-gray-900">
 
   <!-- Alert/Confirm Modal --> 
-  <div id="modalOverlay" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50"> 
+  <div id="modalOverlay" class="fixed inset-0 bg-black-50 bg-opacity-50 hidden flex items-center justify-center z-50 pointer-events-auto"> 
     <div class="bg-white rounded shadow-lg max-w-sm w-full p-6"> 
       <h3 id="modalTitle" class="text-lg font-bold mb-4">Title</h3> 
       <p id="modalMessage" class="mb-6">Message</p> 
@@ -49,7 +206,7 @@
 
   <main class="p-6 max-w-4xl mx-auto mt-32">
     <!-- Product Form --> 
-    <div class="bg-white shadow p-6 rounded mb-8"> 
+    <div id="productFormSection" class="bg-white shadow p-6 rounded mb-8"> 
       <h2 class="text-lg font-semibold mb-4" id="formTitle">Add New Product</h2> 
       <form id="productForm" class="grid grid-cols-1 md:grid-cols-2 gap-4"> 
         <input type="text" id="name" placeholder="Product Name" class="border p-2 rounded" required /> 
@@ -251,6 +408,9 @@ window.addEventListener("load", () => {
     modalMessage.textContent = message;
     modalCancelBtn.classList.add("hidden");
     modalOverlay.classList.remove("hidden");
+
+     lockBackground();
+
     return new Promise(resolve => {
       modalOkBtn.onclick = () => {
         modalOverlay.classList.add("hidden");
@@ -270,6 +430,8 @@ window.addEventListener("load", () => {
     modalCancelBtn.classList.remove("hidden");
     modalOverlay.classList.remove("hidden");
 
+     lockBackground();
+
     return new Promise(resolve => {
         modalOkBtn.onclick = () => { 
             modalOverlay.classList.add("hidden"); 
@@ -282,8 +444,26 @@ window.addEventListener("load", () => {
     });
 }
 
+function lockBackground() {
+  document.body.style.overflow = "hidden";
+}
+
+function unlockBackground() {
+  document.body.style.overflow = "";
+}
+
+document.addEventListener("focusin", e => {
+  if (!modalOverlay.classList.contains("hidden")) {
+    if (!modalOverlay.contains(e.target)) {
+      e.stopPropagation();
+      modalOkBtn.focus();
+    }
+  }
+});
+
   // Loader
 function showLoader() {
+  modalOverlay.classList.add("hidden"); // close modal
   loader.classList.remove("hidden");
   document.body.style.overflow = "hidden";
 }
@@ -353,7 +533,6 @@ auth.onAuthStateChanged(async (user) => {
     return snap.docs.map(d => ({id:d.id, ...d.data()}));
   }
 
-//   // Render Table
 // Render Table
 async function renderTable(append = false) {
   const tbody = document.getElementById("productTableBody");
@@ -374,19 +553,20 @@ async function renderTable(append = false) {
 
       tbody.innerHTML += `
         <tr class="border-b">
-          <td class="p-2">${p.name}</td>
-          <td class="p-2">₦${p.price.toLocaleString()}</td>
-          <td class="p-2">${p.category}</td>
-          <td class="p-2">${p.weight || 0} kg</td>
-          <td class="p-2">
-            <img src="${imgUrl}" class="w-12 h-12 object-cover rounded"/>
-          </td>
-          <td class="p-2 text-sm max-w-xs truncate">${p.description}</td>
-          <td class="p-2">
-            <button onclick="editProduct('${p.id}')" class="text-blue-600 text-sm">Edit</button>
-            <button onclick="deleteProduct('${p.id}')" class="text-red-600 text-sm ml-2">Delete</button>
-          </td>
-        </tr>`;
+  <td data-label="Name" class="p-2">${p.name}</td>
+  <td data-label="Price" class="p-2">₦${p.price.toLocaleString()}</td>
+  <td data-label="Category" class="p-2">${p.category}</td>
+  <td data-label="Weight (kg)" class="p-2">${p.weight || 0} kg</td>
+  <td data-label="Image" class="p-2">
+    <img src="${imgUrl}" class="w-12 h-12 object-cover rounded"/>
+  </td>
+  <td data-label="Description" class="p-2 text-sm max-w-xs truncate">${p.description}</td>
+  <td data-label="Actions" class="p-2">
+    <button onclick="editProduct('${p.id}')" class="text-blue-600 text-sm">Edit</button>
+    <button onclick="deleteProduct('${p.id}')" class="text-red-600 text-sm ml-2">Delete</button>
+  </td>
+</tr>`
+        ;
     });
 
     if (!append && products.length === 0) {
@@ -462,6 +642,13 @@ async function renderTable(append = false) {
     document.getElementById("weight").value = p.weight || 0;
     document.getElementById("formTitle").textContent = "Edit Product";
     editId = id;
+
+      // ✅ Smooth scroll to form
+  document.getElementById("productFormSection")
+    .scrollIntoView({ behavior: "smooth", block: "start" });
+
+  // Optional: focus first input
+  document.getElementById("name").focus();
   };
 
   window.deleteProduct = async id=>{

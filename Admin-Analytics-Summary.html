@@ -18,139 +18,109 @@
 
   <!-- jsPDF -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+  .card { background:#fff; border-radius:12px; padding:18px; box-shadow:0 4px 20px rgba(0,0,0,0.05); }
+  .skeleton { background:linear-gradient(90deg,#f0f0f0 25%, #e6e6e6 50%, #f0f0f0 75%); background-size:200% 100%; animation:skeleton 1.2s linear infinite; }
+  @keyframes skeleton { from { background-position:200% 0 } to { background-position:-200% 0 } }
+  .cursor-pointer { cursor:pointer; }
 
-  <style>
-    .card { background:#fff; border-radius:12px; padding:18px; box-shadow:0 4px 20px rgba(0,0,0,0.05); }
-    .skeleton { background:linear-gradient(90deg,#f0f0f0 25%, #e6e6e6 50%, #f0f0f0 75%); background-size:200% 100%; animation:skeleton 1.2s linear infinite; }
-    @keyframes skeleton { from { background-position:200% 0 } to { background-position:-200% 0 } }
-    .cursor-pointer { cursor:pointer; }
-  </style>
+  /* Tiny screen tweaks */
+  @media (max-width: 640px) {
+    #totalSales, #totalOrders, #aov, #totalCustomers { font-size:1.5rem; }
+    button { font-size:0.85rem; padding:0.5rem 1rem; }
+    table thead { font-size:0.7rem; }
+    table td { font-size:0.75rem; }
+  }
+</style>
 </head>
 <body class="bg-gray-50 text-gray-900">
 
-  <header class="bg-pink-600 text-white p-4 shadow fixed w-full z-50 top-0">
-    <div class="max-w-7xl mx-auto flex items-center justify-between">
-        <div class="flex space-x-2">
-        <button onclick="history.back()">
-      <i class="fas fa-arrow-left"></i>
+<header class="bg-pink-600 text-white p-4 shadow fixed w-full z-50 top-0">
+  <div class="max-w-7xl mx-auto flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-0">
+    <div class="flex items-center space-x-2 w-full sm:w-auto">
+      <button onclick="history.back()" class="text-white hover:text-gray-200">
+        <i class="fas fa-arrow-left"></i>
       </button>
-      <h1 class="text-xl font-semibold">Admin Analytics</h1>
-      </div>
-      <div id="adminBadge" class="hidden text-sm bg-white text-pink-600 px-3 py-1 rounded">ADMIN</div>
+      <h1 class="text-xl font-semibold truncate">Admin Analytics</h1>
     </div>
-  </header>
-
-  <main class="max-w-7xl mx-auto p-6 space-y-6 mt-16">
-
-    <!-- Filters -->
-    <section class="card">
-      <div class="flex flex-col md:flex-row gap-3 md:items-center">
-        <input id="searchQ" placeholder="Search product, customer, paymentRef..." class="border rounded p-2 flex-1" />
-        <input id="fromDate" type="date" class="border rounded p-2" />
-        <input id="toDate" type="date" class="border rounded p-2" />
-        <button id="applyFilters" class="bg-pink-600 text-white px-4 py-2 rounded">Apply</button>
-        <button id="clearFilters" class="bg-gray-200 px-4 py-2 rounded">Clear</button>
-        <button id="refreshBtn" class="ml-auto bg-blue-600 text-white px-3 py-2 rounded">Refresh</button>
-      </div>
-    </section>
-
-    <!-- Summary cards -->
-    <section class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
-      <div class="card text-center">
-        <p class="text-sm text-gray-500">Total Sales (selected)</p>
-        <p id="totalSales" class="text-2xl font-bold text-pink-600">₦0</p>
-      </div>
-      <div class="card text-center">
-        <p class="text-sm text-gray-500">Total Orders</p>
-        <p id="totalOrders" class="text-2xl font-bold text-pink-600">0</p>
-      </div>
-      <div class="card text-center">
-        <p class="text-sm text-gray-500">Average Order Value</p>
-        <p id="aov" class="text-2xl font-bold text-pink-600">₦0</p>
-      </div>
-      <div class="card text-center">
-        <p class="text-sm text-gray-500">Total Customers</p>
-        <p id="totalCustomers" class="text-2xl font-bold text-pink-600">0</p>
-      </div>
-    </section>
-
-    <!-- Charts row -->
-    <section class="grid grid-cols-1 lg:grid-cols-2 gap-4">
-      <div class="card">
-        <h3 class="font-semibold mb-2">Daily Sales (last 30 days)</h3>
-        <canvas id="dailySalesChart" height="120"></canvas>
-      </div>
-      <div class="card">
-        <h3 class="font-semibold mb-2">Monthly Revenue (this year)</h3>
-        <canvas id="monthlyChart" height="120"></canvas>
-      </div>
-      <div class="card">
-        <h3 class="font-semibold mb-2">Order Status</h3>
-        <canvas id="statusChart" height="120"></canvas>
-      </div>
-      <div class="card">
-        <h3 class="font-semibold mb-2">Payment Methods</h3>
-        <canvas id="paymentChart" height="120"></canvas>
-      </div>
-    </section>
-
-    <!-- Top Products & Customers -->
-    <section class="grid grid-cols-1 lg:grid-cols-2 gap-4">
-      <div class="card">
-        <h3 class="font-semibold mb-2">Top 10 Products (by quantity)</h3>
-        <div class="overflow-auto max-h-72">
-          <table class="w-full text-left">
-            <thead class="text-xs text-gray-600">
-              <tr><th class="p-2">Product</th><th class="p-2">Qty Sold</th><th class="p-2">Revenue</th></tr>
-            </thead>
-            <tbody id="topProductsBody"></tbody>
-          </table>
-        </div>
-        <div class="flex justify-end mt-2">
-          <button id="loadMoreProducts" class="bg-pink-600 text-white px-3 py-1 rounded text-sm">Load More</button>
-        </div>
-      </div>
-
-      <div class="card">
-        <h3 class="font-semibold mb-2">Top Customers (by spend)</h3>
-        <div class="overflow-auto max-h-72">
-          <table class="w-full text-left">
-            <thead class="text-xs text-gray-600">
-              <tr><th class="p-2">Customer</th><th class="p-2">Orders</th><th class="p-2">Spent</th></tr>
-            </thead>
-            <tbody id="topCustomersBody"></tbody>
-          </table>
-        </div>
-        <div class="flex justify-end mt-2">
-          <button id="loadMoreCustomers" class="bg-pink-600 text-white px-3 py-1 rounded text-sm">Load More</button>
-        </div>
-      </div>
-    </section>
-
-    <!-- Real-time Orders Feed -->
-    <section class="card">
-      <div class="flex items-center justify-between">
-        <h3 class="font-semibold">Real-time Orders Feed</h3>
-        <div class="text-sm text-gray-600">Newest orders appear here</div>
-      </div>
-      <div id="liveFeed" class="mt-3 space-y-2 max-h-80 overflow-auto"></div>
-    </section>
-
-  </main>
-
-  <!-- Modal -->
-  <div id="detailModal" class="fixed inset-0 bg-black/50 hidden items-center flex justify-center z-50 p-4">
-    <div class="bg-white rounded-lg max-w-lg w-full p-4">
-      <div class="flex justify-between items-center mb-2">
-        <h2 id="modalTitle" class="text-lg font-semibold">Details</h2>
-        <button id="closeModal" class="text-gray-500 hover:text-gray-700">&times;</button>
-      </div>
-      <div id="modalContent" class="text-sm space-y-2"></div>
-    </div>
+    <div id="adminBadge" class="hidden text-sm bg-white text-pink-600 px-3 py-1 rounded mt-2 sm:mt-0">ADMIN</div>
   </div>
+</header>
 
-  <div id="dashboard-loader"
-  class="fixed inset-0 flex items-center justify-center bg-black/40 z-50 hidden">
+<main class="max-w-7xl mx-auto p-6 space-y-6 mt-20">
+
+  <!-- Filters -->
+  <section class="card">
+    <div class="flex flex-col md:flex-row flex-wrap gap-3 md:items-center">
+      <input id="searchQ" placeholder="Search product, customer, paymentRef..." class="border rounded p-2 flex-1 min-w-[120px]" />
+      <input id="fromDate" type="date" class="border rounded p-2 flex-1 min-w-[120px]" />
+      <input id="toDate" type="date" class="border rounded p-2 flex-1 min-w-[120px]" />
+      <button id="applyFilters" class="bg-pink-600 text-white px-4 py-2 rounded flex-1 min-w-[100px]">Apply</button>
+      <button id="clearFilters" class="bg-gray-200 px-4 py-2 rounded flex-1 min-w-[100px]">Clear</button>
+      <button id="refreshBtn" class="ml-auto bg-blue-600 text-white px-3 py-2 rounded flex-1 min-w-[100px]">Refresh</button>
+    </div>
+  </section>
+
+  <!-- Summary cards -->
+  <section class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+    <div class="card text-center"><p class="text-sm text-gray-500">Total Sales (selected)</p><p id="totalSales" class="text-2xl font-bold text-pink-600">₦0</p></div>
+    <div class="card text-center"><p class="text-sm text-gray-500">Total Orders</p><p id="totalOrders" class="text-2xl font-bold text-pink-600">0</p></div>
+    <div class="card text-center"><p class="text-sm text-gray-500">Average Order Value</p><p id="aov" class="text-2xl font-bold text-pink-600">₦0</p></div>
+    <div class="card text-center"><p class="text-sm text-gray-500">Total Customers</p><p id="totalCustomers" class="text-2xl font-bold text-pink-600">0</p></div>
+  </section>
+
+  <!-- Charts row -->
+  <section class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+    <div class="card overflow-auto"><h3 class="font-semibold mb-2">Daily Sales (last 30 days)</h3><canvas id="dailySalesChart" height="120"></canvas></div>
+    <div class="card overflow-auto"><h3 class="font-semibold mb-2">Monthly Revenue (this year)</h3><canvas id="monthlyChart" height="120"></canvas></div>
+    <div class="card overflow-auto"><h3 class="font-semibold mb-2">Order Status</h3><canvas id="statusChart" height="120"></canvas></div>
+    <div class="card overflow-auto"><h3 class="font-semibold mb-2">Payment Methods</h3><canvas id="paymentChart" height="120"></canvas></div>
+  </section>
+
+  <!-- Top Products & Customers -->
+  <section class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+    <div class="card overflow-auto">
+      <h3 class="font-semibold mb-2">Top 10 Products (by quantity)</h3>
+      <table class="w-full text-left min-w-[300px]">
+        <thead class="text-xs text-gray-600"><tr><th class="p-2">Product</th><th class="p-2">Qty Sold</th><th class="p-2">Revenue</th></tr></thead>
+        <tbody id="topProductsBody"></tbody>
+      </table>
+      <div class="flex justify-end mt-2"><button id="loadMoreProducts" class="bg-pink-600 text-white px-3 py-1 rounded text-sm">Load More</button></div>
+    </div>
+
+    <div class="card overflow-auto">
+      <h3 class="font-semibold mb-2">Top Customers (by spend)</h3>
+      <table class="w-full text-left min-w-[300px]">
+        <thead class="text-xs text-gray-600"><tr><th class="p-2">Customer</th><th class="p-2">Orders</th><th class="p-2">Spent</th></tr></thead>
+        <tbody id="topCustomersBody"></tbody>
+      </table>
+      <div class="flex justify-end mt-2"><button id="loadMoreCustomers" class="bg-pink-600 text-white px-3 py-1 rounded text-sm">Load More</button></div>
+    </div>
+  </section>
+
+  <!-- Real-time Orders Feed -->
+  <section class="card">
+    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
+      <h3 class="font-semibold">Real-time Orders Feed</h3>
+      <div class="text-sm text-gray-600">Newest orders appear here</div>
+    </div>
+    <div id="liveFeed" class="mt-3 space-y-2 max-h-80 overflow-auto"></div>
+  </section>
+
+</main>
+
+<!-- Modal -->
+<div id="detailModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm hidden items-center flex justify-center z-50 p-4">
+  <div class="bg-white rounded-lg max-w-lg w-full p-4">
+    <div class="flex justify-between items-center mb-2">
+      <h2 id="modalTitle" class="text-lg font-semibold">Details</h2>
+      <button id="closeModal" class="text-gray-500 hover:text-gray-700">&times;</button>
+    </div>
+    <div id="modalContent" class="text-sm space-y-2"></div>
+  </div>
+</div>
+
+<div id="dashboard-loader" class="fixed inset-0 flex items-center justify-center bg-black/40 z-50 hidden">
   <i class="fas fa-spinner fa-spin text-white text-5xl"></i>
 </div>
 
@@ -212,13 +182,26 @@ firebase.auth().onAuthStateChanged(async user => {
 
   // ===== Global Loader =====
 function showLoader() {
+  closeModal();
   loader.classList.remove("hidden");
-  document.body.style.pointerEvents = "none";
+  document.body.style.overflow = "hidden";
+  // document.body.style.pointerEvents = "none";
 }
 
 function hideLoader() {
   loader.classList.add("hidden");
-  document.body.style.pointerEvents = "";
+  document.body.style.overflow = "";
+  // document.body.style.pointerEvents = "";
+}
+
+function openModal() {
+  modal.classList.remove("hidden");
+  document.body.style.overflow = "hidden"; // disable background scroll
+}
+
+function closeModal() {
+  modal.classList.add("hidden");
+  document.body.style.overflow = ""; // restore scroll
 }
 
   // ===== Button Event Listeners =====
@@ -250,7 +233,16 @@ function hideLoader() {
     displayCustomers();
   });
 
-  document.getElementById('closeModal').addEventListener('click', ()=>modal.classList.add('hidden'));
+  // document.getElementById('closeModal').addEventListener('click', ()=>modal.classList.add('hidden'));
+  document.getElementById('closeModal')
+  .addEventListener('click', closeModal);
+
+  modal.addEventListener("click", e => {
+  // Only close if clicking the overlay, not the modal box
+  if (e.target === modal) {
+    closeModal();
+  }
+});
 
   // ===== Initialize Charts =====
   function initCharts(){
@@ -454,7 +446,8 @@ function hideLoader() {
     modalContent.innerHTML=`<p><strong>Quantity Sold:</strong> ${t.qty}</p>
       <p><strong>Total Revenue:</strong> ₦${Math.round(t.revenue).toLocaleString()}</p>
       <p><strong>Last Ordered:</strong> ${t.lastOrder.toLocaleString()}</p>`;
-    modal.classList.remove('hidden');
+    // modal.classList.remove('hidden');
+    openModal();
   });
 
   topCustomersBody.addEventListener('click', e=>{
@@ -465,7 +458,8 @@ function hideLoader() {
       <p><strong>Total Orders:</strong> ${c.orders}</p>
       <p><strong>Total Spent:</strong> ₦${Math.round(c.spent).toLocaleString()}</p>
       <p><strong>Last Order:</strong> ${c.lastOrder.toLocaleString()}</p>`;
-    modal.classList.remove('hidden');
+    // modal.classList.remove('hidden');
+    openModal();
   });
 
   // ===== Real-time Feed =====
@@ -504,7 +498,15 @@ function hideLoader() {
   }
 
   // ===== Helpers =====
-  function escapeHtml(text){ return text.replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
+  function escapeHtml(text) {
+  return (text||'').toString().replace(/[&<>"']/g, m => ({
+    '&':'&amp;',
+    '<':'&lt;',
+    '>':'&gt;',
+    '"':'&quot;',
+    "'":'&#39;'
+  }[m]));
+}
 </script>
 </body>
 </html>

@@ -12,52 +12,57 @@
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
   <!-- EmailJS SDK -->
-<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/emailjs-com@3/dist/email.min.js"></script>
-<script>
-  emailjs.init("cRuLIat7A3PEivQCu"); //EmailJS public key
-</script>
+  <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/emailjs-com@3/dist/email.min.js"></script>
+  <script>
+    emailjs.init("cRuLIat7A3PEivQCu"); //EmailJS public key
+  </script>
   <!-- jsPDF for PDF generation -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-
 
   <style>
     @keyframes slide-in { 0%{transform:translateY(-20px);opacity:0}100%{transform:none;opacity:1} }
     .animate-slide-in { animation: slide-in .22s ease-out; }
     .timeline-step { width: 10px; height: 10px; border-radius: 999px; display:inline-block; margin-right:8px; }
+
+    /* Optional tiny tweaks for very small screens */
+    @media (max-width: 640px) {
+      #ordersSummary { font-size: 0.8rem; }
+      #loadMoreBtn { padding: 0.5rem 1rem; font-size: 0.85rem; }
+    }
   </style>
 </head>
 <body class="bg-gray-50 text-gray-900">
 
 <header class="bg-pink-600 text-white p-4 fixed w-full z-50 top-0">
-  <div class="max-w-6xl mx-auto flex items-center justify-between">
-    <div class="flex space-x-2">
-      <button onclick="history.back()">
+  <div class="max-w-6xl mx-auto flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-0">
+    <div class="flex items-center space-x-2">
+      <button onclick="history.back()" class="text-white hover:text-gray-200">
         <i class="fas fa-arrow-left"></i>
       </button>
-      <h1 class="text-lg font-bold">Order History — Advanced</h1>
+      <h1 class="text-lg font-bold truncate">Order History — Advanced</h1>
     </div>
-    <div id="adminBadge" class="hidden bg-white text-pink-600 px-2 py-1 rounded text-sm">ADMIN</div>
+    <div id="adminBadge" class="hidden bg-white text-pink-600 px-2 py-1 rounded text-sm mt-2 sm:mt-0">ADMIN</div>
   </div>
 </header>
 
-<main class="max-w-6xl mx-auto p-6 mt-16">
+<main class="max-w-6xl mx-auto p-6 mt-20">
 
   <!-- FILTERS / SEARCH -->
   <section class="bg-white p-4 rounded shadow mb-6">
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
-      <input id="qText" placeholder="Search product / name / paymentRef" class="border p-2 rounded" />
-      <select id="filterStatus" class="border p-2 rounded">
+    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
+      <input id="qText" placeholder="Search product / name / paymentRef" class="border p-2 rounded w-full" />
+      <select id="filterStatus" class="border p-2 rounded w-full">
         <option value="all">All status</option>
         <option value="pending">Pending</option>
         <option value="completed">Completed</option>
       </select>
-      <select id="filterShipment" class="border p-2 rounded">
+      <select id="filterShipment" class="border p-2 rounded w-full">
         <option value="all">All shipment</option>
         <option value="processing">Processing</option>
         <option value="shipped">Shipped</option>
         <option value="delivered">Delivered</option>
       </select>
-      <select id="filterPayment" class="border p-2 rounded">
+      <select id="filterPayment" class="border p-2 rounded w-full">
         <option value="all">All payment</option>
         <option value="Paystack">Paystack</option>
         <option value="Flutterwave">Flutterwave</option>
@@ -65,12 +70,12 @@
       </select>
     </div>
 
-    <div class="flex gap-3 mt-3">
-      <input id="dateFrom" type="date" class="border p-2 rounded" />
-      <input id="dateTo" type="date" class="border p-2 rounded" />
-      <button id="applyFilters" class="bg-pink-600 text-white px-4 py-2 rounded">Apply</button>
-      <button id="clearFilters" class="bg-gray-200 px-4 py-2 rounded">Clear</button>
-      <div class="ml-auto flex gap-2">
+    <div class="flex flex-col sm:flex-row flex-wrap gap-3 mt-3">
+      <input id="dateFrom" type="date" class="border p-2 rounded flex-1 min-w-[120px]" />
+      <input id="dateTo" type="date" class="border p-2 rounded flex-1 min-w-[120px]" />
+      <button id="applyFilters" class="bg-pink-600 text-white px-4 py-2 rounded flex-1 min-w-[120px]">Apply</button>
+      <button id="clearFilters" class="bg-gray-200 px-4 py-2 rounded flex-1 min-w-[120px]">Clear</button>
+      <div class="ml-auto flex gap-2 flex-wrap">
         <button id="refreshBtn" class="bg-blue-600 text-white px-3 py-2 rounded">Refresh</button>
       </div>
     </div>
@@ -82,8 +87,8 @@
 
   <!-- ORDERS TABLE -->
   <section class="bg-white p-4 rounded shadow">
-    <div class="overflow-auto">
-      <table class="w-full text-left">
+    <div class="overflow-x-auto">
+      <table class="w-full text-left min-w-[600px]">
         <thead class="bg-pink-100">
           <tr>
             <th class="p-2">When</th>
@@ -91,7 +96,6 @@
             <th class="p-2">Total</th>
             <th class="p-2">Payment</th>
             <th class="p-2">Shipment</th>
-            <!-- <th class="p-2">Delivery</th> -->
             <th class="p-2">Status</th>
             <th class="p-2">Actions</th>
           </tr>
@@ -106,34 +110,26 @@
 </main>
 
 <!-- DETAIL MODAL -->
-<div id="detailModal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50 p-4">
-  <div class="bg-white w-full max-w-2xl p-6 rounded shadow-lg animate-slide-in max-h-[90vh] overflow-auto">
+<div id="detailModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
+  <div class="bg-white w-full max-w-lg sm:max-w-lg md:max-w-2xl p-6 rounded shadow-lg animate-slide-in max-h-[90vh] overflow-auto">
     <div class="flex justify-between items-start gap-4">
       <h2 class="text-2xl font-semibold text-pink-600">Order Details</h2>
       <div>
         <button id="modalClose" class="text-gray-600 hover:text-gray-800 text-xl">&times;</button>
       </div>
     </div>
-    <!-- International Order Control -->
     <div id="internationalControls" class="mt-3"></div>
     <div id="detailContent" class="mt-4 space-y-3 text-sm text-gray-800"></div>
-    <div class="mt-4 flex gap-2 ">
-      <button id="downloadPdfBtn" class="bg-pink-600 text-white px-4 py-2 rounded">Download Receipt</button>
-      <button id="emailReceiptBtn" class="bg-blue-600 text-white px-4 py-2 rounded opacity-50 cursor-not-allowed" disabled>Email Receipt</button>
-      <div id="modalStatusControls" class="ml-auto flex gap-2"></div>
+    <div class="mt-4 flex gap-2 flex-wrap">
+      <button id="downloadPdfBtn" class="bg-pink-600 text-white px-4 py-2 rounded flex-1 min-w-[120px]">Download Receipt</button>
+      <button id="emailReceiptBtn" class="bg-blue-600 text-white px-4 py-2 rounded opacity-50 cursor-not-allowed flex-1 min-w-[120px]" disabled>Email Receipt</button>
+      <div id="modalStatusControls" class="ml-auto flex gap-2 flex-wrap"></div>
     </div>
-    <!-- International Order Control -->
-    <!-- <div id="internationalControls" class="mt-3"></div> -->
   </div>
 </div>
 
-<div id="modalStatusControls" class="mt-4 flex items-center"></div>
-
-<!-- ===== LOADER ===== -->
-<div
-  id="dashboard-loader"
-  class="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center hidden z-50"
->
+<!-- LOADER -->
+<div id="dashboard-loader" class="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center hidden z-50">
   <i class="fas fa-spinner fa-spin text-white text-5xl"></i>
 </div>
 
@@ -243,12 +239,21 @@ firebase.auth().onAuthStateChanged(async (user) => {
 
   // ===== GLOBAL LOADER =====
 function showLoader() {
+    detailModal.classList.add("hidden"); // force-close modal
   loader.classList.remove("hidden");
   document.body.style.overflow = "hidden";
 }
 
 function hideLoader() {
   loader.classList.add("hidden");
+  document.body.style.overflow = "";
+}
+
+function lockBackground() {
+  document.body.style.overflow = "hidden";
+}
+
+function unlockBackground() {
   document.body.style.overflow = "";
 }
 
@@ -549,6 +554,13 @@ function getDeliveryFee(order) {
   const internationalControls = document.getElementById("internationalControls");
   internationalControls.innerHTML = ''; // reset every open
 
+  detailModal.addEventListener("click", (e) => {
+  // If user clicks the overlay (not the modal box)
+  if (e.target === detailModal) {
+    closeDetailModal();
+  }
+});
+
   // Enable email button
   emailReceiptBtn.disabled = false;
   emailReceiptBtn.classList.remove("opacity-50", "cursor-not-allowed");
@@ -777,17 +789,31 @@ function getDeliveryFee(order) {
 
   detailModal.classList.remove('hidden');
   detailModal.classList.add('flex');
+  lockBackground();
 }
 
 // ===== CLOSE MODAL =====
-document.getElementById("modalClose").onclick = () => {
-  const detailModal = document.getElementById("detailModal");
-  detailModal.classList.add('hidden');
-  detailModal.classList.remove('flex');
+function closeDetailModal() {
+  detailModal.classList.add("hidden");
+  detailModal.classList.remove("flex");
   currentOpenOrder = null;
-};
+  unlockBackground();
+}
 
-  modalClose.onclick = () => { detailModal.classList.add('hidden'); detailModal.classList.remove('flex'); currentOpenOrder=null; }
+modalClose.onclick = closeDetailModal;
+
+// document.getElementById("modalClose").onclick = () => {
+//   const detailModal = document.getElementById("detailModal");
+//   detailModal.classList.add('hidden');
+//   detailModal.classList.remove('flex');
+//   currentOpenOrder = null;
+// };
+
+  // modalClose.onclick = () => { 
+  //   detailModal.classList.add('hidden'); 
+  //   detailModal.classList.remove('flex'); 
+  //   currentOpenOrder=null; 
+  // }
 
   document.getElementById('applyFilters').onclick = () => {
     activeFilters.q = qText.value;
