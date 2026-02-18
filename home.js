@@ -934,10 +934,11 @@ function renderProducts(reset=false){
       return ()=>{ button.disabled=false; button.innerHTML=original; };
   }
 
-// Ensure guest cart exists
+  // ---------- ENSURE GUEST CART EXISTS ----------
 async function ensureGuestCart() {
   const cartDocRef = userDb.collection("guestCarts").doc(guestId);
   const snap = await cartDocRef.get();
+
   if (!snap.exists) {
     await cartDocRef.set({
       guestId,
@@ -945,25 +946,23 @@ async function ensureGuestCart() {
       updatedAt: firebase.firestore.FieldValue.serverTimestamp()
     });
   }
+
+  return cartDocRef; // return ref for further use
 }
 
 // ---------- ADD TO CART ----------
-window.addToCart = async function(id){
-  const product = currentProducts.find(p => p.id === id);
-  if(!product) return showNotification("Product not found","error");
-
-  const cartDocRef = userDb.collection("guestCarts").doc(guestId);
+window.addToCart = async function(productId) {
+  const product = currentProducts.find(p => p.id === productId);
+  if (!product) return showNotification("Product not found", "error");
 
   try {
-    // Make sure cart exists
-    await ensureGuestCart();
-
+    const cartDocRef = await ensureGuestCart();
     const snap = await cartDocRef.get();
-    let items = snap.exists ? snap.data().items || [] : [];
+    const items = snap.exists ? snap.data().items || [] : [];
 
+    // Check if product already exists
     const existing = items.find(i => i.id === product.id);
-
-    if(existing){
+    if (existing) {
       existing.quantity += 1;
     } else {
       items.push({
@@ -976,68 +975,179 @@ window.addToCart = async function(id){
       });
     }
 
+    // Update Firestore
     await cartDocRef.set({
       guestId,
       items,
       updatedAt: firebase.firestore.FieldValue.serverTimestamp()
     }, { merge: true });
 
-    // ✅ SYNC IMMEDIATELY
-localStorage.setItem("cart", JSON.stringify(items));
+    // Update localStorage instantly
+    localStorage.setItem("cart", JSON.stringify(items));
 
     showNotification("Added to cart!", "success");
     updateCartCount();
 
-  } catch(err){
+  } catch (err) {
     console.error(err);
-    showNotification("Failed to add to cart","error");
+    showNotification("Failed to add to cart", "error");
   }
 };
 
 // ---------- UPDATE CART COUNT ----------
-function updateCartCount(){
-  const el = document.getElementById("cartCount");
-  if(!el) return;
+// let cartUnsub = null;
 
-  // ✅ Instant count from localStorage
+async function updateCartCount() {
+  const el = document.getElementById("cartCount");
+  if (!el) return;
+
+  // Get instant count from localStorage
   try {
     const cached = JSON.parse(localStorage.getItem("cart")) || [];
-    const cachedTotal = cached.reduce((s,i)=>s+(i.quantity||0),0);
+    const cachedTotal = cached.reduce((sum, i) => sum + (i.quantity || 0), 0);
     el.textContent = cachedTotal;
   } catch {
     el.textContent = "0";
   }
 
-  // Unsubscribe previous listener
-  if(cartUnsub){
-    try{ cartUnsub(); } catch(e){}
+  // Unsubscribe previous snapshot listener
+  if (cartUnsub) {
+    try { cartUnsub(); } catch (e) {}
     cartUnsub = null;
   }
 
-  const cartDocRef = userDb.collection("guestCarts").doc(guestId);
+  try {
+    const cartDocRef = await ensureGuestCart();
 
-  // Make sure cart exists first
-  ensureGuestCart().then(()=>{
-    cartUnsub = cartDocRef.onSnapshot(doc=>{
-      if(!doc.exists){
+    // Subscribe to Firestore updates
+    cartUnsub = cartDocRef.onSnapshot(doc => {
+      if (!doc.exists) {
         el.textContent = "0";
         return;
       }
       const items = doc.data().items || [];
-      const total = items.reduce((sum,i)=>sum+(i.quantity||0),0);
+      const total = items.reduce((sum, i) => sum + (i.quantity || 0), 0);
       el.textContent = total;
-    }, err=>{
-      console.error(err);
+
+      // Sync localStorage with Firestore
+      localStorage.setItem("cart", JSON.stringify(items));
+    }, err => {
+      console.error("Cart snapshot error:", err);
       el.textContent = "0";
     });
-  }).catch(err=>{
+  } catch (err) {
     console.error(err);
     el.textContent = "0";
-  });
+  }
 }
 
-// ---------- INITIALIZE CART COUNT ----------
+// ---------- INITIALIZE ----------
 updateCartCount();
+
+// // Ensure guest cart exists
+// async function ensureGuestCart() {
+//   const cartDocRef = userDb.collection("guestCarts").doc(guestId);
+//   const snap = await cartDocRef.get();
+//   if (!snap.exists) {
+//     await cartDocRef.set({
+//       guestId,
+//       items: [],
+//       updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+//     });
+//   }
+// }
+
+// // ---------- ADD TO CART ----------
+// window.addToCart = async function(id){
+//   const product = currentProducts.find(p => p.id === id);
+//   if(!product) return showNotification("Product not found","error");
+
+//   const cartDocRef = userDb.collection("guestCarts").doc(guestId);
+
+//   try {
+//     // Make sure cart exists
+//     await ensureGuestCart();
+
+//     const snap = await cartDocRef.get();
+//     let items = snap.exists ? snap.data().items || [] : [];
+
+//     const existing = items.find(i => i.id === product.id);
+
+//     if(existing){
+//       existing.quantity += 1;
+//     } else {
+//       items.push({
+//         id: product.id,
+//         name: product.name,
+//         price: Number(product.price) || 0,
+//         image: product.image || "",
+//         quantity: 1,
+//         weight: Number(product.weight || 0)
+//       });
+//     }
+
+//     await cartDocRef.set({
+//       guestId,
+//       items,
+//       updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+//     }, { merge: true });
+
+//     // ✅ SYNC IMMEDIATELY
+// localStorage.setItem("cart", JSON.stringify(items));
+
+//     showNotification("Added to cart!", "success");
+//     updateCartCount();
+
+//   } catch(err){
+//     console.error(err);
+//     showNotification("Failed to add to cart","error");
+//   }
+// };
+
+// // ---------- UPDATE CART COUNT ----------
+// function updateCartCount(){
+//   const el = document.getElementById("cartCount");
+//   if(!el) return;
+
+//   // ✅ Instant count from localStorage
+//   try {
+//     const cached = JSON.parse(localStorage.getItem("cart")) || [];
+//     const cachedTotal = cached.reduce((s,i)=>s+(i.quantity||0),0);
+//     el.textContent = cachedTotal;
+//   } catch {
+//     el.textContent = "0";
+//   }
+
+//   // Unsubscribe previous listener
+//   if(cartUnsub){
+//     try{ cartUnsub(); } catch(e){}
+//     cartUnsub = null;
+//   }
+
+//   const cartDocRef = userDb.collection("guestCarts").doc(guestId);
+
+//   // Make sure cart exists first
+//   ensureGuestCart().then(()=>{
+//     cartUnsub = cartDocRef.onSnapshot(doc=>{
+//       if(!doc.exists){
+//         el.textContent = "0";
+//         return;
+//       }
+//       const items = doc.data().items || [];
+//       const total = items.reduce((sum,i)=>sum+(i.quantity||0),0);
+//       el.textContent = total;
+//     }, err=>{
+//       console.error(err);
+//       el.textContent = "0";
+//     });
+//   }).catch(err=>{
+//     console.error(err);
+//     el.textContent = "0";
+//   });
+// }
+
+// // ---------- INITIALIZE CART COUNT ----------
+// updateCartCount();
 
   // ---------- INITIAL LOAD ----------
   rotateTipsFade();
