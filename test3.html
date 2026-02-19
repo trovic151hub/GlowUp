@@ -81,9 +81,9 @@
     </div>
   </section>
 
-  <div id="ordersSummary" class="mb-4 p-2 bg-gray-100 rounded text-sm text-gray-700">
+  <!-- <div id="ordersSummary" class="mb-4 p-2 bg-gray-100 rounded text-sm text-gray-700">
     Loading summary...
-  </div>
+  </div> -->
 
   <!-- ORDERS TABLE -->
   <section class="bg-white p-4 rounded shadow">
@@ -312,19 +312,6 @@ function buildQuery(pageSize = PAGE_SIZE, startAfterDoc = null) {
 
   return q.limit(pageSize);
 }
-//   function buildQuery(pageSize=PAGE_SIZE, startAfterDoc=null) {
-//     // let q = db.collection('orders').orderBy('timestamp','desc');
-//     let q = db.collection('orders').orderBy('createdAt', 'desc');
-//     if(activeFilters.status && activeFilters.status!=='all') q = q.where('fulfilled','==', activeFilters.status==='completed');
-//     if(activeFilters.payment && activeFilters.payment!=='all') q = q.where('paymentMethod','==', activeFilters.payment);
-//     if(activeFilters.shipment && activeFilters.shipment!=='all') q = q.where('shipmentStatus','==', activeFilters.shipment);
-//     if(activeFilters.from) q = q.where('createdAt','>=', firebase.firestore.Timestamp.fromDate(new Date(activeFilters.from+'T00:00:00')));
-// if(activeFilters.to) q = q.where('createdAt','<=', firebase.firestore.Timestamp.fromDate(new Date(activeFilters.to+'T23:59:59')));
-//     // if(activeFilters.from) q = q.where('timestamp','>=', firebase.firestore.Timestamp.fromDate(new Date(activeFilters.from+'T00:00:00')));
-//     // if(activeFilters.to) q = q.where('timestamp','<=', firebase.firestore.Timestamp.fromDate(new Date(activeFilters.to+'T23:59:59')));
-//     if(startAfterDoc) q = q.startAfter(startAfterDoc);
-//     return q.limit(pageSize);
-//   }
 
   function hideLoadMore() {
   loadMoreBtn.style.display = "none";
@@ -347,15 +334,14 @@ function showLoadMore() {
   }
 }
 
-  function updateSummary() {
-    const rows = Array.from(ordersTbody.children).filter(r => r.__order);
-    const totalOrders = rows.length;
-    const totalDeliveryFee = rows.reduce((sum, r) => sum + getDeliveryFee(r.__order), 0);
-    const totalWeight = rows.reduce((sum, r) => sum + (r.__order.totalWeight||0), 0);
-    ordersSummary.innerHTML = `<strong>Total Orders:</strong> ${totalOrders} | <strong>Total Delivery Fee:</strong> ₦${totalDeliveryFee.toLocaleString()} | <strong>Total Weight:</strong> ${totalWeight} kg`;
-  }
+  // function updateSummary() {
+  //   const rows = Array.from(ordersTbody.children).filter(r => r.__order);
+  //   const totalOrders = rows.length;
+  //   const totalDeliveryFee = rows.reduce((sum, r) => sum + getDeliveryFee(r.__order), 0);
+  //   const totalWeight = rows.reduce((sum, r) => sum + (r.__order.totalWeight||0), 0);
+  //   ordersSummary.innerHTML = `<strong>Total Orders:</strong> ${totalOrders} | <strong>Total Delivery Fee:</strong> ₦${totalDeliveryFee.toLocaleString()} | <strong>Total Weight:</strong> ${totalWeight} kg`;
+  // }
 
-  //  Load More btn
   // ===== Load Orders (Initial + Load More) =====
 async function loadMore(isInitial = false) {
   if (loadingMore) return;
@@ -384,62 +370,9 @@ async function loadMore(isInitial = false) {
     loadingMore = false;
     loadMoreBtn.disabled = false;
     hideLoader();
-    updateSummary();
+    // updateSummary();
   }
 }
-//   async function loadMore(isInitial=false) {
-//     if(loadingMore) return;
-//     loadingMore = true; loadMoreBtn.disabled = true;
-
-//     if (isInitial) showLoader();
-
-//     for(let i=0;i<3;i++){
-//       const r = document.createElement('tr'); 
-//       r.innerHTML = `<td class="p-2 bg-gray-200 animate-pulse"></td>`.repeat(8); 
-//       ordersTbody.appendChild(r);
-//     }
-
-//     try{
-//       const snap = await buildQuery(PAGE_SIZE, lastDoc).get();
-//       if(!snap.empty){
-//         if(isInitial) ordersTbody.innerHTML='';
-//         const docs = snap.docs.map(d => ({id:d.id,...d.data()}));
-//         const filteredDocs = activeFilters.q ? docs.filter(o => {
-//           const qlow = activeFilters.q.toLowerCase();
-//           return (o.name && o.name.toLowerCase().includes(qlow)) ||
-//                  (o.paymentRef && o.paymentRef.toLowerCase().includes(qlow)) ||
-//                  (Array.isArray(o.items) && o.items.some(it => (it.name||'').toLowerCase().includes(qlow)));
-//         }) : docs;
-
-//         filteredDocs.forEach(order => ordersTbody.appendChild(orderRow(order)));
-//         lastDoc = snap.docs[snap.docs.length - 1];
-
-// // ✅ If fewer than PAGE_SIZE docs returned, no more orders exist
-// if (snap.size < PAGE_SIZE) {
-//   hideLoadMore();
-// } else {
-//   showLoadMore();
-// }
-//       } else if (isInitial) {
-//   ordersTbody.innerHTML = `
-//     <tr>
-//       <td colspan="8" class="p-4 text-center text-gray-500">
-//         No orders found.
-//       </td>
-//     </tr>
-//   `;
-//   hideLoadMore();
-//         loadMoreBtn.style.display='none';
-//       }
-//     }catch(err){
-//       console.error(err);
-//       ordersTbody.innerHTML = `<tr><td colspan="8" class="p-4 text-red-500">Failed to load orders.</td></tr>`;
-//     } finally {
-//       loadingMore = false; loadMoreBtn.disabled = false; 
-//       hideLoader();
-//       updateSummary();
-//     }
-//   }
 
   // ===== Order Row Renderer =====
 function orderRow(order) {
@@ -485,73 +418,6 @@ function orderRow(order) {
   tr.__order = order;
   return tr;
 }
-//   function orderRow(order){
-//   const tr = document.createElement('tr');
-//   const when = order.createdAt?.toDate?.()?.toLocaleString() || '';
-//   const deliveryFee = getDeliveryFee(order);
-
-//   const totalWithFee = order.delivery?.isInternational
-//     ? Number(order.total || 0) + deliveryFee
-//     : Number(order.total || 0);
-
-//   const adminId = firebase.auth().currentUser?.uid;
-//   const isNew = !order.viewedBy || !order.viewedBy[adminId];
-
-// tr.innerHTML = `
-// <td class="p-2 align-top border border-gray-300">${when}</td>
-
-// <td class="p-2 align-top border border-gray-300">
-//   <div class="flex items-center gap-2">
-//     <span>${order.shipping ? `${order.shipping.firstName} ${order.shipping.lastName}` : "Guest"}</span>
-//     ${
-//       isNew
-//         ? `<span class="px-2 py-0.5 text-xs font-semibold rounded-full
-//              bg-red-600 text-white animate-pulse">
-//              NEW
-//            </span>`
-//         : ""
-//     }
-//   </div>
-// </td>
-
-// <td class="p-2 align-top border border-gray-300">
-//   ₦${totalWithFee.toLocaleString()}
-// </td>
-
-// <td class="p-2 align-top border border-gray-300">
-//   ${order.payment?.method || ""}
-// </td>
-
-// <td class="p-2 align-top border border-gray-300">
-//   ${order.shipmentStatus || "processing"}
-// </td>
-
-// <td class="p-2 align-top border border-gray-300">
-//   <span class="px-2 py-1 rounded text-xs ${
-//     order.fulfilled
-//       ? "bg-green-200 text-green-800"
-//       : "bg-yellow-200 text-yellow-800"
-//   }">
-//     ${order.fulfilled ? "Completed" : "Pending"}
-//   </span>
-// </td>
-
-// <td class="p-2 align-top border border-gray-300">
-//   <div class="flex flex-col md:flex-row gap-2">
-//     <button class="bg-blue-600 text-white px-3 py-1 rounded"
-//       onclick='openDetail("${order.id}")'>
-//       Detail
-//     </button>
-//     <button class="bg-pink-500 text-white px-3 py-1 rounded"
-//       onclick='toggleFulfilled("${order.id}", ${!!order.fulfilled})'>
-//       ${order.fulfilled ? "Mark Pending" : "Mark Complete"}
-//     </button>
-//   </div>
-// </td>
-// `;
-//     tr.__order = order;
-//     return tr;
-//   }
 
   // ===== DELETE & TOGGLE =====
   window.deleteOrder = async function(orderId) {
@@ -575,15 +441,41 @@ function orderRow(order) {
         const newRow = orderRow(row.__order);
         ordersTbody.replaceChild(newRow, row);
       }
-      updateSummary();
+      // updateSummary();
     } catch(err){ showAlert("Failed to update order: "+err.message,"Error"); }
   };
 
-  function updateShipmentStatus(orderId,newStatus){
-    if(!window.isAdmin) return showAlert("Only admins can update shipment status","Error");
-    db.collection('orders').doc(orderId).update({ shipmentStatus: newStatus })
-      .catch(err => showAlert("Failed to update shipment status: "+err.message,"Error"));
-  }
+  // Update Shipment Status
+  function updateShipmentStatus(orderId, newStatus) {
+  if (!window.isAdmin) return showAlert("Only admins can update shipment status", "Error");
+
+  // 1️⃣ Update Firestore
+  const orderRef = db.collection("orders").doc(orderId);
+  orderRef
+    .update({ shipmentStatus: newStatus })
+    .then(() => {
+      // 2️⃣ Update local row immediately
+      const row = Array.from(ordersTbody.children).find(r => r.__order?.id === orderId);
+      if (row) {
+        row.__order.shipping = row.__order.shipping || {};
+        row.__order.shipping.status = newStatus;
+
+        const newRow = orderRow(row.__order);
+        ordersTbody.replaceChild(newRow, row);
+      }
+
+      // 3️⃣ Update modal if open
+      if (currentOpenOrder?.id === orderId) {
+        currentOpenOrder.shipping = currentOpenOrder.shipping || {};
+        currentOpenOrder.shipping.status = newStatus;
+        renderModal(currentOpenOrder);
+      }
+
+      showAlert("Shipment status updated successfully!", "Success");
+      // updateSummary();
+    })
+    .catch(err => showAlert("Failed to update shipment status: " + err.message, "Error"));
+}
 
   // ===== DETAIL MODAL =====
   window.openDetail = function (orderId) {
@@ -605,13 +497,14 @@ function orderRow(order) {
 };
 
   // ===== Confirm International Payment =====
-async function confirmInternationalPayment(orderId) {
+  async function confirmInternationalPayment(orderId) {
   if (!orderId) throw new Error('Invalid order ID');
 
   const orderRef = firebase.firestore().collection('orders').doc(orderId);
+
   await orderRef.update({
     'delivery.fulfilled': true,
-    'shipmentStatus': 'processing' // optionally reset shipment status
+    'shipmentStatus': 'processing'
   });
 }
 
@@ -622,54 +515,59 @@ async function updateInternationalDelivery(orderId, updatedDelivery) {
 
   const orderRef = firebase.firestore().collection('orders').doc(orderId);
 
-  // Ensure deliveryFee is number
   const fee = Number(updatedDelivery.deliveryFee) || 0;
+
   await orderRef.update({
     'delivery.deliveryFee': fee,
-    'delivery.type': updatedDelivery.type ?? 'home'
+    'delivery.type': updatedDelivery.type || 'home'
   });
 }
 
 // Get Delivery Fee
 function getDeliveryFee(order) {
   const delivery = order?.delivery || {};
+  const country = (delivery.country || '').toLowerCase();
 
-  // If international, always use the updated fee
-  if (delivery.isInternational) {
-    return delivery.deliveryFee != null ? Number(delivery.deliveryFee) : 0;
+  // Detect international properly
+  const isInternational = country && country !== 'nigeria';
+
+  // International: use updated delivery fee
+  if (isInternational) {
+    return delivery.deliveryFee != null
+      ? Number(delivery.deliveryFee)
+      : 0;
   }
 
-  // Local/Nigeria: check if deliveryFee exists directly or in fallback fields
+  // Local/Nigeria
   if (delivery.deliveryFee != null) {
     return Number(delivery.deliveryFee);
   }
 
-  // Optional: fallback if stored elsewhere in Firestore
   if (order?.deliveryFee != null) {
     return Number(order.deliveryFee);
   }
 
-  // Default
   return 0;
 }
 
-  // ===== Render Detail Modal =====
-  function renderModal(order) {
+//   // ===== Render Detail Modal =====
+// ===== Render Detail Modal =====
+function renderModal(order) {
   currentOpenOrder = order;
+
   const detailContent = document.getElementById("detailContent");
   const modalStatusControls = document.getElementById("modalStatusControls");
   const detailModal = document.getElementById("detailModal");
   const emailReceiptBtn = document.getElementById("emailReceiptBtn");
-
   const internationalControls = document.getElementById("internationalControls");
-  internationalControls.innerHTML = ''; // reset every open
+
+  internationalControls.innerHTML = '';
 
   detailModal.addEventListener("click", (e) => {
-  // If user clicks the overlay (not the modal box)
-  if (e.target === detailModal) {
-    closeDetailModal();
-  }
-});
+    if (e.target === detailModal) {
+      closeDetailModal();
+    }
+  });
 
   // Enable email button
   emailReceiptBtn.disabled = false;
@@ -690,76 +588,116 @@ function getDeliveryFee(order) {
     }
   };
 
-  // ===== Calculate delivery fee & total WITH delivery =====
-  const deliveryFee = getDeliveryFee(order);       // delivery fee from Firestore
-  const orderTotal = Number(order.total || 0);     // original total from order items
+  // ===== SAFE DATA EXTRACTION FROM FIRESTORE STRUCTURE =====
+  const shipping = order.shipping || {};
+  const delivery = order.delivery || {};
+  const pricing = order.pricing || {};
+  const items = order.items || [];
 
-  // ✅ Only add delivery fee for international orders
-  const totalWithFee = order.delivery?.isInternational
-    ? orderTotal + deliveryFee
-    : orderTotal;
+  const subtotal = Number(pricing.subtotal || 0);
+  const shippingFee = Number(pricing.shippingFee || 0);
+  const orderTotal = Number(pricing.total || (subtotal + shippingFee));
 
-  // ===== Modal Header & Items =====
+  const totalWeight = items.reduce((sum, item) => {
+    return sum + (Number(item.weight || 0) * Number(item.quantity || 1));
+  }, 0);
+
+  const deliveryFee = getDeliveryFee(order);
+
+  function isInternationalOrder(order) {
+  const delivery = order?.delivery || {};
+  const country = (delivery.country || '').toLowerCase().trim();
+
+  return country && country !== 'nigeria';
+}
+
+const totalWithFee = isInternationalOrder(order)
+  ? orderTotal + (order.delivery.deliveryFee || 0)
+  : orderTotal + (pricing.shippingFee || 0);
+
+  // const totalWithFee = delivery?.isInternational
+  //   ? orderTotal + deliveryFee
+  //   : orderTotal;
+
+  // ===== Header =====
   const headerHtml = `<div class="flex justify-between items-center">
     <div>
-      <div class="text-lg font-semibold">${escapeHtml(order.shipping ? `${order.shipping.firstName || ''} ${order.shipping.lastName || ''}` : 'Guest')}</div>
-      <div class="text-xs text-gray-600">${escapeHtml(order.shipping?.email || '')} • ${escapeHtml(order.phone || '')}</div>
-      <div class="text-xs text-gray-600 mt-1">Ref: ${escapeHtml(order.payment?.reference || '')}</div>
+      <div class="text-lg font-semibold">
+        ${escapeHtml(shipping.firstName || '')} ${escapeHtml(shipping.lastName || '')}
+      </div>
+      <div class="text-xs text-gray-600">
+        ${escapeHtml(shipping.email || '')} • ${escapeHtml(shipping.phone || '')}
+      </div>
+      <div class="text-xs text-gray-600 mt-1">
+        Ref: ${escapeHtml(order.payment?.reference || '')}
+      </div>
     </div>
     <div class="text-right">
       <div class="text-sm">Total</div>
-      <div class="text-xl font-bold">₦${totalWithFee.toLocaleString()}</div>
+      <div class="text-xl font-bold">
+        ₦${totalWithFee.toLocaleString()}
+      </div>
     </div>
   </div>`;
 
-  const itemsHtml = (order.items || []).map(i => `
+  // ===== Items =====
+  const itemsHtml = items.map(i => `
     <div class="flex justify-between border-b py-2">
       <div>
         <div class="font-medium">${escapeHtml(i.name)}</div>
-        <div class="text-xs text-gray-600">₦${Number(i.price).toLocaleString()} each</div>
+        <div class="text-xs text-gray-600">
+          ₦${Number(i.price).toLocaleString()} each
+        </div>
       </div>
       <div class="text-right">
         <div>${i.quantity} ×</div>
-        <div class="font-semibold">₦${(i.price*i.quantity).toLocaleString()}</div>
+        <div class="font-semibold">
+          ₦${(Number(i.price) * Number(i.quantity)).toLocaleString()}
+        </div>
       </div>
-    </div>`).join('');
+    </div>
+  `).join('');
 
   const prog = shipmentTimelineHtml(order.shipmentStatus || 'processing');
-  const delivery = order.delivery || {};
+
   let deliveryText = '';
 
-  // ✅ INTERNATIONAL FIRST (always)
-  if (delivery.isInternational) {
-    deliveryText = `Company: ${delivery.company || '—'}<br>
-                    Type: ${delivery.type || '—'}<br>
-                    Terminal: ${delivery.terminal || '—'}<br>
-                    Country: ${delivery.country || '—'}<br>
-                    State: ${delivery.state || '—'}<br>
-                    Address: ${delivery.address || '—'}`;
+  // International Delivery
+  if ((delivery.country || '').toLowerCase() !== 'nigeria') {
 
-    if (!delivery.fulfilled) {
-      deliveryText += `<br>
-        <span class="text-sm text-blue-600 font-medium">
-          Update Available
-        </span>`;
-    }
+  deliveryText = `Company: ${delivery.company || 'International'}<br>
+                  Type: ${delivery.type || '—'}<br>
+                  Terminal: ${delivery.terminal || '—'}<br>
+                  Country: ${delivery.country || '—'}<br>
+                  State: ${delivery.state || '—'}<br>
+                  Address: ${delivery.address || '—'}`;
 
-    if (delivery.fulfilled && (!delivery.deliveryFee || delivery.deliveryFee === 0)) {
-      deliveryText += `<br>
-        <span class="inline-block mt-2 px-3 py-1 rounded-full
-          bg-green-100 text-green-700 text-xs font-semibold">
-          Awaiting Admin Fee Update
-        </span>`;
-    }
+  if (!delivery.fulfilled) {
+    deliveryText += `<br>
+      <span class="text-sm text-blue-600 font-medium">
+        Update Available
+      </span>`;
+  }
 
-  // 🏠 Local Lagos Home Delivery
-  } else if (delivery.type === 'home' && delivery.state?.toLowerCase() === 'lagos') {
-    deliveryText = `Home Delivery<br>
-                    LGA: ${delivery.lga || '—'}<br>
-                    Address: ${delivery.address || '—'}`;
+  if (delivery.fulfilled && (!delivery.deliveryFee || delivery.deliveryFee === 0)) {
+    deliveryText += `<br>
+      <span class="inline-block mt-2 px-3 py-1 rounded-full
+        bg-green-100 text-green-700 text-xs font-semibold">
+        Awaiting Admin Fee Update
+      </span>`;
+  }
 
-  // 🏢 Company delivery
+    // Lagos Delivery
+    } else if (
+  (delivery.state || '').toLowerCase().includes('lagos')
+) {
+  deliveryText = `Home Delivery<br>
+                  LGA: ${delivery.lga || shipping.lga || '—'}<br>
+                  Address: ${delivery.address || shipping.street || '—'}`;
+
+    // InterState Delivery
   } else if (delivery.company) {
+
     if (delivery.type === 'home') {
       deliveryText = `Company: ${delivery.company || '—'}<br>
                       Type: Home Delivery<br>
@@ -784,17 +722,26 @@ function getDeliveryFee(order) {
       <p class="text-sm text-gray-600">${deliveryText}</p>
       <div class="mt-2">${prog}</div>
       <div class="mt-2 text-sm text-gray-700">
-        Fee: ₦${deliveryFee.toLocaleString()}<br>
-        Weight: ${order.totalWeight || 0} kg
-      </div>
+  Fee: ₦${
+    isInternationalOrder(order) 
+      ? (order.delivery.deliveryFee || 0).toLocaleString() 
+      : (pricing.shippingFee || 0).toLocaleString()
+  }<br>
+  Weight: ${totalWeight} kg
+</div>
+
     </div>
   `;
 
   const paymentHtml = `
     <div class="mt-4">
       <h4 class="font-semibold">Payment</h4>
-      <p class="text-sm text-gray-600">${escapeHtml(order.payment?.method || '')}</p>
-      <p class="text-sm text-gray-600">Ref: ${escapeHtml(order.payment?.reference || '')}</p>
+      <p class="text-sm text-gray-600">
+        ${escapeHtml(order.payment?.method || '')}
+      </p>
+      <p class="text-sm text-gray-600">
+        Ref: ${escapeHtml(order.payment?.reference || '')}
+      </p>
     </div>
   `;
 
@@ -803,13 +750,15 @@ function getDeliveryFee(order) {
       ${headerHtml}
       <div class="mt-4">
         <h4 class="font-semibold">Items</h4>
-        <div class="mt-2">${itemsHtml || '<div class="text-gray-500">No items listed</div>'}</div>
+        <div class="mt-2">
+          ${itemsHtml || '<div class="text-gray-500">No items listed</div>'}
+        </div>
       </div>
       ${deliveryHtml}
       ${paymentHtml}
     </div>`;
 
-  // ===== MODAL STATUS CONTROLS =====
+  // ===== MODAL STATUS CONTROLS (UNCHANGED) =====
   modalStatusControls.innerHTML = '';
 
   const sel = document.createElement('select');
@@ -823,79 +772,106 @@ function getDeliveryFee(order) {
   sel.onchange = () => updateShipmentStatus(order.id, sel.value);
   modalStatusControls.appendChild(sel);
 
-  // Admin controls
   if (window.isAdmin) {
-    const delBtn = document.createElement('button');
-    delBtn.className='ml-2 bg-red-600 text-white px-3 py-2 rounded';
-    delBtn.innerText = 'Delete Order';
-    delBtn.onclick = () => deleteOrder(order.id);
-    modalStatusControls.appendChild(delBtn);
 
-    if (delivery.isInternational) {
-      const adminControls = document.createElement('div');
-      adminControls.className =
-        'mt-3 p-4 border rounded-lg bg-gray-50 flex flex-col gap-2';
+  const delBtn = document.createElement('button');
+  delBtn.className = 'ml-2 bg-red-600 text-white px-3 py-2 rounded';
+  delBtn.innerText = 'Delete Order';
+  delBtn.onclick = () => deleteOrder(order.id);
+  modalStatusControls.appendChild(delBtn);
 
-      const title = document.createElement('div');
-      title.className = 'font-semibold text-sm text-gray-700';
-      title.innerText = 'International Order Control';
-      adminControls.appendChild(title);
+  // ✅ Correct international detection
+  if (isInternationalOrder(order)) {
 
-      const confirmPaymentBtn = document.createElement('button');
-      confirmPaymentBtn.className = 'bg-green-600 text-white px-3 py-2 rounded';
-      confirmPaymentBtn.innerText = delivery.fulfilled
-        ? 'Payment Confirmed'
-        : 'Confirm Payment';
-      confirmPaymentBtn.disabled = delivery.fulfilled;
+    const adminControls = document.createElement('div');
+    adminControls.className =
+      'mt-3 p-4 border rounded-lg bg-gray-50 flex flex-col gap-2';
 
-      confirmPaymentBtn.onclick = async () => {
-        try {
-          await confirmInternationalPayment(order.id);
-          confirmPaymentBtn.innerText = 'Payment Confirmed';
-          confirmPaymentBtn.disabled = true;
-          showAlert('Payment confirmed successfully!', 'Success');
-        } catch (err) {
-          showAlert(err.message || 'Failed to confirm payment', 'Error');
-        }
-      };
-      adminControls.appendChild(confirmPaymentBtn);
+    const title = document.createElement('div');
+    title.className = 'font-semibold text-sm text-gray-700';
+    title.innerText = 'International Order Control';
+    adminControls.appendChild(title);
 
-      const feeInput = document.createElement('input');
-      feeInput.type = 'number';
-      feeInput.placeholder = 'Delivery Fee';
-      feeInput.value = delivery.deliveryFee || 0;
-      feeInput.className = 'border p-2 rounded';
-      adminControls.appendChild(feeInput);
+    // ===== Confirm Payment Button =====
+    const confirmPaymentBtn = document.createElement('button');
+    confirmPaymentBtn.className =
+      'bg-green-600 text-white px-3 py-2 rounded';
 
-      const deliverySelect = document.createElement('select');
-      deliverySelect.className = 'border p-2 rounded';
-      deliverySelect.innerHTML = `
-        <option value="home" ${delivery.type === 'home' ? 'selected' : ''}>Home</option>
-        <option value="terminal" ${delivery.type === 'terminal' ? 'selected' : ''}>Terminal</option>
-      `;
-      adminControls.appendChild(deliverySelect);
+    confirmPaymentBtn.innerText = delivery.fulfilled
+      ? 'Payment Confirmed'
+      : 'Confirm Payment';
 
-      const saveBtn = document.createElement('button');
-      saveBtn.className = 'bg-blue-600 text-white px-3 py-2 rounded';
-      saveBtn.innerText = 'Update Delivery';
+    confirmPaymentBtn.disabled = !!delivery.fulfilled;
 
-      saveBtn.onclick = async () => {
-        try {
-          const updatedDelivery = {
-            deliveryFee: Number(feeInput.value),
-            type: deliverySelect.value
-          };
-          await updateInternationalDelivery(order.id, updatedDelivery);
-          showAlert('Delivery updated successfully!', 'Success');
-        } catch (err) {
-          showAlert(err.message || 'Failed to update delivery', 'Error');
-        }
-      };
-      adminControls.appendChild(saveBtn);
+    confirmPaymentBtn.onclick = async () => {
+      try {
+        await confirmInternationalPayment(order.id);
+        confirmPaymentBtn.innerText = 'Payment Confirmed';
+        confirmPaymentBtn.disabled = true;
+        showAlert('Payment confirmed successfully!', 'Success');
+      } catch (err) {
+        showAlert(err.message || 'Failed to confirm payment', 'Error');
+      }
+    };
 
-      internationalControls.appendChild(adminControls);
+    adminControls.appendChild(confirmPaymentBtn);
+
+    // ===== Delivery Fee Input =====
+    const feeInput = document.createElement('input');
+    feeInput.type = 'number';
+    feeInput.placeholder = 'Delivery Fee';
+    feeInput.value = delivery.deliveryFee || 0;
+    feeInput.className = 'border p-2 rounded';
+    adminControls.appendChild(feeInput);
+
+    // ===== Delivery Type Select =====
+    const deliverySelect = document.createElement('select');
+    deliverySelect.className = 'border p-2 rounded';
+
+    deliverySelect.innerHTML = `
+      <option value="home" ${delivery.type === 'home' ? 'selected' : ''}>Home</option>
+      <option value="terminal" ${delivery.type === 'terminal' ? 'selected' : ''}>Terminal</option>
+    `;
+
+    adminControls.appendChild(deliverySelect);
+
+    // ===== Save Button =====
+    const saveBtn = document.createElement('button');
+    saveBtn.className =
+      'bg-blue-600 text-white px-3 py-2 rounded';
+    saveBtn.innerText = 'Update Delivery';
+
+    saveBtn.onclick = async () => {
+  try {
+    // Get fee and type from inputs
+    let feeValue = Number(feeInput.value);
+    if (isNaN(feeValue) || feeValue < 0) {
+      feeValue = 0; // fallback to 0 if input is invalid
     }
+
+    const updatedDelivery = {
+      deliveryFee: feeValue,
+      type: deliverySelect.value || 'home',
+    };
+
+    // Save to Firestore
+    await updateInternationalDelivery(order.id, updatedDelivery);
+
+    // Update local delivery object so modal reflects new data
+    order.delivery.deliveryFee = updatedDelivery.deliveryFee;
+    order.delivery.type = updatedDelivery.type;
+
+    showAlert('Delivery updated successfully!', 'Success');
+  } catch (err) {
+    showAlert(err.message || 'Failed to update delivery', 'Error');
   }
+};
+
+    adminControls.appendChild(saveBtn);
+
+    modalStatusControls.appendChild(adminControls);
+  }
+}
 
   detailModal.classList.remove('hidden');
   detailModal.classList.add('flex');
@@ -911,19 +887,6 @@ function closeDetailModal() {
 }
 
 modalClose.onclick = closeDetailModal;
-
-// document.getElementById("modalClose").onclick = () => {
-//   const detailModal = document.getElementById("detailModal");
-//   detailModal.classList.add('hidden');
-//   detailModal.classList.remove('flex');
-//   currentOpenOrder = null;
-// };
-
-  // modalClose.onclick = () => { 
-  //   detailModal.classList.add('hidden'); 
-  //   detailModal.classList.remove('flex'); 
-  //   currentOpenOrder=null; 
-  // }
 
   document.getElementById('applyFilters').onclick = () => {
     activeFilters.q = qText.value;
@@ -968,25 +931,8 @@ db.collection('orders').orderBy('createdAt','desc').onSnapshot(snap => {
       }
     }
   });
-  updateSummary();
+  // updateSummary();
 });
-//   db.collection('orders').orderBy('timestamp','desc').onSnapshot(snap => {
-//     snap.docChanges().forEach(change => {
-//       const order = {id: change.doc.id, ...change.doc.data()};
-//       if(change.type === 'added') ordersTbody.appendChild(orderRow(order));
-//       if(change.type === 'modified'){
-//         const row = Array.from(ordersTbody.children).find(r => r.__order?.id === order.id);
-//         if(row){ const newRow = orderRow(order); ordersTbody.replaceChild(newRow,row); }
-//         if(currentOpenOrder?.id === order.id) renderModal(order);
-//       }
-//       if(change.type === 'removed'){
-//         const row = Array.from(ordersTbody.children).find(r => r.__order?.id === order.id);
-//         if(row) row.remove();
-//         if(currentOpenOrder?.id === order.id){ detailModal.classList.add('hidden'); currentOpenOrder=null; }
-//       }
-//     });
-//     updateSummary();
-//   });
 
   // Email Receipt
   async function sendReceiptEmail(orderId, customerEmail) {
