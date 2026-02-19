@@ -360,18 +360,18 @@ document.addEventListener("DOMContentLoaded", () => {
         const data = doc.data();
         const status = (data.shipmentStatus || data.status || "Pending").trim();
         allOrders.push({
-          id: doc.id,
-          total: data.total || 0,
-          items: data.items || [],
-          status,
-          createdAt: data.createdAt || data.timestamp,
-          name: data.name || "",
-          phone: data.phone || "",
-          email: data.email || "",
-          delivery: data.delivery || {},
-          paymentMethod: data.paymentMethod || "—",
-          paymentRef: data.paymentRef || "—"
-        });
+  id: doc.id,
+  total: data.pricing?.total || 0,
+  items: data.items || [],
+  status,
+  createdAt: data.createdAt || data.timestamp,
+  name: data.shipping?.firstName + " " + data.shipping?.lastName || "",
+  phone: data.shipping?.phone || "",
+  email: data.shipping?.email || "",
+  delivery: data.delivery || {},
+  paymentMethod: data.payment?.method || "—",
+  paymentRef: data.payment?.reference || "—"
+});
       });
 
       // ✅ HANDLE OPEN MODAL ON REAL-TIME UPDATE
