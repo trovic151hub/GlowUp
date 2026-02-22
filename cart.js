@@ -14,7 +14,7 @@
   if (!document.body.contains(loader)) {
     loader = document.createElement("div");
     loader.id = "cartLoader";
-    loader.className = "fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50";
+    loader.className = "fixed inset-0 bg-black backdrop-blur-sm bg-opacity-30 flex items-center justify-center z-50";
     loader.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" class="fas fa-shopping-cart text-white w-12 h-12 animate-pulse"  viewBox="0 0 16 16"><path fill="currentColor" d="M0 
     2.5A.5.5 0 0 1 .5 2H2a.5.5 0 0 1 .485.379L2.89 4H14.5a.5.5 0 0 1 .485.621l-1.5 6A.5.5 0 0 1 13 11H4a.5.5 0 0 1-.485-.379L1.61 
     3H.5a.5.5 0 0 1-.5-.5M3.14 5l.5 2H5V5zM6 5v2h2V5zm3 0v2h2V5zm3 0v2h1.36l.5-2zm1.11 3H12v2h.61zM11 8H9v2h2zM8 8H6v2h2zM5 8H3.89l.5 2H5zm0 
@@ -166,37 +166,44 @@ const lagosLGAs = {"Agege":3000,"Ajeromi-Ifelodun":3000,
   "Oshodi-Isolo":3000,"Shomolu":3000,"Surulere":3000
 };
 
-// Supported GUO states
-const guoSupportedStates = ["lagos","abuja","abia", "Aba", "anambra",
-  "benin","enugu","imo","rivers","delta","edo","benue","kaduna","kano",
-  "benin","ebonyi","plateau","warri","asaba", "Umuahia", "Yola", "Awka",
-  "Bauchi"
-];
+const deliveryTypeSelect = document.getElementById("delivery-type");
+console.log("Delivery Type:", deliveryTypeSelect.value);
 
-// Calculate delivery fee based on company & weight
 function calculateDeliveryFee(deliveryInfo, totalWeight) {
   let fee = 0;
-  const state = (deliveryInfo.state || "").toLowerCase();
+
+  const stateRaw = (deliveryInfo.state || "").toLowerCase();
+  const state = stateRaw.replace(" state", "").trim(); // FIXED
   const company = (deliveryInfo.company || "").toUpperCase();
   const lga = (deliveryInfo.lga || "").trim();
+  const deliveryType = (deliveryInfo.deliveryType || "").toLowerCase();
   totalWeight = totalWeight || 1;
 
-  // Only for Nigeria
   if (deliveryInfo.country?.toLowerCase() !== "nigeria") return 0;
 
-  // Lagos LGA specific fee
+  // Lagos LGA special fee
   if (state.includes("lagos") && lga && lagosLGAs[lga]) {
     fee = lagosLGAs[lga];
-    return fee; // ignore company/weight for Lagos LGA
+    if (deliveryType === "home") fee += 800;
+    return fee;
   }
 
-  // GIG delivery
+  // GIG pricing
   if (company === "GIG") {
-    fee = 6700 + Math.max(totalWeight - 1, 0) * 800;
+    if (totalWeight <= 3) fee = 6800;
+    else if (totalWeight <= 6) fee = 6800 + 900;
+    else fee = 6800 + 900 * Math.ceil((totalWeight - 3) / 3);
+
+    if (deliveryType === "home") fee += 800;
   }
-  // GUO delivery
+
+  // GUO pricing
   else if (company === "GUO" && guoSupportedStates.includes(state)) {
-    fee = 3500 + Math.max(totalWeight - 1, 0) * 700;
+    if (totalWeight <= 3) fee = 3500;
+    else if (totalWeight <= 6) fee = 3500 + 800;
+    else fee = 3500 + 800 * Math.ceil((totalWeight - 3) / 3);
+
+    if (deliveryType === "home") fee += 800;
   }
 
   return fee;
@@ -260,6 +267,14 @@ function calculateDeliveryFee(deliveryInfo, totalWeight) {
         </div>
       `;
       cartItemsContainer.appendChild(card);
+
+        // GSAP fade-in + slide-up animation
+  gsap.from(card, { 
+    duration: 0.5, 
+    y: 20, 
+    opacity: 0, 
+    ease: "power2.out" 
+  });
     });
 
     updateTotals(subtotal);
@@ -342,90 +357,49 @@ if(summaryTotal) summaryTotal.textContent = `₦${(subtotal + shippingFee).toLoc
 
   let selectedPayment = null;
 
-document.querySelectorAll("#payment-summary-card .cursor-pointer").forEach(option => {
+  document.querySelectorAll("#payment-summary-card .cursor-pointer").forEach(option => {
   option.addEventListener("click", () => {
-    // Remove highlight from all
+
+    const isAlreadySelected = option.classList.contains("border-pink-600");
+
+    // Remove highlight + hide all check icons
     document.querySelectorAll("#payment-summary-card .cursor-pointer").forEach(o => {
       o.classList.remove("border-pink-600", "bg-pink-50");
+
+      const icon = o.querySelector(".check-icon");
+      if (icon) icon.classList.add("hidden");
     });
 
-    // Highlight selected
+    // If clicking already selected → unselect
+    if (isAlreadySelected) {
+      selectedPayment = null;
+
+      summaryPlaceOrderBtn.disabled = true;
+      summaryPlaceOrderBtn.classList.add("bg-gray-400");
+      summaryPlaceOrderBtn.classList.remove("bg-pink-600", "hover:bg-pink-700");
+
+      return;
+    }
+
+    // Select current option
     option.classList.add("border-pink-600", "bg-pink-50");
 
-    // Detect which one was clicked
-    if (option.innerHTML.includes("Paystack")) selectedPayment = "paystack";
-    else selectedPayment = "whatsapp";
+    const selectedIcon = option.querySelector(".check-icon");
+    if (selectedIcon) selectedIcon.classList.remove("hidden");
 
-    // Enable place order button
+    gsap.from(selectedIcon, { scale: 0, opacity: 0, duration: 0.3, ease: "back.out(1.7)" });
+
+    if (option.id === "paystack-option") {
+      selectedPayment = "paystack";
+    } else if (option.id === "WhatsApp") {
+      selectedPayment = "whatsapp";
+    }
+
     summaryPlaceOrderBtn.disabled = false;
     summaryPlaceOrderBtn.classList.remove("bg-gray-400");
     summaryPlaceOrderBtn.classList.add("bg-pink-600", "hover:bg-pink-700");
   });
 });
-
-// GUO Terminal
-  const GUOTerminals = {
-  abuja: ["Kubwa", "Utako", "Gwarinpa", "Mararaba", "Wuse2", "Zuba"],
-  abia: ["Aba", "Umuahia"],
-  aba: ["Aba"],
-  anambra: ["Awka", "Awkuzu", "Ihiala", "Nnewi", "Onitsha", "Umunze", "Ekwulobia"],
-  awka: ["Unizik junction", "Ifite-Awka"],
-  enugu: ["Enugu (Holy Ghost / Ogbete)"],
-  imo: ["Akokwa", "Orlu", "Owerri", "Umuaka"],
-  rivers: ["Port Harcourt (Aba Road)"],
-  delta: ["Asaba (Head Bridge, Okpanam Road)"],
-  edo: ["Benin City (Ugbowo–Lagos Road)"],
-  kaduna: ["Kaduna", "Zaria", "Mando"],
-  kano: ["Kano (Sabon Gari)"],
-  ebonyi: ["Abakaliki", "Afikpo"],
-  plateau: ["Jos (Old Railway Station)"],
-  umuahia: ["Umuahia"],
-  yola: ["Jambutu Park"],
-  bauchi: ["Bauchi"],
-};
-
-// GIG Terminals
-const GIGTerminals = {
-  abia: ["Aba 1", "Aba 2", "Umuahia-1", "Umuahia-2"],
-  adamawa: ["Yola"],
-  akwaIbom: ["Uyo 1", "Uyo 2", "Eket"],
-  anambra: ["Awka", "Onitsha", "Nnewi"],
-  bauchi: ["Bauchi"],
-  bayelsa: ["Yenagoa"],
-  benue: ["Makurdi"],
-  borno: ["Maiduguri"],
-  crossRiver: ["Calabar"],
-  delta: ["Asaba", "Warri", "Ughelli"],
-  ebonyi: ["Abakaliki"],
-  edo: ["Airport Road Benin", "Auchi", "Akpakpava", "Ekpoma"],
-  ekiti: ["Ado-Ekiti"],
-  enugu: ["Enugu", "Nsukka"],
-  gombe: ["Gombe"],
-  imo: ["Owerri"],
-  jigawa: ["Dutse"],
-  kaduna: ["Kaduna"],
-  kano: ["Kano"],
-  katsina: ["Katsina"],
-  kebbi: ["Birnin Kebbi"],
-  kogi: ["Lokoja"],
-  kwara: ["Ilorin"],
-  lagos: ["Ikeja", "Ajah", "Lekki", "Yaba", "Ikotun", ],
-  nasarawa: ["Lafia"],
-  niger: ["Minna"],
-  ogun: ["Abeokuta FUNAAB", "Ijebu-Ode", "Ota"],
-  ondo: ["Akure", "Ondo Town"],
-  osun: ["Osogbo", "Ile-Ife"],
-  oyo: ["Ibadan", "Ogbomosho"],
-  plateau: ["Jos"],
-  rivers: ["Ada George", "Alakahia", "Elelenwon", "Woji", "Artillery", "Aliozu", "Olu Obasanjo", "Peter odili", "Stadium Road", "Tombia"],
-  sokoto: ["Sokoto"],
-  taraba: ["Jalingo"],
-  yobe: ["Damaturu"],
-  zamfara: ["Gusau"],
-  abuja: ["Garki", "Utako 1", "Utako 2", "Wuse 1", "Wuse 2", "Gwagwaglada", "Garki", "Gudu", "Gwarinpa 1", "Gwarinpa 2", "Kubwa 1", "Kubwa 2", "Kubwa 3",
-    "Lugbe", "Mararaba", "Madalla", "Zuba"
-  ]
-};
 
 // Country
 async function loadCountries() {
@@ -525,7 +499,9 @@ if (lgaWrapper) {
 stateSelect.addEventListener("change", () => {
 
   const country = countrySelect.value;
-  const state = stateSelect.value;
+  const state = stateSelect.value; 
+    localStorage.setItem("checkoutState", state); // store selected state
+  updateDeliveryVisibility();
 
   if (
     country === "Nigeria" &&
@@ -548,6 +524,187 @@ stateSelect.addEventListener("change", () => {
   }
 
 });
+
+// ==================== TERMINALS DATA ====================
+const GUOTerminals = {
+  "federal capital territory": ["Kubwa", "Utako", "Gwarinpa", "Mararaba", "Wuse2", "Zuba"],
+  abia: ["Aba", "Umuahia"],
+  anambra: ["Awka", "Awkuzu", "Ihiala", "Nnewi", "Onitsha", "Umunze", "Ekwulobia"],
+  enugu: ["Enugu (Holy Ghost / Ogbete)"],
+  imo: ["Akokwa", "Orlu", "Owerri", "Umuaka"],
+  rivers: ["Port Harcourt (Aba Road)"],
+  delta: ["Asaba (Head Bridge, Okpanam Road)"],
+  edo: ["Benin City (Ugbowo–Lagos Road)"],
+  kaduna: ["Kaduna", "Zaria", "Mando"],
+  kano: ["Kano (Sabon Gari)"],
+  ebonyi: ["Abakaliki", "Afikpo"],
+  plateau: ["Jos (Old Railway Station)"],
+  yola: ["Jambutu Park"],
+  bauchi: ["Bauchi"]
+};
+
+const GIGTerminals = {
+  abia: ["Aba 1", "Aba 2", "Umuahia-1", "Umuahia-2"],
+  adamawa: ["Yola"],
+  "akwa ibom": ["Uyo 1", "Uyo 2", "Eket"],
+  anambra: ["Awka", "Onitsha", "Nnewi"],
+  bauchi: ["Bauchi"],
+  bayelsa: ["Yenagoa"],
+  benue: ["Makurdi"],
+  borno: ["Maiduguri"],
+  "cross river": ["Calabar"],
+  delta: ["Asaba", "Warri", "Ughelli"],
+  ebonyi: ["Abakaliki"],
+  edo: ["Airport Road Benin", "Auchi", "Akpakpava", "Ekpoma"],
+  ekiti: ["Ado-Ekiti"],
+  enugu: ["Enugu", "Nsukka"],
+  gombe: ["Gombe"],
+  imo: ["Owerri"],
+  jigawa: ["Dutse"],
+  kaduna: ["Kaduna"],
+  kano: ["Kano"],
+  katsina: ["Katsina"],
+  kebbi: ["Birnin Kebbi"],
+  kogi: ["Lokoja"],
+  kwara: ["Ilorin"],
+  lagos: ["Ikeja", "Ajah", "Lekki", "Yaba", "Ikotun"],
+  nasarawa: ["Lafia"],
+  niger: ["Minna"],
+  ogun: ["Abeokuta FUNAAB", "Ijebu-Ode", "Ota"],
+  ondo: ["Akure", "Ondo Town"],
+  osun: ["Osogbo", "Ile-Ife"],
+  oyo: ["Ibadan", "Ogbomosho"],
+  plateau: ["Jos"],
+  rivers: ["Ada George", "Alakahia", "Elelenwon", "Woji", "Artillery", "Aliozu", "Olu Obasanjo", "Peter odili", "Stadium Road", "Tombia"],
+  sokoto: ["Sokoto"],
+  taraba: ["Jalingo"],
+  yobe: ["Damaturu"],
+  zamfara: ["Gusau"],
+  "federal capital territory": ["Garki", "Utako 1", "Utako 2", "Wuse 1", "Wuse 2", "Gwagwaglada", "Garki", "Gudu", "Gwarinpa 1", "Gwarinpa 2", "Kubwa 1", "Kubwa 2", "Kubwa 3", "Lugbe", "Mararaba", "Madalla", "Zuba"]
+};
+
+const stateInput = document.getElementById("state");
+// Auto-generate supported states from GUO terminals object
+const guoSupportedStates = Object.keys(GUOTerminals);
+
+// const deliveryCompany = document.getElementById("delivery-company");
+
+function updateDeliveryCompanyAvailability() {
+  const stateRaw = stateInput.value.trim().toLowerCase();
+  const stateKey = stateRaw.replace(" state", "");
+
+  if (!stateKey) return;
+
+  const guoOption = deliveryCompany.querySelector('option[value="GUO"]');
+  const gigOption = deliveryCompany.querySelector('option[value="GIG"]');
+
+  if (!guoOption || !gigOption) return; // safety check
+
+  const guoSupportedStates = Object.keys(GUOTerminals);
+
+  if (!guoSupportedStates.includes(stateKey)) {
+    // Disable GUO
+    guoOption.disabled = true;
+
+    // If GUO was selected, switch to GIG
+    if (deliveryCompany.value === "GUO") {
+      deliveryCompany.value = "GIG";
+    }
+  } else {
+    // Enable GUO if supported
+    guoOption.disabled = false;
+  }
+}
+
+stateInput.addEventListener("input", () => {
+  updateDeliveryCompanyAvailability();
+  populateTerminals();
+});
+
+function populateTerminals() {
+  const stateRaw = stateInput.value.trim().toLowerCase();
+  const company = deliveryCompany.value.trim().toUpperCase();
+  const type = deliveryType.value;
+
+  // reset terminal dropdown
+  terminalSelect.innerHTML = `<option value="">Select Terminal</option>`;
+
+  // Only show terminals if terminal pickup is selected
+  if (!stateRaw || !company || type !== "terminal") {
+    terminalWrapper.classList.add("hidden");
+    return;
+  }
+
+  // Map state input to key
+  const stateKey = stateKeyMap[stateRaw];
+  if (!stateKey || skipTerminalStates.includes(stateKey)) {
+    terminalWrapper.classList.add("hidden");
+    return; // do not populate for skip-list states
+  }
+
+  // Only populate terminals if there is data
+  let terminals = [];
+  if (company === "GUO") terminals = GUOTerminals[stateKey] || [];
+  if (company === "GIG") terminals = GIGTerminals[stateKey] || [];
+
+  if (terminals.length === 0) {
+    terminalWrapper.classList.add("hidden");
+    return;
+  }
+
+  // Show and populate terminals
+  terminalWrapper.classList.remove("hidden");
+  terminals.forEach(t => {
+    const option = document.createElement("option");
+    option.value = t;
+    option.textContent = t;
+    terminalSelect.appendChild(option);
+  });
+}
+
+function populateTerminals() {
+  const stateRaw = stateInput.value.trim().toLowerCase();
+  const company = deliveryCompany.value.trim().toUpperCase();
+  const type = deliveryType.value;
+
+  // Normalize state key
+  const stateKey = stateRaw.replace(" state", ""); // removes " state" if typed
+
+  terminalSelect.innerHTML = `<option value="">Select Terminal</option>`; // reset
+
+  // Only show terminals if terminal pickup is selected
+  if (!stateKey || !company || type !== "terminal") {
+    terminalWrapper.classList.add("hidden");
+    return;
+  }
+
+  terminalWrapper.classList.remove("hidden"); // show terminal select
+
+  let terminals = [];
+
+  if (company === "GUO") terminals = GUOTerminals[stateKey] || [];
+  if (company === "GIG") terminals = GIGTerminals[stateKey] || [];
+
+  terminals.forEach(t => {
+    const option = document.createElement("option");
+    option.value = t;
+    option.textContent = t;
+    terminalSelect.appendChild(option);
+  });
+}
+
+stateSelect.addEventListener("change", () => {
+  localStorage.setItem("checkoutState", stateSelect.value);
+  if (deliveryType.value === "terminal") {
+    terminalSelect.innerHTML = `<option value="">Select Terminal</option>`;
+  }
+});
+
+stateInput.addEventListener("input", populateTerminals);
+deliveryCompany.addEventListener("change", populateTerminals);
+deliveryType.addEventListener("change", populateTerminals);
+
+
 
 // Update Delivery Visibility
 const deliveryOptionsWrapper = document.getElementById("delivery-options");
@@ -572,7 +729,7 @@ function updateDeliveryVisibility() {
   deliveryCompany.value = "";
   deliveryType.value = "";
   terminalSelect.innerHTML = `<option value="">Select Terminal</option>`;
-  terminalWrapper.classList.add("hidden");
+  deliveryOptionsWrapper.classList.add("hidden");
 }
 
 countrySelect.addEventListener("input", updateDeliveryVisibility);
@@ -605,7 +762,7 @@ stateSelect.addEventListener("input", updateDeliveryVisibility);
   // 1️⃣ Validate shipping form first
   if (!validateShippingForm()) {
     showNotification("Please fill in all required fields.");
-    return; // STOP if invalid
+    return;
   }
   
   // Enable summary place order button
@@ -642,7 +799,7 @@ stateSelect.addEventListener("input", updateDeliveryVisibility);
 
   // 3️⃣ Build shipment summary with shipping fee
   const shipmentContainer = document.getElementById("sum-shipment");
-  shipmentContainer.innerHTML = ""; // clear old content
+  shipmentContainer.innerHTML = "";
 
   const cartItems = JSON.parse(localStorage.getItem("cart") || "[]");
 
@@ -657,7 +814,9 @@ const deliveryInfo = {
   country: countrySelect.value,
   state: stateSelect.value,
   company: deliveryCompany.value,
-  lga: lgaSelect.value   // <-- ADD THIS
+  lga: lgaSelect.value,
+  deliveryType: deliveryTypeSelect.value ,
+  terminal: terminalSelect?.value || ""
 };
 
 // Calculate shipping fee
@@ -675,7 +834,24 @@ const shippingFee = calculateDeliveryFee(deliveryInfo, totalWeight);
   title.textContent = "Standard Shipment:";
   const feeEl = document.createElement("p");
   feeEl.className = "text-gray-900 font-bold";
+  let minFee = 0;
+let maxFee = 0;
+
+if (deliveryInfo.company === "GUO") {
+  minFee = 3500;
+  maxFee = 3500 + 800 * 3; // adjust multiplier if needed
+} 
+else if (deliveryInfo.company === "GIG") {
+  minFee = 6800;
+  maxFee = 6800 + 900 * 3;
+}
+
+if (deliveryInfo.company === "GUO" || deliveryInfo.company === "GIG") {
+  feeEl.textContent = `Estimated: ₦${minFee.toLocaleString()} – ₦${maxFee.toLocaleString()}`;
+} else {
   feeEl.textContent = `₦${shippingFee.toLocaleString()}`;
+}
+  // feeEl.textContent = `₦${shippingFee.toLocaleString()}`;
   topRow.appendChild(title);
   topRow.appendChild(feeEl);
   card.appendChild(topRow);
@@ -691,21 +867,71 @@ const shippingFee = calculateDeliveryFee(deliveryInfo, totalWeight);
     card.appendChild(address);
   } else {
     // Other deliveries
-    const companyEl = document.createElement("p");
-    companyEl.className = "text-gray-700";
-    companyEl.textContent = `Delivery Company: ${deliveryInfo.company || "N/A"}`;
+const companyEl = document.createElement("p");
+companyEl.className = "text-gray-700";
+companyEl.textContent = `Delivery Company: ${deliveryInfo.company || "N/A"}`;
 
-    const typeEl = document.createElement("p");
-    typeEl.className = "text-gray-700";
-    typeEl.textContent = `Type: ${deliveryType.value === "terminal" ? "Terminal Pickup" : "Home Delivery"}`;
+const typeEl = document.createElement("p");
+typeEl.className = "text-gray-700";
+typeEl.textContent = `Type: ${deliveryInfo.deliveryType === "terminal" ? "Terminal Pickup" : "Home Delivery"}`;
 
-    const stateEl = document.createElement("p");
-    stateEl.className = "text-gray-700";
-    stateEl.textContent = `State: ${deliveryInfo.state || "N/A"}`;
+const stateEl = document.createElement("p");
+stateEl.className = "text-gray-700";
+stateEl.textContent = `State: ${deliveryInfo.state || "N/A"}`;
 
-    card.appendChild(companyEl);
-    card.appendChild(typeEl);
-    card.appendChild(stateEl);
+card.appendChild(companyEl);
+card.appendChild(typeEl);
+card.appendChild(stateEl);
+
+// ✅ Show terminal only if terminal selected
+if (deliveryInfo.deliveryType === "terminal") {
+  const terminalEl = document.createElement("p");
+  terminalEl.className = "text-gray-700";
+  terminalEl.textContent = `Terminal: ${deliveryInfo.terminal || "N/A"}`;
+  card.appendChild(terminalEl);
+}
+
+// ✅ Show home charge only if home selected
+if (deliveryInfo.deliveryType === "home") {
+  const homeFeeEl = document.createElement("p");
+  homeFeeEl.className = "text-gray-700";
+  homeFeeEl.textContent = `Home Delivery Charge: ₦800`;
+  card.appendChild(homeFeeEl);
+}
+//     // Other deliveries
+//     const companyEl = document.createElement("p");
+//     companyEl.className = "text-gray-700";
+//     companyEl.textContent = `Delivery Company: ${deliveryInfo.company || "N/A"}`;
+
+//     const typeEl = document.createElement("p");
+//     typeEl.className = "text-gray-700";
+//     typeEl.textContent = `Type: ${deliveryType.value === "terminal" ? "Terminal Pickup" : "Home Delivery"}`;
+
+//     const stateEl = document.createElement("p");
+//     stateEl.className = "text-gray-700";
+//     stateEl.textContent = `State: ${deliveryInfo.state || "N/A"}`;
+
+//     const terminalEl = document.createElement("p");
+//     terminalEl.className = "text-gray-700";
+//     terminalEl.textContent = `Terminal: ${terminalSelect.value || "N/A"}`;
+
+//     card.appendChild(companyEl);
+//     card.appendChild(typeEl);
+//     card.appendChild(stateEl);
+
+//     if (deliveryType.value === "terminal") {
+//   const terminalEl = document.createElement("p");
+//   terminalEl.className = "text-gray-700";
+//   terminalEl.textContent = `Terminal: ${terminalSelect.value || "N/A"}`;
+//   card.appendChild(terminalEl);
+
+//   if (deliveryType.value === "home") {
+//   const homeFeeEl = document.createElement("p");
+//   homeFeeEl.className = "text-gray-700";
+//   homeFeeEl.textContent = `Home Delivery Charge: ₦800`;
+//   card.appendChild(homeFeeEl);
+// }
+// }
   }
 
   // Weight row
@@ -776,7 +1002,7 @@ summaryPlaceOrderBtn.addEventListener("click", async () => {
     type: deliveryType.value,
     terminal: terminalSelect.value || null,
     lga: lgaSelect.value || null,
-    address: `${shippingData.street}, ${shippingData.lga ? shippingData.lga + ", " : ""}${shippingData.state}`
+    address: `${shippingData.street}, ${shippingData.lga ? shippingData.lga + ",": ""}${shippingData.state}`
   };
 
   // Subtotal & shipping
@@ -1072,7 +1298,14 @@ bcGuestCarts.onclick = () => {
     completeStep.classList.add("hidden");
     setActiveBreadcrumb("cart");
     hideLoader();
-  }, 200); // small delay to show loader
+  }, 200); //
+
+  gsap.from(completeStep, { 
+  y: 50, 
+  opacity: 0, 
+  duration: 0.8, 
+  ease: "bounce.out" 
+});
 };
 
 bcCheckout.onclick = () => {
@@ -1086,16 +1319,16 @@ bcCheckout.onclick = () => {
   }, 200);
 };
 
-bcComplete.onclick = () => {
-  showLoader();
-  setTimeout(() => {
-    cartContainer.classList.add("hidden");
-    checkoutStep.classList.add("hidden");
-    completeStep.classList.remove("hidden");
-    setActiveBreadcrumb("complete");
-    hideLoader();
-  }, 200);
-};
+// bcComplete.onclick = () => {
+//   showLoader();
+//   setTimeout(() => {
+//     cartContainer.classList.add("hidden");
+//     checkoutStep.classList.add("hidden");
+//     completeStep.classList.remove("hidden");
+//     setActiveBreadcrumb("complete");
+//     hideLoader();
+//   }, 200);
+// };
 
 // ==================== UPDATE BREADCRUMB ON INIT ====================
 // Start on Cart view
