@@ -157,6 +157,48 @@ const stateSelect = document.getElementById("state");
 const lgaWrapper = document.getElementById("lga-wrapper");
 const lgaSelect = document.getElementById("lga");
 
+// Area Code
+countrySelect.addEventListener("change", async () => {
+  const selectedCountry = countrySelect.value;
+
+  if (!selectedCountry) return;
+
+  try {
+    const res = await fetch(
+      `https://restcountries.com/v3.1/name/${selectedCountry}?fullText=true`
+    );
+
+    const data = await res.json();
+
+    const root = data[0]?.idd?.root || "";
+    const suffix = data[0]?.idd?.suffixes?.[0] || "";
+
+    document.getElementById("area-code").value = root + suffix;
+
+  } catch (err) {
+    console.error("Dial code fetch error:", err);
+    document.getElementById("area-code").value = "";
+  }
+});
+
+// Auto go to checkout if triggered from homepage
+window.addEventListener("DOMContentLoaded", () => {
+    const gotoCheckout = localStorage.getItem("gotoCheckout");
+
+    if (gotoCheckout === "true") {
+        localStorage.removeItem("gotoCheckout");
+
+        // Hide cart view and show checkout step
+        cartContainer.classList.add("hidden");
+        checkoutStep.classList.remove("hidden");
+        completeStep.classList.add("hidden");
+        setBreadcrumb("checkout");
+
+        // Optional: scroll to checkout section
+        checkoutStep.scrollIntoView({ behavior: "smooth" });
+    }
+});
+
 // Lagos LGAs
 const lagosLGAs = {"Agege":3000,"Ajeromi-Ifelodun":3000,
   "Alimosho":3000,"Amuwo-Odofin":3000,"Apapa":3000,"Epe":6000,
@@ -828,7 +870,8 @@ const shippingFee = calculateDeliveryFee(deliveryInfo, totalWeight);
 
   // Top row: Title left, Fee right
   const topRow = document.createElement("div");
-  topRow.className = "flex justify-between items-start";
+  // topRow.className = "flex justify-between items-start";
+  topRow.className = "flex flex-col sm:flex-row sm:justify-between sm:items-start";
   const title = document.createElement("p");
   title.className = "font-semibold text-gray-800";
   title.textContent = "Standard Shipment:";
@@ -898,40 +941,6 @@ if (deliveryInfo.deliveryType === "home") {
   homeFeeEl.textContent = `Home Delivery Charge: ₦800`;
   card.appendChild(homeFeeEl);
 }
-//     // Other deliveries
-//     const companyEl = document.createElement("p");
-//     companyEl.className = "text-gray-700";
-//     companyEl.textContent = `Delivery Company: ${deliveryInfo.company || "N/A"}`;
-
-//     const typeEl = document.createElement("p");
-//     typeEl.className = "text-gray-700";
-//     typeEl.textContent = `Type: ${deliveryType.value === "terminal" ? "Terminal Pickup" : "Home Delivery"}`;
-
-//     const stateEl = document.createElement("p");
-//     stateEl.className = "text-gray-700";
-//     stateEl.textContent = `State: ${deliveryInfo.state || "N/A"}`;
-
-//     const terminalEl = document.createElement("p");
-//     terminalEl.className = "text-gray-700";
-//     terminalEl.textContent = `Terminal: ${terminalSelect.value || "N/A"}`;
-
-//     card.appendChild(companyEl);
-//     card.appendChild(typeEl);
-//     card.appendChild(stateEl);
-
-//     if (deliveryType.value === "terminal") {
-//   const terminalEl = document.createElement("p");
-//   terminalEl.className = "text-gray-700";
-//   terminalEl.textContent = `Terminal: ${terminalSelect.value || "N/A"}`;
-//   card.appendChild(terminalEl);
-
-//   if (deliveryType.value === "home") {
-//   const homeFeeEl = document.createElement("p");
-//   homeFeeEl.className = "text-gray-700";
-//   homeFeeEl.textContent = `Home Delivery Charge: ₦800`;
-//   card.appendChild(homeFeeEl);
-// }
-// }
   }
 
   // Weight row
@@ -950,6 +959,9 @@ card.appendChild(weightEl);
 
   // Show edit button
   document.getElementById("shipping-edit-btn").classList.remove("hidden");
+
+  // Clear temporary shipping data from localStorage
+  localStorage.removeItem("checkoutState");
 };
 
 document.getElementById("shipping-edit-btn").onclick = () => {
@@ -1265,6 +1277,25 @@ countrySelect.addEventListener("change", updatePaymentVisibility);
 const bcGuestCarts = document.getElementById("bc-guestCarts");
 const bcCheckout = document.getElementById("bc-checkout");
 const bcComplete = document.getElementById("bc-complete");
+
+// ==================== BREADCRUMB ====================
+const steps = {
+  cart: document.getElementById("bc-cart"),
+  checkout: document.getElementById("bc-checkout"),
+  complete: document.getElementById("bc-complete")
+};
+
+function setBreadcrumb(activeStep) {
+  // remove active class from all steps
+  Object.values(steps).forEach(el => {
+    if (el) el.classList.remove("font-semibold", "text-gray-900");
+  });
+
+  // add active class to the current step
+  if (steps[activeStep]) {
+    steps[activeStep].classList.add("font-semibold", "text-gray-900");
+  }
+}
 
 // Helper to update active breadcrumb
 function setActiveBreadcrumb(step) {

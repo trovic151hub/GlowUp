@@ -1,493 +1,426 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Shopping Cart</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Skincare Shop | Cart & Checkout</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+  <script src="https://js.paystack.co/v1/inline.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.13.0/gsap.min.js"></script>
   <style>
     * {
       font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
     }
 
     @import url('https://fonts.googleapis.com/css2?family=Lora:wght@700&family=Montserrat:wght@500&display=swap');
-
-    /* 📱 Mobile First Adjustments */
-    @media (max-width: 640px) {
-      header h1 {
-        font-size: 1.1rem !important;
+    
+    @media (max-width: 768px) {
+      #cartContainer {
+        flex-direction: column;
       }
 
-      main {
-        padding: 1rem !important;
+      #checkout-step>div.grid {
+        grid-template-columns: 1fr !important;
+        /* single column mobile */
       }
 
-      .cart-img {
-        width: 64px !important;
-        height: 64px !important;
+      /* #cart-items>div {
+        flex-direction: column;
+        align-items: flex-start;
+      } */
+
+      #cart-items img {
+        width: 30%;
+        /* height: 30%; */
       }
 
-      .cart-title {
-        font-size: 0.85rem !important;
-      }
-
-      .cart-price {
-        font-size: 0.9rem !important;
-      }
-
-      .cart-qty button,
-      .cart-qty span {
-        font-size: 0.85rem !important;
-      }
-
-      #checkoutBtn {
+      #order-summary,
+      #shipping-summary-card,
+      #payment-summary-card {
         width: 100%;
-        padding: 0.5rem !important;
-        font-size: 1rem !important;
-      }
-
-      .total-box {
-        text-align: center !important;
-      }
-
-      .shop {
-        display: none !important;
+        margin-top: 1rem;
       }
     }
-
-    /* Very Small Phones */
-    @media (max-width: 380px) {
-      header h1 {
-        font-size: 1rem !important;
-      }
-      header a {
-        font-size: 0.8rem !important;
-      }
-      .cart-title {
-        font-size: 0.75rem !important;
-      }
-    }
-     /* Loader fade-out animation */
-  #cart-loader.fade-out {
-    opacity: 0;
-    transition: opacity 0.4s ease;
-    pointer-events: none;
-  }
   </style>
 </head>
+
 <body class="bg-gray-50 text-gray-900">
   <!-- PLACE AT TOP OF BODY -->
-<div id="cartLoader" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-30 backdrop-blur-sm z-50">
-  <!-- <i class="fas fa-shopping-cart text-white text-5xl animate-pulse"></i> -->
-  <svg xmlns="http://www.w3.org/2000/svg" class="fas fa-shopping-cart text-white w-12 h-12 animate-pulse"  viewBox="0 0 16 16"><path fill="currentColor" d="M0 
+  <div id="cartLoader"
+    class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-30 backdrop-blur-sm z-50">
+    <!-- <i class="fas fa-shopping-cart text-white text-5xl animate-pulse"></i> -->
+    <svg xmlns="http://www.w3.org/2000/svg" class="fas fa-shopping-cart text-white w-12 h-12 animate-pulse"
+      viewBox="0 0 16 16">
+      <path fill="currentColor"
+        d="M0 
     2.5A.5.5 0 0 1 .5 2H2a.5.5 0 0 1 .485.379L2.89 4H14.5a.5.5 0 0 1 .485.621l-1.5 6A.5.5 0 0 1 13 11H4a.5.5 0 0 1-.485-.379L1.61 
     3H.5a.5.5 0 0 1-.5-.5M3.14 5l.5 2H5V5zM6 5v2h2V5zm3 0v2h2V5zm3 0v2h1.36l.5-2zm1.11 3H12v2h.61zM11 8H9v2h2zM8 8H6v2h2zM5 8H3.89l.5 2H5zm0 
-    5a1 1 0 1 0 0 2a1 1 0 0 0 0-2m-2 1a2 2 0 1 1 4 0a2 2 0 0 1-4 0m9-1a1 1 0 1 0 0 2a1 1 0 0 0 0-2m-2 1a2 2 0 1 1 4 0a2 2 0 0 1-4 0"/></svg>
-</div>
+    5a1 1 0 1 0 0 2a1 1 0 0 0 0-2m-2 1a2 2 0 1 1 4 0a2 2 0 0 1-4 0m9-1a1 1 0 1 0 0 2a1 1 0 0 0 0-2m-2 1a2 2 0 1 1 4 0a2 2 0 0 1-4 0" />
+    </svg>
+  </div>
 
   <!-- Notification Container -->
-<div id="notification-container" class="fixed top-4 right-4 z-50 flex flex-col gap-2"></div>
+  <div id="notification-container" class="fixed top-4 right-4 z-50 flex flex-col gap-2"></div>
 
-  <header class="bg-gradient-to-r from-[#fbcfe8] to-[#f9a8d4] fixed top-0 w-full p-4 shadow-md flex justify-between items-center z-50">
+  <header
+    class="bg-gradient-to-r from-[#fbcfe8] to-[#f9a8d4] fixed top-0 w-full p-4 shadow-md flex justify-between items-center z-50">
     <button onclick="history.back()">
       <h1 class="text-xl font-bold">🛒 My Cart</h1>
     </button>
-    <button onclick="history.back()">
-      <div class="flex space-x-2">
-        <a href="products.html"><i class="fas fa-shop mt-1"></i></a>
-        <a href="products.html" class="shop text-pink-600 font-bold">Continue Shopping</a>
-      </div>
     </button>
   </header>
 
-  <main class="p-6 max-w-4xl mx-auto mt-16">
-    <!-- Cart Skeletons (hidden by default) -->
-    <div id="cartSkeleton" class="space-y-4">
-      <div class="flex items-center justify-between bg-white p-4 rounded shadow animate-pulse cart-item">
-        <div class="flex items-center gap-4">
-          <div class="w-16 h-16 bg-gray-200 rounded cart-img"></div>
-          <div>
-            <div class="w-32 h-4 bg-gray-200 mb-2 rounded cart-title"></div>
-            <div class="w-20 h-4 bg-gray-200 rounded cart-price"></div>
+  <!-- Breadcrumb -->
+  <nav class="bg-white h-20 flex items-center justify-center text-sm text-gray-500 gap-2 mt-16">
+    <span id="bc-guestCarts" class="cursor-pointer">Shopping Cart</span>
+    <i class="fas fa-chevron-right text-xs"></i>
+    <span id="bc-checkout" class="cursor-pointer">Secure Checkout</span>
+    <i class="fas fa-chevron-right text-xs"></i>
+    <span id="bc-complete" class="cursor-pointer">Order Complete</span>
+  </nav>
+
+  <!-- Main Cart Wrapper -->
+  <main class="max-w-6xl mx-auto p-4 flex md:gap-6" id="cartContainer">
+
+    <!-- Products List -->
+    <div class="flex-1 space-y-4">
+      <div class="flex justify-between items-center mb-4">
+        <h2 class="text-2xl font-bold">Shopping Cart</h2>
+      </div>
+      <div id="cart-items" class="space-y-4">
+        <!-- JS will populate cart items here -->
+      </div>
+    </div>
+
+    <!-- Order Summary -->
+    <div class="w-full md:w-1/3 bg-white p-6 rounded-lg mt-8 shadow space-y-4 h-fit">
+      <h3 class="text-lg font-bold border-b pb-5">Order summary</h3>
+      <div class="flex justify-between py-2">
+        <span>Cart Subtotal</span>
+        <span id="cart-subtotal-checkout">₦0.00</span>
+      </div>
+      <div class="flex justify-between text-lg font-bold border-t pt-5">
+        <span>Estimated total</span>
+        <span class="text-lg font-semibold" id="cart-subtotal-main">₦0.00</span>
+      </div>
+      <button id="checkout-btn"
+        class="w-full bg-pink-600 text-white py-2 rounded hover:bg-pink-700 transition">Checkout</button>
+      <button id="goPageBtn" class="w-full border border-gray-400 text-pink-600 py-2 rounded transition">Continue
+        shopping</button>
+    </div>
+
+  </main>
+
+  <!-- Checkout Step -->
+  <section id="checkout-step" class="hidden max-w-6xl mx-auto p-4">
+    <div class="grid md:grid-cols-3 gap-6">
+
+      <!-- Left Column: Shipping Form -->
+      <div class="bg-white p-6 rounded shadow md:col-span-2">
+
+        <!-- Header -->
+        <div class="flex justify-between items-center mb-6 border-b pb-3">
+          <h3 class="font-bold text-lg">Shipping Address</h3>
+          <button id="shipping-edit-btn"
+            class="hidden text-sm border font-medium border-gray-400 px-3 py-1 rounded text-gray-700 hover:bg-gray-100">Edit</button>
+        </div>
+
+        <!-- Shipping Form -->
+        <div id="address-form">
+          <!-- Email -->
+          <div class="my-2">
+            <label for="email" class="block text-sm font-medium text-gray-700 mb-1">Email Address <span
+                class="text-red-500">*</span></label>
+            <input id="email" type="email" placeholder="Email Address"
+              class="w-full h-[52px] p-3 rounded-lg bg-gray-100 focus:outline-none" />
+          </div>
+
+          <!-- Name -->
+          <div class="grid grid-cols-2 gap-3 my-2">
+            <div>
+              <label for="first-name" class="block text-sm font-medium text-gray-700 mb-1">First Name <span
+                  class="text-red-500">*</span></label>
+              <input id="first-name" placeholder="First Name"
+                class="w-full h-[52px] p-3 rounded-lg bg-gray-100 focus:outline-none" />
+            </div>
+            <div>
+              <label for="last-name" class="block text-sm font-medium text-gray-700 mb-1">Last Name <span
+                  class="text-red-500">*</span></label>
+              <input id="last-name" placeholder="Last Name"
+                class="w-full h-[52px] p-3 rounded-lg bg-gray-100 focus:outline-none" />
+            </div>
+          </div>
+
+          <!-- Street Address -->
+          <div class="my-2">
+            <label for="street" class="block text-sm font-medium text-gray-700 mb-1">Street Address <span
+                class="text-red-500">*</span></label>
+            <input id="street" placeholder="Street Address"
+              class="w-full h-[52px] p-3 rounded-lg bg-gray-100 focus:outline-none" />
+          </div>
+
+          <!-- Country & State -->
+          <div class="grid grid-cols-2 gap-3 my-2">
+            <!-- Country -->
+            <div>
+              <label for="country" class="block text-sm font-medium text-gray-700 mb-1">
+                Country <span class="text-red-500">*</span>
+              </label>
+              <input list="country-list" id="country" placeholder="Type country..."
+                class="w-full h-[52px] p-3 rounded-lg bg-gray-100 focus:outline-none" />
+              <datalist id="country-list">
+                <option value="Loading countries..."></option>
+              </datalist>
+            </div>
+
+            <!-- State -->
+            <div>
+              <label for="state" class="block text-sm font-medium text-gray-700 mb-1">
+                State / Province <span class="text-red-500">*</span>
+              </label>
+              <input list="state-list" id="state" placeholder="Type state..."
+                class="w-full h-[52px] p-3 rounded-lg bg-gray-100 focus:outline-none" />
+              <datalist id="state-list">
+                <option value="Select country first"></option>
+              </datalist>
+            </div>
+          </div>
+
+          <!-- LGA (Hidden by default) -->
+          <div id="lga-wrapper" class="my-2 hidden">
+            <label for="lga" class="block text-sm font-medium text-gray-700 mb-1">
+              LGA <span class="text-red-500">*</span>
+            </label>
+            <select id="lga" class="w-full h-[52px] p-3 rounded-lg bg-gray-100 focus:outline-none">
+              <option value="">Select LGA</option>
+            </select>
+          </div>
+
+          <!-- Phone -->
+          <div class="flex flex-col sm:flex-row gap-3 my-3">
+
+            <div class="w-full sm:w-1/4">
+              <label for="area-code" class="block text-sm font-medium text-gray-700 mb-1">
+                Area Code <span class="text-red-500">*</span>
+              </label>
+              <input id="area-code" value="" placeholder="+234"
+                class="w-full h-[52px] p-3 rounded-lg bg-gray-100 focus:outline-none" readonly />
+            </div>
+
+            <div class="flex-1 w-full">
+              <label for="phone" class="block text-sm font-medium text-gray-700 mb-1">
+                Phone Number <span class="text-red-500">*</span>
+              </label>
+              <input id="phone" placeholder="Phone Number"
+                class="w-full h-[52px] p-3 rounded-lg bg-gray-100 focus:outline-none" />
+            </div>
+
+          </div>
+
+          <!-- Delivery Options -->
+          <div id="delivery-options" class="mt-6 border-t pt-4 hidden">
+
+            <!-- Delivery Company -->
+            <div class="my-2">
+              <label class="block text-sm font-medium text-gray-700 mb-1">
+                Delivery Company <span class="text-red-500">*</span>
+              </label>
+              <select id="delivery-company" class="w-full h-[52px] p-3 rounded-lg bg-gray-100 focus:outline-none">
+                <option value="">Select Delivery Company</option>
+                <option value="GIG">GIG Logistics</option>
+                <option value="GUO">GUO Transport</option>
+              </select>
+            </div>
+
+            <!-- Delivery Type -->
+            <div class="my-2">
+              <label class="block text-sm font-medium text-gray-700 mb-1">
+                Delivery Type <span class="text-red-500">*</span>
+              </label>
+              <select id="delivery-type" class="w-full h-[52px] p-3 rounded-lg bg-gray-100 focus:outline-none">
+                <option value="">Select Delivery Type</option>
+                <option value="home">Home Delivery</option>
+                <option value="terminal">Terminal Pickup</option>
+              </select>
+            </div>
+
+            <!-- Terminal Select -->
+            <div id="terminal-wrapper" class="my-2 hidden">
+              <label class="block text-sm font-medium text-gray-700 mb-1">
+                Select Terminal <span class="text-red-500">*</span>
+              </label>
+              <select id="terminal" class="w-full h-[52px] p-3 rounded-lg bg-gray-100 focus:outline-none">
+                <option value="">Select Terminal</option>
+              </select>
+            </div>
+          </div>
+
+          <button id="place-order"
+            class="mt-6 w-full max-w-md mx-auto flex justify-center bg-pink-500 text-white py-3 rounded-full transition">
+            Continue
+          </button>
+        </div>
+
+        <!-- Shipping Summary -->
+        <div id="shipping-summary-card"
+          class="hidden border-pink-400 bg-pink-50 border rounded-lg p-4 shadow relative mt-6">
+          <span id="shipping-edit-btn"
+            class="absolute top-2 right-2 text-sm text-blue-600 cursor-pointer hidden">Edit</span>
+          <h4 class="font-semibold mb-2">Shipping Address</h4>
+          <p><strong>Contact:</strong> <span id="sum-email"></span></p>
+          <p><strong>Name:</strong> <span id="sum-name"></span></p>
+          <p><strong>Phone:</strong> <span id="sum-phone"></span></p>
+          <p><strong>Ship to:</strong> <span id="sum-address"></span></p>
+        </div>
+
+        <!-- Shipment Summary -->
+        <div id="shipment-summary-card" class="hidden bg-white border rounded-lg p-4 shadow mt-4">
+          <h4 class="font-semibold mb-2 border-b pb-5">Shipment Method</h4>
+          <div id="sum-shipment" class="p-4 mt-4 mb-2 rounded-lg border-pink-400 bg-pink-50 border"></div>
+        </div>
+
+        <!-- Payment Summary -->
+        <div id="payment-summary-card" class="hidden bg-white border rounded-lg p-4 shadow mt-4">
+          <h4 class="font-semibold mb-2 border-b pb-2">Payment Method</h4>
+          <div id="paystack-option" class="px-4 py-3 mt-2 rounded-lg border cursor-pointer hover:bg-pink-50">
+            <div class="flex justify-between items-center">
+              <span class="p-2 bg-white border border-gray-100 rounded">
+                <img class="w-20 h-6"
+                  src="https://cdn.brandfetch.io/idM5mrwtDs/theme/dark/logo.svg?c=1bxid64Mup7aczewSAYMX&t=1667559828449"
+                  alt="Paystack">
+              </span>
+              <div class="flex justify-between gap-3 items-center">
+                <i class="fas fa-credit-card text-gray-900"></i>
+                <i class="check-icon hidden fas fa-check-circle text-pink-600 text-lg"></i>
+              </div>
+            </div>
+          </div>
+
+          <div id="WhatsApp" class="p-4 mt-2 rounded-lg border cursor-pointer hover:bg-pink-50">
+            <div class="flex justify-between items-center">
+              <span class="p-2 bg-white border border-gray-100 rounded">
+                <i class="fab fa-whatsapp text-green-800"></i> WhatsApp
+              </span>
+              <div class="flex justify-between gap-3 items-center">
+                <i class="fas fa-credit-card text-gray-900"></i>
+                <i class="check-icon hidden fas fa-check-circle text-pink-600 text-lg"></i>
+              </div>
+            </div>
           </div>
         </div>
-        <div class="flex items-center gap-2 cart-qty">
-          <div class="w-6 h-4 bg-gray-200 rounded"></div>
-          <div class="w-8 h-4 bg-gray-200 rounded"></div>
-          <div class="w-6 h-4 bg-gray-200 rounded"></div>
+
+      </div>
+
+      <!-- Right Column: Order Summary -->
+      <div class="bg-white p-4 rounded shadow max-h-[700px] overflow-auto space-y-4">
+        <h3 class="font-bold text-lg border-b pb-5">My Order</h3>
+        <div id="summary-items" class="space-y-3">
+          <!-- JS will populate items here -->
         </div>
-        <div class="text-right total-box">
-          <div class="w-16 h-4 bg-gray-200 mb-2 rounded"></div>
-          <div class="w-12 h-4 bg-gray-200 rounded"></div>
+        <div class="border-t pt-2 space-y-2 text-sm">
+          <div class="flex justify-between">
+            <span>Cart Subtotal</span>
+            <span id="summary-subtotal">₦0</span>
+          </div>
+          <div class="flex justify-between">
+            <span>Shipping</span>
+            <span id="summary-shipping">₦0</span>
+          </div>
+        </div>
+        <div class="border-t pt-3 flex justify-between font-bold text-lg">
+          <span>Total</span>
+          <span id="summary-total">₦0</span>
+        </div>
+        <button id="summary-place-order" class="mt-4 w-full bg-gray-400 text-white text-lg font-bold py-3 rounded-lg">
+          PLACE ORDER
+        </button>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- Complete Step -->
+  <section id="complete-step" class="hidden text-center min-h-[70vh] flex flex-col justify-center items-center px-4">
+    <h2 class="text-2xl font-bold">🎉 Order Successful</h2>
+    <p class="text-gray-500 mt-2">Thank you for your purchase</p>
+  </section>
+
+  <!-- Footer -->
+  <footer class="bg-pink-100 text-gray-800 relative">
+    <div class="mx-6 md:mx-10 px-4 md:px-6 py-8 md:py-12 flex flex-col md:flex-row justify-between gap-8 md:gap-40">
+
+      <!-- Contact Info -->
+      <div class="flex-1 border-b md:border-b-0 pb-4 md:pb-0 border-gray-300">
+        <h4 class="text-lg font-semibold mb-4">CONTACT US</h4>
+        <p class="mb-2 flex items-center gap-2">
+          <i class="fas fa-phone-alt"></i> +2347053380773
+        </p>
+        <p class="flex items-start gap-2">
+          <i class="fas fa-map-marker-alt mt-1"></i>
+          Lagos, Nigeria
+        </p>
+      </div>
+
+      <!-- Newsletter -->
+      <div class="flex-1">
+        <h4 class="text-lg font-semibold mb-3">SIGN UP FOR DISCOUNTS & UPDATES</h4>
+        <div class="block flex-col md:flex-row gap-2 md:gap-4 items-start md:items-center">
+          <input type="text" placeholder="Enter your phone number or email address"
+            class="w-full md:w-[100%] px-4 py-2 rounded border border-gray-300 focus:outline-none">
+          <button class="mt-3 bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">
+            Subscribe
+          </button>
         </div>
       </div>
     </div>
 
-    <div id="cartContainer" class="space-y-4"></div>
+    <!-- Powered By -->
+    <div class="btn text-left text-sm text-white mx-6 md:mx-10 px-4 md:px-6 py-4 border-t border-gray-300">
+      <button class="text-left block p-4 bg-pink-500">
+        POWERED BY VTec
+      </button>
+    </div>
 
-    <!-- Spacer so content doesn't hide behind fixed bar -->
-<div class="h-24"></div>
+    <!-- WhatsApp Button -->
+    <button id="openWhatsappModal" class="fixed bottom-6 right-6 z-50">
+      <div class="relative w-14 h-14">
+        <!-- Ripple circles -->
+        <span class="absolute inset-0 rounded-full bg-green-400 opacity-50 animate-ping"></span>
+        <span class="absolute inset-0 rounded-full bg-green-400 opacity-50 animate-ping delay-200"></span>
+        <span class="absolute inset-0 rounded-full bg-green-400 opacity-50 animate-ping delay-400"></span>
 
-<!-- Fixed Checkout Bar -->
-<div class="fixed bottom-0 left-0 right-0 bg-white border-t shadow-lg z-40">
-  <div class="max-w-6xl mx-auto flex items-center justify-between px-4 py-4">
-    <h2 class="text-xl font-semibold">
-      Total: ₦<span id="totalPrice">0</span>
-    </h2>
-
-    <button
-      id="checkoutBtn"
-      class="bg-pink-500 text-white px-8 py-3 rounded-lg hover:bg-pink-600 font-semibold"
-    >
-      Checkout
+        <!-- Main Button -->
+        <div
+          class="relative w-14 h-14 rounded-full bg-green-500 hover:bg-green-600 text-white flex items-center justify-center shadow-lg text-2xl">
+          <i class="fab fa-whatsapp"></i>
+        </div>
+      </div>
     </button>
-  </div>
-</div>
 
-    <!-- <div class="text-right mt-6">
-      <h2 class="text-xl font-semibold mb-2">Total: ₦<span id="totalPrice">0</span></h2>
-        <button id="checkoutBtn" class="bg-pink-500 text-white px-6 py-2 rounded hover:bg-pink-600">Checkout</button>
-    </div> -->
-  </main>
+    <!-- WhatsApp Button -->
+    <a href="https://wa.me/2349053380773" target="_blank" class="fixed bottom-6 right-6 z-50">
+      <div class="relative w-14 h-14">
+        <!-- Ripple circles -->
+        <span class="absolute inset-0 rounded-full bg-green-400 opacity-50 animate-ping"></span>
+        <span class="absolute inset-0 rounded-full bg-green-400 opacity-50 animate-ping delay-200"></span>
+        <span class="absolute inset-0 rounded-full bg-green-400 opacity-50 animate-ping delay-400"></span>
 
-<!-- Firebase Compat Scripts -->
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
-
-<script>
-(function(){
-  // ----- Loader Overlay -----
-  let loader = document.getElementById("cartLoader");
-  if(!loader){
-    loader = document.createElement("div");
-    loader.id = "cartLoader";
-    loader.style = `
-      position: fixed; inset: 0; background: rgba(0,0,0,0.4);
-      display: flex; align-items: center; justify-content: center;
-      z-index: 9999; font-size: 50px; color: white; 
-      transition: opacity 0.3s ease;
-    `;
-    loader.innerHTML = "🛒";
-    document.body.appendChild(loader);
-  }
-
-  function hideLoader(){
-    if(loader){
-      loader.style.opacity = "0";
-      setTimeout(()=> loader.remove(), 300);
-    }
-  }
-
-  // --- Firebase App config ---
-  const firebaseConfig = {
-    apiKey: "AIzaSyDdTPmpaIPWSDWOmR-fXgvAb7hoxZUawcc",
-    authDomain: "e-commerce-39c74.firebaseapp.com",
-    projectId: "e-commerce-39c74",
-    storageBucket: "e-commerce-39c74.firebasestorage.app",
-    messagingSenderId: "863375033754",
-    appId: "1:863375033754:web:7ba248c8dbb1566c83e623"
-  };
-
-  if (!window.firebase) {
-    console.error("Firebase not loaded. Ensure firebase scripts are included on the page.");
-    return;
-  }
-
-  if (!firebase.apps.length) {
-    firebase.initializeApp(firebaseConfig);
-  }
-
-  // ===== GUEST ID (SHARED ACROSS SITE) =====
-const guestId = localStorage.getItem("guestId");
-
-if (!guestId) {
-  console.warn("No guestId found — redirecting to home");
-  window.location.href = "index.html";
-}
-
-// Firestore (must come BEFORE cartRef)
-const userDb = firebase.firestore();
-
-// Guest cart reference
-const guestCartRef = userDb.collection("guestCarts").doc(guestId);
-
-  // State
-  let cartUnsub = null;
-
-  // Elements
-  const cartContainer = document.getElementById("cartContainer");
-  const cartSkeleton  = document.getElementById("cartSkeleton");
-  const totalSpan     = document.getElementById("totalPrice");
-  const checkoutBtn   = document.getElementById("checkoutBtn");
-
-  // Helpers
-  function showElem(el){ if(!el) return; el.classList.remove('hidden'); }
-  function hideElem(el){ if(!el) return; el.classList.add('hidden'); }
-  function escapeHtml(text){ if(text==null) return ''; return String(text).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
-
-  // ---------- Notifications ----------
-  const activeNotifications = new Set();
-  function showNotification(message, type="info", duration=3000){
-    let container = document.getElementById("notification-container");
-    if(!container){
-      container = document.createElement("div");
-      container.id = "notification-container";
-      container.className = "fixed top-4 right-4 z-50 flex flex-col gap-2";
-      document.body.appendChild(container);
-    }
-
-    if(activeNotifications.has(message)) return;
-    activeNotifications.add(message);
-
-    const notif = document.createElement("div");
-    notif.className = `
-      flex items-center justify-between gap-3 p-4 bg-white rounded-lg shadow-lg
-      border border-gray-200 min-w-[250px] max-w-sm
-      animate-slideIn
-    `;
-    const icon = document.createElement("span");
-    if(type==="success") icon.innerHTML=`<i class="fas fa-check-circle text-green-500 text-xl"></i>`;
-    else if(type==="error") icon.innerHTML=`<i class="fas fa-times-circle text-red-500 text-xl"></i>`;
-    else if(type==="warning") icon.innerHTML=`<i class="fas fa-exclamation-triangle text-yellow-500 text-xl"></i>`;
-    else icon.innerHTML=`<i class="fas fa-info-circle text-blue-500 text-xl"></i>`;
-    const text = document.createElement("span");
-    text.className="flex-1 text-gray-800 font-medium";
-    text.textContent = message;
-    const closeBtn = document.createElement("button");
-    closeBtn.innerHTML = "&times;";
-    closeBtn.className = "ml-4 text-gray-400 hover:text-gray-600 font-bold text-lg";
-    closeBtn.onclick = () => removeNotification(notif, message);
-    notif.appendChild(icon);
-    notif.appendChild(text);
-    notif.appendChild(closeBtn);
-    container.appendChild(notif);
-
-    setTimeout(()=> removeNotification(notif, message), duration);
-  }
-  function removeNotification(notif, message){
-    if(!notif) return;
-    notif.classList.remove("animate-slideIn");
-    notif.classList.add("animate-slideOut");
-    notif.addEventListener("animationend", ()=> notif.remove());
-    activeNotifications.delete(message);
-  }
-
-  // Notification Styles
-  const style = document.createElement("style");
-  style.textContent = `
-    #notification-container { display: flex; flex-direction: column; gap: 0.5rem; position: fixed; top: 1rem; right: 1rem; z-index: 9999; }
-    @keyframes slideIn { from {opacity:0; transform: translateX(50px);} to {opacity:1; transform:translateX(0);} }
-    .animate-slideIn { animation: slideIn 0.3s ease-out forwards; }
-    @keyframes slideOut { from {opacity:1; transform:translateX(0);} to {opacity:0; transform:translateX(50px);} }
-    .animate-slideOut { animation: slideOut 0.3s ease-in forwards; }
-  `;
-  document.head.appendChild(style);
-
-  // ---------- CART LISTENER ----------
-  function startCartListener(){
-  stopCartListener();
-
-  if(cartSkeleton) showElem(cartSkeleton);
-  if(cartContainer) cartContainer.innerHTML = "";
-
-  let firstLoad = true;
-
-  cartUnsub = guestCartRef.onSnapshot(doc => {
-    const data = doc.exists ? doc.data() : { items: [] };
-    const cartItems = data.items || [];
-
-    // ✅ SYNC TO LOCALSTORAGE
-  localStorage.setItem("cart", JSON.stringify(cartItems));
-  
-    if(cartSkeleton) hideElem(cartSkeleton);
-    renderCart(cartItems);
-
-    if(firstLoad){
-      hideLoader();
-      firstLoad = false;
-    }
-  }, err => {
-    console.error("Cart listener error:", err);
-    showNotification("Failed to load cart", "error");
-    hideLoader();
-  });
-}
-
-  function stopCartListener(){
-    if (cartUnsub) {
-      try { cartUnsub(); } catch(e){ console.warn("Failed to unsubscribe cart listener", e); }
-      cartUnsub = null;
-    }
-  }
-
-  function destroyCartListener(){
-  if(cartUnsub){
-    cartUnsub();
-    cartUnsub = null;
-  }
-}
-
-  // ---------- CART RENDER ----------
-  function renderCart(items = []){
-    if(!cartContainer) return;
-    cartContainer.innerHTML = "";
-    let total = 0;
-
-    // if(!currentUser || items.length===0){
-    if(items.length === 0){
-      cartContainer.innerHTML = `<p class="text-center text-gray-500">Your cart is empty.</p>`;
-      if(totalSpan) totalSpan.textContent = "0";
-      if(checkoutBtn){
-        checkoutBtn.disabled = true;
-        checkoutBtn.classList.add("opacity-50","cursor-not-allowed");
-      }
-      return;
-    }
-
-    items.forEach(it => {
-      const quantity = it.quantity || 0;
-      const price = it.price || 0;
-      const originalPrice = it.originalPrice || null;
-      const lineTotal = price * quantity;
-      total += lineTotal;
-
-      const div = document.createElement("div");
-      div.className = "flex flex-col bg-white p-4 rounded shadow mb-3 cart-item";
-      div.innerHTML = `
-        <div class="flex items-start gap-4">
-          <img src="${it.image || 'https://via.placeholder.com/64'}" class="w-24 h-24 object-cover rounded cart-img" alt="${escapeHtml(it.name)}">
-          <div class="flex-1 space-y-1">
-            <div class="font-medium text-gray-900">${escapeHtml(it.name)}</div>
-            ${it.description ? `<div class="text-gray-500 text-sm">${escapeHtml(it.description)}</div>` : ''}
-          </div>
+        <!-- Main Button -->
+        <div
+          class="relative w-14 h-14 rounded-full bg-green-500 hover:bg-green-600 text-white flex items-center justify-center shadow-lg text-2xl">
+          <i class="fab fa-whatsapp"></i>
         </div>
-        <div class="mt-2 text-gray-700 font-semibold">Unit Price: ₦${price.toLocaleString()}</div>
-        <div class="text-pink-500 font-bold">Total: ₦${lineTotal.toLocaleString()} (${quantity})</div>
-        ${originalPrice ? `<div class="line-through text-gray-400 text-sm">₦${originalPrice.toLocaleString()}</div>` : ''}
-        <div class="mt-4 flex items-center justify-between">
-          <button data-action="delete" data-id="${it.id}" class="text-red-600 flex items-center gap-1">
-            <i class="fas fa-trash-alt"></i> Delete
-          </button>
-          <div class="flex items-center gap-2">
-            <button data-action="minus" data-id="${it.id}" class="bg-blue-500 text-white rounded-full w-6 h-6 flex items-center justify-center">−</button>
-            <span id="qty-${it.id}" class="w-6 text-center">${quantity}</span>
-            <button data-action="plus" data-id="${it.id}" class="bg-blue-500 text-white rounded-full w-6 h-6 flex items-center justify-center">+</button>
-          </div>
-        </div>
-      `;
-      cartContainer.appendChild(div);
-
-      const plusBtn = div.querySelector('button[data-action="plus"]');
-      const minusBtn = div.querySelector('button[data-action="minus"]');
-      const deleteBtn = div.querySelector('button[data-action="delete"]');
-      const qtySpan = div.querySelector(`#qty-${it.id}`);
-
-      if(quantity<=1){ minusBtn.disabled=true; minusBtn.classList.add("opacity-50","cursor-not-allowed"); }
-
-      plusBtn.onclick = async ()=>{
-  if(plusBtn.disabled) return;
-  plusBtn.disabled=true;
-  await updateQtyWithSpinner(it.id,1);
-  setTimeout(()=>{ plusBtn.disabled=false },250);
-  div.classList.add("fade-update");
-  setTimeout(()=>div.classList.remove("fade-update"),300);
-  showNotification("Item Added");
-};
-
-minusBtn.onclick = async ()=>{
-  if(minusBtn.disabled) return;
-  minusBtn.disabled=true;
-  await updateQtyWithSpinner(it.id,-1);
-  setTimeout(()=>{ minusBtn.disabled=false },250);
-  div.classList.add("fade-update");
-  setTimeout(()=>div.classList.remove("fade-update"),300);
-  showNotification("Item Removed");
-};
-
-deleteBtn.onclick = async ()=>{
-  deleteBtn.disabled=true;
-  await removeWithSpinner(it.id);
-  deleteBtn.disabled=false;
-  div.classList.add("fade-update");
-  setTimeout(()=>div.remove(),300);
-};
-    });
-
-    if(totalSpan) totalSpan.textContent = total.toLocaleString();
-    if(checkoutBtn){ checkoutBtn.disabled=false; checkoutBtn.classList.remove("opacity-50","cursor-not-allowed"); }
-  }
-
-  // ----- Spinners for qty actions -----
-  function toggleSpinner(spinnerKey, show=true){
-    const svg = document.querySelector(`[data-spinner="${spinnerKey}"]`);
-    if(!svg) return;
-    if(show) svg.classList.remove("hidden"); else svg.classList.add("hidden");
-  }
-
-  async function updateQtyWithSpinner(itemId, delta){
-  try{
-    await userDb.runTransaction(async t=>{
-      const snap = await t.get(guestCartRef);
-      if(!snap.exists) return;
-
-      const items = snap.data().items || [];
-      const idx = items.findIndex(i => i.id === itemId);
-      if(idx === -1) return;
-
-      items[idx].quantity += delta;
-
-      if(items[idx].quantity <= 0){
-        items.splice(idx,1);
-      }
-
-      t.update(guestCartRef,{
-        items,
-        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-      });
-    });
-  }catch(err){
-    console.error(err);
-    showNotification("Quantity update failed","error");
-  }
-}
-
-  async function removeWithSpinner(itemId){
-  try{
-    await userDb.runTransaction(async t=>{
-      const snap = await t.get(guestCartRef);
-      if(!snap.exists) return;
-
-      const items = (snap.data().items || []).filter(i => i.id !== itemId);
-
-      t.update(guestCartRef,{
-        items,
-        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-      });
-    });
-    showNotification("Item removed","success");
-  }catch(err){
-    console.error(err);
-    showNotification("Remove failed","error");
-  }
-}
-
-  // Checkout
-  if(checkoutBtn){
-    checkoutBtn.addEventListener("click", e=>{
-  e.preventDefault();
-  window.location.href = "checkout.html";
-})
-  }
-
-  // Safety fallback
-  setTimeout(()=>hideLoader(),5000);
-  startCartListener();
-  // Expose for debugging
-  window.destroyCartListener = destroyCartListener;
-  window._cart={startCartListener, stopCartListener};
-})();
-</script>
+      </div>
+    </a>
+  </footer>
+  <script src="cart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/tom-select/dist/js/tom-select.complete.min.js"></script>
 </body>
+
 </html>

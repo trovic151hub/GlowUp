@@ -624,6 +624,298 @@ document.getElementById("sendResetLinkBtn")?.addEventListener("click", async () 
   }
 });
 
+// --- Mini Cart ---
+    const cartButton = document.getElementById("cart-button");
+    const miniCart = document.getElementById("mini-cart");
+    const closeCart = document.getElementById("close-cart");
+
+    // ===== REAL-TIME MINI CART UPDATE =====
+(async function initReactiveMiniCart() {
+  const cartRef = userDb.collection("guestCarts").doc(guestId);
+
+  // Ensure cart exists
+  await ensureGuestCart();
+
+  // Listen for changes in real-time
+  cartRef.onSnapshot(snap => {
+    if (!snap.exists) return;
+
+    const cart = snap.data().items || [];
+    updateCartCount(cart);
+    renderMiniCart(cart);
+  });
+})();
+
+    // --- Ensure overlay exists ---
+    let overlay = document.getElementById("mini-cart-overlay");
+    if (!overlay) {
+      overlay = document.createElement("div");
+      overlay.id = "mini-cart-overlay";
+      overlay.className = "fixed inset-0 bg-black backdrop-blur-sm bg-opacity-30 z-40 hidden";
+      document.body.appendChild(overlay);
+
+      // Clicking the overlay closes the mini-cart
+      overlay.addEventListener("click", () => closeMiniCart());
+    }
+
+    // --- Open / Close Mini Cart ---
+    function openMiniCart() {
+      gsap.to(miniCart, { x: 0, duration: 0.5, ease: "power2.out" });
+      overlay.classList.remove("hidden");
+      document.body.style.overflow = "hidden"; // disable background scroll
+    }
+
+    function closeMiniCart() {
+      gsap.to(miniCart, { x: "100%", duration: 0.5, ease: "power2.in" });
+      overlay.classList.add("hidden");
+      document.body.style.overflow = ""; // re-enable scroll
+    }
+
+    cartButton.addEventListener("click", openMiniCart);
+    closeCart.addEventListener("click", closeMiniCart);
+
+    // --- Make cart functions global for async calls ---
+    window.changeQuantity = async function (productId, delta) {
+      let cart = await getCart();
+      const item = cart.find(i => i.id === productId);
+      if (!item) return;
+
+      item.quantity += delta;
+      if (item.quantity <= 0) {
+        cart = cart.filter(i => i.id !== productId);
+        showNotification("Item removed from cart", "warning");
+      } else {
+        showNotification("Cart updated", "info");
+      }
+
+      await saveCart(cart);
+    };
+
+    window.removeFromCart = async function (productId) {
+      let cart = await getCart();
+      cart = cart.filter(i => i.id !== productId);
+      await saveCart(cart);
+      showNotification("Item removed from cart", "error");
+    };
+
+    // ===== CART UTILS =====
+const cartCountEl = document.getElementById("cart-count");
+const miniCartContainer = document.getElementById("mini-cart-items");
+const miniCartTotalEl = document.getElementById("mini-cart-total");
+
+// --- Ensure guest cart exists in Firestore ---
+async function ensureGuestCart() {
+  const cartRef = userDb.collection("guestCarts").doc(guestId);
+  const snap = await cartRef.get();
+
+  if (!snap.exists) {
+    await cartRef.set({
+      guestId,
+      items: [],
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+  }
+
+  return cartRef;
+}
+
+// --- Fetch guest cart ---
+async function getCart() {
+  const cartRef = userDb.collection("guestCarts").doc(guestId);
+  const snap = await cartRef.get();
+  return snap.exists ? snap.data().items : [];
+}
+
+// --- Save guest cart ---
+async function saveCart(cart) {
+  const cartRef = userDb.collection("guestCarts").doc(guestId);
+  await cartRef.set({
+    items: cart,
+    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+  }, { merge: true });
+  updateCartCount(cart);
+  renderMiniCart(cart);
+}
+
+// --- Update cart count in header ---
+function updateCartCount(cart) {
+  const total = cart.reduce((sum, item) => sum + item.quantity, 0);
+  if (cartCountEl) cartCountEl.innerText = total;
+}
+
+// ===== MINI CART RENDER =====
+async function renderMiniCart(cartData = null) {
+  const cart = cartData || await getCart();
+  miniCartContainer.innerHTML = "";
+
+  if (!cart.length) {
+    miniCartContainer.innerHTML = `<p class="text-gray-500 text-center mt-4">Your cart is empty.</p>`;
+    miniCartTotalEl.innerText = "₦0.00";
+
+        // Hide buttons if empty
+    updateMiniCartButtons(cart);
+    return;
+  }
+
+  let total = 0;
+
+  cart.forEach(item => {
+    total += (item.price || 0) * item.quantity;
+
+    const div = document.createElement("div");
+    div.className = "flex items-start space-x-3 p-3 mb-2";
+
+    div.innerHTML = `
+      <img src="${item.image || ''}" 
+           alt="${item.name}" 
+           class="w-24 h-22 object-cover rounded">
+      <div class="flex-1 flex flex-col justify-between">
+        <div>
+          <h3 class="font-medium text-gray-600">${item.name}</h3>
+          <div class="flex space-x-2 mt-1">
+            <p class="text-sm text-gray-800 font-bold">₦${item.price.toLocaleString()}</p>
+            <p class="text-sm text-gray-500">Qty: ${item.quantity}</p>
+          </div>
+        </div>
+        <div class="flex justify-between items-center space-x-2 mt-2">
+          <div class="space-x-2">
+            <button class="btn-minus text-gray-500 px-2 py-1 bg-gray-100" data-id="${item.id}" ${item.quantity === 1 ? 'disabled' : ''}>-</button>
+            <span>${item.quantity}</span>
+            <button class="btn-plus text-gray-500 px-2 py-1 bg-gray-100" data-id="${item.id}">+</button>
+          </div>
+          <div>
+            <button class="btn-remove text-gray-400" data-id="${item.id}"><i class="fas fa-trash-can"></i></button>
+          </div>
+        </div>
+      </div>
+    `;
+
+      // Show buttons since cart has items
+  updateMiniCartButtons(cart);
+    miniCartContainer.appendChild(div);
+  });
+
+    // Attach click event to the existing button
+const viewCartBtn = document.getElementById("view-cart-btn");
+const cartCountEl = document.getElementById("cart-count");
+
+if (viewCartBtn) {
+  viewCartBtn.addEventListener("click", () => {
+    const cartCount = parseInt(cartCountEl?.innerText || "0", 10);
+
+    if (cartCount === 0) {
+      showNotification("Your cart is empty", "warning");
+      return;
+    }
+
+    window.location.href = "/cart.html"; // full cart page
+  });
+}
+
+  miniCartTotalEl.innerText = "₦" + total.toFixed(2);
+
+  // --- Attach button events ---
+  miniCartContainer.querySelectorAll(".btn-minus").forEach(btn => {
+    btn.addEventListener("click", async () => {
+      await changeQuantity(btn.dataset.id, -1);
+    });
+  });
+
+  miniCartContainer.querySelectorAll(".btn-plus").forEach(btn => {
+    btn.addEventListener("click", async () => {
+      await changeQuantity(btn.dataset.id, 1);
+    });
+  });
+
+  miniCartContainer.querySelectorAll(".btn-remove").forEach(btn => {
+    btn.addEventListener("click", async () => {
+      await removeFromCart(btn.dataset.id);
+    });
+  });
+}
+
+// ===== CART OPERATIONS =====
+window.addToCart = async function(productId) {
+  const product = currentProducts.find(p => p.id === productId);
+  if (!product) return showNotification("Product not found", "error");
+
+  let cart = await getCart();
+  const existing = cart.find(item => item.id === productId);
+  if (existing) existing.quantity += 1;
+  else cart.push({...product, quantity: 1});
+
+  await saveCart(cart);
+  showNotification("Added to cart", "success");
+};
+
+window.changeQuantity = async function(productId, delta) {
+  let cart = await getCart();
+  const item = cart.find(i => i.id === productId);
+  if (!item) return;
+
+  item.quantity += delta;
+  if (item.quantity <= 0) {
+    cart = cart.filter(i => i.id !== productId);
+    showNotification("Item removed from cart", "warning");
+  } else {
+    showNotification("Cart updated", "info");
+  }
+
+  await saveCart(cart);
+};
+
+window.removeFromCart = async function(productId) {
+  let cart = await getCart();
+  cart = cart.filter(i => i.id !== productId);
+  await saveCart(cart);
+  showNotification("Item removed from cart", "error");
+};
+
+  // --- Mini Cart Buttons ---
+const viewCartBtn = document.getElementById("view-cart-btn");
+const miniCartCheckoutBtn = document.getElementById("mini-cart-checkout");
+
+// View Cart: go to cart page
+viewCartBtn?.addEventListener("click", async () => {
+  // const cart = await getCart();
+  window.location.href = "/cart.html";
+});
+
+// Checkout: go to cart page, scroll to checkout section
+miniCartCheckoutBtn?.addEventListener("click", async () => {
+  const cart = await getCart();
+
+  // Save flag so cart page knows to scroll to checkout
+  localStorage.setItem("gotoCheckout", "true");
+  window.location.href = "/cart.html";
+});
+
+// Function to update mini-cart buttons & total visibility
+function updateMiniCartButtons(cart) {
+  if (!cart.length) {
+    viewCartBtn?.classList.add("hidden");
+    miniCartCheckoutBtn?.classList.add("hidden");
+
+    // Hide mini cart total
+    if (miniCartTotalEl) miniCartTotalEl.innerText = "";
+  } else {
+    viewCartBtn?.classList.remove("hidden");
+    miniCartCheckoutBtn?.classList.remove("hidden");
+
+    // Show mini cart total
+    const total = cart.reduce((sum, item) => sum + (item.price || 0) * item.quantity, 0);
+    if (miniCartTotalEl) miniCartTotalEl.innerText = "₦" + total.toFixed(2);
+  }
+}
+
+// ===== INIT CART ON PAGE LOAD =====
+(async function initMiniCart() {
+  await ensureGuestCart();
+  const cart = await getCart();
+  updateCartCount(cart);
+  renderMiniCart(cart);
+})();
+
 // Modal close buttons
 document.getElementById("cancelPasswordEmail")?.addEventListener("click", closePasswordEmailModal);
 document.getElementById("closePasswordResetBtn")?.addEventListener("click", closePasswordResetModal);

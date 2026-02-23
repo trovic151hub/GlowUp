@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -22,102 +23,111 @@
 
   <!-- Navbar -->
   <header id="mainHeader"
-    class="fixed top-0 left-0 w-full text-white p-4 flex justify-between items-center flex-wrap gap-4 text-sm font-medium md:gap-6 z-50">
+    class="fixed top-0 left-0 w-full text-white p-4 flex justify-between items-center flex-wrap gap-4 text-sm font-medium md:gap-6 z-40">
     <h1 class="text-2xl font-bold main-head">Pearl Skin Care</h1>
-    <nav class="nav-bar space-x-6 text-sm font-medium flex flex-wrap items-center gap-4">
+    <nav class="nav-bar space-x-6 text-sm font-medium flex flex-wrap items-center gap-16">
 
-      <!-- Hamburger + Mobile Menu -->
-      <div class="mr-14 md:hidden">
-        <!-- Hamburger Button -->
-        <button id="menuToggle" class="text-2xl">
-          <i class="fas fa-bars"></i>
-        </button>
+      <!-- Header Links -->
+      <div class="space-x-6 text-sm font-medium items-center gap-4">
+        <a href="#" class="main-head hover:text-pink-600 nav-link">Home</a>
+        <a href="products.html" class="main-head hover:text-pink-600 nav-link">Shop</a>
+        <a href="#categories" class="main-head hover:text-pink-600 nav-link">Categories</a>
 
-        <!-- Overlay -->
-        <div id="menuOverlay" class="fixed inset-0 bg-black bg-opacity-30 backdrop-blur-sm z-40 hidden"></div>
-
-        <!-- Mobile Menu -->
-        <div id="mobileMenu"
-          class="fixed top-0 left-0 w-64 h-full bg-white shadow-lg p-6 transform -translate-x-full transition-transform duration-300 z-50">
-          <!-- Close Button -->
-          <button id="closeMenu"
-            class="text-3xl text-gray-600 hover:text-red-500 absolute top-4 right-4">&times;</button>
-
-          <!-- Menu Links -->
-          <div class="flex flex-col space-y-4 mt-12 text-lg font-medium">
-            <span id="welcomeTextMobile" class="text-sm text-gray-700 hidden"></span>
-
-            <a href="products.html" class="flex items-center gap-2 px-2 py-2 text-gray-700 hover:bg-pink-50 rounded">
-              <i class="fa fa-shop mt-1"></i> Shop
-            </a>
-
-            <a href="customer-dashboard.html"
-              class="flex items-center gap-2 px-2 py-2 text-gray-700 hover:bg-pink-50 rounded">
-              <span class="text-[20px]">👤</span> Dashboard
-            </a>
-
-            <a href="mailto:@gmail.com"
-              class="flex items-center gap-2 px-2 py-2 text-gray-700 hover:bg-pink-50 rounded">
-              <i class="fas fa-envelope text-[20px] text-pink-500"></i> Email Us
-            </a>
-
-            <a href="https://wa.me/2347053380773" target="_blank"
-              class="flex items-center gap-2 px-2 py-2 text-gray-700 hover:bg-pink-50 rounded">
-              <i class="fab fa-whatsapp text-green-500 text-[20px]"></i> WhatsApp
-            </a>
-
+        <!-- Contact Dropdown -->
+        <div class="relative group inline-block main-head">
+          <button class="hover:text-pink-600">Contact</button>
+          <div
+            class="absolute hidden group-hover:block bg-pink-100 shadow rounded mt-1 z-50 min-w-[150px] fixed top-5 right-[-10%] text-left">
+            <a href="customer-dashboard.html" class="block px-4 py-2 text-sm text-gray-700 hover:bg-white">👤
+              Dashboard</a>
+            <a href="mailto:victoradeyimika0@gmail.com" class="block px-4 py-2 text-sm text-gray-700 hover:bg-white"><i
+                class="fas fa-envelope text-pink-500"></i> Email Us</a>
+            <a href="https://wa.me/2349053380773" target="_blank"
+              class="block px-4 py-2 text-sm text-gray-700 hover:bg-white"><i
+                class="fab fa-whatsapp text-green-500"></i>
+              WhatsApp</a>
             <a href="https://instagram.com/yourhandle" target="_blank"
-              class="flex items-center gap-2 px-2 py-2 text-gray-700 hover:bg-pink-50 rounded">
-              <i class="fab fa-instagram text-pink-600 text-[20px]"></i> Instagram
-            </a>
+              class="block px-4 py-2 text-sm text-gray-700 hover:bg-white"><i
+                class="fab fa-instagram text-pink-600"></i>
+              Instagram</a>
           </div>
         </div>
       </div>
 
-      <!-- Logo -->
-      <div class="logo-con">
-        <div class="logo md:hidden text-center">
-          <h1 class="brand">Pearl</h1>
-          <p class="tagline">SKIN CARE</p>
+      <div class="flex justify-between items-center">
+        <div class="mr-14 -ml-24 md:hidden">
+          <!-- Hamburger Button -->
+          <button id="menuToggle" class="text-2xl">
+            <i class="fas fa-bars"></i>
+          </button>
+
+          <!-- Overlay -->
+          <div id="menuOverlay" class="fixed inset-0 bg-black bg-opacity-30 backdrop-blur-sm z-40 hidden">
+          </div>
+
+          <!-- Mobile Menu -->
+          <div id="mobileMenu"
+            class="fixed top-0 left-0 w-64 h-full bg-white shadow-lg p-6 transform -translate-x-full transition-transform duration-300 z-50">
+            <!-- Close Button -->
+            <button id="closeMenu"
+              class="text-3xl text-gray-600 hover:text-red-500 absolute top-4 right-4">&times;</button>
+
+            <!-- Menu Links -->
+            <div class="flex flex-col space-y-4 mt-12 text-lg font-medium">
+              <span id="welcomeTextMobile" class="text-sm text-gray-700 hidden"></span>
+
+              <a href="products.html" class="flex items-center gap-2 px-2 py-2 text-gray-700 hover:bg-pink-50 rounded">
+                <i class="fa fa-shop mt-1"></i> Shop
+              </a>
+
+              <a href="customer-dashboard.html"
+                class="flex items-center gap-2 px-2 py-2 text-gray-700 hover:bg-pink-50 rounded">
+                <span class="text-[20px]">👤</span> Dashboard
+              </a>
+
+              <a href="mailto:@gmail.com"
+                class="flex items-center gap-2 px-2 py-2 text-gray-700 hover:bg-pink-50 rounded">
+                <i class="fas fa-envelope text-[20px] text-pink-500"></i> Email Us
+              </a>
+
+              <a href="https://wa.me/2347053380773" target="_blank"
+                class="flex items-center gap-2 px-2 py-2 text-gray-700 hover:bg-pink-50 rounded">
+                <i class="fab fa-whatsapp text-green-500 text-[20px]"></i> WhatsApp
+              </a>
+
+              <a href="https://instagram.com/yourhandle" target="_blank"
+                class="flex items-center gap-2 px-2 py-2 text-gray-700 hover:bg-pink-50 rounded">
+                <i class="fab fa-instagram text-pink-600 text-[20px]"></i> Instagram
+              </a>
+            </div>
+          </div>
         </div>
-      </div>
 
-      <!-- Cart -->
-      <a href="test.html" class="cart-tag relative inline-block">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 inline hover:text-pink-500 text-white" fill="none"
-          viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-            d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13l-1.35 2.7a1 1 0 001.85.9L7 13zm0 0H5m14 0v6a1 1 0 001 1h1a1 1 0 001-1v-6M7 19a2 2 0 104 0 2 2 0 00-4 0zm10 0a2 2 0 104 0 2 2 0 00-4 0z" />
-        </svg>
-        <span id="cartCount"
-          class="absolute -top-2 -right-2 bg-red-500 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center">0</span>
-      </a>
+        <!-- Logo -->
+        <div class="logo-con ml-12">
+          <div class="logo md:hidden text-center">
+            <h1 class="brand">Pearl</h1>
+            <p class="tagline ">SKIN CARE</p>
+          </div>
+        </div>
 
-      <!-- Navbar Links -->
-      <!-- Search Icon -->
-      <button id="openSearchBtn" class="openSearchBtn text-white hover:text-pink-500">
-        <i class="fas fa-search text-xl"></i>
-      </button>
-      <a href="#" class="main-head hover:text-pink-600 nav-link"><i class="fa fa-home"></i> Home</a>
-      <a href="products.html" class="main-head hover:text-pink-600 nav-link"><i class="fa fa-shop"></i> Shop</a>
-      <a href="#categories" class="main-head hover:text-pink-600 nav-link"><i class="fa fa-layer-group"></i>
-        Categories</a>
+        <div class="flex justify-between gap-10 icon">
+          <!-- Search Icon -->
+          <button id="openSearchBtn" class="openSearchBtn hover:text-pink-500">
+            <i class="fas fa-search text-xl"></i>
+          </button>
 
-      <!-- Contact Dropdown -->
-      <div class="relative group inline-block main-head">
-        <button class="hover:text-pink-600"><i class="fa fa-phone"></i> Contact</button>
-        <div
-          class="absolute hidden group-hover:block bg-pink-100 shadow rounded mt-1 z-50 min-w-[150px] fixed top-5 right-[-10%] text-left">
-          <a href="customer-dashboard.html" class="block px-4 py-2 text-sm text-gray-700 hover:bg-white">👤
-            Dashboard</a>
-          <a href="mailto:victoradeyimika0@gmail.com" class="block px-4 py-2 text-sm text-gray-700 hover:bg-white"><i
-              class="fas fa-envelope text-pink-500"></i> Email Us</a>
-          <a href="https://wa.me/2349053380773" target="_blank"
-            class="block px-4 py-2 text-sm text-gray-700 hover:bg-white"><i class="fab fa-whatsapp text-green-500"></i>
-            WhatsApp</a>
-          <a href="https://instagram.com/yourhandle" target="_blank"
-            class="block px-4 py-2 text-sm text-gray-700 hover:bg-white"><i class="fab fa-instagram text-pink-600"></i>
-            Instagram</a>
+          <!-- Cart -->
+          <button id="cart-button" class="cart-tag relative inline-block">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 inline hover:text-pink-500 text-white" width="16"
+              height="16" viewBox="0 0 16 16">
+              <path fill="currentColor"
+                d="M0 1.5A.5.5 0 0 1 .5 1H2a.5.5 0 0 1 .485.379L2.89 3H14.5a.5.5 0 0 1 .491.592l-1.5 8A.5.5 0 0 1 13 12H4a.5.5 0 0 1-.491-.408L2.01 3.607L1.61 2H.5a.5.5 0 0 1-.5-.5M3.102 4l1.313 7h8.17l1.313-7zM5 12a2 2 0 1 0 0 4a2 2 0 0 0 0-4m7 0a2 2 0 1 0 0 4a2 2 0 0 0 0-4m-7 1a1 1 0 1 1 0 2a1 1 0 0 1 0-2m7 0a1 1 0 1 1 0 2a1 1 0 0 1 0-2" />
+            </svg>
+
+            <span id="cartCount"
+              class="absolute -top-3 -right-3 bg-pink-500 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center">0</span>
+          </button>
         </div>
       </div>
     </nav>
@@ -215,6 +225,38 @@
     </div>
   </section>
 
+  <!-- Mini Cart -->
+  <div id="mini-cart"
+    class="fixed top-0 right-0 h-full 
+         w-full sm:w-[70%] md:w-[45%] lg:w-[32%] 
+         bg-white shadow-xl transform translate-x-full 
+         z-50 flex flex-col transition-transform duration-300">
+    <div class="flex justify-between items-center p-4 border-b">
+      <h2 class="text-lg font-semibold text-gray-700">Your Cart</h2>
+      <button id="close-cart" class="text-gray-500 font-bold text-lg hover:text-red-900">&times;</button>
+    </div>
+    <div id="mini-cart-items" class="flex-1 overflow-y-auto p-4 space-y-4"></div>
+    <div class="p-4 border-t">
+  <div class="flex justify-between font-semibold mb-2">
+    <span class="text-gray-500 font-bold text-sm md:text-base">Subtotal:</span>
+    <span id="mini-cart-total" 
+      class="text-xl md:text-3xl font-semibold">₦0.00</span>
+  </div>
+
+  <div class="block">
+    <button id="view-cart-btn"
+      class="w-full bg-white border border-gray-400 text-gray-900 py-3 md:py-2 rounded-full mb-4 transition">
+      View Cart
+    </button>
+
+    <button id="mini-cart-checkout"
+      class="w-full bg-pink-600 text-white py-3 md:py-2 rounded-full transition">
+      Checkout
+    </button>
+  </div>
+</div>
+  </div>
+
   <!-- ===== GLOBAL LEAVE LOADER ===== -->
   <div id="leaveLoader">
     <div class="spinner"></div>
@@ -299,6 +341,108 @@
 
 </html>
 
+
+<!-- Navbar -->
+<!-- <header id="mainHeader"
+    class="fixed top-0 left-0 w-full text-white p-4 flex justify-between items-center flex-wrap gap-4 text-sm font-medium md:gap-6 z-40">
+    <h1 class="text-2xl font-bold main-head">Pearl Skin Care</h1>
+    <nav class="nav-bar space-x-6 text-sm font-medium flex flex-wrap items-center gap-4"> -->
+
+<!-- Hamburger + Mobile Menu -->
+<!-- <div class="mr-14 md:hidden"> -->
+<!-- Hamburger Button -->
+<!-- <button id="menuToggle" class="text-2xl">
+          <i class="fas fa-bars"></i>
+        </button> -->
+
+<!-- Overlay -->
+<!-- <div id="menuOverlay" class="fixed inset-0 bg-black bg-opacity-30 backdrop-blur-sm z-40 hidden"></div> -->
+
+<!-- Mobile Menu -->
+<!-- <div id="mobileMenu"
+          class="fixed top-0 left-0 w-64 h-full bg-white shadow-lg p-6 transform -translate-x-full transition-transform duration-300 z-50"> -->
+<!-- Close Button -->
+<!-- <button id="closeMenu"
+            class="text-3xl text-gray-600 hover:text-red-500 absolute top-4 right-4">&times;</button> -->
+
+<!-- Menu Links -->
+<!-- <div class="flex flex-col space-y-4 mt-12 text-lg font-medium">
+            <span id="welcomeTextMobile" class="text-sm text-gray-700 hidden"></span>
+
+            <a href="products.html" class="flex items-center gap-2 px-2 py-2 text-gray-700 hover:bg-pink-50 rounded">
+              <i class="fa fa-shop mt-1"></i> Shop
+            </a>
+
+            <a href="customer-dashboard.html"
+              class="flex items-center gap-2 px-2 py-2 text-gray-700 hover:bg-pink-50 rounded">
+              <span class="text-[20px]">👤</span> Dashboard
+            </a>
+
+            <a href="mailto:@gmail.com"
+              class="flex items-center gap-2 px-2 py-2 text-gray-700 hover:bg-pink-50 rounded">
+              <i class="fas fa-envelope text-[20px] text-pink-500"></i> Email Us
+            </a>
+
+            <a href="https://wa.me/2347053380773" target="_blank"
+              class="flex items-center gap-2 px-2 py-2 text-gray-700 hover:bg-pink-50 rounded">
+              <i class="fab fa-whatsapp text-green-500 text-[20px]"></i> WhatsApp
+            </a>
+
+            <a href="https://instagram.com/yourhandle" target="_blank"
+              class="flex items-center gap-2 px-2 py-2 text-gray-700 hover:bg-pink-50 rounded">
+              <i class="fab fa-instagram text-pink-600 text-[20px]"></i> Instagram
+            </a>
+          </div>
+        </div>
+      </div> -->
+
+<!-- Logo -->
+<!-- <div class="logo-con">
+        <div class="logo md:hidden text-center">
+          <h1 class="brand">Pearl</h1>
+          <p class="tagline">SKIN CARE</p>
+        </div>
+      </div> -->
+<!-- Cart -->
+<!-- <button id="cart-button" class="cart-tag relative inline-block">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 inline hover:text-pink-500 text-white"
+                        width="16" height="16" viewBox="0 0 16 16">
+                        <path fill="currentColor"
+                            d="M0 1.5A.5.5 0 0 1 .5 1H2a.5.5 0 0 1 .485.379L2.89 3H14.5a.5.5 0 0 1 .491.592l-1.5 8A.5.5 0 0 1 13 12H4a.5.5 0 0 1-.491-.408L2.01 3.607L1.61 2H.5a.5.5 0 0 1-.5-.5M3.102 4l1.313 7h8.17l1.313-7zM5 12a2 2 0 1 0 0 4a2 2 0 0 0 0-4m7 0a2 2 0 1 0 0 4a2 2 0 0 0 0-4m-7 1a1 1 0 1 1 0 2a1 1 0 0 1 0-2m7 0a1 1 0 1 1 0 2a1 1 0 0 1 0-2" />
+                    </svg>
+
+                    <span id="cartCount"
+                        class="absolute -top-3 -right-3 bg-pink-500 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center">0</span>
+                </button> -->
+
+<!-- Search Icon -->
+<!-- <button id="openSearchBtn" class="openSearchBtn text-white hover:text-pink-500">
+        <i class="fas fa-search text-xl"></i>
+      </button>
+      <a href="#" class="main-head hover:text-pink-600 nav-link"><i class="fa fa-home"></i> Home</a>
+      <a href="products.html" class="main-head hover:text-pink-600 nav-link"><i class="fa fa-shop"></i> Shop</a>
+      <a href="#categories" class="main-head hover:text-pink-600 nav-link"><i class="fa fa-layer-group"></i>
+        Categories</a> -->
+
+<!-- Contact Dropdown -->
+<!-- <div class="relative group inline-block main-head">
+        <button class="hover:text-pink-600"><i class="fa fa-phone"></i> Contact</button>
+        <div
+          class="absolute hidden group-hover:block bg-pink-100 shadow rounded mt-1 z-50 min-w-[150px] fixed top-5 right-[-10%] text-left">
+          <a href="customer-dashboard.html" class="block px-4 py-2 text-sm text-gray-700 hover:bg-white">👤
+            Dashboard</a>
+          <a href="mailto:victoradeyimika0@gmail.com" class="block px-4 py-2 text-sm text-gray-700 hover:bg-white"><i
+              class="fas fa-envelope text-pink-500"></i> Email Us</a>
+          <a href="https://wa.me/2349053380773" target="_blank"
+            class="block px-4 py-2 text-sm text-gray-700 hover:bg-white"><i class="fab fa-whatsapp text-green-500"></i>
+            WhatsApp</a>
+          <a href="https://instagram.com/yourhandle" target="_blank"
+            class="block px-4 py-2 text-sm text-gray-700 hover:bg-white"><i class="fab fa-instagram text-pink-600"></i>
+            Instagram</a>
+        </div>
+      </div>
+    </nav>
+  </header> -->
 
 
 <!-- <body class="bg-white text-gray-800"> -->

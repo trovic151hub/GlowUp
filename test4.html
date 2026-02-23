@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Homepage</title>
+    <link rel="stylesheet" href="index.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Poppins:wght@700&family=Great+Vibes&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+    <style>
+
+    </style>
+</head>
+
+<body class="bg-white text-gray-800">
+
+    <!-- Notification Container -->
+    <div id="notification-container" class="fixed top-4 right-4 z-50 flex flex-col gap-2"></div>
+
+    <!-- Navbar -->
+    <header id="mainHeader"
+        class="fixed top-0 left-0 w-full text-white p-4 flex justify-between items-center flex-wrap gap-4 text-sm font-medium md:gap-6 z-40">
+        <h1 class="text-2xl font-bold main-head">Pearl Skin Care</h1>
+        <nav class="nav-bar space-x-6 text-sm font-medium flex flex-wrap items-center gap-16">
+
+            <!-- Header Links -->
+            <div class="space-x-6 text-sm font-medium items-center gap-4">
+            <a href="#" class="main-head hover:text-pink-600 nav-link">Home</a>
+            <a href="products.html" class="main-head hover:text-pink-600 nav-link">Shop</a>
+            <a href="#categories" class="main-head hover:text-pink-600 nav-link">Categories</a>
+
+            <!-- Contact Dropdown -->
+            <div class="relative group inline-block main-head">
+                <button class="hover:text-pink-600">Contact</button>
+                <div
+                    class="absolute hidden group-hover:block bg-pink-100 shadow rounded mt-1 z-50 min-w-[150px] fixed top-5 right-[-10%] text-left">
+                    <a href="customer-dashboard.html" class="block px-4 py-2 text-sm text-gray-700 hover:bg-white">👤
+                        Dashboard</a>
+                    <a href="mailto:victoradeyimika0@gmail.com"
+                        class="block px-4 py-2 text-sm text-gray-700 hover:bg-white"><i
+                            class="fas fa-envelope text-pink-500"></i> Email Us</a>
+                    <a href="https://wa.me/2349053380773" target="_blank"
+                        class="block px-4 py-2 text-sm text-gray-700 hover:bg-white"><i
+                            class="fab fa-whatsapp text-green-500"></i>
+                        WhatsApp</a>
+                    <a href="https://instagram.com/yourhandle" target="_blank"
+                        class="block px-4 py-2 text-sm text-gray-700 hover:bg-white"><i
+                            class="fab fa-instagram text-pink-600"></i>
+                        Instagram</a>
+                </div>
+            </div>
+            </div>
+
+            <div class="flex justify-between items-center">
+                <div class="mr-14 -ml-24 md:hidden">
+                    <!-- Hamburger Button -->
+                    <button id="menuToggle" class="text-2xl">
+                        <i class="fas fa-bars"></i>
+                    </button>
+
+                    <!-- Overlay -->
+                    <div id="menuOverlay" class="fixed inset-0 bg-black bg-opacity-30 backdrop-blur-sm z-40 hidden">
+                    </div>
+
+                    <!-- Mobile Menu -->
+                    <div id="mobileMenu"
+                        class="fixed top-0 left-0 w-64 h-full bg-white shadow-lg p-6 transform -translate-x-full transition-transform duration-300 z-50">
+                        <!-- Close Button -->
+                        <button id="closeMenu"
+                            class="text-3xl text-gray-600 hover:text-red-500 absolute top-4 right-4">&times;</button>
+
+                        <!-- Menu Links -->
+                        <div class="flex flex-col space-y-4 mt-12 text-lg font-medium">
+                            <span id="welcomeTextMobile" class="text-sm text-gray-700 hidden"></span>
+
+                            <a href="products.html"
+                                class="flex items-center gap-2 px-2 py-2 text-gray-700 hover:bg-pink-50 rounded">
+                                <i class="fa fa-shop mt-1"></i> Shop
+                            </a>
+
+                            <a href="customer-dashboard.html"
+                                class="flex items-center gap-2 px-2 py-2 text-gray-700 hover:bg-pink-50 rounded">
+                                <span class="text-[20px]">👤</span> Dashboard
+                            </a>
+
+                            <a href="mailto:@gmail.com"
+                                class="flex items-center gap-2 px-2 py-2 text-gray-700 hover:bg-pink-50 rounded">
+                                <i class="fas fa-envelope text-[20px] text-pink-500"></i> Email Us
+                            </a>
+
+                            <a href="https://wa.me/2347053380773" target="_blank"
+                                class="flex items-center gap-2 px-2 py-2 text-gray-700 hover:bg-pink-50 rounded">
+                                <i class="fab fa-whatsapp text-green-500 text-[20px]"></i> WhatsApp
+                            </a>
+
+                            <a href="https://instagram.com/yourhandle" target="_blank"
+                                class="flex items-center gap-2 px-2 py-2 text-gray-700 hover:bg-pink-50 rounded">
+                                <i class="fab fa-instagram text-pink-600 text-[20px]"></i> Instagram
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Logo -->
+                <div class="logo-con ml-12">
+                    <div class="logo md:hidden text-center">
+                        <h1 class="brand">Pearl</h1>
+                        <p class="tagline ">SKIN CARE</p>
+                    </div>
+                </div>
+
+                <div class="flex justify-between gap-10 icon">
+                <!-- Search Icon -->
+                <button id="openSearchBtn" class="openSearchBtn hover:text-pink-500">
+                    <i class="fas fa-search text-xl"></i>
+                </button>
+
+                <!-- Cart -->
+                <button id="cart-button" class="cart-tag relative inline-block">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 inline hover:text-pink-500 text-white"
+                        width="16" height="16" viewBox="0 0 16 16">
+                        <path fill="currentColor"
+                            d="M0 1.5A.5.5 0 0 1 .5 1H2a.5.5 0 0 1 .485.379L2.89 3H14.5a.5.5 0 0 1 .491.592l-1.5 8A.5.5 0 0 1 13 12H4a.5.5 0 0 1-.491-.408L2.01 3.607L1.61 2H.5a.5.5 0 0 1-.5-.5M3.102 4l1.313 7h8.17l1.313-7zM5 12a2 2 0 1 0 0 4a2 2 0 0 0 0-4m7 0a2 2 0 1 0 0 4a2 2 0 0 0 0-4m-7 1a1 1 0 1 1 0 2a1 1 0 0 1 0-2m7 0a1 1 0 1 1 0 2a1 1 0 0 1 0-2" />
+                    </svg>
+
+                    <span id="cartCount"
+                        class="absolute -top-3 -right-3 bg-pink-500 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center">0</span>
+                </button>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <!-- Hero Section -->
+    <div class="hero-slider">
+        <div id="heroSkeleton" class="hero-skeleton"></div>
+
+        <div class="hero-image-wrapper">
+            <div class="hero-image-track" id="heroImageTrack"></div>
+        </div>
+
+        <!-- NEW: Dark overlay -->
+        <div class="hero-dark-overlay"></div>
+
+        <div class="hero-overlay">
+            <h1 id="heroTitle"></h1>
+            <p id="heroText"></p>
+        </div>
+
+        <!-- Play/Pause Buttons -->
+        <i id="heroPlay" class="fas fa-play hero-control"></i>
+        <i id="heroPause" class="fas fa-pause hero-control hidden"></i>
+
+        <!-- Bottom Tabs -->
+        <div id="heroDots" class="hero-tabs absolute bottom-4 left-1/2 transform -translate-x-1/2 z-20">
+            <div class="hero-tabs-track"></div>
+        </div>
+    </div>
+
+    <!-- Featured Search Bar (Hidden by default) -->
+    <div id="featuredSearchWrapper" class="hidden sticky search top-16 px-4 py-3 z-40 bg-white shadow-md mb-2">
+
+        <div class="flex items-center gap-3">
+            <input id="featuredSearchInput" type="text" placeholder="Search featured products..."
+                class="flex-1 border rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-pink-500" />
+
+            <button id="closeSearchBtn"
+                class="absolute top-4 right-6 text-gray-500 hover:text-pink-500 text-xl font-bold">
+                &times;
+            </button>
+        </div>
+    </div>
+
+    <!-- Featured Search Bar (Hidden by default) -->
+  <div id="featuredSearchWrapper" class="hidden sticky search top-16 px-4 py-3 z-40 bg-white shadow-md mb-2">
+
+    <div class="flex items-center gap-3">
+      <input id="featuredSearchInput" type="text" placeholder="Search featured products..."
+        class="flex-1 border rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-pink-500" />
+
+      <button id="closeSearchBtn" class="absolute top-4 right-6 text-gray-500 hover:text-pink-500 text-xl font-bold">
+        &times;
+      </button>
+    </div>
+  </div>
+
+  <!-- Featured Products -->
+  <section class="p-6">
+    <h2 class="text-2xl font-semibold mb-4">Featured Products</h2>
+    <div id="product-list" class="grid grid-cols-2 md:grid-cols-4 gap-4 "></div>
+  </section>
+
+  <!-- Product Detail Modal -->
+  <div id="productModal"
+    class="hidden fixed inset-0 bg-black bg-opacity-30 backdrop-blur-sm flex items-center justify-center z-50">
+    <div class="bg-white w-11/12 max-w-md p-6 rounded shadow-lg relative">
+      <button onclick="closeModal()" class="absolute top-2 right-2 text-gray-500 hover:text-red-600 text-xl">×</button>
+      <h2 id="modalProductName" class="text-xl font-bold mb-2"></h2>
+      <img id="modalProductImage" class="w-full h-48 object-cover rounded mb-2" />
+      <p id="modalProductPrice" class="text-pink-600 font-semibold text-lg mb-1"></p>
+      <p id="modalProductDescription" class="text-sm text-gray-700 mb-4"></p>
+      <button id="modalAddToCartBtn" class="bg-pink-600 text-white px-4 py-2 rounded hover:bg-pink-700 w-full">Add to
+        Cart</button>
+    </div>
+  </div>
+
+  <!-- Promo Section -->
+  <section class="bg-pink-50 p-6 my-6 rounded-xl text-center">
+    <h3 class="text-2xl font-semibold mb-4">💡 Skin Tips</h3>
+    <p id="skinTip" class="text-lg text-gray-700 font-medium">Loading tip...</p>
+  </section>
+
+  <!-- Categories -->
+  <section id="categories" class="p-6">
+    <h3 class="text-2xl font-semibold mb-4">Browse by Category</h3>
+    <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
+      <button onclick="filterProducts('All')" data-category="All"
+        class="category-btn bg-pink-100 p-4 rounded-xl text-center hover:bg-pink-200 cursor-pointer">
+        💧<br />All
+      </button>
+      <button onclick="filterProducts('Brightening')" data-category="Brightening"
+        class="category-btn bg-pink-100 p-4 rounded-xl text-center hover:bg-pink-200 cursor-pointer">
+        ✨<br />Brightening
+      </button>
+      <button onclick="filterProducts('Anti-Aging')" data-category="Anti-Aging"
+        class="category-btn bg-pink-100 p-4 rounded-xl text-center hover:bg-pink-200 cursor-pointer">
+        🔄<br />Anti-Aging
+      </button>
+      <button onclick="filterProducts('Hydration')" data-category="Hydration"
+        class="category-btn bg-pink-100 p-4 rounded-xl text-center hover:bg-pink-200 cursor-pointer">
+        💦<br />Hydration
+      </button>
+      <button onclick="filterProducts('Supplements')" data-category="Supplements"
+        class="category-btn bg-pink-100 p-4 rounded-xl text-center hover:bg-pink-200 cursor-pointer">
+        💊<br />Supplements
+      </button>
+    </div>
+  </section>
+
+  <!-- Mini Cart -->
+  <div id="mini-cart"
+    class="fixed top-0 right-0 h-full w-[32%] bg-white backdrop-blur-sm shadow-xl transform translate-x-full z-50 flex flex-col">
+    <div class="flex justify-between items-center p-4 border-b">
+      <h2 class="text-lg font-semibold text-gray-700">Your Cart</h2>
+      <button id="close-cart" class="text-gray-500 font-bold text-lg hover:text-red-900">&times;</button>
+    </div>
+    <div id="mini-cart-items" class="flex-1 overflow-y-auto p-4 space-y-4"></div>
+    <div class="p-4 border-t">
+      <div class="flex justify-between font-semibold mb-2">
+        <span class="text-gray-500 font-bold">Subtotal:</span>
+        <span id="mini-cart-total" class="text-3xl font-semibold">₦0.00</span>
+      </div>
+
+      <div class="block">
+      <button id="view-cart-btn"
+        class="w-full bg-white border border-gray-400 text-gray-900 py-2 rounded-full mb-4 transition">View Cart</button>
+
+      <button id="mini-cart-checkout"
+        class="w-full bg-pink-600 text-white py-2 rounded-full transition">Checkout</button>
+        </div>
+    </div>
+  </div>
+
+  <!-- ===== GLOBAL LEAVE LOADER ===== -->
+  <div id="leaveLoader">
+    <div class="spinner"></div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="bg-pink-100 text-gray-800 relative">
+    <div class="mx-6 md:mx-10 px-4 md:px-6 py-8 md:py-12 flex flex-col md:flex-row justify-between gap-8 md:gap-40">
+
+      <!-- Contact Info -->
+      <div class="flex-1 border-b md:border-b-0 pb-4 md:pb-0 border-gray-300">
+        <h4 class="text-lg font-semibold mb-4">CONTACT US</h4>
+        <p class="mb-2 flex items-center gap-2">
+          <i class="fas fa-phone-alt"></i> +2347053380773
+        </p>
+        <p class="flex items-start gap-2">
+          <i class="fas fa-map-marker-alt mt-1"></i>
+          Lagos, Nigeria
+        </p>
+      </div>
+
+      <!-- Newsletter -->
+      <div class="flex-1">
+        <h4 class="text-lg font-semibold mb-3">SIGN UP FOR DISCOUNTS & UPDATES</h4>
+        <div class="block flex-col md:flex-row gap-2 md:gap-4 items-start md:items-center">
+          <input type="text" placeholder="Enter your phone number or email address"
+            class="w-full md:w-[100%] px-4 py-2 rounded border border-gray-300 focus:outline-none">
+          <button class="mt-3 bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">
+            Subscribe
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Powered By -->
+    <div class="btn text-left text-sm text-white mx-6 md:mx-10 px-4 md:px-6 py-4 border-t border-gray-300">
+      <button class="text-left block p-4 bg-pink-500">
+        POWERED BY VTec
+      </button>
+    </div>
+
+    <!-- WhatsApp Button -->
+    <button id="openWhatsappModal" class="fixed bottom-6 right-6 z-50">
+      <div class="relative w-14 h-14">
+        <!-- Ripple circles -->
+        <span class="absolute inset-0 rounded-full bg-green-400 opacity-50 animate-ping"></span>
+        <span class="absolute inset-0 rounded-full bg-green-400 opacity-50 animate-ping delay-200"></span>
+        <span class="absolute inset-0 rounded-full bg-green-400 opacity-50 animate-ping delay-400"></span>
+
+        <!-- Main Button -->
+        <div
+          class="relative w-14 h-14 rounded-full bg-green-500 hover:bg-green-600 text-white flex items-center justify-center shadow-lg text-2xl">
+          <i class="fab fa-whatsapp"></i>
+        </div>
+      </div>
+    </button>
+
+    <!-- WhatsApp Button -->
+    <a href="https://wa.me/2349053380773" target="_blank" class="fixed bottom-6 right-6 z-50">
+      <div class="relative w-14 h-14">
+        <!-- Ripple circles -->
+        <span class="absolute inset-0 rounded-full bg-green-400 opacity-50 animate-ping"></span>
+        <span class="absolute inset-0 rounded-full bg-green-400 opacity-50 animate-ping delay-200"></span>
+        <span class="absolute inset-0 rounded-full bg-green-400 opacity-50 animate-ping delay-400"></span>
+
+        <!-- Main Button -->
+        <div
+          class="relative w-14 h-14 rounded-full bg-green-500 hover:bg-green-600 text-white flex items-center justify-center shadow-lg text-2xl">
+          <i class="fab fa-whatsapp"></i>
+        </div>
+      </div>
+    </a>
+  </footer>
+
+
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+    <script src="home.js"></script>
+    <script src="https://unpkg.com/gsap@3/dist/gsap.min.js"></script>
+    <script src="https://unpkg.com/gsap@3/dist/ScrollTrigger.min.js"></script>
+</body>
+
+</html>
