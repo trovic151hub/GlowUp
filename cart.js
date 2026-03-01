@@ -1053,7 +1053,7 @@ summaryPlaceOrderBtn.addEventListener("click", async () => {
         total
       },
       shipment: {
-  status: "processing"
+  status: "pending"
 },
       // status: "pending",
       createdAt: firebase.firestore.FieldValue.serverTimestamp()
