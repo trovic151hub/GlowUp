@@ -880,20 +880,27 @@ const shippingFee = calculateDeliveryFee(deliveryInfo, totalWeight);
   let minFee = 0;
 let maxFee = 0;
 
+const buffer = 4000;
+
 if (deliveryInfo.company === "GUO") {
   minFee = 3500;
-  maxFee = 3500 + 800 * 3; // adjust multiplier if needed
-} 
-else if (deliveryInfo.company === "GIG") {
-  minFee = 6800;
-  maxFee = 6800 + 900 * 3;
+
+  // Ensure the minimum is not above the real fee
+  minFee = Math.min(minFee, shippingFee);
+
+  maxFee = shippingFee + buffer;
 }
 
-if (deliveryInfo.company === "GUO" || deliveryInfo.company === "GIG") {
-  feeEl.textContent = `Estimated: ₦${minFee.toLocaleString()} – ₦${maxFee.toLocaleString()}`;
-} else {
-  feeEl.textContent = `₦${shippingFee.toLocaleString()}`;
+else if (deliveryInfo.company === "GIG") {
+  minFee = 6800;
+
+  minFee = Math.min(minFee, shippingFee);
+
+  maxFee = shippingFee + buffer;
 }
+
+feeEl.textContent = 
+  `Estimated: ₦${minFee.toLocaleString()} – ₦${maxFee.toLocaleString()}`;
   // feeEl.textContent = `₦${shippingFee.toLocaleString()}`;
   topRow.appendChild(title);
   topRow.appendChild(feeEl);
@@ -1034,16 +1041,21 @@ summaryPlaceOrderBtn.addEventListener("click", async () => {
       items: cartItems,
       shipping: shippingData,
       delivery: deliveryInfo,
+      status: "processing",
       payment: {
         method: "whatsapp",
-        reference: whatsappPaymentRef
+        reference: whatsappPaymentRef,
+        status: "paid"
       },
       pricing: {
         subtotal,
         shippingFee,
         total
       },
-      status: "pending",
+      shipment: {
+  status: "processing"
+},
+      // status: "pending",
       createdAt: firebase.firestore.FieldValue.serverTimestamp()
     });
 
@@ -1122,7 +1134,7 @@ Thank you! 🙏
             shippingFee,
             total: totalAmount
           },
-          status: "paid",
+          status: "pending",
           createdAt: firebase.firestore.FieldValue.serverTimestamp()
         });
 

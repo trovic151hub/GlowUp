@@ -148,6 +148,367 @@ firebase.auth().onAuthStateChanged(async user => {
   if (user) {
     const adminDoc = await db.collection('admins').doc(user.uid).get();
     isAdmin = adminDoc.exists;
+    window.isAdmin = isAdmin; 
+
+    if (isAdmin) {
+      loadAllAnalytics();   
+      startRealtimeFeed();
+    } else {
+      alert('You do not have permission to view this page.');
+    }
+  }
+});
+
+  // ===== Refs =====
+  const totalSalesEl=document.getElementById('totalSales');
+  const totalOrdersEl=document.getElementById('totalOrders');
+  const aovEl=document.getElementById('aov');
+  const totalCustomersEl=document.getElementById('totalCustomers');
+  const topProductsBody=document.getElementById('topProductsBody');
+  const topCustomersBody=document.getElementById('topCustomersBody');
+  const liveFeed=document.getElementById('liveFeed');
+  const searchQ=document.getElementById('searchQ');
+  const fromDate=document.getElementById('fromDate');
+  const toDate=document.getElementById('toDate');
+  const applyFilters=document.getElementById('applyFilters');
+  const clearFilters=document.getElementById('clearFilters');
+  const refreshBtn=document.getElementById('refreshBtn');
+  const modal=document.getElementById('detailModal');
+  const modalTitle=document.getElementById('modalTitle');
+  const modalContent=document.getElementById('modalContent');
+  let loader = document.getElementById("dashboard-loader");
+
+  // ===== Global Loader =====
+function showLoader() {
+  closeModal();
+  loader.classList.remove("hidden");
+  document.body.style.overflow = "hidden";
+}
+
+function hideLoader() {
+  loader.classList.add("hidden");
+  document.body.style.overflow = "";
+}
+
+function openModal() {
+  modal.classList.remove("hidden");
+  document.body.style.overflow = "hidden"; 
+}
+
+function closeModal() {
+  modal.classList.add("hidden");
+  document.body.style.overflow = ""; 
+}
+
+  // ===== Button Event Listeners =====
+  applyFilters.addEventListener('click', ()=>{ loadAllAnalytics(); startRealtimeFeed(); });
+  clearFilters.addEventListener('click', ()=>{
+    searchQ.value=''; fromDate.value=''; toDate.value='';
+    loadAllAnalytics(); startRealtimeFeed();
+  });
+  refreshBtn.addEventListener('click', ()=>{ loadAllAnalytics(); startRealtimeFeed(); });
+  document.getElementById('loadMoreProducts').addEventListener('click', ()=>{ productsDisplayLimit += 5; displayProducts(); });
+  document.getElementById('loadMoreCustomers').addEventListener('click', ()=>{ customersDisplayLimit +=5; displayCustomers(); });
+  document.getElementById('closeModal').addEventListener('click', closeModal);
+  modal.addEventListener("click", e => { if(e.target===modal) closeModal(); });
+
+  // ===== Initialize Charts =====
+function initCharts(){
+    const ctxDaily=document.getElementById('dailySalesChart').getContext('2d');
+    dailyChart=new Chart(ctxDaily,{ type:'line', data:{labels:[],datasets:[{label:'Sales',data:[],fill:true,backgroundColor:'rgba(219,39,119,0.12)',borderColor:'#db2777'}]}, options:{responsive:true,scales:{x:{grid:{display:false}},y:{ticks:{callback:v=>'₦'+v}}}} });
+
+    const ctxMonthly=document.getElementById('monthlyChart').getContext('2d');
+    monthlyChart=new Chart(ctxMonthly,{ type:'bar', data:{labels:[],datasets:[{label:'Monthly Revenue',data:[],backgroundColor:'#f472b6'}]}, options:{responsive:true,y:{ticks:{callback:v=>'₦'+v}}}});
+
+    const ctxStatus=document.getElementById('statusChart').getContext('2d');
+    statusChart=new Chart(ctxStatus,{ type:'doughnut', data:{labels:['Completed','Pending'],datasets:[{data:[0,0],backgroundColor:['#10b981','#f59e0b']}]}, options:{responsive:true} });
+
+    const ctxPayment=document.getElementById('paymentChart').getContext('2d');
+    paymentChart=new Chart(ctxPayment,{ type:'pie', data:{labels:[],datasets:[{data:[],backgroundColor:[]}]}, options:{responsive:true} });
+}
+
+initCharts();
+loadAllAnalytics();
+startRealtimeFeed();
+
+// ===== Load Analytics =====
+async function loadAllAnalytics(){
+    showLoader();
+
+    totalSalesEl.textContent='Loading...'; totalOrdersEl.textContent='…'; aovEl.textContent='…'; totalCustomersEl.textContent='…';
+    topProductsBody.innerHTML=`<tr><td colspan="3" class="p-3 skeleton"></td></tr>`;
+    topCustomersBody.innerHTML=`<tr><td colspan="3" class="p-3 skeleton"></td></tr>`;
+    liveFeed.innerHTML=`<div class="p-3 skeleton h-20"></div>`;
+
+    let q = db.collection('orders').orderBy('createdAt','desc');
+    const from = fromDate.value ? firebase.firestore.Timestamp.fromDate(new Date(fromDate.value+'T00:00:00')) : null;
+    const to = toDate.value ? firebase.firestore.Timestamp.fromDate(new Date(toDate.value+'T23:59:59')) : null;
+    if(from) q = q.where('createdAt','>=', from);
+    if(to) q = q.where('createdAt','<=', to);
+
+    try{
+      const snap=await q.limit(5000).get();
+      const orders=snap.docs.map(d=>({id:d.id,...d.data()}));
+      const term=(searchQ.value||'').trim().toLowerCase();
+      const filtered=term?orders.filter(o=>{
+        if((o.shipping?.firstName||'').toLowerCase().includes(term)) return true;
+        if((o.shipping?.email||'').toLowerCase().includes(term)) return true;
+        if((o.payment?.reference||'').toLowerCase().includes(term)) return true;
+        if(Array.isArray(o.items)&&o.items.some(it=>(it.name||'').toLowerCase().includes(term))) return true;
+        return false;
+      }):orders;
+
+      computeSummaries(filtered);
+      computeDailyChart(filtered);
+      computeMonthlyChart(filtered);
+      computeStatusChart(filtered);
+      computePaymentChart(filtered);
+      renderTopProducts(filtered);
+      renderTopCustomers(filtered);
+    }catch(err){
+      console.error(err);
+      totalSalesEl.textContent='Error'; totalOrdersEl.textContent='Error'; aovEl.textContent='Error'; totalCustomersEl.textContent='Error';
+    }finally {
+      hideLoader();
+    }
+}
+
+// ===== Compute Summaries =====
+function computeSummaries(orders){
+    const totalOrders=orders.length;
+    const totalSales=orders.reduce((s,o)=>s+Number(o.pricing?.total||0),0);
+    const uniqueCustomers=new Set(orders.map(o=>o.userId||o.shipping?.email||o.guestId||'')).size;
+    const aov=totalOrders?totalSales/totalOrders:0;
+    totalSalesEl.textContent='₦'+totalSales.toLocaleString();
+    totalOrdersEl.textContent=totalOrders.toLocaleString();
+    aovEl.textContent='₦'+Math.round(aov).toLocaleString();
+    totalCustomersEl.textContent=uniqueCustomers.toLocaleString();
+}
+
+function computeDailyChart(orders){
+    const days=30,map={};
+    for(let i=days-1;i>=0;i--){
+      const d=new Date(); d.setDate(d.getDate()-i); d.setHours(0,0,0,0);
+      map[d.toISOString().slice(0,10)]=0;
+    }
+    orders.forEach(o=>{
+      if(!o.createdAt) return;
+      const d=o.createdAt.toDate?o.createdAt.toDate():new Date(o.createdAt);
+      const key=d.toISOString().slice(0,10);
+      if(key in map) map[key]+=Number(o.pricing?.total||0);
+    });
+    dailyChart.data.labels=Object.keys(map);
+    dailyChart.data.datasets[0].data=Object.values(map);
+    dailyChart.update();
+}
+
+function computeMonthlyChart(orders){
+    const now=new Date(), year=now.getFullYear(), months=Array.from({length:12},(_,i)=>new Date(year,i,1));
+    const map=months.map(_=>0);
+    orders.forEach(o=>{
+      if(!o.createdAt) return;
+      const d=o.createdAt.toDate?o.createdAt.toDate():new Date(o.createdAt);
+      if(d.getFullYear()!==year) return;
+      map[d.getMonth()]+=Number(o.pricing?.total||0);
+    });
+    monthlyChart.data.labels=months.map(m=>m.toLocaleString(undefined,{month:'short'}));
+    monthlyChart.data.datasets[0].data=map;
+    monthlyChart.update();
+}
+
+function computeStatusChart(orders){
+    let completed=0,pending=0;
+    orders.forEach(o=>{
+      const status=o.shipping?.status||'pending';
+      if(status.toLowerCase()==='completed') completed++; else pending++;
+    });
+    statusChart.data.datasets[0].data=[completed,pending];
+    statusChart.update();
+}
+
+function computePaymentChart(orders){
+    const counts={};
+    orders.forEach(o=>{
+      const pm=o.payment?.method||'Unknown';
+      counts[pm]=(counts[pm]||0)+1;
+    });
+    const labels=Object.keys(counts);
+    const data=labels.map(l=>counts[l]);
+    const colors=labels.map((_,i)=>`hsl(${(i*73)%360} 70% 60%)`);
+    paymentChart.data.labels=labels;
+    paymentChart.data.datasets[0].data=data;
+    paymentChart.data.datasets[0].backgroundColor=colors;
+    paymentChart.update();
+}
+
+// ===== Top Products/Customers =====
+function renderTopProducts(orders){
+    const map={};
+    orders.forEach(o=>(o.items||[]).forEach(it=>{
+      const name=it.name||'Untitled';
+      if(!map[name]) map[name]={qty:0,revenue:0,lastOrder:o.createdAt?o.createdAt.toDate():new Date()};
+      map[name].qty+=Number(it.quantity||0);
+      map[name].revenue+=Number(it.quantity||0)*Number(it.price||0);
+      if(o.createdAt && o.createdAt.toDate) map[name].lastOrder=o.createdAt.toDate();
+    }));
+    lastProductsArr=Object.entries(map).map(([name,v])=>({name,qty:v.qty,revenue:v.revenue,lastOrder:v.lastOrder})).sort((a,b)=>b.qty-a.qty);
+    displayProducts();
+}
+
+function renderTopCustomers(orders){
+  const map={};
+  orders.forEach(o=>{
+    const fullName = o.shipping
+                     ? `${o.shipping.firstName || ''} ${o.shipping.lastName || ''}`.trim()
+                     : (o.name || o.email || 'Customer');
+
+    const key = o.userId || o.email || fullName || ('guest-'+(o.payment?.reference||''));
+
+    if(!map[key]) map[key] = {
+      name: fullName,
+      email: o.shipping?.email || o.email || '',
+      orders: 0,
+      spent: 0,
+      lastOrder: o.timestamp ? (o.timestamp.toDate ? o.timestamp.toDate() : new Date(o.timestamp)) : new Date()
+    };
+
+    map[key].orders++;
+    map[key].spent += Number(o.pricing?.total || 0);
+    if(o.timestamp && o.timestamp.toDate) map[key].lastOrder = o.timestamp.toDate();
+  });
+
+  lastCustomersArr = Object.values(map).sort((a,b)=>b.spent - a.spent);
+  displayCustomers();
+}
+// function renderTopCustomers(orders){
+//     const map={};
+//     orders.forEach(o=>{
+//       const key=o.userId||o.shipping?.email||o.guestId||('guest-'+(o.payment?.reference||'')); 
+//       if(!map[key]) map[key]={name:o.shipping?.firstName||o.shipping?.email||'Customer',email:o.shipping?.email||'',orders:0,spent:0,lastOrder:o.createdAt?o.createdAt.toDate():new Date()};
+//       map[key].orders++; map[key].spent+=Number(o.pricing?.total||0); 
+//       if(o.createdAt && o.createdAt.toDate) map[key].lastOrder=o.createdAt.toDate();
+//     });
+//     lastCustomersArr=Object.values(map).sort((a,b)=>b.spent-a.spent);
+//     displayCustomers();
+// }
+
+// ===== Display Helpers =====
+function displayProducts(){
+    const top=lastProductsArr.slice(0,productsDisplayLimit);
+    topProductsBody.innerHTML=top.length?top.map((t,i)=>`
+    <tr class="cursor-pointer hover:bg-gray-100" data-index="${i}">
+        <td class="p-2">${escapeHtml(t.name)}</td>
+        <td class="p-2">${t.qty.toLocaleString()}</td>
+        <td class="p-2">₦${Math.round(t.revenue).toLocaleString()}</td>
+      </tr>`).join(''):`<tr><td colspan="3" class="p-3 text-gray-500">No product data</td></tr>`;
+}
+
+function displayCustomers(){
+    const top=lastCustomersArr.slice(0,customersDisplayLimit);
+    topCustomersBody.innerHTML=top.length?top.map((c,i)=>`
+      <tr class="cursor-pointer hover:bg-gray-100" data-index="${i}">
+        <td class="p-2">${escapeHtml(c.name)}</td>
+        <td class="p-2">${c.orders}</td>
+        <td class="p-2">₦${Math.round(c.spent).toLocaleString()}</td>
+      </tr>`).join(''):`<tr><td colspan="3" class="p-3 text-gray-500">No customer data</td></tr>`;
+}
+
+// ===== Modals =====
+  topProductsBody.addEventListener('click', e=>{
+    const tr=e.target.closest('tr'); if(!tr) return;
+    const t=lastProductsArr[Number(tr.dataset.index)]; if(!t) return;
+    modalTitle.textContent=`Product: ${t.name}`;
+    modalContent.innerHTML=`<p><strong>Quantity Sold:</strong> ${t.qty}</p>
+      <p><strong>Total Revenue:</strong> ₦${Math.round(t.revenue).toLocaleString()}</p>
+      <p><strong>Last Ordered:</strong> ${t.lastOrder.toLocaleString()}</p>`;
+    // modal.classList.remove('hidden');
+    openModal();
+  });
+
+  topCustomersBody.addEventListener('click', e=>{
+    const tr=e.target.closest('tr'); if(!tr) return;
+    const c=lastCustomersArr[Number(tr.dataset.index)]; if(!c) return;
+    modalTitle.textContent=`Customer: ${c.name}`;
+    modalContent.innerHTML=`<p><strong>Email:</strong> ${escapeHtml(c.email)}</p>
+      <p><strong>Total Orders:</strong> ${c.orders}</p>
+      <p><strong>Total Spent:</strong> ₦${Math.round(c.spent).toLocaleString()}</p>
+      <p><strong>Last Order:</strong> ${c.lastOrder.toLocaleString()}</p>`;
+    // modal.classList.remove('hidden');
+    openModal();
+  });
+  
+// ===== Real-time Feed =====
+function startRealtimeFeed(){
+    if(ordersSnapshotUnsub) ordersSnapshotUnsub();
+    let q=db.collection('orders').orderBy('createdAt','desc').limit(15);
+
+    const from=fromDate.value?firebase.firestore.Timestamp.fromDate(new Date(fromDate.value+'T00:00:00')):null;
+    const to=toDate.value?firebase.firestore.Timestamp.fromDate(new Date(toDate.value+'T23:59:59')):null;
+    if(from) q=q.where('createdAt','>=',from);
+    if(to) q=q.where('createdAt','<=',to);
+
+    const term=(searchQ.value||'').trim().toLowerCase();
+
+    ordersSnapshotUnsub=q.onSnapshot(snap=>{
+      liveFeed.innerHTML='';
+      snap.docs.forEach(d=>{
+        const o=d.data();
+        if(term){
+          let match=false;
+          if((o.shipping?.firstName||'').toLowerCase().includes(term)) match=true;
+          if((o.shipping?.email||'').toLowerCase().includes(term)) match=true;
+          if((o.payment?.reference||'').toLowerCase().includes(term)) match=true;
+          if(Array.isArray(o.items)&&o.items.some(it=>(it.name||'').toLowerCase().includes(term))) match=true;
+          if(!match) return;
+        }
+        const time=o.createdAt? (o.createdAt.toDate ? o.createdAt.toDate().toLocaleTimeString() : new Date(o.createdAt).toLocaleTimeString()) : '';
+        const div=document.createElement('div'); 
+        div.className='p-2 border-b cursor-pointer hover:bg-gray-100';
+        const total=o.pricing?.total||0;
+        const fullName = o.shipping 
+                 ? `${o.shipping.firstName || ''} ${o.shipping.lastName || ''}`.trim() 
+                 : (o.name || o.email || 'Guest');
+
+        div.textContent = `${fullName} - ₦${Math.round(o.pricing?.total||0).toLocaleString()} - ${time}`;
+        liveFeed.appendChild(div);
+      });
+    });
+}
+
+// ===== Helpers =====
+function escapeHtml(text) {
+  return (text||'').toString().replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+}
+</script>
+</body>
+</html>
+
+
+
+<!-- <script>
+  // ===== Firebase Config =====
+  const firebaseConfig = {
+    apiKey: "AIzaSyDdTPmpaIPWSDWOmR-fXgvAb7hoxZUawcc",
+    authDomain: "e-commerce-39c74.firebaseapp.com",
+    projectId: "e-commerce-39c74",
+    storageBucket: "e-commerce-39c74.firebasestorage.app",
+    messagingSenderId: "863375033754",
+    appId: "1:863375033754:web:7ba248c8dbb1566c83e623"
+  };
+  
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.firestore();
+
+  // ===== State =====
+  let dailyChart, monthlyChart, statusChart, paymentChart, ordersSnapshotUnsub=null;
+  let productsDisplayLimit=5, customersDisplayLimit=5, lastProductsArr=[], lastCustomersArr=[];
+
+  let isAdmin = false;
+
+firebase.auth().onAuthStateChanged(async user => {
+  if (user) {
+    const adminDoc = await db.collection('admins').doc(user.uid).get();
+    isAdmin = adminDoc.exists;
     window.isAdmin = isAdmin; // optional if you want global access
 
     if (isAdmin) {
@@ -507,6 +868,4 @@ function closeModal() {
     "'":'&#39;'
   }[m]));
 }
-</script>
-</body>
-</html>
+</script> -->

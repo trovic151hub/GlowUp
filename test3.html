@@ -64,9 +64,9 @@
       </select>
       <select id="filterPayment" class="border p-2 rounded w-full">
         <option value="all">All payment</option>
-        <option value="Paystack">Paystack</option>
-        <option value="Flutterwave">Flutterwave</option>
-        <option value="Cash">WhatsApp</option>
+        <option value="paystack">Paystack</option>
+        <option value="flutterwave">Flutterwave</option>
+        <option value="whatsapp">WhatsApp</option>
       </select>
     </div>
 
@@ -155,7 +155,7 @@ firebase.auth().onAuthStateChanged(async (user) => {
   if (user) {
     try {
       const adminDoc = await db.collection("admins").doc(user.uid).get();
-      window.isAdmin = adminDoc.exists; // true if user is in admins collection
+      window.isAdmin = adminDoc.exists;
     } catch (err) {
       console.error("Failed to check admin status:", err);
       window.isAdmin = false;
@@ -239,7 +239,7 @@ firebase.auth().onAuthStateChanged(async (user) => {
 
   // ===== GLOBAL LOADER =====
 function showLoader() {
-    detailModal.classList.add("hidden"); // force-close modal
+    detailModal.classList.add("hidden");
   loader.classList.remove("hidden");
   document.body.style.overflow = "hidden";
 }
@@ -269,15 +269,6 @@ function unlockBackground() {
         <div class="${done ? 'text-green-700 font-semibold' : 'text-gray-600'} text-sm">${capitalize(s)}</div>
       </div>`;
     }).join('<span class="text-gray-300">→</span>')}</div>`;
-  }
-
-  function getDeliveryFee(order) {
-    if(order.deliveryFee !== undefined) return order.deliveryFee;
-    const weight = order.totalWeight || 1;
-    if(order.deliveryOption==="gig") return 6700 + Math.max(weight-1,0)*800;
-    if(order.deliveryOption==="guo") return 3500 + Math.max(weight-1,0)*700;
-    if(order.state?.toLowerCase() === "lagos") return 0;
-    return 0;
   }
 
   // ===== Build Query for Orders =====
@@ -452,7 +443,9 @@ function orderRow(order) {
   // 1️⃣ Update Firestore
   const orderRef = db.collection("orders").doc(orderId);
   orderRef
-    .update({ shipmentStatus: newStatus })
+    .update({ 'shipping.status': newStatus,
+      shipmentStatus: firebase.firestore.FieldValue.delete()
+     })
     .then(() => {
       // 2️⃣ Update local row immediately
       const row = Array.from(ordersTbody.children).find(r => r.__order?.id === orderId);
@@ -550,7 +543,6 @@ function getDeliveryFee(order) {
   return 0;
 }
 
-//   // ===== Render Detail Modal =====
 // ===== Render Detail Modal =====
 function renderModal(order) {
   currentOpenOrder = order;
@@ -613,11 +605,7 @@ function renderModal(order) {
 
 const totalWithFee = isInternationalOrder(order)
   ? orderTotal + (order.delivery.deliveryFee || 0)
-  : orderTotal + (pricing.shippingFee || 0);
-
-  // const totalWithFee = delivery?.isInternational
-  //   ? orderTotal + deliveryFee
-  //   : orderTotal;
+  : orderTotal;
 
   // ===== Header =====
   const headerHtml = `<div class="flex justify-between items-center">
@@ -658,7 +646,7 @@ const totalWithFee = isInternationalOrder(order)
     </div>
   `).join('');
 
-  const prog = shipmentTimelineHtml(order.shipmentStatus || 'processing');
+  const prog = shipmentTimelineHtml(order.shipping?.status || 'processing');
 
   let deliveryText = '';
 
@@ -846,7 +834,7 @@ const totalWithFee = isInternationalOrder(order)
     // Get fee and type from inputs
     let feeValue = Number(feeInput.value);
     if (isNaN(feeValue) || feeValue < 0) {
-      feeValue = 0; // fallback to 0 if input is invalid
+      feeValue = 0;
     }
 
     const updatedDelivery = {
@@ -907,7 +895,6 @@ modalClose.onclick = closeDetailModal;
   document.getElementById('refreshBtn').onclick = () => clearAndLoad();
 
   // ===== REAL-TIME UPDATES =====
-  // ===== Real-time Listener =====
 db.collection('orders').orderBy('createdAt','desc').onSnapshot(snap => {
   snap.docChanges().forEach(change => {
     const order = { id: change.doc.id, ...change.doc.data() };
@@ -936,7 +923,6 @@ db.collection('orders').orderBy('createdAt','desc').onSnapshot(snap => {
 
   // Email Receipt
   async function sendReceiptEmail(orderId, customerEmail) {
-  // Example: send request to your server or Firebase function
   const res = await fetch("/api/send-receipt", {
     method: "POST",
     headers: {"Content-Type": "application/json"},
@@ -952,42 +938,55 @@ async function sendReceiptEmail(order) {
   if (!window.isAdmin) throw new Error("Only admins can send emails.");
 
   try {
-    // ===== ORDER ITEMS (TABLE ROWS ONLY) =====
-    const orderItems = (order.items || [])
-      .map(i => `
-        <tr>
-          <td>${i.name}</td>
-          <td align="center">${i.quantity}</td>
-          <td align="right">₦${Number(i.price).toLocaleString()}</td>
-          <td align="right">₦${(i.price * i.quantity).toLocaleString()}</td>
-        </tr>
-      `)
-      .join("");
-
-    // ===== DELIVERY INFO (SAFE DEFAULTS) =====
+    // ===== SAFE DATA EXTRACTION =====
+    const shipping = order.shipping || {};
+    const payment = order.payment || {};
     const delivery = order.delivery || {};
-    const deliveryFee = order.deliveryFee || 0;
-    const weight = order.totalWeight || 0;
+    const items = order.items || [];
+    const pricing = order.pricing || {};
 
-    // ===== EMAIL TEMPLATE PARAMS =====
+    const fullName = `${shipping.firstName || ''} ${shipping.lastName || ''}`.trim() || order.name || "Customer";
+    const email = shipping.email || order.email || "no-email@example.com";
+    const phone = shipping.phone || order.phone || "—";
+    const paymentMethod = payment.method || order.paymentMethod || "—";
+    const paymentRef = payment.reference || order.paymentRef || order.id;
+
+    // ===== CALCULATE ITEM TOTALS =====
+    const orderItemsHtml = items.map(i => `
+      <tr>
+        <td>${i.name || '—'}</td>
+        <td align="center">${i.quantity || 0}</td>
+        <td align="right">₦${Number(i.price || 0).toLocaleString()}</td>
+        <td align="right">₦${(Number(i.price || 0) * (i.quantity || 0)).toLocaleString()}</td>
+      </tr>
+    `).join('');
+
+        // ===== CALCULATE DELIVERY FEE, TOTAL WEIGHT, ORDER TOTAL =====
+    const deliveryFee = Number(
+      delivery.deliveryFee ?? pricing.shippingFee ?? 0
+    );
+
+    const totalWeight = Number(order.totalWeight ?? items.reduce((sum, i) => sum + ((i.weight || 0) * (i.quantity || 0)), 0));
+    const subtotal = items.reduce((sum, i) => sum + ((Number(i.price) || 0) * (i.quantity || 0)), 0);
+    const orderTotal = Number(order.total ?? subtotal + deliveryFee);
+
+    // ===== TEMPLATE PARAMS =====
     const templateParams = {
-      to_email: order.email,
-      customer_name: order.name || "Customer",
-      order_id: order.paymentRef || order.id,
+      to_email: email,
+      customer_name: fullName,
+      order_id: paymentRef,
 
-      logo_url:
-        "https://res.cloudinary.com/dut2dpxuc/image/upload/v1764188839/e1232d47-ee66-47c9-97fa-b9b86232fb80_n35lqo.png",
+      logo_url: "https://res.cloudinary.com/dut2dpxuc/image/upload/v1764188839/e1232d47-ee66-47c9-97fa-b9b86232fb80_n35lqo.png",
 
-      order_name: order.name || "—",
-      order_email: order.email || "—",
-      order_phone: order.phone || "—",
+      order_name: fullName,
+      order_email: email,
+      order_phone: phone,
 
-      payment_method: order.paymentMethod || "—",
-      payment_ref: order.paymentRef || "—",
+      payment_method: paymentMethod,
+      payment_ref: paymentRef,
 
-      order_items: orderItems,
-
-      order_total: Number(order.total || 0).toLocaleString(),
+      order_items: orderItemsHtml,
+      order_total: orderTotal.toLocaleString(),
 
       delivery_company: delivery.company || "—",
       delivery_type: delivery.type || "—",
@@ -995,8 +994,8 @@ async function sendReceiptEmail(order) {
       delivery_state: delivery.state || "—",
       delivery_lga: delivery.lga || "—",
       delivery_address: delivery.address || "—",
-      delivery_fee: Number(deliveryFee).toLocaleString(),
-      total_weight: weight
+      delivery_fee: deliveryFee.toLocaleString(),
+      total_weight: totalWeight
     };
 
     // ===== SEND EMAIL =====
@@ -1014,7 +1013,7 @@ async function sendReceiptEmail(order) {
   }
 }
 
-  // ===== DOWNLOAD Receipt =====
+//   // ===== DOWNLOAD Receipt =====
 async function downloadPdf(order) {
   if (!order) return;
 
@@ -1059,28 +1058,34 @@ async function downloadPdf(order) {
     y += 5;
 
     // ===== CUSTOMER INFO =====
+    const shipping = order.shipping || {};
+    const fullName = `${shipping.firstName || order.name || ''} ${shipping.lastName || ''}`.trim() || "Customer";
+    const email = shipping.email || order.email || "—";
+    const phone = shipping.phone || order.phone || "—";
+    const paymentRef = order.payment?.reference || order.paymentRef || order.id;
+
     doc.setFillColor("#f9f9f9");
-    doc.roundedRect(margin, y, pageWidth - margin*2, 40, 3, 3, "F");
+    doc.roundedRect(margin, y, pageWidth - margin*2, 45, 3, 3, "F");
     doc.setFontSize(12);
     doc.setTextColor(dark);
-
     y += 10;
-    doc.text(`Name: ${order.name || ""}`, margin+5, y); y+=7;
-    doc.text(`Email: ${order.email || ""}`, margin+5, y); y+=7;
-    doc.text(`Phone: ${order.phone || ""}`, margin+5, y); y+=7;
-    doc.text(`Payment Ref: ${order.paymentRef || ""}`, margin+5, y);
+
+    doc.text(`Name: ${fullName}`, margin+5, y); y+=7;
+    doc.text(`Email: ${email}`, margin+5, y); y+=7;
+    doc.text(`Phone: ${phone}`, margin+5, y); y+=7;
+    doc.text(`Payment Ref: ${paymentRef}`, margin+5, y);
     y += 15;
 
     // ===== TABLE HEADER =====
+    const tableX = margin;
+    const tableWidth = pageWidth - margin*2;
+    const rowHeight = 8;
+
     doc.setDrawColor("#e0e0e0");
     doc.setLineWidth(0.5);
     doc.setFillColor(gold);
     doc.setTextColor("#ffffff");
     doc.setFontSize(11);
-    const tableX = margin;
-    const tableWidth = pageWidth - margin*2;
-    const rowHeight = 8;
-
     doc.rect(tableX, y, tableWidth, rowHeight, "F");
     doc.text("Item", tableX + 2, y + 6);
     doc.text("Qty", tableX + 80, y + 6);
@@ -1094,54 +1099,73 @@ async function downloadPdf(order) {
     items.forEach((i, index) => {
       if (y > 260) { doc.addPage(); y = 20; }
       if (index % 2 === 0) { doc.setFillColor(rowLight); doc.rect(tableX, y, tableWidth, rowHeight, "F"); }
-      doc.text(i.name || "", tableX + 2, y + 6);
-      doc.text(`${i.quantity}`, tableX + 80, y + 6);
-      doc.text(`₦${Number(i.price).toLocaleString()}`, tableX + 110, y + 6, { align: "right" });
-      doc.text(`₦${(i.price*i.quantity).toLocaleString()}`, tableX + 150, y + 6, { align: "right" });
+      doc.text(i.name || "—", tableX + 2, y + 6);
+      doc.text(`${i.quantity || 0}`, tableX + 80, y + 6);
+      doc.text(`₦${Number(i.price || 0).toLocaleString()}`, tableX + 110, y + 6, { align: "right" });
+      doc.text(`₦${(Number(i.price || 0) * Number(i.quantity || 0)).toLocaleString()}`, tableX + 150, y + 6, { align: "right" });
       doc.rect(tableX, y, tableWidth, rowHeight);
       y += rowHeight;
     });
 
-    // ===== TOTAL ROW =====
+    // ===== DELIVERY & TOTAL =====
+    const delivery = order.delivery || {};
+    const deliveryFee = order.delivery?.deliveryFee || order.pricing?.shippingFee || 0;
+    const totalWeight = (order.items || []).reduce(
+      (sum, item) => sum + (Number(item.weight || 0) * Number(item.quantity || 1)),
+      0
+    );
+
+    // Total including delivery fee for international orders
+    const subtotal = order.total || items.reduce((sum,i)=>sum+(Number(i.price||0)*Number(i.quantity||0)),0);
+    const finalTotal = (delivery.country && delivery.country.toLowerCase() !== "nigeria")
+      ? subtotal + (deliveryFee || 0)
+      : subtotal;
+
+    // Optional delivery fee row
+    if (deliveryFee > 0) {
+      doc.setFillColor("#f0f0f0");
+      doc.rect(tableX, y, tableWidth, rowHeight, "F");
+      doc.setFont("helvetica","normal");
+      doc.setFontSize(11);
+      doc.text("Delivery Fee", tableX + 110, y + 6, { align: "right" });
+      doc.text(`₦${deliveryFee.toLocaleString()}`, tableX + 150, y + 6, { align: "right" });
+      doc.rect(tableX, y, tableWidth, rowHeight);
+      y += rowHeight;
+    }
+
+    // Total row
     doc.setFillColor("#eaeaea");
     doc.rect(tableX, y, tableWidth, rowHeight, "F");
     doc.setFont("helvetica", "bold");
     doc.text("Order Total", tableX + 110, y + 6, { align: "right" });
-    doc.text(`₦${Number(order.total || 0).toLocaleString()}`, tableX + 150, y + 6, { align: "right" });
+    doc.text(`₦${finalTotal.toLocaleString()}`, tableX + 150, y + 6, { align: "right" });
     doc.rect(tableX, y, tableWidth, rowHeight);
     y += rowHeight + 5;
 
     // ===== DELIVERY INFO =====
-const delivery = order.delivery || {};
-const deliveryFee = getDeliveryFee(order);
-const weight = order.totalWeight || 0;
-
-doc.setFont("helvetica","normal");
-doc.setFontSize(11);
-doc.setTextColor(gray);
-doc.text("Delivery:", margin, y); y += 6;
-
-// Check for Lagos home delivery
-if (delivery.type === 'home' && delivery.state?.toLowerCase() === 'lagos') {
-  doc.text(`Home Delivery`, margin, y); y += 6;
-  doc.text(`LGA: ${delivery.lga || '—'}`, margin, y); y += 6;
-  doc.text(`Address: ${delivery.address || '—'}`, margin, y); y += 6;
-} else {
-  doc.text(`Company: ${delivery.company?.toUpperCase() || '—'}`, margin, y); y += 6;
-  doc.text(`Type: ${delivery.type || '—'}`, margin, y); y += 6;
-  doc.text(`Terminal: ${delivery.terminal || '—'}`, margin, y); y += 6;
-  doc.text(`State: ${delivery.state || '—'}`, margin, y); y += 6;
-  doc.text(`LGA: ${delivery.lga || '—'}`, margin, y); y += 6;
-  doc.text(`Address: ${delivery.address || '—'}`, margin, y); y += 6;
-}
-
-doc.text(`Fee: ₦${deliveryFee.toLocaleString()}`, margin, y); y += 6;
-doc.text(`Weight: ${weight} kg`, margin, y); y += 8;
+    doc.setFont("helvetica","normal");
+    doc.setFontSize(11);
+    doc.setTextColor(gray);
+    doc.text("Delivery:", margin, y); y += 6;
+    if (delivery.type === 'home' && delivery.state?.toLowerCase() === 'lagos') {
+      doc.text(`Home Delivery`, margin, y); y += 6;
+      doc.text(`LGA: ${delivery.lga || '—'}`, margin, y); y += 6;
+      doc.text(`Address: ${delivery.address || '—'}`, margin, y); y += 6;
+    } else {
+      doc.text(`Company: ${delivery.company?.toUpperCase() || '—'}`, margin, y); y += 6;
+      doc.text(`Type: ${delivery.type || '—'}`, margin, y); y += 6;
+      doc.text(`Terminal: ${delivery.terminal || '—'}`, margin, y); y += 6;
+      doc.text(`State: ${delivery.state || '—'}`, margin, y); y += 6;
+      doc.text(`LGA: ${delivery.lga || '—'}`, margin, y); y += 6;
+      doc.text(`Address: ${delivery.address || '—'}`, margin, y); y += 6;
+    }
+    doc.text(`Fee: ₦${deliveryFee.toLocaleString()}`, margin, y); y += 6;
+    doc.text(`Weight: ${totalWeight} kg`, margin, y); y += 8;
 
     // ===== PAYMENT INFO =====
     doc.text("Payment:", margin, y); y+=6;
-    doc.text(`Method: ${order.paymentMethod || ''}`, margin, y); y+=6;
-    doc.text(`Ref: ${order.paymentRef || ''}`, margin, y); y+=8;
+    doc.text(`Method: ${order.payment?.method || order.paymentMethod || '—'}`, margin, y); y+=6;
+    doc.text(`Ref: ${order.payment?.reference || order.paymentRef || '—'}`, margin, y); y+=8;
 
     // ===== FOOTER =====
     y = 285;
@@ -1149,7 +1173,7 @@ doc.text(`Weight: ${weight} kg`, margin, y); y += 8;
     doc.setTextColor(gray);
     doc.text("Thank you for shopping with Pearl Skin Care!", pageWidth/2, y, { align: "center" });
 
-    doc.save(`Order_${order.paymentRef || order.id}.pdf`);
+    doc.save(`Order_${paymentRef}.pdf`);
     showAlert("PDF generated successfully!", "Success");
 
   } catch(err) {

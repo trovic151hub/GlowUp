@@ -1,351 +1,874 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Homepage</title>
-    <link rel="stylesheet" href="index.css">
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link
-        href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Poppins:wght@700&family=Great+Vibes&display=swap"
-        rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
-    <style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Analytics Dashboard</title>
 
-    </style>
+  <!-- Tailwind -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <!-- jsPDF -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+  .card { background:#fff; border-radius:12px; padding:18px; box-shadow:0 4px 20px rgba(0,0,0,0.05); }
+  .skeleton { background:linear-gradient(90deg,#f0f0f0 25%, #e6e6e6 50%, #f0f0f0 75%); background-size:200% 100%; animation:skeleton 1.2s linear infinite; }
+  @keyframes skeleton { from { background-position:200% 0 } to { background-position:-200% 0 } }
+  .cursor-pointer { cursor:pointer; }
+
+  /* Tiny screen tweaks */
+  @media (max-width: 640px) {
+    #totalSales, #totalOrders, #aov, #totalCustomers { font-size:1.5rem; }
+    button { font-size:0.85rem; padding:0.5rem 1rem; }
+    table thead { font-size:0.7rem; }
+    table td { font-size:0.75rem; }
+  }
+</style>
 </head>
+<body class="bg-gray-50 text-gray-900">
 
-<body class="bg-white text-gray-800">
-
-    <!-- Notification Container -->
-    <div id="notification-container" class="fixed top-4 right-4 z-50 flex flex-col gap-2"></div>
-
-    <!-- Navbar -->
-    <header id="mainHeader"
-        class="fixed top-0 left-0 w-full text-white p-4 flex justify-between items-center flex-wrap gap-4 text-sm font-medium md:gap-6 z-40">
-        <h1 class="text-2xl font-bold main-head">Pearl Skin Care</h1>
-        <nav class="nav-bar space-x-6 text-sm font-medium flex flex-wrap items-center gap-16">
-
-            <!-- Header Links -->
-            <div class="space-x-6 text-sm font-medium items-center gap-4">
-            <a href="#" class="main-head hover:text-pink-600 nav-link">Home</a>
-            <a href="products.html" class="main-head hover:text-pink-600 nav-link">Shop</a>
-            <a href="#categories" class="main-head hover:text-pink-600 nav-link">Categories</a>
-
-            <!-- Contact Dropdown -->
-            <div class="relative group inline-block main-head">
-                <button class="hover:text-pink-600">Contact</button>
-                <div
-                    class="absolute hidden group-hover:block bg-pink-100 shadow rounded mt-1 z-50 min-w-[150px] fixed top-5 right-[-10%] text-left">
-                    <a href="customer-dashboard.html" class="block px-4 py-2 text-sm text-gray-700 hover:bg-white">👤
-                        Dashboard</a>
-                    <a href="mailto:victoradeyimika0@gmail.com"
-                        class="block px-4 py-2 text-sm text-gray-700 hover:bg-white"><i
-                            class="fas fa-envelope text-pink-500"></i> Email Us</a>
-                    <a href="https://wa.me/2349053380773" target="_blank"
-                        class="block px-4 py-2 text-sm text-gray-700 hover:bg-white"><i
-                            class="fab fa-whatsapp text-green-500"></i>
-                        WhatsApp</a>
-                    <a href="https://instagram.com/yourhandle" target="_blank"
-                        class="block px-4 py-2 text-sm text-gray-700 hover:bg-white"><i
-                            class="fab fa-instagram text-pink-600"></i>
-                        Instagram</a>
-                </div>
-            </div>
-            </div>
-
-            <div class="flex justify-between items-center">
-                <div class="mr-14 -ml-24 md:hidden">
-                    <!-- Hamburger Button -->
-                    <button id="menuToggle" class="text-2xl">
-                        <i class="fas fa-bars"></i>
-                    </button>
-
-                    <!-- Overlay -->
-                    <div id="menuOverlay" class="fixed inset-0 bg-black bg-opacity-30 backdrop-blur-sm z-40 hidden">
-                    </div>
-
-                    <!-- Mobile Menu -->
-                    <div id="mobileMenu"
-                        class="fixed top-0 left-0 w-64 h-full bg-white shadow-lg p-6 transform -translate-x-full transition-transform duration-300 z-50">
-                        <!-- Close Button -->
-                        <button id="closeMenu"
-                            class="text-3xl text-gray-600 hover:text-red-500 absolute top-4 right-4">&times;</button>
-
-                        <!-- Menu Links -->
-                        <div class="flex flex-col space-y-4 mt-12 text-lg font-medium">
-                            <span id="welcomeTextMobile" class="text-sm text-gray-700 hidden"></span>
-
-                            <a href="products.html"
-                                class="flex items-center gap-2 px-2 py-2 text-gray-700 hover:bg-pink-50 rounded">
-                                <i class="fa fa-shop mt-1"></i> Shop
-                            </a>
-
-                            <a href="customer-dashboard.html"
-                                class="flex items-center gap-2 px-2 py-2 text-gray-700 hover:bg-pink-50 rounded">
-                                <span class="text-[20px]">👤</span> Dashboard
-                            </a>
-
-                            <a href="mailto:@gmail.com"
-                                class="flex items-center gap-2 px-2 py-2 text-gray-700 hover:bg-pink-50 rounded">
-                                <i class="fas fa-envelope text-[20px] text-pink-500"></i> Email Us
-                            </a>
-
-                            <a href="https://wa.me/2347053380773" target="_blank"
-                                class="flex items-center gap-2 px-2 py-2 text-gray-700 hover:bg-pink-50 rounded">
-                                <i class="fab fa-whatsapp text-green-500 text-[20px]"></i> WhatsApp
-                            </a>
-
-                            <a href="https://instagram.com/yourhandle" target="_blank"
-                                class="flex items-center gap-2 px-2 py-2 text-gray-700 hover:bg-pink-50 rounded">
-                                <i class="fab fa-instagram text-pink-600 text-[20px]"></i> Instagram
-                            </a>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Logo -->
-                <div class="logo-con ml-12">
-                    <div class="logo md:hidden text-center">
-                        <h1 class="brand">Pearl</h1>
-                        <p class="tagline ">SKIN CARE</p>
-                    </div>
-                </div>
-
-                <div class="flex justify-between gap-10 icon">
-                <!-- Search Icon -->
-                <button id="openSearchBtn" class="openSearchBtn hover:text-pink-500">
-                    <i class="fas fa-search text-xl"></i>
-                </button>
-
-                <!-- Cart -->
-                <button id="cart-button" class="cart-tag relative inline-block">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 inline hover:text-pink-500 text-white"
-                        width="16" height="16" viewBox="0 0 16 16">
-                        <path fill="currentColor"
-                            d="M0 1.5A.5.5 0 0 1 .5 1H2a.5.5 0 0 1 .485.379L2.89 3H14.5a.5.5 0 0 1 .491.592l-1.5 8A.5.5 0 0 1 13 12H4a.5.5 0 0 1-.491-.408L2.01 3.607L1.61 2H.5a.5.5 0 0 1-.5-.5M3.102 4l1.313 7h8.17l1.313-7zM5 12a2 2 0 1 0 0 4a2 2 0 0 0 0-4m7 0a2 2 0 1 0 0 4a2 2 0 0 0 0-4m-7 1a1 1 0 1 1 0 2a1 1 0 0 1 0-2m7 0a1 1 0 1 1 0 2a1 1 0 0 1 0-2" />
-                    </svg>
-
-                    <span id="cartCount"
-                        class="absolute -top-3 -right-3 bg-pink-500 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center">0</span>
-                </button>
-                </div>
-            </div>
-        </nav>
-    </header>
-
-    <!-- Hero Section -->
-    <div class="hero-slider">
-        <div id="heroSkeleton" class="hero-skeleton"></div>
-
-        <div class="hero-image-wrapper">
-            <div class="hero-image-track" id="heroImageTrack"></div>
-        </div>
-
-        <!-- NEW: Dark overlay -->
-        <div class="hero-dark-overlay"></div>
-
-        <div class="hero-overlay">
-            <h1 id="heroTitle"></h1>
-            <p id="heroText"></p>
-        </div>
-
-        <!-- Play/Pause Buttons -->
-        <i id="heroPlay" class="fas fa-play hero-control"></i>
-        <i id="heroPause" class="fas fa-pause hero-control hidden"></i>
-
-        <!-- Bottom Tabs -->
-        <div id="heroDots" class="hero-tabs absolute bottom-4 left-1/2 transform -translate-x-1/2 z-20">
-            <div class="hero-tabs-track"></div>
-        </div>
-    </div>
-
-    <!-- Featured Search Bar (Hidden by default) -->
-    <div id="featuredSearchWrapper" class="hidden sticky search top-16 px-4 py-3 z-40 bg-white shadow-md mb-2">
-
-        <div class="flex items-center gap-3">
-            <input id="featuredSearchInput" type="text" placeholder="Search featured products..."
-                class="flex-1 border rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-pink-500" />
-
-            <button id="closeSearchBtn"
-                class="absolute top-4 right-6 text-gray-500 hover:text-pink-500 text-xl font-bold">
-                &times;
-            </button>
-        </div>
-    </div>
-
-    <!-- Featured Search Bar (Hidden by default) -->
-  <div id="featuredSearchWrapper" class="hidden sticky search top-16 px-4 py-3 z-40 bg-white shadow-md mb-2">
-
-    <div class="flex items-center gap-3">
-      <input id="featuredSearchInput" type="text" placeholder="Search featured products..."
-        class="flex-1 border rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-pink-500" />
-
-      <button id="closeSearchBtn" class="absolute top-4 right-6 text-gray-500 hover:text-pink-500 text-xl font-bold">
-        &times;
+<header class="bg-pink-600 text-white p-4 shadow fixed w-full z-50 top-0">
+  <div class="max-w-7xl mx-auto flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-0">
+    <div class="flex items-center space-x-2 w-full sm:w-auto">
+      <button onclick="history.back()" class="text-white hover:text-gray-200">
+        <i class="fas fa-arrow-left"></i>
       </button>
+      <h1 class="text-xl font-semibold truncate">Admin Analytics</h1>
     </div>
+    <div id="adminBadge" class="hidden text-sm bg-white text-pink-600 px-3 py-1 rounded mt-2 sm:mt-0">ADMIN</div>
   </div>
+</header>
 
-  <!-- Featured Products -->
-  <section class="p-6">
-    <h2 class="text-2xl font-semibold mb-4">Featured Products</h2>
-    <div id="product-list" class="grid grid-cols-2 md:grid-cols-4 gap-4 "></div>
-  </section>
+<main class="max-w-7xl mx-auto p-6 space-y-6 mt-20">
 
-  <!-- Product Detail Modal -->
-  <div id="productModal"
-    class="hidden fixed inset-0 bg-black bg-opacity-30 backdrop-blur-sm flex items-center justify-center z-50">
-    <div class="bg-white w-11/12 max-w-md p-6 rounded shadow-lg relative">
-      <button onclick="closeModal()" class="absolute top-2 right-2 text-gray-500 hover:text-red-600 text-xl">×</button>
-      <h2 id="modalProductName" class="text-xl font-bold mb-2"></h2>
-      <img id="modalProductImage" class="w-full h-48 object-cover rounded mb-2" />
-      <p id="modalProductPrice" class="text-pink-600 font-semibold text-lg mb-1"></p>
-      <p id="modalProductDescription" class="text-sm text-gray-700 mb-4"></p>
-      <button id="modalAddToCartBtn" class="bg-pink-600 text-white px-4 py-2 rounded hover:bg-pink-700 w-full">Add to
-        Cart</button>
-    </div>
-  </div>
-
-  <!-- Promo Section -->
-  <section class="bg-pink-50 p-6 my-6 rounded-xl text-center">
-    <h3 class="text-2xl font-semibold mb-4">💡 Skin Tips</h3>
-    <p id="skinTip" class="text-lg text-gray-700 font-medium">Loading tip...</p>
-  </section>
-
-  <!-- Categories -->
-  <section id="categories" class="p-6">
-    <h3 class="text-2xl font-semibold mb-4">Browse by Category</h3>
-    <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
-      <button onclick="filterProducts('All')" data-category="All"
-        class="category-btn bg-pink-100 p-4 rounded-xl text-center hover:bg-pink-200 cursor-pointer">
-        💧<br />All
-      </button>
-      <button onclick="filterProducts('Brightening')" data-category="Brightening"
-        class="category-btn bg-pink-100 p-4 rounded-xl text-center hover:bg-pink-200 cursor-pointer">
-        ✨<br />Brightening
-      </button>
-      <button onclick="filterProducts('Anti-Aging')" data-category="Anti-Aging"
-        class="category-btn bg-pink-100 p-4 rounded-xl text-center hover:bg-pink-200 cursor-pointer">
-        🔄<br />Anti-Aging
-      </button>
-      <button onclick="filterProducts('Hydration')" data-category="Hydration"
-        class="category-btn bg-pink-100 p-4 rounded-xl text-center hover:bg-pink-200 cursor-pointer">
-        💦<br />Hydration
-      </button>
-      <button onclick="filterProducts('Supplements')" data-category="Supplements"
-        class="category-btn bg-pink-100 p-4 rounded-xl text-center hover:bg-pink-200 cursor-pointer">
-        💊<br />Supplements
-      </button>
+  <!-- Filters -->
+  <section class="card">
+    <div class="flex flex-col md:flex-row flex-wrap gap-3 md:items-center">
+      <input id="searchQ" placeholder="Search product, customer, paymentRef..." class="border rounded p-2 flex-1 min-w-[120px]" />
+      <input id="fromDate" type="date" class="border rounded p-2 flex-1 min-w-[120px]" />
+      <input id="toDate" type="date" class="border rounded p-2 flex-1 min-w-[120px]" />
+      <button id="applyFilters" class="bg-pink-600 text-white px-4 py-2 rounded flex-1 min-w-[100px]">Apply</button>
+      <button id="clearFilters" class="bg-gray-200 px-4 py-2 rounded flex-1 min-w-[100px]">Clear</button>
+      <button id="refreshBtn" class="ml-auto bg-blue-600 text-white px-3 py-2 rounded flex-1 min-w-[100px]">Refresh</button>
     </div>
   </section>
 
-  <!-- Mini Cart -->
-  <div id="mini-cart"
-    class="fixed top-0 right-0 h-full w-[32%] bg-white backdrop-blur-sm shadow-xl transform translate-x-full z-50 flex flex-col">
-    <div class="flex justify-between items-center p-4 border-b">
-      <h2 class="text-lg font-semibold text-gray-700">Your Cart</h2>
-      <button id="close-cart" class="text-gray-500 font-bold text-lg hover:text-red-900">&times;</button>
-    </div>
-    <div id="mini-cart-items" class="flex-1 overflow-y-auto p-4 space-y-4"></div>
-    <div class="p-4 border-t">
-      <div class="flex justify-between font-semibold mb-2">
-        <span class="text-gray-500 font-bold">Subtotal:</span>
-        <span id="mini-cart-total" class="text-3xl font-semibold">₦0.00</span>
-      </div>
+  <!-- Summary cards -->
+  <section class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+    <div class="card text-center"><p class="text-sm text-gray-500">Total Sales (selected)</p><p id="totalSales" class="text-2xl font-bold text-pink-600">₦0</p></div>
+    <div class="card text-center"><p class="text-sm text-gray-500">Total Orders</p><p id="totalOrders" class="text-2xl font-bold text-pink-600">0</p></div>
+    <div class="card text-center"><p class="text-sm text-gray-500">Average Order Value</p><p id="aov" class="text-2xl font-bold text-pink-600">₦0</p></div>
+    <div class="card text-center"><p class="text-sm text-gray-500">Total Customers</p><p id="totalCustomers" class="text-2xl font-bold text-pink-600">0</p></div>
+  </section>
 
-      <div class="block">
-      <button id="view-cart-btn"
-        class="w-full bg-white border border-gray-400 text-gray-900 py-2 rounded-full mb-4 transition">View Cart</button>
+  <!-- Charts row -->
+  <section class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+    <div class="card overflow-auto"><h3 class="font-semibold mb-2">Daily Sales (last 30 days)</h3><canvas id="dailySalesChart" height="120"></canvas></div>
+    <div class="card overflow-auto"><h3 class="font-semibold mb-2">Monthly Revenue (this year)</h3><canvas id="monthlyChart" height="120"></canvas></div>
+    <div class="card overflow-auto"><h3 class="font-semibold mb-2">Order Status</h3><canvas id="statusChart" height="120"></canvas></div>
+    <div class="card overflow-auto"><h3 class="font-semibold mb-2">Payment Methods</h3><canvas id="paymentChart" height="120"></canvas></div>
+  </section>
 
-      <button id="mini-cart-checkout"
-        class="w-full bg-pink-600 text-white py-2 rounded-full transition">Checkout</button>
-        </div>
+  <!-- Top Products & Customers -->
+  <section class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+    <div class="card overflow-auto">
+      <h3 class="font-semibold mb-2">Top 10 Products (by quantity)</h3>
+      <table class="w-full text-left min-w-[300px]">
+        <thead class="text-xs text-gray-600"><tr><th class="p-2">Product</th><th class="p-2">Qty Sold</th><th class="p-2">Revenue</th></tr></thead>
+        <tbody id="topProductsBody"></tbody>
+      </table>
+      <div class="flex justify-end mt-2"><button id="loadMoreProducts" class="bg-pink-600 text-white px-3 py-1 rounded text-sm">Load More</button></div>
     </div>
+
+    <div class="card overflow-auto">
+      <h3 class="font-semibold mb-2">Top Customers (by spend)</h3>
+      <table class="w-full text-left min-w-[300px]">
+        <thead class="text-xs text-gray-600"><tr><th class="p-2">Customer</th><th class="p-2">Orders</th><th class="p-2">Spent</th></tr></thead>
+        <tbody id="topCustomersBody"></tbody>
+      </table>
+      <div class="flex justify-end mt-2"><button id="loadMoreCustomers" class="bg-pink-600 text-white px-3 py-1 rounded text-sm">Load More</button></div>
+    </div>
+  </section>
+
+  <!-- Real-time Orders Feed -->
+  <section class="card">
+    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
+      <h3 class="font-semibold">Real-time Orders Feed</h3>
+      <div class="text-sm text-gray-600">Newest orders appear here</div>
+    </div>
+    <div id="liveFeed" class="mt-3 space-y-2 max-h-80 overflow-auto"></div>
+  </section>
+
+</main>
+
+<!-- Modal -->
+<div id="detailModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm hidden items-center flex justify-center z-50 p-4">
+  <div class="bg-white rounded-lg max-w-lg w-full p-4">
+    <div class="flex justify-between items-center mb-2">
+      <h2 id="modalTitle" class="text-lg font-semibold">Details</h2>
+      <button id="closeModal" class="text-gray-500 hover:text-gray-700">&times;</button>
+    </div>
+    <div id="modalContent" class="text-sm space-y-2"></div>
   </div>
+</div>
 
-  <!-- ===== GLOBAL LEAVE LOADER ===== -->
-  <div id="leaveLoader">
-    <div class="spinner"></div>
-  </div>
+<div id="dashboard-loader" class="fixed inset-0 flex items-center justify-center bg-black/40 z-50 hidden">
+  <i class="fas fa-spinner fa-spin text-white text-5xl"></i>
+</div>
 
-  <!-- Footer -->
-  <footer class="bg-pink-100 text-gray-800 relative">
-    <div class="mx-6 md:mx-10 px-4 md:px-6 py-8 md:py-12 flex flex-col md:flex-row justify-between gap-8 md:gap-40">
+<script>
+  // ===== Firebase Config =====
+  const firebaseConfig = {
+    apiKey: "AIzaSyDdTPmpaIPWSDWOmR-fXgvAb7hoxZUawcc",
+    authDomain: "e-commerce-39c74.firebaseapp.com",
+    projectId: "e-commerce-39c74",
+    storageBucket: "e-commerce-39c74.firebasestorage.app",
+    messagingSenderId: "863375033754",
+    appId: "1:863375033754:web:7ba248c8dbb1566c83e623"
+  };
+  
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.firestore();
 
-      <!-- Contact Info -->
-      <div class="flex-1 border-b md:border-b-0 pb-4 md:pb-0 border-gray-300">
-        <h4 class="text-lg font-semibold mb-4">CONTACT US</h4>
-        <p class="mb-2 flex items-center gap-2">
-          <i class="fas fa-phone-alt"></i> +2347053380773
-        </p>
-        <p class="flex items-start gap-2">
-          <i class="fas fa-map-marker-alt mt-1"></i>
-          Lagos, Nigeria
-        </p>
-      </div>
+  // ===== State =====
+  let dailyChart, monthlyChart, statusChart, paymentChart, ordersSnapshotUnsub=null;
+  let productsDisplayLimit=5, customersDisplayLimit=5, lastProductsArr=[], lastCustomersArr=[];
 
-      <!-- Newsletter -->
-      <div class="flex-1">
-        <h4 class="text-lg font-semibold mb-3">SIGN UP FOR DISCOUNTS & UPDATES</h4>
-        <div class="block flex-col md:flex-row gap-2 md:gap-4 items-start md:items-center">
-          <input type="text" placeholder="Enter your phone number or email address"
-            class="w-full md:w-[100%] px-4 py-2 rounded border border-gray-300 focus:outline-none">
-          <button class="mt-3 bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">
-            Subscribe
-          </button>
-        </div>
-      </div>
-    </div>
+  let isAdmin = false;
 
-    <!-- Powered By -->
-    <div class="btn text-left text-sm text-white mx-6 md:mx-10 px-4 md:px-6 py-4 border-t border-gray-300">
-      <button class="text-left block p-4 bg-pink-500">
-        POWERED BY VTec
-      </button>
-    </div>
+firebase.auth().onAuthStateChanged(async user => {
+  if (user) {
+    const adminDoc = await db.collection('admins').doc(user.uid).get();
+    isAdmin = adminDoc.exists;
+    window.isAdmin = isAdmin; 
 
-    <!-- WhatsApp Button -->
-    <button id="openWhatsappModal" class="fixed bottom-6 right-6 z-50">
-      <div class="relative w-14 h-14">
-        <!-- Ripple circles -->
-        <span class="absolute inset-0 rounded-full bg-green-400 opacity-50 animate-ping"></span>
-        <span class="absolute inset-0 rounded-full bg-green-400 opacity-50 animate-ping delay-200"></span>
-        <span class="absolute inset-0 rounded-full bg-green-400 opacity-50 animate-ping delay-400"></span>
+    if (isAdmin) {
+      loadAllAnalytics();   
+      startRealtimeFeed();
+    } else {
+      alert('You do not have permission to view this page.');
+    }
+  }
+});
 
-        <!-- Main Button -->
-        <div
-          class="relative w-14 h-14 rounded-full bg-green-500 hover:bg-green-600 text-white flex items-center justify-center shadow-lg text-2xl">
-          <i class="fab fa-whatsapp"></i>
-        </div>
-      </div>
-    </button>
+  // ===== Refs =====
+  const totalSalesEl=document.getElementById('totalSales');
+  const totalOrdersEl=document.getElementById('totalOrders');
+  const aovEl=document.getElementById('aov');
+  const totalCustomersEl=document.getElementById('totalCustomers');
+  const topProductsBody=document.getElementById('topProductsBody');
+  const topCustomersBody=document.getElementById('topCustomersBody');
+  const liveFeed=document.getElementById('liveFeed');
+  const searchQ=document.getElementById('searchQ');
+  const fromDate=document.getElementById('fromDate');
+  const toDate=document.getElementById('toDate');
+  const applyFilters=document.getElementById('applyFilters');
+  const clearFilters=document.getElementById('clearFilters');
+  const refreshBtn=document.getElementById('refreshBtn');
+  const modal=document.getElementById('detailModal');
+  const modalTitle=document.getElementById('modalTitle');
+  const modalContent=document.getElementById('modalContent');
+  let loader = document.getElementById("dashboard-loader");
 
-    <!-- WhatsApp Button -->
-    <a href="https://wa.me/2349053380773" target="_blank" class="fixed bottom-6 right-6 z-50">
-      <div class="relative w-14 h-14">
-        <!-- Ripple circles -->
-        <span class="absolute inset-0 rounded-full bg-green-400 opacity-50 animate-ping"></span>
-        <span class="absolute inset-0 rounded-full bg-green-400 opacity-50 animate-ping delay-200"></span>
-        <span class="absolute inset-0 rounded-full bg-green-400 opacity-50 animate-ping delay-400"></span>
+  // ===== Global Loader =====
+function showLoader() {
+  closeModal();
+  loader.classList.remove("hidden");
+  document.body.style.overflow = "hidden";
+}
 
-        <!-- Main Button -->
-        <div
-          class="relative w-14 h-14 rounded-full bg-green-500 hover:bg-green-600 text-white flex items-center justify-center shadow-lg text-2xl">
-          <i class="fab fa-whatsapp"></i>
-        </div>
-      </div>
-    </a>
-  </footer>
+function hideLoader() {
+  loader.classList.add("hidden");
+  document.body.style.overflow = "";
+}
+
+function openModal() {
+  modal.classList.remove("hidden");
+  document.body.style.overflow = "hidden"; 
+}
+
+function closeModal() {
+  modal.classList.add("hidden");
+  document.body.style.overflow = ""; 
+}
+
+  // ===== Button Event Listeners =====
+  applyFilters.addEventListener('click', ()=>{ loadAllAnalytics(); startRealtimeFeed(); });
+  clearFilters.addEventListener('click', ()=>{
+    searchQ.value=''; fromDate.value=''; toDate.value='';
+    loadAllAnalytics(); startRealtimeFeed();
+  });
+  refreshBtn.addEventListener('click', ()=>{ loadAllAnalytics(); startRealtimeFeed(); });
+  document.getElementById('loadMoreProducts').addEventListener('click', ()=>{ productsDisplayLimit += 5; displayProducts(); });
+  document.getElementById('loadMoreCustomers').addEventListener('click', ()=>{ customersDisplayLimit +=5; displayCustomers(); });
+  document.getElementById('closeModal').addEventListener('click', closeModal);
+  modal.addEventListener("click", e => { if(e.target===modal) closeModal(); });
+
+  // ===== Initialize Charts =====
+function initCharts(){
+    const ctxDaily=document.getElementById('dailySalesChart').getContext('2d');
+    dailyChart=new Chart(ctxDaily,{ type:'line', data:{labels:[],datasets:[{label:'Sales',data:[],fill:true,backgroundColor:'rgba(219,39,119,0.12)',borderColor:'#db2777'}]}, options:{responsive:true,scales:{x:{grid:{display:false}},y:{ticks:{callback:v=>'₦'+v}}}} });
+
+    const ctxMonthly=document.getElementById('monthlyChart').getContext('2d');
+    monthlyChart=new Chart(ctxMonthly,{ type:'bar', data:{labels:[],datasets:[{label:'Monthly Revenue',data:[],backgroundColor:'#f472b6'}]}, options:{responsive:true,y:{ticks:{callback:v=>'₦'+v}}}});
+
+    const ctxStatus=document.getElementById('statusChart').getContext('2d');
+    statusChart=new Chart(ctxStatus,{ type:'doughnut', data:{labels:['Completed','Pending'],datasets:[{data:[0,0],backgroundColor:['#10b981','#f59e0b']}]}, options:{responsive:true} });
+
+    const ctxPayment=document.getElementById('paymentChart').getContext('2d');
+    paymentChart=new Chart(ctxPayment,{ type:'pie', data:{labels:[],datasets:[{data:[],backgroundColor:[]}]}, options:{responsive:true} });
+}
+
+initCharts();
+loadAllAnalytics();
+startRealtimeFeed();
+
+// ===== Load Analytics =====
+async function loadAllAnalytics(){
+    showLoader();
+
+    totalSalesEl.textContent='Loading...'; totalOrdersEl.textContent='…'; aovEl.textContent='…'; totalCustomersEl.textContent='…';
+    topProductsBody.innerHTML=`<tr><td colspan="3" class="p-3 skeleton"></td></tr>`;
+    topCustomersBody.innerHTML=`<tr><td colspan="3" class="p-3 skeleton"></td></tr>`;
+    liveFeed.innerHTML=`<div class="p-3 skeleton h-20"></div>`;
+
+    let q = db.collection('orders').orderBy('createdAt','desc');
+    const from = fromDate.value ? firebase.firestore.Timestamp.fromDate(new Date(fromDate.value+'T00:00:00')) : null;
+    const to = toDate.value ? firebase.firestore.Timestamp.fromDate(new Date(toDate.value+'T23:59:59')) : null;
+    if(from) q = q.where('createdAt','>=', from);
+    if(to) q = q.where('createdAt','<=', to);
+
+    try{
+      const snap=await q.limit(5000).get();
+      const orders=snap.docs.map(d=>({id:d.id,...d.data()}));
+      const term=(searchQ.value||'').trim().toLowerCase();
+      const filtered=term?orders.filter(o=>{
+        if((o.shipping?.firstName||'').toLowerCase().includes(term)) return true;
+        if((o.shipping?.email||'').toLowerCase().includes(term)) return true;
+        if((o.payment?.reference||'').toLowerCase().includes(term)) return true;
+        if(Array.isArray(o.items)&&o.items.some(it=>(it.name||'').toLowerCase().includes(term))) return true;
+        return false;
+      }):orders;
+
+      computeSummaries(filtered);
+      computeDailyChart(filtered);
+      computeMonthlyChart(filtered);
+      computeStatusChart(filtered);
+      computePaymentChart(filtered);
+      renderTopProducts(filtered);
+      renderTopCustomers(filtered);
+    }catch(err){
+      console.error(err);
+      totalSalesEl.textContent='Error'; totalOrdersEl.textContent='Error'; aovEl.textContent='Error'; totalCustomersEl.textContent='Error';
+    }finally {
+      hideLoader();
+    }
+}
+
+// ===== Compute Summaries =====
+function computeSummaries(orders){
+    const totalOrders=orders.length;
+    const totalSales=orders.reduce((s,o)=>s+Number(o.pricing?.total||0),0);
+    const uniqueCustomers=new Set(orders.map(o=>o.userId||o.shipping?.email||o.guestId||'')).size;
+    const aov=totalOrders?totalSales/totalOrders:0;
+    totalSalesEl.textContent='₦'+totalSales.toLocaleString();
+    totalOrdersEl.textContent=totalOrders.toLocaleString();
+    aovEl.textContent='₦'+Math.round(aov).toLocaleString();
+    totalCustomersEl.textContent=uniqueCustomers.toLocaleString();
+}
+
+function computeDailyChart(orders){
+    const days=30,map={};
+    for(let i=days-1;i>=0;i--){
+      const d=new Date(); d.setDate(d.getDate()-i); d.setHours(0,0,0,0);
+      map[d.toISOString().slice(0,10)]=0;
+    }
+    orders.forEach(o=>{
+      if(!o.createdAt) return;
+      const d=o.createdAt.toDate?o.createdAt.toDate():new Date(o.createdAt);
+      const key=d.toISOString().slice(0,10);
+      if(key in map) map[key]+=Number(o.pricing?.total||0);
+    });
+    dailyChart.data.labels=Object.keys(map);
+    dailyChart.data.datasets[0].data=Object.values(map);
+    dailyChart.update();
+}
+
+function computeMonthlyChart(orders){
+    const now=new Date(), year=now.getFullYear(), months=Array.from({length:12},(_,i)=>new Date(year,i,1));
+    const map=months.map(_=>0);
+    orders.forEach(o=>{
+      if(!o.createdAt) return;
+      const d=o.createdAt.toDate?o.createdAt.toDate():new Date(o.createdAt);
+      if(d.getFullYear()!==year) return;
+      map[d.getMonth()]+=Number(o.pricing?.total||0);
+    });
+    monthlyChart.data.labels=months.map(m=>m.toLocaleString(undefined,{month:'short'}));
+    monthlyChart.data.datasets[0].data=map;
+    monthlyChart.update();
+}
+
+function computeStatusChart(orders){
+    let completed=0,pending=0;
+    orders.forEach(o=>{
+      const status=o.shipping?.status||'pending';
+      if(status.toLowerCase()==='completed') completed++; else pending++;
+    });
+    statusChart.data.datasets[0].data=[completed,pending];
+    statusChart.update();
+}
+
+function computePaymentChart(orders){
+    const counts={};
+    orders.forEach(o=>{
+      const pm=o.payment?.method||'Unknown';
+      counts[pm]=(counts[pm]||0)+1;
+    });
+    const labels=Object.keys(counts);
+    const data=labels.map(l=>counts[l]);
+    const colors=labels.map((_,i)=>`hsl(${(i*73)%360} 70% 60%)`);
+    paymentChart.data.labels=labels;
+    paymentChart.data.datasets[0].data=data;
+    paymentChart.data.datasets[0].backgroundColor=colors;
+    paymentChart.update();
+}
+
+// ===== Top Products/Customers =====
+function renderTopProducts(orders){
+    const map={};
+    orders.forEach(o=>(o.items||[]).forEach(it=>{
+      const name=it.name||'Untitled';
+      if(!map[name]) map[name]={qty:0,revenue:0,lastOrder:o.createdAt?o.createdAt.toDate():new Date()};
+      map[name].qty+=Number(it.quantity||0);
+      map[name].revenue+=Number(it.quantity||0)*Number(it.price||0);
+      if(o.createdAt && o.createdAt.toDate) map[name].lastOrder=o.createdAt.toDate();
+    }));
+    lastProductsArr=Object.entries(map).map(([name,v])=>({name,qty:v.qty,revenue:v.revenue,lastOrder:v.lastOrder})).sort((a,b)=>b.qty-a.qty);
+    displayProducts();
+}
+
+function renderTopCustomers(orders){
+  const map={};
+  orders.forEach(o=>{
+    const fullName = o.shipping
+                     ? `${o.shipping.firstName || ''} ${o.shipping.lastName || ''}`.trim()
+                     : (o.name || o.email || 'Customer');
+
+    const key = o.userId || o.email || fullName || ('guest-'+(o.payment?.reference||''));
+
+    if(!map[key]) map[key] = {
+      name: fullName,
+      email: o.shipping?.email || o.email || '',
+      orders: 0,
+      spent: 0,
+      lastOrder: o.timestamp ? (o.timestamp.toDate ? o.timestamp.toDate() : new Date(o.timestamp)) : new Date()
+    };
+
+    map[key].orders++;
+    map[key].spent += Number(o.pricing?.total || 0);
+    if(o.timestamp && o.timestamp.toDate) map[key].lastOrder = o.timestamp.toDate();
+  });
+
+  lastCustomersArr = Object.values(map).sort((a,b)=>b.spent - a.spent);
+  displayCustomers();
+}
+// function renderTopCustomers(orders){
+//     const map={};
+//     orders.forEach(o=>{
+//       const key=o.userId||o.shipping?.email||o.guestId||('guest-'+(o.payment?.reference||'')); 
+//       if(!map[key]) map[key]={name:o.shipping?.firstName||o.shipping?.email||'Customer',email:o.shipping?.email||'',orders:0,spent:0,lastOrder:o.createdAt?o.createdAt.toDate():new Date()};
+//       map[key].orders++; map[key].spent+=Number(o.pricing?.total||0); 
+//       if(o.createdAt && o.createdAt.toDate) map[key].lastOrder=o.createdAt.toDate();
+//     });
+//     lastCustomersArr=Object.values(map).sort((a,b)=>b.spent-a.spent);
+//     displayCustomers();
+// }
+
+// ===== Display Helpers =====
+function displayProducts(){
+    const top=lastProductsArr.slice(0,productsDisplayLimit);
+    topProductsBody.innerHTML=top.length?top.map((t,i)=>`
+    <tr class="cursor-pointer hover:bg-gray-100" data-index="${i}">
+        <td class="p-2">${escapeHtml(t.name)}</td>
+        <td class="p-2">${t.qty.toLocaleString()}</td>
+        <td class="p-2">₦${Math.round(t.revenue).toLocaleString()}</td>
+      </tr>`).join(''):`<tr><td colspan="3" class="p-3 text-gray-500">No product data</td></tr>`;
+}
+
+function displayCustomers(){
+    const top=lastCustomersArr.slice(0,customersDisplayLimit);
+    topCustomersBody.innerHTML=top.length?top.map((c,i)=>`
+      <tr class="cursor-pointer hover:bg-gray-100" data-index="${i}">
+        <td class="p-2">${escapeHtml(c.name)}</td>
+        <td class="p-2">${c.orders}</td>
+        <td class="p-2">₦${Math.round(c.spent).toLocaleString()}</td>
+      </tr>`).join(''):`<tr><td colspan="3" class="p-3 text-gray-500">No customer data</td></tr>`;
+}
+
+// ===== Modals =====
+  topProductsBody.addEventListener('click', e=>{
+    const tr=e.target.closest('tr'); if(!tr) return;
+    const t=lastProductsArr[Number(tr.dataset.index)]; if(!t) return;
+    modalTitle.textContent=`Product: ${t.name}`;
+    modalContent.innerHTML=`<p><strong>Quantity Sold:</strong> ${t.qty}</p>
+      <p><strong>Total Revenue:</strong> ₦${Math.round(t.revenue).toLocaleString()}</p>
+      <p><strong>Last Ordered:</strong> ${t.lastOrder.toLocaleString()}</p>`;
+    // modal.classList.remove('hidden');
+    openModal();
+  });
+
+  topCustomersBody.addEventListener('click', e=>{
+    const tr=e.target.closest('tr'); if(!tr) return;
+    const c=lastCustomersArr[Number(tr.dataset.index)]; if(!c) return;
+    modalTitle.textContent=`Customer: ${c.name}`;
+    modalContent.innerHTML=`<p><strong>Email:</strong> ${escapeHtml(c.email)}</p>
+      <p><strong>Total Orders:</strong> ${c.orders}</p>
+      <p><strong>Total Spent:</strong> ₦${Math.round(c.spent).toLocaleString()}</p>
+      <p><strong>Last Order:</strong> ${c.lastOrder.toLocaleString()}</p>`;
+    // modal.classList.remove('hidden');
+    openModal();
+  });
+  
+// ===== Real-time Feed =====
+function startRealtimeFeed(){
+    if(ordersSnapshotUnsub) ordersSnapshotUnsub();
+    let q=db.collection('orders').orderBy('createdAt','desc').limit(15);
+
+    const from=fromDate.value?firebase.firestore.Timestamp.fromDate(new Date(fromDate.value+'T00:00:00')):null;
+    const to=toDate.value?firebase.firestore.Timestamp.fromDate(new Date(toDate.value+'T23:59:59')):null;
+    if(from) q=q.where('createdAt','>=',from);
+    if(to) q=q.where('createdAt','<=',to);
+
+    const term=(searchQ.value||'').trim().toLowerCase();
+
+    ordersSnapshotUnsub=q.onSnapshot(snap=>{
+      liveFeed.innerHTML='';
+      snap.docs.forEach(d=>{
+        const o=d.data();
+        if(term){
+          let match=false;
+          if((o.shipping?.firstName||'').toLowerCase().includes(term)) match=true;
+          if((o.shipping?.email||'').toLowerCase().includes(term)) match=true;
+          if((o.payment?.reference||'').toLowerCase().includes(term)) match=true;
+          if(Array.isArray(o.items)&&o.items.some(it=>(it.name||'').toLowerCase().includes(term))) match=true;
+          if(!match) return;
+        }
+        const time=o.createdAt? (o.createdAt.toDate ? o.createdAt.toDate().toLocaleTimeString() : new Date(o.createdAt).toLocaleTimeString()) : '';
+        const div=document.createElement('div'); 
+        div.className='p-2 border-b cursor-pointer hover:bg-gray-100';
+        const total=o.pricing?.total||0;
+        const fullName = o.shipping 
+                 ? `${o.shipping.firstName || ''} ${o.shipping.lastName || ''}`.trim() 
+                 : (o.name || o.email || 'Guest');
+
+        div.textContent = `${fullName} - ₦${Math.round(o.pricing?.total||0).toLocaleString()} - ${time}`;
+        liveFeed.appendChild(div);
+      });
+    });
+}
+
+// ===== Helpers =====
+function escapeHtml(text) {
+  return (text||'').toString().replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+}
+</script>
+  <!-- <script>
+  // ===== Firebase Config =====
+  const firebaseConfig = {
+    apiKey: "AIzaSyDdTPmpaIPWSDWOmR-fXgvAb7hoxZUawcc",
+    authDomain: "e-commerce-39c74.firebaseapp.com",
+    projectId: "e-commerce-39c74",
+    storageBucket: "e-commerce-39c74.firebasestorage.app",
+    messagingSenderId: "863375033754",
+    appId: "1:863375033754:web:7ba248c8dbb1566c83e623"
+  };
+  
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.firestore();
+
+  // ===== State =====
+  let dailyChart, monthlyChart, statusChart, paymentChart, ordersSnapshotUnsub=null;
+  let productsDisplayLimit=5, customersDisplayLimit=5, lastProductsArr=[], lastCustomersArr=[];
+
+  let isAdmin = false;
+
+firebase.auth().onAuthStateChanged(async user => {
+  if (user) {
+    const adminDoc = await db.collection('admins').doc(user.uid).get();
+    isAdmin = adminDoc.exists;
+    window.isAdmin = isAdmin; // optional if you want global access
+
+    if (isAdmin) {
+      loadAllAnalytics();   // only load analytics if admin
+      startRealtimeFeed();
+    } else {
+      alert('You do not have permission to view this page.');
+      // redirect or hide content
+    }
+  }
+});
 
 
-    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
-    <script src="home.js"></script>
-    <script src="https://unpkg.com/gsap@3/dist/gsap.min.js"></script>
-    <script src="https://unpkg.com/gsap@3/dist/ScrollTrigger.min.js"></script>
+  // ===== Refs =====
+  const totalSalesEl=document.getElementById('totalSales');
+  const totalOrdersEl=document.getElementById('totalOrders');
+  const aovEl=document.getElementById('aov');
+  const totalCustomersEl=document.getElementById('totalCustomers');
+  const topProductsBody=document.getElementById('topProductsBody');
+  const topCustomersBody=document.getElementById('topCustomersBody');
+  const liveFeed=document.getElementById('liveFeed');
+  const searchQ=document.getElementById('searchQ');
+  const fromDate=document.getElementById('fromDate');
+  const toDate=document.getElementById('toDate');
+  const applyFilters=document.getElementById('applyFilters');
+  const clearFilters=document.getElementById('clearFilters');
+  const refreshBtn=document.getElementById('refreshBtn');
+  const modal=document.getElementById('detailModal');
+  const modalTitle=document.getElementById('modalTitle');
+  const modalContent=document.getElementById('modalContent');
+  let loader = document.getElementById("dashboard-loader");
+
+  // ===== Global Loader =====
+function showLoader() {
+  closeModal();
+  loader.classList.remove("hidden");
+  document.body.style.overflow = "hidden";
+  // document.body.style.pointerEvents = "none";
+}
+
+function hideLoader() {
+  loader.classList.add("hidden");
+  document.body.style.overflow = "";
+  // document.body.style.pointerEvents = "";
+}
+
+function openModal() {
+  modal.classList.remove("hidden");
+  document.body.style.overflow = "hidden"; // disable background scroll
+}
+
+function closeModal() {
+  modal.classList.add("hidden");
+  document.body.style.overflow = ""; // restore scroll
+}
+
+  // ===== Button Event Listeners =====
+  applyFilters.addEventListener('click', ()=>{
+    loadAllAnalytics();
+    startRealtimeFeed();
+  });
+
+  clearFilters.addEventListener('click', ()=>{
+    searchQ.value = '';
+    fromDate.value = '';
+    toDate.value = '';
+    loadAllAnalytics();
+    startRealtimeFeed();
+  });
+
+  refreshBtn.addEventListener('click', ()=>{
+    loadAllAnalytics();
+    startRealtimeFeed();
+  });
+
+  document.getElementById('loadMoreProducts').addEventListener('click', ()=>{
+    productsDisplayLimit += 5;
+    displayProducts();
+  });
+
+  document.getElementById('loadMoreCustomers').addEventListener('click', ()=>{
+    customersDisplayLimit +=5;
+    displayCustomers();
+  });
+
+  // document.getElementById('closeModal').addEventListener('click', ()=>modal.classList.add('hidden'));
+  document.getElementById('closeModal')
+  .addEventListener('click', closeModal);
+
+  modal.addEventListener("click", e => {
+  // Only close if clicking the overlay, not the modal box
+  if (e.target === modal) {
+    closeModal();
+  }
+});
+
+  // ===== Initialize Charts =====
+  function initCharts(){
+    const ctxDaily=document.getElementById('dailySalesChart').getContext('2d');
+    dailyChart=new Chart(ctxDaily,{
+      type:'line',
+      data:{labels:[],datasets:[{label:'Sales',data:[],fill:true,backgroundColor:'rgba(219,39,119,0.12)',borderColor:'#db2777'}]},
+      options:{responsive:true,scales:{x:{grid:{display:false}},y:{ticks:{callback:v=>'₦'+v}}}}
+    });
+
+    const ctxMonthly=document.getElementById('monthlyChart').getContext('2d');
+    monthlyChart=new Chart(ctxMonthly,{
+      type:'bar',
+      data:{labels:[],datasets:[{label:'Monthly Revenue',data:[],backgroundColor:'#f472b6'}]},
+      options:{responsive:true,y:{ticks:{callback:v=>'₦'+v}}}
+    });
+
+    const ctxStatus=document.getElementById('statusChart').getContext('2d');
+    statusChart=new Chart(ctxStatus,{
+      type:'doughnut',
+      data:{labels:['Completed','Pending'],datasets:[{data:[0,0],backgroundColor:['#10b981','#f59e0b']}]},
+      options:{responsive:true}
+    });
+
+    const ctxPayment=document.getElementById('paymentChart').getContext('2d');
+    paymentChart=new Chart(ctxPayment,{
+      type:'pie',
+      data:{labels:[],datasets:[{data:[],backgroundColor:[]}]},
+      options:{responsive:true}
+    });
+  }
+
+  initCharts();
+  loadAllAnalytics();
+  startRealtimeFeed();
+
+  // ===== Load Analytics =====
+  async function loadAllAnalytics(){
+    showLoader(); // 👈 START loader
+
+    totalSalesEl.textContent='Loading...';
+    totalOrdersEl.textContent='…';
+    aovEl.textContent='…';
+    totalCustomersEl.textContent='…';
+    topProductsBody.innerHTML=`<tr><td colspan="3" class="p-3 skeleton"></td></tr>`;
+    topCustomersBody.innerHTML=`<tr><td colspan="3" class="p-3 skeleton"></td></tr>`;
+    liveFeed.innerHTML=`<div class="p-3 skeleton h-20"></div>`;
+
+    let q = db.collection('orders').orderBy('createdAt','desc');
+
+const from = fromDate.value ? firebase.firestore.Timestamp.fromDate(new Date(fromDate.value+'T00:00:00')) : null;
+const to = toDate.value ? firebase.firestore.Timestamp.fromDate(new Date(toDate.value+'T23:59:59')) : null;
+if(from) q = q.where('createdAt','>=', from);
+if(to) q = q.where('createdAt','<=', to);
+    // let q=db.collection('orders').orderBy('timestamp','desc');
+
+    // const from=fromDate.value?firebase.firestore.Timestamp.fromDate(new Date(fromDate.value+'T00:00:00')):null;
+    // const to=toDate.value?firebase.firestore.Timestamp.fromDate(new Date(toDate.value+'T23:59:59')):null;
+    // if(from) q=q.where('timestamp','>=',from);
+    // if(to) q=q.where('timestamp','<=',to);
+
+    try{
+      const snap=await q.limit(5000).get();
+      const orders=snap.docs.map(d=>({id:d.id,...d.data()}));
+      const term=(searchQ.value||'').trim().toLowerCase();
+      const filtered=term?orders.filter(o=>{
+        if((o.name||'').toLowerCase().includes(term)) return true;
+        if((o.email||'').toLowerCase().includes(term)) return true;
+        if((o.paymentRef||'').toLowerCase().includes(term)) return true;
+        if(Array.isArray(o.items)&&o.items.some(it=>(it.name||'').toLowerCase().includes(term))) return true;
+        return false;
+      }):orders;
+
+      computeSummaries(filtered);
+      computeDailyChart(filtered);
+      computeMonthlyChart(filtered);
+      computeStatusChart(filtered);
+      computePaymentChart(filtered);
+      renderTopProducts(filtered);
+      renderTopCustomers(filtered);
+    }catch(err){
+      console.error(err);
+      totalSalesEl.textContent='Error';
+      totalOrdersEl.textContent='Error';
+      aovEl.textContent='Error';
+      totalCustomersEl.textContent='Error';
+    }finally {
+    hideLoader(); // 👈 STOP loader (always)
+  }
+  }
+
+  // ===== Compute Summaries =====
+  function computeSummaries(orders){
+    const totalOrders=orders.length;
+    const totalSales=orders.reduce((s,o)=>s+Number(o.total||0),0);
+    const uniqueCustomers=new Set(orders.map(o=>o.userId||o.email||'')).size;
+    const aov=totalOrders?totalSales/totalOrders:0;
+    totalSalesEl.textContent='₦'+totalSales.toLocaleString();
+    totalOrdersEl.textContent=totalOrders.toLocaleString();
+    aovEl.textContent='₦'+Math.round(aov).toLocaleString();
+    totalCustomersEl.textContent=uniqueCustomers.toLocaleString();
+  }
+
+  function computeDailyChart(orders){
+    const days=30,map={};
+    for(let i=days-1;i>=0;i--){
+      const d=new Date(); d.setDate(d.getDate()-i); d.setHours(0,0,0,0);
+      map[d.toISOString().slice(0,10)]=0;
+    }
+    orders.forEach(o=>{
+      if(!o.timestamp) return;
+      const d=o.timestamp.toDate?o.timestamp.toDate():new Date(o.timestamp);
+      const key=d.toISOString().slice(0,10);
+      if(key in map) map[key]+=Number(o.total||0);
+    });
+    dailyChart.data.labels=Object.keys(map);
+    dailyChart.data.datasets[0].data=Object.values(map);
+    dailyChart.update();
+  }
+
+  function computeMonthlyChart(orders){
+    const now=new Date(), year=now.getFullYear(), months=Array.from({length:12},(_,i)=>new Date(year,i,1));
+    const map=months.map(_=>0);
+    orders.forEach(o=>{
+      if(!o.timestamp) return;
+      const d=o.timestamp.toDate?o.timestamp.toDate():new Date(o.timestamp);
+      if(d.getFullYear()!==year) return;
+      map[d.getMonth()]+=Number(o.total||0);
+    });
+    monthlyChart.data.labels=months.map(m=>m.toLocaleString(undefined,{month:'short'}));
+    monthlyChart.data.datasets[0].data=map;
+    monthlyChart.update();
+  }
+
+  function computeStatusChart(orders){
+    let completed=0,pending=0;
+    orders.forEach(o=>o.fulfilled?completed++:pending++);
+    statusChart.data.datasets[0].data=[completed,pending];
+    statusChart.update();
+  }
+
+  function computePaymentChart(orders){
+    const counts={};
+    orders.forEach(o=>{
+      const pm=o.paymentMethod||'Unknown';
+      counts[pm]=(counts[pm]||0)+1;
+    });
+    const labels=Object.keys(counts);
+    const data=labels.map(l=>counts[l]);
+    const colors=labels.map((_,i)=>`hsl(${(i*73)%360} 70% 60%)`);
+    paymentChart.data.labels=labels;
+    paymentChart.data.datasets[0].data=data;
+    paymentChart.data.datasets[0].backgroundColor=colors;
+    paymentChart.update();
+  }
+
+  // ===== Top Products/Customers =====
+  function renderTopProducts(orders){
+    const map={};
+    orders.forEach(o=>(o.items||[]).forEach(it=>{
+      const name=it.name||'Untitled';
+      if(!map[name]) map[name]={qty:0,revenue:0,lastOrder:o.timestamp?o.timestamp.toDate():new Date()};
+      map[name].qty+=Number(it.quantity||0);
+      map[name].revenue+=Number(it.quantity||0)*Number(it.price||0);
+      if(o.timestamp && o.timestamp.toDate) map[name].lastOrder=o.timestamp.toDate();
+    }));
+    lastProductsArr=Object.entries(map).map(([name,v])=>({name,qty:v.qty,revenue:v.revenue,lastOrder:v.lastOrder})).sort((a,b)=>b.qty-a.qty);
+    displayProducts();
+  }
+
+  function displayProducts(){
+    const top=lastProductsArr.slice(0,productsDisplayLimit);
+    topProductsBody.innerHTML=top.length?top.map((t,i)=>`
+      <tr class="cursor-pointer hover:bg-gray-100" data-index="${i}">
+        <td class="p-2">${escapeHtml(t.name)}</td>
+        <td class="p-2">${t.qty.toLocaleString()}</td>
+        <td class="p-2">₦${Math.round(t.revenue).toLocaleString()}</td>
+      </tr>`).join(''):`<tr><td colspan="3" class="p-3 text-gray-500">No product data</td></tr>`;
+  }
+
+  function renderTopCustomers(orders){
+    const map={};
+    orders.forEach(o=>{
+      const key=o.userId||o.email||o.name||('guest-'+(o.paymentRef||''));
+      if(!map[key]) map[key]={name:o.name||o.email||'Customer',email:o.email||'',orders:0,spent:0,lastOrder:o.timestamp?o.timestamp.toDate():new Date()};
+      map[key].orders++; map[key].spent+=Number(o.total||0); if(o.timestamp && o.timestamp.toDate) map[key].lastOrder=o.timestamp.toDate();
+    });
+    lastCustomersArr=Object.values(map).sort((a,b)=>b.spent-a.spent);
+    displayCustomers();
+  }
+
+  function displayCustomers(){
+    const top=lastCustomersArr.slice(0,customersDisplayLimit);
+    topCustomersBody.innerHTML=top.length?top.map((c,i)=>`
+      <tr class="cursor-pointer hover:bg-gray-100" data-index="${i}">
+        <td class="p-2">${escapeHtml(c.name)}</td>
+        <td class="p-2">${c.orders}</td>
+        <td class="p-2">₦${Math.round(c.spent).toLocaleString()}</td>
+      </tr>`).join(''):`<tr><td colspan="3" class="p-3 text-gray-500">No customer data</td></tr>`;
+  }
+
+  // ===== Modals =====
+  topProductsBody.addEventListener('click', e=>{
+    const tr=e.target.closest('tr'); if(!tr) return;
+    const t=lastProductsArr[Number(tr.dataset.index)]; if(!t) return;
+    modalTitle.textContent=`Product: ${t.name}`;
+    modalContent.innerHTML=`<p><strong>Quantity Sold:</strong> ${t.qty}</p>
+      <p><strong>Total Revenue:</strong> ₦${Math.round(t.revenue).toLocaleString()}</p>
+      <p><strong>Last Ordered:</strong> ${t.lastOrder.toLocaleString()}</p>`;
+    // modal.classList.remove('hidden');
+    openModal();
+  });
+
+  topCustomersBody.addEventListener('click', e=>{
+    const tr=e.target.closest('tr'); if(!tr) return;
+    const c=lastCustomersArr[Number(tr.dataset.index)]; if(!c) return;
+    modalTitle.textContent=`Customer: ${c.name}`;
+    modalContent.innerHTML=`<p><strong>Email:</strong> ${escapeHtml(c.email)}</p>
+      <p><strong>Total Orders:</strong> ${c.orders}</p>
+      <p><strong>Total Spent:</strong> ₦${Math.round(c.spent).toLocaleString()}</p>
+      <p><strong>Last Order:</strong> ${c.lastOrder.toLocaleString()}</p>`;
+    // modal.classList.remove('hidden');
+    openModal();
+  });
+
+  // ===== Real-time Feed =====
+  function startRealtimeFeed(){
+    if(ordersSnapshotUnsub) ordersSnapshotUnsub();
+    let q=db.collection('orders').orderBy('timestamp','desc').limit(15);
+
+    // apply date and search filters
+    const from=fromDate.value?firebase.firestore.Timestamp.fromDate(new Date(fromDate.value+'T00:00:00')):null;
+    const to=toDate.value?firebase.firestore.Timestamp.fromDate(new Date(toDate.value+'T23:59:59')):null;
+
+    if(from) q=q.where('timestamp','>=',from);
+    if(to) q=q.where('timestamp','<=',to);
+
+    const term=(searchQ.value||'').trim().toLowerCase();
+
+    ordersSnapshotUnsub=q.onSnapshot(snap=>{
+      liveFeed.innerHTML='';
+      snap.docs.forEach(d=>{
+        const o=d.data();
+        if(term){
+          let match=false;
+          if((o.name||'').toLowerCase().includes(term)) match=true;
+          if((o.email||'').toLowerCase().includes(term)) match=true;
+          if((o.paymentRef||'').toLowerCase().includes(term)) match=true;
+          if(Array.isArray(o.items)&&o.items.some(it=>(it.name||'').toLowerCase().includes(term))) match=true;
+          if(!match) return;
+        }
+        const time=o.timestamp?o.timestamp.toDate().toLocaleTimeString(): '';
+        const div=document.createElement('div'); 
+        div.className='p-2 border-b cursor-pointer hover:bg-gray-100';
+        div.textContent=`${o.name||o.email||'Guest'} - ₦${Math.round(o.total||0).toLocaleString()} - ${time}`;
+        liveFeed.appendChild(div);
+      });
+    });
+  }
+
+  // ===== Helpers =====
+  function escapeHtml(text) {
+  return (text||'').toString().replace(/[&<>"']/g, m => ({
+    '&':'&amp;',
+    '<':'&lt;',
+    '>':'&gt;',
+    '"':'&quot;',
+    "'":'&#39;'
+  }[m]));
+}
+</script> -->
 </body>
-
 </html>
