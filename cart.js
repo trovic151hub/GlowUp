@@ -881,26 +881,60 @@ const shippingFee = calculateDeliveryFee(deliveryInfo, totalWeight);
 let maxFee = 0;
 
 const buffer = 4000;
+const isNigeria = deliveryInfo.country?.toLowerCase() === "nigeria";
+const isLagos = deliveryInfo.state?.toLowerCase().includes("lagos");
 
-if (deliveryInfo.company === "GUO") {
-  minFee = 3500;
-
-  // Ensure the minimum is not above the real fee
-  minFee = Math.min(minFee, shippingFee);
-
-  maxFee = shippingFee + buffer;
+// 🌍 INTERNATIONAL
+if (!isNigeria) {
+  feeEl.textContent = "Delivery fee will be confirmed via WhatsAppp";
 }
 
+// 🏙 LAGOS DELIVERY (show exact fee only)
+else if (isLagos) {
+  feeEl.textContent = `₦${shippingFee.toLocaleString()}`;
+}
+
+// 🚚 GUO
+else if (deliveryInfo.company === "GUO") {
+  minFee = 3500;
+  minFee = Math.min(minFee, shippingFee);
+  maxFee = shippingFee + buffer;
+
+  feeEl.textContent = `Estimated: ₦${minFee.toLocaleString()} – ₦${maxFee.toLocaleString()}`;
+}
+
+// 🚚 GIG
 else if (deliveryInfo.company === "GIG") {
   minFee = 6800;
-
   minFee = Math.min(minFee, shippingFee);
-
   maxFee = shippingFee + buffer;
-}
 
-feeEl.textContent = 
-  `Estimated: ₦${minFee.toLocaleString()} – ₦${maxFee.toLocaleString()}`;
+  feeEl.textContent = `Estimated: ₦${minFee.toLocaleString()} – ₦${maxFee.toLocaleString()}`;
+}
+//   let minFee = 0;
+// let maxFee = 0;
+
+// const buffer = 4000;
+
+// if (deliveryInfo.company === "GUO") {
+//   minFee = 3500;
+
+//   // Ensure the minimum is not above the real fee
+//   minFee = Math.min(minFee, shippingFee);
+
+//   maxFee = shippingFee + buffer;
+// }
+
+// else if (deliveryInfo.company === "GIG") {
+//   minFee = 6800;
+
+//   minFee = Math.min(minFee, shippingFee);
+
+//   maxFee = shippingFee + buffer;
+// }
+
+// feeEl.textContent = 
+//   `Estimated: ₦${minFee.toLocaleString()} – ₦${maxFee.toLocaleString()}`;
   // feeEl.textContent = `₦${shippingFee.toLocaleString()}`;
   topRow.appendChild(title);
   topRow.appendChild(feeEl);

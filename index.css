@@ -260,10 +260,11 @@
 
 .hero-control {
   position: absolute;
-  top: 50%;
-  right: 50%;
+  top: 64%;
+  /* right: 50%; */
+  left:35px;
   transform: translateY(-50%);
-  font-size: 6rem;
+  font-size: 2rem;
   color: white;
   padding: 0.5rem;
   border-radius: 50%;
@@ -641,7 +642,7 @@
 /* Tablet */
 @media (max-width: 1024px) {
   .hero-control {
-    font-size: 4rem; /* smaller play/pause buttons */
+    font-size: 2rem; /* smaller play/pause buttons */
   }
 
   .hero-tabs span {
@@ -659,7 +660,10 @@
 /* Mobile */
 @media (max-width: 640px) {
   .hero-control {
-    font-size: 3rem; /* even smaller play/pause */
+    font-size: 3rem;
+    position: absolute;
+    top: 68% !important;
+    left: 20px !important;
   }
 
   .hero-tabs {
@@ -701,9 +705,9 @@
 
   .hero-control {
   position: absolute;
-  top: 60% !important;
-  right: 45% !important;
-  font-size: 3rem !important;
+  top: 68% !important;
+  left: 20px !important;
+  font-size: 1.8rem !important;
 }
 }
 
