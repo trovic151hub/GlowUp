@@ -66,7 +66,7 @@
         <option value="all">All payment</option>
         <option value="Paystack">Paystack</option>
         <option value="Flutterwave">Flutterwave</option>
-        <option value="Cash">WhatsApp</option>
+        <option value="WhatsApp">WhatsApp</option>
       </select>
     </div>
 
@@ -112,6 +112,33 @@
 <!-- DETAIL MODAL -->
 <div id="detailModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
   <div class="bg-white w-full max-w-lg sm:max-w-lg md:max-w-2xl p-6 rounded shadow-lg animate-slide-in max-h-[90vh] overflow-auto">
+    
+    <!-- Header -->
+    <div class="flex justify-between items-start gap-4">
+      <h2 class="text-2xl font-semibold text-pink-600">Order Details</h2>
+      <div>
+        <button id="modalClose" class="text-gray-600 hover:text-gray-800 text-xl">&times;</button>
+      </div>
+    </div>
+
+    <!-- International Controls (optional) -->
+    <div id="internationalControls" class="mt-3"></div>
+
+    <!-- Main Content -->
+    <div id="detailContent" class="mt-4 space-y-3 text-sm text-gray-800"></div>
+
+    <!-- Footer buttons -->
+    <div class="mt-4 flex gap-2 flex-wrap">
+      <button id="downloadPdfBtn" class="bg-pink-600 text-white px-4 py-2 rounded flex-1 min-w-[120px]">Download Receipt</button>
+      <button id="emailReceiptBtn" class="bg-blue-600 text-white px-4 py-2 rounded opacity-50 cursor-not-allowed flex-1 min-w-[120px]" disabled>Email Receipt</button>
+      <!-- Move status controls here at the top -->
+    <div id="modalStatusControls" class="mt-3"></div>
+    </div>
+  </div>
+</div>
+<!-- DETAIL MODAL -->
+<!-- <div id="detailModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
+  <div class="bg-white w-full max-w-lg sm:max-w-lg md:max-w-2xl p-6 rounded shadow-lg animate-slide-in max-h-[90vh] overflow-auto">
     <div class="flex justify-between items-start gap-4">
       <h2 class="text-2xl font-semibold text-pink-600">Order Details</h2>
       <div>
@@ -126,7 +153,7 @@
       <div id="modalStatusControls" class="ml-auto flex gap-2 flex-wrap"></div>
     </div>
   </div>
-</div>
+</div> -->
 
 <!-- LOADER -->
 <div id="dashboard-loader" class="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center hidden z-50">
@@ -272,39 +299,68 @@
     }
 
     // ===== Build Query for Orders =====
-  function buildQuery(pageSize = PAGE_SIZE, startAfterDoc = null) {
-    let q = db.collection('orders').orderBy('createdAt', 'desc');
+    function buildQuery(pageSize = PAGE_SIZE, startAfterDoc = null) {
+  let q = db.collection('orders').orderBy('createdAt', 'desc');
 
-    // Filters
-    if (activeFilters.status && activeFilters.status !== 'all') {
-    // Map dropdown to boolean for Firestore
-    const isCompleted = activeFilters.status === 'completed';
-    q = q.where('fulfilled', '==', isCompleted);
+  // Other Firestore filters
+  if (activeFilters.payment && activeFilters.payment !== 'all') {
+    q = q.where('payment.method', '==', activeFilters.payment);
   }
-    if (activeFilters.payment && activeFilters.payment !== 'all') {
-      q = q.where('payment.method', '==', activeFilters.payment);
-    }
-    if (activeFilters.shipment && activeFilters.shipment !== 'all') {
-      q = q.where('shipping.status', '==', activeFilters.shipment);
-    }
-    if (activeFilters.from) {
-      q = q.where(
-        'createdAt',
-        '>=',
-        firebase.firestore.Timestamp.fromDate(new Date(activeFilters.from + 'T00:00:00'))
-      );
-    }
-    if (activeFilters.to) {
-      q = q.where(
-        'createdAt',
-        '<=',
-        firebase.firestore.Timestamp.fromDate(new Date(activeFilters.to + 'T23:59:59'))
-      );
-    }
-    if (startAfterDoc) q = q.startAfter(startAfterDoc);
+  if (activeFilters.shipment && activeFilters.shipment !== 'all') {
+    q = q.where('shipping.status', '==', activeFilters.shipment);
+  }
+  if (activeFilters.from) {
+    q = q.where(
+      'createdAt',
+      '>=',
+      firebase.firestore.Timestamp.fromDate(new Date(activeFilters.from + 'T00:00:00'))
+    );
+  }
+  if (activeFilters.to) {
+    q = q.where(
+      'createdAt',
+      '<=',
+      firebase.firestore.Timestamp.fromDate(new Date(activeFilters.to + 'T23:59:59'))
+    );
+  }
 
-    return q.limit(pageSize);
-  }
+  if (startAfterDoc) q = q.startAfter(startAfterDoc);
+
+  return q.limit(pageSize);
+}
+  // function buildQuery(pageSize = PAGE_SIZE, startAfterDoc = null) {
+  //   let q = db.collection('orders').orderBy('createdAt', 'desc');
+
+  //   // Filters
+  //   if (activeFilters.status && activeFilters.status !== 'all') {
+  //   // Map dropdown to boolean for Firestore
+  //   const isCompleted = activeFilters.status === 'completed';
+  //   q = q.where('fulfilled', '==', isCompleted);
+  // }
+  //   if (activeFilters.payment && activeFilters.payment !== 'all') {
+  //     q = q.where('payment.method', '==', activeFilters.payment);
+  //   }
+  //   if (activeFilters.shipment && activeFilters.shipment !== 'all') {
+  //     q = q.where('shipping.status', '==', activeFilters.shipment);
+  //   }
+  //   if (activeFilters.from) {
+  //     q = q.where(
+  //       'createdAt',
+  //       '>=',
+  //       firebase.firestore.Timestamp.fromDate(new Date(activeFilters.from + 'T00:00:00'))
+  //     );
+  //   }
+  //   if (activeFilters.to) {
+  //     q = q.where(
+  //       'createdAt',
+  //       '<=',
+  //       firebase.firestore.Timestamp.fromDate(new Date(activeFilters.to + 'T23:59:59'))
+  //     );
+  //   }
+  //   if (startAfterDoc) q = q.startAfter(startAfterDoc);
+
+  //   return q.limit(pageSize);
+  // }
 
     function hideLoadMore() {
     loadMoreBtn.style.display = "none";
@@ -335,61 +391,166 @@
     //   ordersSummary.innerHTML = `<strong>Total Orders:</strong> ${totalOrders} | <strong>Total Delivery Fee:</strong> ₦${totalDeliveryFee.toLocaleString()} | <strong>Total Weight:</strong> ${totalWeight} kg`;
     // }
 
-    // ===== Load Orders (Initial + Load More) =====
-  async function loadMore(isInitial = false) {
-    if (loadingMore) return;
-    loadingMore = true;
-    loadMoreBtn.disabled = true;
-    if (isInitial) showLoader();
+    function updateSummary() {
+  const rows = Array.from(ordersTbody.children).filter(r => r.__order);
+  const totalOrders = rows.length;
 
-    try {
-      const snap = await buildQuery(PAGE_SIZE, lastDoc).get();
-      if (!snap.empty) {
-        if (isInitial) ordersTbody.innerHTML = '';
-        // const docs = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-        // docs.forEach(order => ordersTbody.appendChild(orderRow(order)));
-        const docs = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  // Total delivery fee across all orders
+  const totalDeliveryFee = rows.reduce((sum, r) => {
+    const order = r.__order;
 
-  const filteredDocs = docs.filter(order => {
-    if (!activeFilters.q) return true;
+    // Get delivery fee (from any available place)
+    const deliveryFee = Number(order?.delivery?.deliveryFee || 0);
+    const shippingFee = Number(order?.pricing?.shippingFee || 0);
 
-    const q = activeFilters.q.toLowerCase();
+    return sum + deliveryFee + shippingFee; // add them together
+  }, 0);
 
-    const name =
-      `${order.shipping?.firstName || ""} ${order.shipping?.lastName || ""}`.toLowerCase();
-
-    const paymentRef = (order.payment?.reference || "").toLowerCase();
-
-    const productNames = (order.items || [])
-      .map(i => (i.name || "").toLowerCase())
-      .join(" ");
-
-    return (
-      name.includes(q) ||
-      paymentRef.includes(q) ||
-      productNames.includes(q)
+  // Total weight across all orders
+  const totalWeight = rows.reduce((sum, r) => {
+    const items = r.__order.items || [];
+    const orderWeight = items.reduce(
+      (s, item) => s + Number(item.weight || 0) * Number(item.quantity || 1),
+      0
     );
-  });
+    return sum + orderWeight;
+  }, 0);
 
-  filteredDocs.forEach(order => ordersTbody.appendChild(orderRow(order)));
-        lastDoc = snap.docs[snap.docs.length - 1];
+  ordersSummary.innerHTML = `
+    <strong>Total Orders:</strong> ${totalOrders} | 
+    <strong>Total Delivery Fee:</strong> ₦${totalDeliveryFee.toLocaleString()} | 
+    <strong>Total Weight:</strong> ${totalWeight.toLocaleString()} kg
+  `;
+}
 
-        if (snap.size < PAGE_SIZE) hideLoadMore();
-        else showLoadMore();
-      } else if (isInitial) {
-        ordersTbody.innerHTML = `<tr><td colspan="8" class="p-4 text-center text-gray-500">No orders found.</td></tr>`;
-        hideLoadMore();
-      }
-    } catch (err) {
-      console.error(err);
-      ordersTbody.innerHTML = `<tr><td colspan="8" class="p-4 text-red-500">Failed to load orders.</td></tr>`;
-    } finally {
-      loadingMore = false;
-      loadMoreBtn.disabled = false;
-      hideLoader();
-      // updateSummary();
+    async function loadMore(isInitial = false) {
+  if (loadingMore) return;
+  loadingMore = true;
+  loadMoreBtn.disabled = true;
+  if (isInitial) showLoader();
+
+  try {
+    const snap = await buildQuery(PAGE_SIZE, lastDoc).get();
+    if (!snap.empty) {
+      if (isInitial) ordersTbody.innerHTML = '';
+
+      const docs = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+
+      // ===== FILTER DOCS CLIENT-SIDE =====
+      const filteredDocs = docs.filter(order => {
+        // --- Text search filter ---
+        if (activeFilters.q) {
+          const q = activeFilters.q.toLowerCase();
+          const name = `${order.shipping?.firstName || ""} ${order.shipping?.lastName || ""}`.toLowerCase();
+          const paymentRef = (order.payment?.reference || "").toLowerCase();
+          const productNames = (order.items || []).map(i => (i.name || "").toLowerCase()).join(" ");
+          if (!name.includes(q) && !paymentRef.includes(q) && !productNames.includes(q)) return false;
+        }
+
+        // --- Status filter ---
+        if (activeFilters.status && activeFilters.status !== 'all') {
+          if (activeFilters.status === 'completed' && order.fulfilled !== true) return false;
+          if (activeFilters.status === 'pending' && order.fulfilled === true) return false; // includes undefined as pending
+        }
+
+        // --- Payment filter ---
+        if (activeFilters.payment && activeFilters.payment !== 'all') {
+          if ((order.payment?.method || 'none') !== activeFilters.payment) return false;
+        }
+
+        // --- Shipment filter ---
+        if (activeFilters.shipment && activeFilters.shipment !== 'all') {
+          if ((order.shipping?.status || 'none') !== activeFilters.shipment) return false;
+        }
+
+        // --- Date range filter ---
+        if (activeFilters.from) {
+          const fromDate = new Date(activeFilters.from + 'T00:00:00');
+          if (!order.createdAt?.toDate || order.createdAt.toDate() < fromDate) return false;
+        }
+        if (activeFilters.to) {
+          const toDate = new Date(activeFilters.to + 'T23:59:59');
+          if (!order.createdAt?.toDate || order.createdAt.toDate() > toDate) return false;
+        }
+
+        return true;
+      });
+
+      filteredDocs.forEach(order => ordersTbody.appendChild(orderRow(order)));
+
+      lastDoc = snap.docs[snap.docs.length - 1];
+
+      if (snap.size < PAGE_SIZE) hideLoadMore();
+      else showLoadMore();
+    } else if (isInitial) {
+      ordersTbody.innerHTML = `<tr><td colspan="8" class="p-4 text-center text-gray-500">No orders found.</td></tr>`;
+      hideLoadMore();
     }
+  } catch (err) {
+    console.error(err);
+    ordersTbody.innerHTML = `<tr><td colspan="8" class="p-4 text-red-500">Failed to load orders.</td></tr>`;
+  } finally {
+    loadingMore = false;
+    loadMoreBtn.disabled = false;
+    hideLoader();
+    updateSummary();
   }
+}
+    // ===== Load Orders (Initial + Load More) =====
+  // async function loadMore(isInitial = false) {
+  //   if (loadingMore) return;
+  //   loadingMore = true;
+  //   loadMoreBtn.disabled = true;
+  //   if (isInitial) showLoader();
+
+  //   try {
+  //     const snap = await buildQuery(PAGE_SIZE, lastDoc).get();
+  //     if (!snap.empty) {
+  //       if (isInitial) ordersTbody.innerHTML = '';
+  //       // const docs = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  //       // docs.forEach(order => ordersTbody.appendChild(orderRow(order)));
+  //       const docs = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+
+  // const filteredDocs = docs.filter(order => {
+  //   if (!activeFilters.q) return true;
+
+  //   const q = activeFilters.q.toLowerCase();
+
+  //   const name =
+  //     `${order.shipping?.firstName || ""} ${order.shipping?.lastName || ""}`.toLowerCase();
+
+  //   const paymentRef = (order.payment?.reference || "").toLowerCase();
+
+  //   const productNames = (order.items || [])
+  //     .map(i => (i.name || "").toLowerCase())
+  //     .join(" ");
+
+  //   return (
+  //     name.includes(q) ||
+  //     paymentRef.includes(q) ||
+  //     productNames.includes(q)
+  //   );
+  // });
+
+  // filteredDocs.forEach(order => ordersTbody.appendChild(orderRow(order)));
+  //       lastDoc = snap.docs[snap.docs.length - 1];
+
+  //       if (snap.size < PAGE_SIZE) hideLoadMore();
+  //       else showLoadMore();
+  //     } else if (isInitial) {
+  //       ordersTbody.innerHTML = `<tr><td colspan="8" class="p-4 text-center text-gray-500">No orders found.</td></tr>`;
+  //       hideLoadMore();
+  //     }
+  //   } catch (err) {
+  //     console.error(err);
+  //     ordersTbody.innerHTML = `<tr><td colspan="8" class="p-4 text-red-500">Failed to load orders.</td></tr>`;
+  //   } finally {
+  //     loadingMore = false;
+  //     loadMoreBtn.disabled = false;
+  //     hideLoader();
+  //     // updateSummary();
+  //   }
+  // }
 
   qText.addEventListener("input", () => {
     activeFilters.q = qText.value;
@@ -463,7 +624,7 @@
           const newRow = orderRow(row.__order);
           ordersTbody.replaceChild(newRow, row);
         }
-        // updateSummary();
+        updateSummary();
       } catch(err){ showAlert("Failed to update order: "+err.message,"Error"); }
     };
 
@@ -496,7 +657,7 @@
         }
 
         showAlert("Shipment status updated successfully!", "Success");
-        // updateSummary();
+        updateSummary();
       })
       .catch(err => showAlert("Failed to update shipment status: " + err.message, "Error"));
   }
@@ -527,9 +688,9 @@
     const orderRef = firebase.firestore().collection('orders').doc(orderId);
 
     await orderRef.update({
-      'delivery.fulfilled': true,
-      'shipmentStatus': 'processing'
-    });
+  'delivery.fulfilled': true,
+  'shipping.status': 'processing'
+});
   }
 
   // ===== Update International Delivery =====
@@ -787,7 +948,10 @@
       <option value="shipped">Shipped</option>
       <option value="delivered">Delivered</option>
     `;
-    sel.value = order.shipmentStatus || 'processing';
+
+    // Use the actual Firestore field
+sel.value = order.shipping?.status || 'processing';
+    // sel.value = order.shipmentStatus || 'processing';
     sel.onchange = () => updateShipmentStatus(order.id, sel.value);
     modalStatusControls.appendChild(sel);
 
@@ -888,7 +1052,7 @@
 
       adminControls.appendChild(saveBtn);
 
-      modalStatusControls.appendChild(adminControls);
+      internationalControls.appendChild(adminControls);
     }
   }
 
@@ -949,7 +1113,7 @@
         }
       }
     });
-    // updateSummary();
+    updateSummary();
   });
 
     // Email Receipt

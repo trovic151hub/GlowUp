@@ -911,27 +911,6 @@ else if (deliveryInfo.company === "GIG") {
 
   feeEl.textContent = `Estimated: ₦${minFee.toLocaleString()} – ₦${maxFee.toLocaleString()}`;
 }
-//   let minFee = 0;
-// let maxFee = 0;
-
-// const buffer = 4000;
-
-// if (deliveryInfo.company === "GUO") {
-//   minFee = 3500;
-
-//   // Ensure the minimum is not above the real fee
-//   minFee = Math.min(minFee, shippingFee);
-
-//   maxFee = shippingFee + buffer;
-// }
-
-// else if (deliveryInfo.company === "GIG") {
-//   minFee = 6800;
-
-//   minFee = Math.min(minFee, shippingFee);
-
-//   maxFee = shippingFee + buffer;
-// }
 
 // feeEl.textContent = 
 //   `Estimated: ₦${minFee.toLocaleString()} – ₦${maxFee.toLocaleString()}`;
@@ -1018,7 +997,6 @@ document.getElementById("shipping-edit-btn").onclick = () => {
   summaryPlaceOrderBtn.classList.remove("bg-pink-600", "hover:bg-pink-700");
 };
 
-// // Summary Place Order Button
 // Summary Place Order Button
 summaryPlaceOrderBtn.addEventListener("click", async () => {
   if (!selectedPayment) {
@@ -1087,9 +1065,9 @@ summaryPlaceOrderBtn.addEventListener("click", async () => {
         total
       },
       shipment: {
-  status: "pending"
+  status: "processing"
 },
-      // status: "pending",
+      status: "processing",
       createdAt: firebase.firestore.FieldValue.serverTimestamp()
     });
 
