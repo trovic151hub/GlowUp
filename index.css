@@ -196,7 +196,7 @@
 
     .log-btn i {
   display: inline-block;
-  font-size: 15px; /* bigger so it’s visible */
+  font-size: 15px;
   color: #000 !important;
 }
 
@@ -241,6 +241,7 @@
 .hero-image-track {
   display: flex;
   height: 100%;
+  width: 100%;
    transition: transform 0.8s cubic-bezier(0.22, 0.61, 0.36, 1); 
   will-change: transform;
 }
@@ -250,13 +251,8 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
-  transform: scale(1.05);
+  display: block;
 }
-
-  .hero-slider {
-  position: relative;
-  overflow: hidden;
-} 
 
 .hero-control {
   position: absolute;
@@ -324,11 +320,13 @@
   justify-content: center;
   color: #fff;
   z-index: 5;
+
   background: linear-gradient(
     to right,
-    rgba(0,0,0,.55) 0%,
-    rgba(0,0,0,.35) 35%,
-    transparent 70%
+    rgba(0,0,0,0.75) 0%,
+    rgba(0,0,0,0.55) 35%,
+    rgba(0,0,0,0.25) 55%,
+    transparent 75%
   );
 }
 

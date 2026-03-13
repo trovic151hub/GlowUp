@@ -358,7 +358,7 @@ document.addEventListener("DOMContentLoaded", () => {
       allOrders = [];
       snapshot.forEach(doc => {
         const data = doc.data();
-        const status = (data.shipmentStatus || data.status || "Pending").trim();
+        const status = (data.shipping?.status || data.shipmentStatus || data.status || "Pending").trim();
         allOrders.push({
   id: doc.id,
   total: data.pricing?.total || 0,
@@ -429,7 +429,7 @@ if (!orderModal.classList.contains("hidden") && openedOrderId) {
       }
     });
     applyOrderFilter(status);
-    setTimeout(hideLoader, 400); // hide after filter animation
+    setTimeout(hideLoader, 400);
   };
 
   // Apply Order Filter

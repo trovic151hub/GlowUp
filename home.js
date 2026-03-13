@@ -474,32 +474,6 @@ loadHeroSlides();
 window.addEventListener("scroll", () => {
   if (!header) return;
 
-//   if (window.scrollY > 50) {
-//   // Remove semi-transparent black background
-//   header.classList.remove("bg-[#0000004D]");
-
-//   // Add gradient background
-//   header.classList.add("bg-gradient-to-r", "from-[#fbcfe8]/70", "to-[#f9a8d4]/70");
-
-//   // Add backdrop blur
-//   header.classList.add("backdrop-blur-md");
-
-//   // Make text dark
-//   header.classList.add("text-black");
-//   header.classList.remove("text-white");
-
-// } else {
-//   // Remove gradient background
-//   header.classList.remove("bg-gradient-to-r", "from-[#fbcfe8]/70", "to-[#f9a8d4]/70");
-
-//   // Add semi-transparent black background with blur
-//   header.classList.add("bg-[#0000004D]", "backdrop-blur-md");
-
-//   // Reset text color
-//   header.classList.remove("text-black");
-//   header.classList.add("text-white");
-// }
-
   if (window.scrollY > 50) {
     // Remove semi-transparent black background
     header.classList.remove("bg-[#0000004D]");
@@ -523,24 +497,6 @@ window.addEventListener("scroll", () => {
     header.classList.add("text-white");
   }
 });
-
-// const header = document.getElementById("mainHeader");
-
-// window.addEventListener("scroll", () => {
-//   if (!header) return;
-
-//   if (window.scrollY > 50) {
-//     // Remove white background
-//     header.classList.remove("bg-[#0000004D]");
-//     // Add gradient classes individually
-//     header.classList.add("bg-gradient-to-r", "from-[#fbcfe8]", "to-[#f9a8d4]");
-//   } else {
-//     // Remove gradient classes individually
-//     header.classList.remove("bg-gradient-to-r", "from-[#fbcfe8]", "to-[#f9a8d4]");
-//     // Add white background
-//     header.classList.add("bg-[#0000004D]");
-//   }
-// });
 
 // ===== Open Email Modal =====
 function openPasswordEmailModal() {
@@ -1287,8 +1243,6 @@ window.addToCart = async function(productId) {
 };
 
 // ---------- UPDATE CART COUNT ----------
-// let cartUnsub = null;
-
 async function updateCartCount() {
   const el = document.getElementById("cartCount");
   if (!el) return;
@@ -1335,111 +1289,6 @@ async function updateCartCount() {
 
 // ---------- INITIALIZE ----------
 updateCartCount();
-
-// // Ensure guest cart exists
-// async function ensureGuestCart() {
-//   const cartDocRef = userDb.collection("guestCarts").doc(guestId);
-//   const snap = await cartDocRef.get();
-//   if (!snap.exists) {
-//     await cartDocRef.set({
-//       guestId,
-//       items: [],
-//       updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-//     });
-//   }
-// }
-
-// // ---------- ADD TO CART ----------
-// window.addToCart = async function(id){
-//   const product = currentProducts.find(p => p.id === id);
-//   if(!product) return showNotification("Product not found","error");
-
-//   const cartDocRef = userDb.collection("guestCarts").doc(guestId);
-
-//   try {
-//     // Make sure cart exists
-//     await ensureGuestCart();
-
-//     const snap = await cartDocRef.get();
-//     let items = snap.exists ? snap.data().items || [] : [];
-
-//     const existing = items.find(i => i.id === product.id);
-
-//     if(existing){
-//       existing.quantity += 1;
-//     } else {
-//       items.push({
-//         id: product.id,
-//         name: product.name,
-//         price: Number(product.price) || 0,
-//         image: product.image || "",
-//         quantity: 1,
-//         weight: Number(product.weight || 0)
-//       });
-//     }
-
-//     await cartDocRef.set({
-//       guestId,
-//       items,
-//       updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-//     }, { merge: true });
-
-//     // ✅ SYNC IMMEDIATELY
-// localStorage.setItem("cart", JSON.stringify(items));
-
-//     showNotification("Added to cart!", "success");
-//     updateCartCount();
-
-//   } catch(err){
-//     console.error(err);
-//     showNotification("Failed to add to cart","error");
-//   }
-// };
-
-// // ---------- UPDATE CART COUNT ----------
-// function updateCartCount(){
-//   const el = document.getElementById("cartCount");
-//   if(!el) return;
-
-//   // ✅ Instant count from localStorage
-//   try {
-//     const cached = JSON.parse(localStorage.getItem("cart")) || [];
-//     const cachedTotal = cached.reduce((s,i)=>s+(i.quantity||0),0);
-//     el.textContent = cachedTotal;
-//   } catch {
-//     el.textContent = "0";
-//   }
-
-//   // Unsubscribe previous listener
-//   if(cartUnsub){
-//     try{ cartUnsub(); } catch(e){}
-//     cartUnsub = null;
-//   }
-
-//   const cartDocRef = userDb.collection("guestCarts").doc(guestId);
-
-//   // Make sure cart exists first
-//   ensureGuestCart().then(()=>{
-//     cartUnsub = cartDocRef.onSnapshot(doc=>{
-//       if(!doc.exists){
-//         el.textContent = "0";
-//         return;
-//       }
-//       const items = doc.data().items || [];
-//       const total = items.reduce((sum,i)=>sum+(i.quantity||0),0);
-//       el.textContent = total;
-//     }, err=>{
-//       console.error(err);
-//       el.textContent = "0";
-//     });
-//   }).catch(err=>{
-//     console.error(err);
-//     el.textContent = "0";
-//   });
-// }
-
-// // ---------- INITIALIZE CART COUNT ----------
-// updateCartCount();
 
   // ---------- INITIAL LOAD ----------
   rotateTipsFade();

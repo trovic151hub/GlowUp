@@ -912,9 +912,6 @@ else if (deliveryInfo.company === "GIG") {
   feeEl.textContent = `Estimated: ₦${minFee.toLocaleString()} – ₦${maxFee.toLocaleString()}`;
 }
 
-// feeEl.textContent = 
-//   `Estimated: ₦${minFee.toLocaleString()} – ₦${maxFee.toLocaleString()}`;
-  // feeEl.textContent = `₦${shippingFee.toLocaleString()}`;
   topRow.appendChild(title);
   topRow.appendChild(feeEl);
   card.appendChild(topRow);
@@ -1053,7 +1050,7 @@ summaryPlaceOrderBtn.addEventListener("click", async () => {
       items: cartItems,
       shipping: shippingData,
       delivery: deliveryInfo,
-      status: "processing",
+      status: "pending",
       payment: {
         method: "whatsapp",
         reference: whatsappPaymentRef,
@@ -1065,9 +1062,9 @@ summaryPlaceOrderBtn.addEventListener("click", async () => {
         total
       },
       shipment: {
-  status: "processing"
+  status: "pending"
 },
-      status: "processing",
+      status: "pending",
       createdAt: firebase.firestore.FieldValue.serverTimestamp()
     });
 
