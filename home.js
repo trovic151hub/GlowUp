@@ -613,19 +613,52 @@ document.getElementById("sendResetLinkBtn")?.addEventListener("click", async () 
       // Clicking the overlay closes the mini-cart
       overlay.addEventListener("click", () => closeMiniCart());
     }
+  
+// --- Open / Close Mini Cart ---
+function openMiniCart() {
+  overlay.classList.remove("hidden");
+  document.body.style.overflow = "hidden"; // disable background scroll
 
-    // --- Open / Close Mini Cart ---
-    function openMiniCart() {
-      gsap.to(miniCart, { x: 0, duration: 0.5, ease: "power2.out" });
-      overlay.classList.remove("hidden");
-      document.body.style.overflow = "hidden"; // disable background scroll
-    }
+  gsap.fromTo(
+    miniCart,
+    { x: "100%" }, // start off-screen
+    { x: 0, duration: 0.5, ease: "power2.out" }
+  );
 
-    function closeMiniCart() {
-      gsap.to(miniCart, { x: "100%", duration: 0.5, ease: "power2.in" });
-      overlay.classList.add("hidden");
-      document.body.style.overflow = ""; // re-enable scroll
-    }
+  gsap.fromTo(
+    overlay,
+    { autoAlpha: 0 }, // start transparent
+    { autoAlpha: 1, duration: 0.5, ease: "power2.out" }
+  );
+}
+
+function closeMiniCart() {
+  document.body.style.overflow = ""; // re-enable scroll
+
+  gsap.to(miniCart, {
+    x: "100%",
+    duration: 0.5,
+    ease: "power2.in",
+  });
+
+  gsap.to(overlay, {
+    autoAlpha: 0,
+    duration: 0.5,
+    ease: "power2.in",
+    onComplete: () => overlay.classList.add("hidden"),
+  });
+}
+    // function openMiniCart() {
+    //   gsap.to(miniCart, { x: 0, duration: 0.5, ease: "power2.out" });
+    //   overlay.classList.remove("hidden");
+    //   document.body.style.overflow = "hidden"; // disable background scroll
+    // }
+
+    // function closeMiniCart() {
+    //   gsap.to(miniCart, { x: "100%", duration: 0.5, ease: "power2.in" });
+    //   overlay.classList.add("hidden");
+    //   document.body.style.overflow = ""; // re-enable scroll
+    // }
 
     cartButton.addEventListener("click", openMiniCart);
     closeCart.addEventListener("click", closeMiniCart);
@@ -755,18 +788,18 @@ async function renderMiniCart(cartData = null) {
 const viewCartBtn = document.getElementById("view-cart-btn");
 const cartCountEl = document.getElementById("cart-count");
 
-if (viewCartBtn) {
-  viewCartBtn.addEventListener("click", () => {
-    const cartCount = parseInt(cartCountEl?.innerText || "0", 10);
+// if (viewCartBtn) {
+//   viewCartBtn.addEventListener("click", () => {
+//     const cartCount = parseInt(cartCountEl?.innerText || "0", 10);
 
-    if (cartCount === 0) {
-      showNotification("Your cart is empty", "warning");
-      return;
-    }
+//     if (cartCount === 0) {
+//       showNotification("Your cart is empty", "warning");
+//       return;
+//     }
 
-    window.location.href = "/cart.html"; // full cart page
-  });
-}
+//     window.location.href = "/cart.html"; // full cart page
+//   });
+// }
 
   miniCartTotalEl.innerText = "₦" + total.toFixed(2);
 
@@ -1300,7 +1333,24 @@ updateCartCount();
   function escapeHtml(text){ if(text==null) return ''; return String(text).replace(/[&<>"']/g, m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
   function showLoader(el){ if(!el) return null; const original=el.innerHTML; el.disabled=true; el.innerHTML=`<span class="animate-spin border-2 border-white border-t-transparent rounded-full w-4 h-4 inline-block mr-2"></span> Loading...`; return ()=>{ el.disabled=false; el.innerHTML=original; }; }
 
-  // WhatsApp 
+document.addEventListener("DOMContentLoaded", () => {
+  const cartIcon = document.getElementById("cart-icon");
+  const body = document.querySelector("body"); //
+
+  // const headerHeight = document.querySelector("header")?.offsetHeight || 100;
+
+  window.addEventListener("scroll", () => {
+    if (window.scrollY >= 50) {
+      // Reached the body
+      cartIcon.classList.remove("text-white");
+      cartIcon.classList.add("text-black");
+    } else {
+      // Back to header
+      cartIcon.classList.remove("text-black");
+      cartIcon.classList.add("text-white");
+    }
+  });
+});
   
   // Hamburger Menu
 const menuToggle = document.getElementById("menuToggle");

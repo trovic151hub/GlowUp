@@ -7,6 +7,11 @@
   <title>Homepage</title>
   <link rel="stylesheet" href="index.css">
   <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Outfit:wght@200;300;400;500&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Raleway:wght@500;600&display=swap" rel="stylesheet">
   <link
     href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Poppins:wght@700&family=Great+Vibes&display=swap"
     rel="stylesheet">
@@ -24,7 +29,7 @@
   <!-- Navbar -->
   <header id="mainHeader"
     class="fixed top-0 left-0 w-full text-white p-4 flex justify-between items-center flex-wrap gap-4 text-sm font-medium md:gap-6 z-40">
-    <h1 class="text-2xl font-bold main-head">Pearl Skin Care</h1>
+    <h1 class="text-2xl  font-bold main-head">Pearl Skin Care</h1>
     <nav class="nav-bar space-x-6 text-sm font-medium flex flex-wrap items-center gap-16">
 
       <!-- Header Links -->
@@ -111,23 +116,31 @@
           </div>
         </div>
 
-        <div class="flex justify-between gap-10 icon">
+        <div class="flex justify-between gap-5 icon">
           <!-- Search Icon -->
           <button id="openSearchBtn" class="openSearchBtn hover:text-pink-500">
-            <i class="fas fa-search text-xl"></i>
+            <i class="fas fa-search text-[16px]"></i>
           </button>
 
-          <!-- Cart -->
-          <button id="cart-button" class="cart-tag relative inline-block">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 inline hover:text-pink-500 text-white" width="16"
-              height="16" viewBox="0 0 16 16">
-              <path fill="currentColor"
-                d="M0 1.5A.5.5 0 0 1 .5 1H2a.5.5 0 0 1 .485.379L2.89 3H14.5a.5.5 0 0 1 .491.592l-1.5 8A.5.5 0 0 1 13 12H4a.5.5 0 0 1-.491-.408L2.01 3.607L1.61 2H.5a.5.5 0 0 1-.5-.5M3.102 4l1.313 7h8.17l1.313-7zM5 12a2 2 0 1 0 0 4a2 2 0 0 0 0-4m7 0a2 2 0 1 0 0 4a2 2 0 0 0 0-4m-7 1a1 1 0 1 1 0 2a1 1 0 0 1 0-2m7 0a1 1 0 1 1 0 2a1 1 0 0 1 0-2" />
-            </svg>
+          <!-- Cart Button -->
+<button id="cart-button" class="cart-tag relative inline-block">
+  <svg id="cart-icon"
+       class="cart-icon h-5 w-5 inline text-white hover:text-pink-500"
+       fill="none"
+       stroke="currentColor"
+       stroke-width="2.7"
+       opacity=".8"
+       viewBox="0 0 24 24">
+    <path d="M6 2 3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"></path>
+    <line x1="3" y1="6" x2="21" y2="6"></line>
+    <path d="M16 10a4 4 0 01-8 0"></path>
+  </svg>
 
-            <span id="cartCount"
-              class="absolute -top-3 -right-3 bg-pink-500 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center">0</span>
-          </button>
+  <span id="cartCount"
+        class="absolute -top-3 -right-3 bg-pink-500 text-white text-[12px] w-5 h-5 rounded-full flex items-center justify-center">
+    0
+  </span>
+</button>
         </div>
       </div>
     </nav>

@@ -10,7 +10,23 @@
     body {
       background: #fff7f9;
       color: #333;
+      font-family: 'Poppins', sans-serif;
     }
+
+    .main-head, h1, h2, h3 {
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 700;
+}
+
+body, p, li, input, button, a {
+  font-family: 'Roboto', sans-serif;
+  font-weight: 400;
+}
+
+.category-btn, .promo-section h3 {
+  font-family: 'Raleway', sans-serif;
+  font-weight: 600;
+}
 
     /* ================= NOTIFICATION ================= */
 #notification-container {
