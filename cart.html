@@ -93,18 +93,25 @@
     .breadcrumb span {
       color: #c0b0aa;
       cursor: pointer;
-      transition: color 0.2s, font-weight 0.2s;
       padding: 4px 0;
       border-bottom: 2px solid transparent;
-      transition: all 0.2s;
+      transition: color 0.2s, border-color 0.2s, font-weight 0.2s;
     }
-    /* active step — set in HTML or by JS (adds font-semibold + text-gray-900) */
-    .breadcrumb span.active,
+    /* Active — JS adds font-bold + text-pink-600 (setActiveBreadcrumb)
+       or font-semibold + text-gray-900 (setBreadcrumb) */
+    .breadcrumb span.font-bold,
+    .breadcrumb span.text-pink-600,
     .breadcrumb span.font-semibold,
     .breadcrumb span.text-gray-900 {
       color: #8B4F6B !important;
       font-weight: 600 !important;
       border-bottom-color: #8B4F6B;
+    }
+    /* Inactive — JS adds text-gray-500 to non-active steps */
+    .breadcrumb span.text-gray-500 {
+      color: #c0b0aa !important;
+      font-weight: 400 !important;
+      border-bottom-color: transparent;
     }
     .breadcrumb span:hover { color: #8B4F6B; }
     .breadcrumb i { color: #e0d8d4; font-size: 0.6rem; }
@@ -470,7 +477,7 @@
 
   <!-- Breadcrumb -->
   <nav class="breadcrumb">
-    <span id="bc-guestCarts" class="active">Shopping Cart</span>
+    <span id="bc-guestCarts">Shopping Cart</span>
     <i class="fas fa-chevron-right"></i>
     <span id="bc-checkout">Secure Checkout</span>
     <i class="fas fa-chevron-right"></i>
