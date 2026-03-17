@@ -4,24 +4,16 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Homepage</title>
+  <title>Pearl Skin Care</title>
   <link rel="stylesheet" href="index.css">
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Outfit:wght@200;300;400;500&display=swap" rel="stylesheet">
-  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
-  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&display=swap" rel="stylesheet">
-  <link href="https://fonts.googleapis.com/css2?family=Raleway:wght@500;600&display=swap" rel="stylesheet">
-  <link
-    href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Poppins:wght@700&family=Great+Vibes&display=swap"
-    rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=Inter:wght@300;400;500;600&family=DM+Sans:wght@300;400;500&family=Lora:wght@700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
-  <style>
-
-  </style>
 </head>
 
-<body class="bg-white text-gray-800">
+<body class="bg-[#FAF8F5] text-[#2C2420]">
 
   <!-- Notification Container -->
   <div id="notification-container" class="fixed top-4 right-4 z-50 flex flex-col gap-2"></div>
@@ -29,32 +21,34 @@
   <!-- Navbar -->
   <header id="mainHeader"
     class="fixed top-0 left-0 w-full text-white p-4 flex justify-between items-center flex-wrap gap-4 text-sm font-medium md:gap-6 z-40">
-    <h1 class="text-2xl  font-bold main-head">Pearl Skin Care</h1>
+
+    <!-- Brand -->
+    <h1 class="main-head brand-title text-white">Pearl Skin Care</h1>
+
     <nav class="nav-bar space-x-6 text-sm font-medium flex flex-wrap items-center gap-16">
 
-      <!-- Header Links -->
-      <div class="space-x-6 text-sm font-medium items-center gap-4">
-        <a href="#" class="main-head hover:text-pink-600 nav-link">Home</a>
-        <a href="products.html" class="main-head hover:text-pink-600 nav-link">Shop</a>
-        <a href="#categories" class="main-head hover:text-pink-600 nav-link">Categories</a>
+      <!-- Desktop Links -->
+      <div class="space-x-8 text-sm font-medium items-center gap-4">
+        <a href="#" class="main-head nav-link text-white">Home</a>
+        <a href="products.html" class="main-head nav-link text-white">Shop</a>
+        <a href="#categories" class="main-head nav-link text-white">Categories</a>
 
         <!-- Contact Dropdown -->
         <div class="relative group inline-block main-head">
-          <button class="hover:text-pink-600">Contact</button>
-          <div
-            class="absolute hidden group-hover:block bg-pink-100 shadow rounded mt-1 z-50 min-w-[150px] fixed top-5 right-[-10%] text-left">
-            <a href="customer-dashboard.html" class="block px-4 py-2 text-sm text-gray-700 hover:bg-white">👤
-              Dashboard</a>
-            <a href="mailto:victoradeyimika0@gmail.com" class="block px-4 py-2 text-sm text-gray-700 hover:bg-white"><i
-                class="fas fa-envelope text-pink-500"></i> Email Us</a>
-            <a href="https://wa.me/2349053380773" target="_blank"
-              class="block px-4 py-2 text-sm text-gray-700 hover:bg-white"><i
-                class="fab fa-whatsapp text-green-500"></i>
-              WhatsApp</a>
-            <a href="https://instagram.com/yourhandle" target="_blank"
-              class="block px-4 py-2 text-sm text-gray-700 hover:bg-white"><i
-                class="fab fa-instagram text-pink-600"></i>
-              Instagram</a>
+          <button class="nav-link text-white hover:text-[#C9A28F] transition-colors duration-200 text-xs font-medium tracking-widest uppercase">Contact</button>
+          <div class="absolute hidden group-hover:block bg-white shadow-xl rounded-md mt-2 z-50 min-w-[170px] right-0 border border-gray-100">
+            <a href="customer-dashboard.html" class="flex items-center gap-2 px-4 py-3 text-sm text-[#2C2420] hover:bg-[#FAF8F5] hover:text-[#8B4F6B] transition-colors">
+              <i class="fas fa-user-circle text-[#8B4F6B]"></i> Dashboard
+            </a>
+            <a href="mailto:victoradeyimika0@gmail.com" class="flex items-center gap-2 px-4 py-3 text-sm text-[#2C2420] hover:bg-[#FAF8F5] hover:text-[#8B4F6B] transition-colors">
+              <i class="fas fa-envelope text-[#8B4F6B]"></i> Email Us
+            </a>
+            <a href="https://wa.me/2349053380773" target="_blank" class="flex items-center gap-2 px-4 py-3 text-sm text-[#2C2420] hover:bg-[#FAF8F5] hover:text-[#8B4F6B] transition-colors">
+              <i class="fab fa-whatsapp text-green-500"></i> WhatsApp
+            </a>
+            <a href="https://instagram.com/yourhandle" target="_blank" class="flex items-center gap-2 px-4 py-3 text-sm text-[#2C2420] hover:bg-[#FAF8F5] hover:text-[#8B4F6B] transition-colors border-t border-gray-100">
+              <i class="fab fa-instagram text-[#8B4F6B]"></i> Instagram
+            </a>
           </div>
         </div>
       </div>
@@ -67,80 +61,67 @@
           </button>
 
           <!-- Overlay -->
-          <div id="menuOverlay" class="fixed inset-0 bg-black bg-opacity-30 backdrop-blur-sm z-40 hidden">
-          </div>
+          <div id="menuOverlay" class="fixed inset-0 bg-black bg-opacity-30 backdrop-blur-sm z-40 hidden"></div>
 
           <!-- Mobile Menu -->
           <div id="mobileMenu"
-            class="fixed top-0 left-0 w-64 h-full bg-white shadow-lg p-6 transform -translate-x-full transition-transform duration-300 z-50">
-            <!-- Close Button -->
-            <button id="closeMenu"
-              class="text-3xl text-gray-600 hover:text-red-500 absolute top-4 right-4">&times;</button>
+            class="fixed top-0 left-0 w-64 h-full bg-white shadow-2xl p-6 transform -translate-x-full transition-transform duration-300 z-50">
+            <button id="closeMenu" class="text-2xl text-gray-400 hover:text-[#8B4F6B] absolute top-5 right-5 transition-colors">&times;</button>
 
-            <!-- Menu Links -->
-            <div class="flex flex-col space-y-4 mt-12 text-lg font-medium">
-              <span id="welcomeTextMobile" class="text-sm text-gray-700 hidden"></span>
+            <div class="mt-3 mb-6">
+              <p class="font-serif text-lg font-semibold text-[#2C2420] tracking-wide" style="font-family:'Cormorant Garamond',serif;">Pearl Skin Care</p>
+              <p class="text-xs text-[#9E8E88] tracking-widest uppercase mt-0.5">Premium Supplements</p>
+            </div>
 
-              <a href="products.html" class="flex items-center gap-2 px-2 py-2 text-gray-700 hover:bg-pink-50 rounded">
-                <i class="fa fa-shop mt-1"></i> Shop
+            <span id="welcomeTextMobile" class="text-xs text-[#8B4F6B] font-medium hidden mb-2 block"></span>
+
+            <div class="flex flex-col space-y-1 mt-2 text-sm">
+              <a href="products.html" class="flex items-center gap-3 px-3 py-3 text-[#2C2420] hover:bg-[#FAF8F5] hover:text-[#8B4F6B] rounded-md transition-colors">
+                <i class="fa fa-shop text-[#8B4F6B] w-4"></i> Shop
               </a>
-
-              <a href="customer-dashboard.html"
-                class="flex items-center gap-2 px-2 py-2 text-gray-700 hover:bg-pink-50 rounded">
-                <span class="text-[20px]">👤</span> Dashboard
+              <a href="customer-dashboard.html" class="flex items-center gap-3 px-3 py-3 text-[#2C2420] hover:bg-[#FAF8F5] hover:text-[#8B4F6B] rounded-md transition-colors">
+                <i class="fas fa-user-circle text-[#8B4F6B] w-4"></i> Dashboard
               </a>
-
-              <a href="mailto:@gmail.com"
-                class="flex items-center gap-2 px-2 py-2 text-gray-700 hover:bg-pink-50 rounded">
-                <i class="fas fa-envelope text-[20px] text-pink-500"></i> Email Us
+              <a href="mailto:victoradeyimika0@gmail.com" class="flex items-center gap-3 px-3 py-3 text-[#2C2420] hover:bg-[#FAF8F5] hover:text-[#8B4F6B] rounded-md transition-colors">
+                <i class="fas fa-envelope text-[#8B4F6B] w-4"></i> Email Us
               </a>
-
-              <a href="https://wa.me/2347053380773" target="_blank"
-                class="flex items-center gap-2 px-2 py-2 text-gray-700 hover:bg-pink-50 rounded">
-                <i class="fab fa-whatsapp text-green-500 text-[20px]"></i> WhatsApp
+              <a href="https://wa.me/2347053380773" target="_blank" class="flex items-center gap-3 px-3 py-3 text-[#2C2420] hover:bg-[#FAF8F5] hover:text-[#8B4F6B] rounded-md transition-colors">
+                <i class="fab fa-whatsapp text-green-500 w-4"></i> WhatsApp
               </a>
-
-              <a href="https://instagram.com/yourhandle" target="_blank"
-                class="flex items-center gap-2 px-2 py-2 text-gray-700 hover:bg-pink-50 rounded">
-                <i class="fab fa-instagram text-pink-600 text-[20px]"></i> Instagram
+              <a href="https://instagram.com/yourhandle" target="_blank" class="flex items-center gap-3 px-3 py-3 text-[#2C2420] hover:bg-[#FAF8F5] hover:text-[#8B4F6B] rounded-md transition-colors">
+                <i class="fab fa-instagram text-[#8B4F6B] w-4"></i> Instagram
               </a>
             </div>
           </div>
         </div>
 
-        <!-- Logo -->
+        <!-- Mobile Logo -->
         <div class="logo-con ml-12">
           <div class="logo md:hidden text-center">
             <h1 class="brand">Pearl</h1>
-            <p class="tagline ">SKIN CARE</p>
+            <p class="tagline">SKIN CARE</p>
           </div>
         </div>
 
         <div class="flex justify-between gap-5 icon">
           <!-- Search Icon -->
-          <button id="openSearchBtn" class="openSearchBtn hover:text-pink-500">
-            <i class="fas fa-search text-[16px]"></i>
+          <button id="openSearchBtn" class="openSearchBtn text-white hover:text-[#C9A28F] transition-colors">
+            <i class="fas fa-search text-[15px]"></i>
           </button>
 
           <!-- Cart Button -->
-<button id="cart-button" class="cart-tag relative inline-block">
-  <svg id="cart-icon"
-       class="cart-icon h-5 w-5 inline text-white hover:text-pink-500"
-       fill="none"
-       stroke="currentColor"
-       stroke-width="2.7"
-       opacity=".8"
-       viewBox="0 0 24 24">
-    <path d="M6 2 3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"></path>
-    <line x1="3" y1="6" x2="21" y2="6"></line>
-    <path d="M16 10a4 4 0 01-8 0"></path>
-  </svg>
-
-  <span id="cartCount"
-        class="absolute -top-3 -right-3 bg-pink-500 text-white text-[12px] w-5 h-5 rounded-full flex items-center justify-center">
-    0
-  </span>
-</button>
+          <button id="cart-button" class="cart-tag relative inline-block">
+            <svg id="cart-icon" class="cart-icon h-5 w-5 inline text-white hover:text-[#C9A28F] transition-colors"
+              fill="none" stroke="currentColor" stroke-width="2.2" opacity=".9" viewBox="0 0 24 24">
+              <path d="M6 2 3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"></path>
+              <line x1="3" y1="6" x2="21" y2="6"></line>
+              <path d="M16 10a4 4 0 01-8 0"></path>
+            </svg>
+            <span id="cartCount"
+              class="absolute -top-3 -right-3 bg-[#8B4F6B] text-white text-[11px] w-5 h-5 rounded-full flex items-center justify-center font-medium">
+              0
+            </span>
+          </button>
         </div>
       </div>
     </nav>
@@ -154,195 +135,165 @@
       <div class="hero-image-track" id="heroImageTrack"></div>
     </div>
 
-    <!-- NEW: Dark overlay -->
     <div class="hero-dark-overlay"></div>
 
     <div class="hero-overlay">
       <h1 id="heroTitle"></h1>
       <p id="heroText"></p>
+      <a href="products.html" class="hero-cta">
+        Shop Now <i class="fas fa-arrow-right text-xs"></i>
+      </a>
     </div>
 
-    <!-- Play/Pause Buttons -->
     <i id="heroPlay" class="far fa-play-circle hero-control"></i>
     <i id="heroPause" class="far fa-pause-circle hero-control hidden"></i>
 
-    <!-- Bottom Tabs -->
     <div id="heroDots" class="hero-tabs absolute bottom-4 left-1/2 transform -translate-x-1/2 z-20">
       <div class="hero-tabs-track"></div>
     </div>
   </div>
 
-  <!-- Featured Search Bar (Hidden by default) -->
-  <div id="featuredSearchWrapper" class="hidden sticky search top-16 px-4 py-3 z-40 bg-white shadow-md mb-2">
-
-    <div class="flex items-center gap-3">
-      <input id="featuredSearchInput" type="text" placeholder="Search featured products..."
-        class="flex-1 border rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-pink-500" />
-
-      <button id="closeSearchBtn" class="absolute top-4 right-6 text-gray-500 hover:text-pink-500 text-xl font-bold">
+  <!-- Search Bar (Hidden by default) -->
+  <div id="featuredSearchWrapper" class="hidden sticky search top-16 px-5 py-3 z-40 bg-white/95 shadow-sm border-b border-gray-100 mb-2">
+    <div class="flex items-center gap-3 max-w-xl mx-auto">
+      <i class="fas fa-search text-[#9E8E88] text-sm"></i>
+      <input id="featuredSearchInput" type="text" placeholder="Search products..."
+        class="flex-1 border-0 bg-transparent text-sm text-[#2C2420] placeholder-[#9E8E88] focus:outline-none" />
+      <button id="closeSearchBtn" class="text-[#9E8E88] hover:text-[#8B4F6B] text-xl font-light transition-colors">
         &times;
       </button>
     </div>
   </div>
 
   <!-- Featured Products -->
-  <section class="p-6">
-    <h2 class="text-2xl font-semibold mb-4">Featured Products</h2>
-    <div id="product-list" class="grid grid-cols-2 md:grid-cols-4 gap-4 "></div>
+  <section class="px-6 py-10 max-w-screen-xl mx-auto">
+    <div class="flex items-end justify-between mb-7">
+      <h2 class="section-heading">Featured Products</h2>
+      <a href="products.html" class="text-xs font-medium text-[#8B4F6B] hover:text-[#7A3F5A] tracking-widest uppercase transition-colors hidden md:block">View All →</a>
+    </div>
+    <div id="product-list" class="grid grid-cols-2 md:grid-cols-4 gap-5"></div>
   </section>
 
   <!-- Product Detail Modal -->
-  <div id="productModal"
-    class="hidden fixed inset-0 bg-black bg-opacity-30 backdrop-blur-sm flex items-center justify-center z-50">
-    <div class="bg-white w-11/12 max-w-md p-6 rounded shadow-lg relative">
-      <button onclick="closeModal()" class="absolute top-2 right-2 text-gray-500 hover:text-red-600 text-xl">×</button>
-      <h2 id="modalProductName" class="text-xl font-bold mb-2"></h2>
-      <img id="modalProductImage" class="w-full h-48 object-cover rounded mb-2" />
-      <p id="modalProductPrice" class="text-pink-600 font-semibold text-lg mb-1"></p>
-      <p id="modalProductDescription" class="text-sm text-gray-700 mb-4"></p>
-      <button id="modalAddToCartBtn" class="bg-pink-600 text-white px-4 py-2 rounded hover:bg-pink-700 w-full">Add to
-        Cart</button>
+  <div id="productModal" class="hidden fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center z-50">
+    <div class="bg-white w-11/12 max-w-md p-6 rounded-lg shadow-2xl relative">
+      <button onclick="closeModal()" class="absolute top-3 right-4 text-[#9E8E88] hover:text-[#8B4F6B] text-2xl font-light transition-colors">×</button>
+      <h2 id="modalProductName" class="text-xl font-semibold mb-3"></h2>
+      <img id="modalProductImage" class="w-full h-52 object-cover rounded-md mb-3" />
+      <p id="modalProductPrice" class="font-semibold text-lg mb-1"></p>
+      <p id="modalProductDescription" class="text-sm text-[#6B5B55] mb-5 leading-relaxed"></p>
+      <button id="modalAddToCartBtn" class="w-full py-3 text-sm rounded">Add to Cart</button>
     </div>
   </div>
 
-  <!-- Promo Section -->
-  <section class="bg-pink-50 p-6 my-6 rounded-xl text-center">
-    <h3 class="text-2xl font-semibold mb-4">💡 Skin Tips</h3>
-    <p id="skinTip" class="text-lg text-gray-700 font-medium">Loading tip...</p>
+  <!-- Skin Tips -->
+  <section class="px-6 my-8 max-w-screen-xl mx-auto">
+    <div class="tips-section p-8 text-center">
+      <p class="tips-label mb-3">Daily Skin Wisdom</p>
+      <p id="skinTip" class="text-lg">Loading tip...</p>
+    </div>
   </section>
 
   <!-- Categories -->
-  <section id="categories" class="p-6">
-    <h3 class="text-2xl font-semibold mb-4">Browse by Category</h3>
+  <section id="categories" class="px-6 pb-12 max-w-screen-xl mx-auto">
+    <h3 class="section-heading mb-7">Browse by Category</h3>
     <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
-      <button onclick="filterProducts('All')" data-category="All"
-        class="category-btn bg-pink-100 p-4 rounded-xl text-center hover:bg-pink-200 cursor-pointer">
-        💧<br />All
+      <button onclick="filterProducts('All')" data-category="All" class="category-btn text-center">
+        💧<br /><span class="mt-1 block">All</span>
       </button>
-      <button onclick="filterProducts('Brightening')" data-category="Brightening"
-        class="category-btn bg-pink-100 p-4 rounded-xl text-center hover:bg-pink-200 cursor-pointer">
-        ✨<br />Brightening
+      <button onclick="filterProducts('Brightening')" data-category="Brightening" class="category-btn text-center">
+        ✨<br /><span class="mt-1 block">Brightening</span>
       </button>
-      <button onclick="filterProducts('Anti-Aging')" data-category="Anti-Aging"
-        class="category-btn bg-pink-100 p-4 rounded-xl text-center hover:bg-pink-200 cursor-pointer">
-        🔄<br />Anti-Aging
+      <button onclick="filterProducts('Anti-Aging')" data-category="Anti-Aging" class="category-btn text-center">
+        🔄<br /><span class="mt-1 block">Anti-Aging</span>
       </button>
-      <button onclick="filterProducts('Hydration')" data-category="Hydration"
-        class="category-btn bg-pink-100 p-4 rounded-xl text-center hover:bg-pink-200 cursor-pointer">
-        💦<br />Hydration
+      <button onclick="filterProducts('Hydration')" data-category="Hydration" class="category-btn text-center">
+        💦<br /><span class="mt-1 block">Hydration</span>
       </button>
-      <button onclick="filterProducts('Supplements')" data-category="Supplements"
-        class="category-btn bg-pink-100 p-4 rounded-xl text-center hover:bg-pink-200 cursor-pointer">
-        💊<br />Supplements
+      <button onclick="filterProducts('Supplements')" data-category="Supplements" class="category-btn text-center">
+        💊<br /><span class="mt-1 block">Supplements</span>
       </button>
     </div>
   </section>
 
   <!-- Mini Cart -->
   <div id="mini-cart"
-    class="fixed top-0 right-0 h-full 
-         w-full sm:w-[70%] md:w-[45%] lg:w-[32%] 
-         bg-white shadow-xl transform translate-x-full 
-         z-50 flex flex-col transition-transform duration-300">
-    <div class="flex justify-between items-center p-4 border-b">
-      <h2 class="text-lg font-semibold text-gray-700">Your Cart</h2>
-      <button id="close-cart" class="text-gray-500 font-bold text-lg hover:text-red-900">&times;</button>
+    class="fixed top-0 right-0 h-full w-full sm:w-[70%] md:w-[45%] lg:w-[32%] bg-white shadow-2xl transform translate-x-full z-50 flex flex-col transition-transform duration-300">
+    <div class="flex justify-between items-center p-5 border-b border-[#f0ebe7]">
+      <h2 class="text-lg">Your Cart</h2>
+      <button id="close-cart" class="text-[#9E8E88] hover:text-[#8B4F6B] text-2xl font-light transition-colors">&times;</button>
     </div>
-    <div id="mini-cart-items" class="flex-1 overflow-y-auto p-4 space-y-4"></div>
-    <div class="p-4 border-t">
-  <div class="flex justify-between font-semibold mb-2">
-    <span class="text-gray-500 font-bold text-sm md:text-base">Subtotal:</span>
-    <span id="mini-cart-total" 
-      class="text-xl md:text-3xl font-semibold">₦0.00</span>
+    <div id="mini-cart-items" class="flex-1 overflow-y-auto p-5 space-y-4"></div>
+    <div class="p-5 border-t border-[#f0ebe7]">
+      <div class="flex justify-between items-center mb-4">
+        <span class="text-sm text-[#9E8E88] font-medium uppercase tracking-wide">Subtotal</span>
+        <span id="mini-cart-total" class="text-2xl font-semibold text-[#2C2420]">₦0.00</span>
+      </div>
+      <button id="view-cart-btn" class="w-full py-3 rounded-full mb-3 text-sm">View Cart</button>
+      <button id="mini-cart-checkout" class="w-full py-3 text-white rounded-full text-sm">Checkout</button>
+    </div>
   </div>
 
-  <div class="block">
-    <button id="view-cart-btn"
-      class="w-full bg-white border border-gray-400 text-gray-900 py-3 md:py-2 rounded-full mb-4 transition">
-      View Cart
-    </button>
-
-    <button id="mini-cart-checkout"
-      class="w-full bg-pink-600 text-white py-3 md:py-2 rounded-full transition">
-      Checkout
-    </button>
-  </div>
-</div>
-  </div>
-
-  <!-- ===== GLOBAL LEAVE LOADER ===== -->
+  <!-- Leave Loader -->
   <div id="leaveLoader">
     <div class="spinner"></div>
   </div>
 
   <!-- Footer -->
-  <footer class="bg-pink-100 text-gray-800 relative">
-    <div class="mx-6 md:mx-10 px-4 md:px-6 py-8 md:py-12 flex flex-col md:flex-row justify-between gap-8 md:gap-40">
+  <footer class="bg-[#1E1418] text-[#9E8E88]">
+    <div class="max-w-screen-xl mx-auto px-8 py-14 grid grid-cols-1 md:grid-cols-3 gap-12">
 
-      <!-- Contact Info -->
-      <div class="flex-1 border-b md:border-b-0 pb-4 md:pb-0 border-gray-300">
-        <h4 class="text-lg font-semibold mb-4">CONTACT US</h4>
-        <p class="mb-2 flex items-center gap-2">
-          <i class="fas fa-phone-alt"></i> +2347053380773
-        </p>
-        <p class="flex items-start gap-2">
-          <i class="fas fa-map-marker-alt mt-1"></i>
-          Lagos, Nigeria
-        </p>
+      <!-- Brand -->
+      <div>
+        <p class="footer-brand mb-3">Pearl Skin Care</p>
+        <p class="text-sm leading-relaxed text-[#6B5B55]">Premium skincare supplements for radiant, healthy skin. Beauty starts from within.</p>
+        <div class="flex gap-4 mt-5">
+          <a href="https://instagram.com/yourhandle" target="_blank" class="text-[#6B5B55] hover:text-[#C9A28F] transition-colors text-lg"><i class="fab fa-instagram"></i></a>
+          <a href="https://wa.me/2349053380773" target="_blank" class="text-[#6B5B55] hover:text-[#C9A28F] transition-colors text-lg"><i class="fab fa-whatsapp"></i></a>
+        </div>
+      </div>
+
+      <!-- Contact -->
+      <div>
+        <h4 class="mb-4">Contact</h4>
+        <div class="space-y-2 text-sm text-[#6B5B55]">
+          <p class="flex items-center gap-2">
+            <i class="fas fa-phone-alt text-[#8B4F6B]"></i> +2347053380773
+          </p>
+          <p class="flex items-start gap-2">
+            <i class="fas fa-map-marker-alt text-[#8B4F6B] mt-0.5"></i> Lagos, Nigeria
+          </p>
+          <a href="mailto:victoradeyimika0@gmail.com" class="flex items-center gap-2 hover:text-[#C9A28F] transition-colors">
+            <i class="fas fa-envelope text-[#8B4F6B]"></i> victoradeyimika0@gmail.com
+          </a>
+        </div>
       </div>
 
       <!-- Newsletter -->
-      <div class="flex-1">
-        <h4 class="text-lg font-semibold mb-3">SIGN UP FOR DISCOUNTS & UPDATES</h4>
-        <div class="block flex-col md:flex-row gap-2 md:gap-4 items-start md:items-center">
-          <input type="text" placeholder="Enter your phone number or email address"
-            class="w-full md:w-[100%] px-4 py-2 rounded border border-gray-300 focus:outline-none">
-          <button class="mt-3 bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">
-            Subscribe
-          </button>
-        </div>
+      <div>
+        <h4 class="mb-4">Stay Updated</h4>
+        <p class="text-sm text-[#6B5B55] mb-4 leading-relaxed">Get skincare tips, offers and new arrivals straight to your inbox.</p>
+        <input type="text" placeholder="Your email or phone"
+          class="w-full mb-3">
+        <button class="footer-subscribe-btn w-full">Subscribe</button>
       </div>
     </div>
 
-    <!-- Powered By -->
-    <div class="btn text-left text-sm text-white mx-6 md:mx-10 px-4 md:px-6 py-4 border-t border-gray-300">
-      <button class="text-left block p-4 bg-pink-500">
-        POWERED BY VTec
-      </button>
+    <div class="border-t border-white/5 max-w-screen-xl mx-auto px-8 py-5 flex flex-col md:flex-row justify-between items-center gap-3">
+      <p class="footer-bottom">© 2025 Pearl Skin Care. All rights reserved.</p>
+      <p class="footer-bottom">Powered by <span class="text-[#8B4F6B]">VTec</span></p>
     </div>
-
-    <!-- WhatsApp Button -->
-    <button id="openWhatsappModal" class="fixed bottom-6 right-6 z-50">
-      <div class="relative w-14 h-14">
-        <!-- Ripple circles -->
-        <span class="absolute inset-0 rounded-full bg-green-400 opacity-50 animate-ping"></span>
-        <span class="absolute inset-0 rounded-full bg-green-400 opacity-50 animate-ping delay-200"></span>
-        <span class="absolute inset-0 rounded-full bg-green-400 opacity-50 animate-ping delay-400"></span>
-
-        <!-- Main Button -->
-        <div
-          class="relative w-14 h-14 rounded-full bg-green-500 hover:bg-green-600 text-white flex items-center justify-center shadow-lg text-2xl">
-          <i class="fab fa-whatsapp"></i>
-        </div>
-      </div>
-    </button>
-
-    <!-- WhatsApp Button -->
-    <a href="https://wa.me/2349053380773" target="_blank" class="fixed bottom-6 right-6 z-50">
-      <div class="relative w-14 h-14">
-        <!-- Ripple circles -->
-        <span class="absolute inset-0 rounded-full bg-green-400 opacity-50 animate-ping"></span>
-        <span class="absolute inset-0 rounded-full bg-green-400 opacity-50 animate-ping delay-200"></span>
-        <span class="absolute inset-0 rounded-full bg-green-400 opacity-50 animate-ping delay-400"></span>
-
-        <!-- Main Button -->
-        <div
-          class="relative w-14 h-14 rounded-full bg-green-500 hover:bg-green-600 text-white flex items-center justify-center shadow-lg text-2xl">
-          <i class="fab fa-whatsapp"></i>
-        </div>
-      </div>
-    </a>
   </footer>
+
+  <!-- WhatsApp Float Button -->
+  <a href="https://wa.me/2349053380773" target="_blank" class="fixed bottom-6 right-6 z-50">
+    <div class="relative w-13 h-13">
+      <span class="absolute inset-0 rounded-full bg-green-400 opacity-40 animate-ping"></span>
+      <div class="relative w-13 h-13 w-12 h-12 rounded-full bg-green-500 hover:bg-green-600 text-white flex items-center justify-center shadow-lg text-xl transition-colors">
+        <i class="fab fa-whatsapp"></i>
+      </div>
+    </div>
+  </a>
 
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
@@ -350,5 +301,17 @@
   <script src="home.js"></script>
   <script src="https://unpkg.com/gsap@3/dist/gsap.min.js"></script>
   <script src="https://unpkg.com/gsap@3/dist/ScrollTrigger.min.js"></script>
+
+  <!-- Navbar scroll effect -->
+  <script>
+    const header = document.getElementById('mainHeader');
+    window.addEventListener('scroll', () => {
+      if (window.scrollY > 60) {
+        header.classList.add('scrolled');
+      } else {
+        header.classList.remove('scrolled');
+      }
+    });
+  </script>
 </body>
 </html>
