@@ -20,111 +20,103 @@
 
   <!-- Navbar -->
   <header id="mainHeader"
-    class="fixed top-0 left-0 w-full text-white p-4 flex justify-between items-center flex-wrap gap-4 text-sm font-medium md:gap-6 z-40">
+    class="fixed top-0 left-0 w-full text-white px-5 py-4 flex justify-between items-center z-40">
 
-    <!-- Brand -->
-    <h1 class="main-head brand-title text-white">Pearl Skin Care</h1>
+    <!-- Left: Hamburger + Brand -->
+    <div class="flex items-center gap-3">
+      <!-- Hamburger Button -->
+      <button id="menuToggle" class="text-white hover:text-[#C9A28F] transition-colors text-xl leading-none">
+        <i class="fas fa-bars"></i>
+      </button>
+      <!-- Brand -->
+      <h1 class="main-head brand-title text-white">Pearl Skin Care</h1>
+    </div>
 
-    <nav class="nav-bar space-x-6 text-sm font-medium flex flex-wrap items-center gap-16">
+    <!-- Overlay -->
+    <div id="menuOverlay" class="fixed inset-0 bg-black bg-opacity-30 backdrop-blur-sm z-40 hidden"></div>
 
-      <!-- Desktop Links -->
-      <div class="space-x-8 text-sm font-medium items-center gap-4">
-        <a href="#" class="main-head nav-link text-white">Home</a>
-        <a href="products.html" class="main-head nav-link text-white">Shop</a>
-        <a href="#categories" class="main-head nav-link text-white">Categories</a>
+    <!-- Slide-in Menu -->
+    <div id="mobileMenu"
+      class="fixed top-0 left-0 w-64 h-full bg-white shadow-2xl p-6 transform -translate-x-full transition-transform duration-300 z-50">
+      <button id="closeMenu" class="text-2xl text-gray-400 hover:text-[#8B4F6B] absolute top-5 right-5 transition-colors">&times;</button>
 
-        <!-- Contact Dropdown -->
-        <div class="relative group inline-block main-head">
-          <button class="nav-link text-white hover:text-[#C9A28F] transition-colors duration-200 text-xs font-medium tracking-widest uppercase">Contact</button>
-          <div class="absolute hidden group-hover:block bg-white shadow-xl rounded-md mt-2 z-50 min-w-[170px] right-0 border border-gray-100">
-            <a href="customer-dashboard.html" class="flex items-center gap-2 px-4 py-3 text-sm text-[#2C2420] hover:bg-[#FAF8F5] hover:text-[#8B4F6B] transition-colors">
-              <i class="fas fa-user-circle text-[#8B4F6B]"></i> Dashboard
-            </a>
-            <a href="mailto:victoradeyimika0@gmail.com" class="flex items-center gap-2 px-4 py-3 text-sm text-[#2C2420] hover:bg-[#FAF8F5] hover:text-[#8B4F6B] transition-colors">
-              <i class="fas fa-envelope text-[#8B4F6B]"></i> Email Us
-            </a>
-            <a href="https://wa.me/2349053380773" target="_blank" class="flex items-center gap-2 px-4 py-3 text-sm text-[#2C2420] hover:bg-[#FAF8F5] hover:text-[#8B4F6B] transition-colors">
-              <i class="fab fa-whatsapp text-green-500"></i> WhatsApp
-            </a>
-            <a href="https://instagram.com/yourhandle" target="_blank" class="flex items-center gap-2 px-4 py-3 text-sm text-[#2C2420] hover:bg-[#FAF8F5] hover:text-[#8B4F6B] transition-colors border-t border-gray-100">
-              <i class="fab fa-instagram text-[#8B4F6B]"></i> Instagram
-            </a>
-          </div>
-        </div>
+      <div class="mt-3 mb-6">
+        <p style="font-family:'Cormorant Garamond',serif;" class="text-lg font-semibold text-[#2C2420] tracking-wide">Pearl Skin Care</p>
+        <p class="text-xs text-[#9E8E88] tracking-widest uppercase mt-0.5">Premium Supplements</p>
       </div>
 
-      <div class="flex justify-between items-center">
-        <div class="mr-14 -ml-24 md:hidden">
-          <!-- Hamburger Button -->
-          <button id="menuToggle" class="text-2xl">
-            <i class="fas fa-bars"></i>
-          </button>
+      <span id="welcomeTextMobile" class="text-xs text-[#8B4F6B] font-medium hidden mb-2 block"></span>
 
-          <!-- Overlay -->
-          <div id="menuOverlay" class="fixed inset-0 bg-black bg-opacity-30 backdrop-blur-sm z-40 hidden"></div>
+      <div class="flex flex-col space-y-1 mt-2 text-sm">
+        <a href="#" class="flex items-center gap-3 px-3 py-3 text-[#2C2420] hover:bg-[#FAF8F5] hover:text-[#8B4F6B] rounded-md transition-colors">
+          <i class="fas fa-home text-[#8B4F6B] w-4"></i> Home
+        </a>
+        <a href="products.html" class="flex items-center gap-3 px-3 py-3 text-[#2C2420] hover:bg-[#FAF8F5] hover:text-[#8B4F6B] rounded-md transition-colors">
+          <i class="fa fa-shop text-[#8B4F6B] w-4"></i> Shop
+        </a>
+        <a href="#categories" class="flex items-center gap-3 px-3 py-3 text-[#2C2420] hover:bg-[#FAF8F5] hover:text-[#8B4F6B] rounded-md transition-colors">
+          <i class="fas fa-th-large text-[#8B4F6B] w-4"></i> Categories
+        </a>
+        <a href="customer-dashboard.html" class="flex items-center gap-3 px-3 py-3 text-[#2C2420] hover:bg-[#FAF8F5] hover:text-[#8B4F6B] rounded-md transition-colors">
+          <i class="fas fa-user-circle text-[#8B4F6B] w-4"></i> Dashboard
+        </a>
+        <a href="mailto:victoradeyimika0@gmail.com" class="flex items-center gap-3 px-3 py-3 text-[#2C2420] hover:bg-[#FAF8F5] hover:text-[#8B4F6B] rounded-md transition-colors">
+          <i class="fas fa-envelope text-[#8B4F6B] w-4"></i> Email Us
+        </a>
+        <a href="https://wa.me/2347053380773" target="_blank" class="flex items-center gap-3 px-3 py-3 text-[#2C2420] hover:bg-[#FAF8F5] hover:text-[#8B4F6B] rounded-md transition-colors">
+          <i class="fab fa-whatsapp text-green-500 w-4"></i> WhatsApp
+        </a>
+        <a href="https://instagram.com/yourhandle" target="_blank" class="flex items-center gap-3 px-3 py-3 text-[#2C2420] hover:bg-[#FAF8F5] hover:text-[#8B4F6B] rounded-md transition-colors">
+          <i class="fab fa-instagram text-[#8B4F6B] w-4"></i> Instagram
+        </a>
+      </div>
+    </div>
 
-          <!-- Mobile Menu -->
-          <div id="mobileMenu"
-            class="fixed top-0 left-0 w-64 h-full bg-white shadow-2xl p-6 transform -translate-x-full transition-transform duration-300 z-50">
-            <button id="closeMenu" class="text-2xl text-gray-400 hover:text-[#8B4F6B] absolute top-5 right-5 transition-colors">&times;</button>
+    <!-- Center: Desktop Nav Links -->
+    <nav class="hidden md:flex items-center gap-8 text-sm">
+      <a href="#" class="nav-link text-white">Home</a>
+      <a href="products.html" class="nav-link text-white">Shop</a>
+      <a href="#categories" class="nav-link text-white">Categories</a>
 
-            <div class="mt-3 mb-6">
-              <p class="font-serif text-lg font-semibold text-[#2C2420] tracking-wide" style="font-family:'Cormorant Garamond',serif;">Pearl Skin Care</p>
-              <p class="text-xs text-[#9E8E88] tracking-widest uppercase mt-0.5">Premium Supplements</p>
-            </div>
-
-            <span id="welcomeTextMobile" class="text-xs text-[#8B4F6B] font-medium hidden mb-2 block"></span>
-
-            <div class="flex flex-col space-y-1 mt-2 text-sm">
-              <a href="products.html" class="flex items-center gap-3 px-3 py-3 text-[#2C2420] hover:bg-[#FAF8F5] hover:text-[#8B4F6B] rounded-md transition-colors">
-                <i class="fa fa-shop text-[#8B4F6B] w-4"></i> Shop
-              </a>
-              <a href="customer-dashboard.html" class="flex items-center gap-3 px-3 py-3 text-[#2C2420] hover:bg-[#FAF8F5] hover:text-[#8B4F6B] rounded-md transition-colors">
-                <i class="fas fa-user-circle text-[#8B4F6B] w-4"></i> Dashboard
-              </a>
-              <a href="mailto:victoradeyimika0@gmail.com" class="flex items-center gap-3 px-3 py-3 text-[#2C2420] hover:bg-[#FAF8F5] hover:text-[#8B4F6B] rounded-md transition-colors">
-                <i class="fas fa-envelope text-[#8B4F6B] w-4"></i> Email Us
-              </a>
-              <a href="https://wa.me/2347053380773" target="_blank" class="flex items-center gap-3 px-3 py-3 text-[#2C2420] hover:bg-[#FAF8F5] hover:text-[#8B4F6B] rounded-md transition-colors">
-                <i class="fab fa-whatsapp text-green-500 w-4"></i> WhatsApp
-              </a>
-              <a href="https://instagram.com/yourhandle" target="_blank" class="flex items-center gap-3 px-3 py-3 text-[#2C2420] hover:bg-[#FAF8F5] hover:text-[#8B4F6B] rounded-md transition-colors">
-                <i class="fab fa-instagram text-[#8B4F6B] w-4"></i> Instagram
-              </a>
-            </div>
-          </div>
-        </div>
-
-        <!-- Mobile Logo -->
-        <div class="logo-con ml-12">
-          <div class="logo md:hidden text-center">
-            <h1 class="brand">Pearl</h1>
-            <p class="tagline">SKIN CARE</p>
-          </div>
-        </div>
-
-        <div class="flex justify-between gap-5 icon">
-          <!-- Search Icon -->
-          <button id="openSearchBtn" class="openSearchBtn text-white hover:text-[#C9A28F] transition-colors">
-            <i class="fas fa-search text-[15px]"></i>
-          </button>
-
-          <!-- Cart Button -->
-          <button id="cart-button" class="cart-tag relative inline-block">
-            <svg id="cart-icon" class="cart-icon h-5 w-5 inline text-white hover:text-[#C9A28F] transition-colors"
-              fill="none" stroke="currentColor" stroke-width="2.2" opacity=".9" viewBox="0 0 24 24">
-              <path d="M6 2 3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"></path>
-              <line x1="3" y1="6" x2="21" y2="6"></line>
-              <path d="M16 10a4 4 0 01-8 0"></path>
-            </svg>
-            <span id="cartCount"
-              class="absolute -top-3 -right-3 bg-[#8B4F6B] text-white text-[11px] w-5 h-5 rounded-full flex items-center justify-center font-medium">
-              0
-            </span>
-          </button>
+      <!-- Contact Dropdown -->
+      <div class="relative group">
+        <button class="nav-link text-white hover:text-[#C9A28F] transition-colors text-xs font-medium tracking-widest uppercase">Contact</button>
+        <div class="absolute hidden group-hover:block bg-white shadow-xl rounded-md mt-2 z-50 min-w-[170px] right-0 border border-gray-100">
+          <a href="customer-dashboard.html" class="flex items-center gap-2 px-4 py-3 text-sm text-[#2C2420] hover:bg-[#FAF8F5] hover:text-[#8B4F6B] transition-colors">
+            <i class="fas fa-user-circle text-[#8B4F6B]"></i> Dashboard
+          </a>
+          <a href="mailto:victoradeyimika0@gmail.com" class="flex items-center gap-2 px-4 py-3 text-sm text-[#2C2420] hover:bg-[#FAF8F5] hover:text-[#8B4F6B] transition-colors">
+            <i class="fas fa-envelope text-[#8B4F6B]"></i> Email Us
+          </a>
+          <a href="https://wa.me/2349053380773" target="_blank" class="flex items-center gap-2 px-4 py-3 text-sm text-[#2C2420] hover:bg-[#FAF8F5] hover:text-[#8B4F6B] transition-colors">
+            <i class="fab fa-whatsapp text-green-500"></i> WhatsApp
+          </a>
+          <a href="https://instagram.com/yourhandle" target="_blank" class="flex items-center gap-2 px-4 py-3 text-sm text-[#2C2420] hover:bg-[#FAF8F5] hover:text-[#8B4F6B] transition-colors border-t border-gray-100">
+            <i class="fab fa-instagram text-[#8B4F6B]"></i> Instagram
+          </a>
         </div>
       </div>
     </nav>
+
+    <!-- Right: Search + Cart -->
+    <div class="flex items-center gap-5">
+      <button id="openSearchBtn" class="text-white hover:text-[#C9A28F] transition-colors">
+        <i class="fas fa-search text-[15px]"></i>
+      </button>
+
+      <button id="cart-button" class="relative">
+        <svg id="cart-icon" class="h-5 w-5 text-white hover:text-[#C9A28F] transition-colors"
+          fill="none" stroke="currentColor" stroke-width="2.2" opacity=".9" viewBox="0 0 24 24">
+          <path d="M6 2 3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"></path>
+          <line x1="3" y1="6" x2="21" y2="6"></line>
+          <path d="M16 10a4 4 0 01-8 0"></path>
+        </svg>
+        <span id="cartCount"
+          class="absolute -top-3 -right-3 bg-[#8B4F6B] text-white text-[11px] w-5 h-5 rounded-full flex items-center justify-center font-medium">
+          0
+        </span>
+      </button>
+    </div>
   </header>
 
   <!-- Hero Section -->
