@@ -142,7 +142,14 @@
   .section-sub { font-size: 0.82rem; color: #9E8E88; margin-bottom: 24px; }
 
   /* ── Skeleton ── */
-  #skeletonContainer.hidden { display: none; }
+  #skeletonContainer { display: none; }
+  #skeletonContainer.visible {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+  }
+  @media (min-width: 640px) { #skeletonContainer.visible { grid-template-columns: repeat(3, 1fr); } }
+  @media (min-width: 1024px) { #skeletonContainer.visible { grid-template-columns: repeat(4, 1fr); } }
   .skeleton-card {
     background: #fff; border: 1px solid #f0ebe7;
     border-radius: 8px; padding: 16px;
@@ -444,16 +451,20 @@
   <p class="section-heading">Our Products</p>
   <p class="section-sub">Premium skincare supplements for radiant, healthy skin.</p>
 
-  <!-- Skeleton -->
-  <div id="skeletonContainer" class="hidden" style="display:grid; grid-template-columns: repeat(2,1fr); gap:16px;">
+  <!-- Skeleton (shown while fetching) -->
+  <div id="skeletonContainer" class="visible">
+    <div class="skeleton-card"><div class="skeleton-img"></div><div class="skeleton-line"></div><div class="skeleton-line short"></div></div>
+    <div class="skeleton-card"><div class="skeleton-img"></div><div class="skeleton-line"></div><div class="skeleton-line short"></div></div>
+    <div class="skeleton-card"><div class="skeleton-img"></div><div class="skeleton-line"></div><div class="skeleton-line short"></div></div>
+    <div class="skeleton-card"><div class="skeleton-img"></div><div class="skeleton-line"></div><div class="skeleton-line short"></div></div>
     <div class="skeleton-card"><div class="skeleton-img"></div><div class="skeleton-line"></div><div class="skeleton-line short"></div></div>
     <div class="skeleton-card"><div class="skeleton-img"></div><div class="skeleton-line"></div><div class="skeleton-line short"></div></div>
     <div class="skeleton-card"><div class="skeleton-img"></div><div class="skeleton-line"></div><div class="skeleton-line short"></div></div>
     <div class="skeleton-card"><div class="skeleton-img"></div><div class="skeleton-line"></div><div class="skeleton-line short"></div></div>
   </div>
 
-  <!-- Product Grid -->
-  <div id="productGrid"></div>
+  <!-- Product Grid (hidden until products are ready) -->
+  <div id="productGrid" class="hidden"></div>
 
   <!-- No Results -->
   <p id="noResults" class="hidden">No products match your search.</p>
@@ -673,20 +684,33 @@
   };
   window.openProductModal = openProductModal;
 
+  // ---------- Skeleton helpers ----------
+  const skeletonContainer = document.getElementById("skeletonContainer");
+
+  function showSkeleton(){
+    skeletonContainer?.classList.add("visible");
+    productGrid.classList.add("hidden");
+  }
+  function hideSkeleton(){
+    skeletonContainer?.classList.remove("visible");
+    productGrid.classList.remove("hidden");
+  }
+
   // ---------- Fetch Products ----------
   async function fetchAllProducts(){
+    showSkeleton();
     try{
-      showLoader(true);
       const snap = await db.collection("products").get();
       allProducts = snap.docs.map(d=>({ id:d.id, ...(d.data()||{}) }));
       applyFilters();
-    }catch(err){ console.error(err); }
-    finally{ showLoader(false); }
+    }catch(err){
+      console.error(err);
+      hideSkeleton();
+    }
   }
 
   // ---------- Filtering / Sorting ----------
   function applyFilters(){
-    showLoader(true);
     const cat = categoryFilter?.value || "All";
     const q = searchInput?.value.trim().toLowerCase() || "";
     const sort = priceSort?.value || "default";
@@ -703,7 +727,7 @@
     visibleCount=0;
     productGrid.innerHTML="";
     renderNextBatch();
-    setTimeout(()=> showLoader(false), 200);
+    hideSkeleton();
   }
 
   // ---------- Render Products ----------
@@ -845,8 +869,11 @@
     openFilterSort.classList.remove("hidden");
   });
 
-  document.addEventListener("DOMContentLoaded",()=>{ fetchAllProducts(); });
-  fetchAllProducts();
+  if(document.readyState === "loading"){
+    document.addEventListener("DOMContentLoaded", fetchAllProducts);
+  } else {
+    fetchAllProducts();
+  }
 
 })();
 </script>
