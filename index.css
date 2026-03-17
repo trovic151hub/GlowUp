@@ -406,7 +406,8 @@ h1.brand-title {
   cursor: pointer;
 }
 .category-btn:hover,
-.category-btn.active-cat {
+.category-btn.active-cat,
+.category-btn.active {
   background: #8B4F6B;
   border-color: #8B4F6B;
   color: #fff;
