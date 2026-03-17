@@ -90,10 +90,24 @@
       letter-spacing: 0.06em;
       text-transform: uppercase;
     }
-    .breadcrumb span { color: #9E8E88; cursor: pointer; transition: color 0.2s; }
-    .breadcrumb span.active { color: #8B4F6B; }
+    .breadcrumb span {
+      color: #c0b0aa;
+      cursor: pointer;
+      transition: color 0.2s, font-weight 0.2s;
+      padding: 4px 0;
+      border-bottom: 2px solid transparent;
+      transition: all 0.2s;
+    }
+    /* active step — set in HTML or by JS (adds font-semibold + text-gray-900) */
+    .breadcrumb span.active,
+    .breadcrumb span.font-semibold,
+    .breadcrumb span.text-gray-900 {
+      color: #8B4F6B !important;
+      font-weight: 600 !important;
+      border-bottom-color: #8B4F6B;
+    }
     .breadcrumb span:hover { color: #8B4F6B; }
-    .breadcrumb i { color: #d4cbc6; font-size: 0.6rem; }
+    .breadcrumb i { color: #e0d8d4; font-size: 0.6rem; }
 
     /* ── Cart Item Cards ── */
     .cart-item-card {
@@ -290,16 +304,21 @@
 
     /* ── Payment options ── */
     .payment-option {
-      border: 1px solid #e0d3cc;
+      border-width: 1px;
+      border-style: solid;
+      border-color: #e0d3cc;
       border-radius: 6px;
       padding: 14px 16px;
       margin-top: 10px;
       cursor: pointer;
       display: flex; justify-content: space-between; align-items: center;
-      transition: all 0.2s;
+      transition: border-color 0.2s, background 0.2s;
+      background: #fff;
     }
     .payment-option:hover { border-color: #8B4F6B; background: #fff9f7; }
-    .payment-option.selected { border-color: #8B4F6B; background: #fff9f7; }
+    /* JS adds border-pink-600 + bg-pink-50 — remap to brand colors */
+    .payment-option.border-pink-600 { border-color: #8B4F6B !important; }
+    .payment-option.bg-pink-50 { background: #fff9f7 !important; }
 
     /* ── Right order panel ── */
     #order-summary-panel {
@@ -632,7 +651,7 @@
         <div id="payment-summary-card" class="hidden section-card">
           <div class="section-card-title">Payment Method</div>
 
-          <div id="paystack-option" class="payment-option">
+          <div id="paystack-option" class="payment-option cursor-pointer">
             <div class="flex items-center gap-3">
               <span class="p-2 bg-white border border-gray-100 rounded">
                 <img class="w-20 h-6 object-contain"
@@ -647,7 +666,7 @@
             </div>
           </div>
 
-          <div id="WhatsApp" class="payment-option">
+          <div id="WhatsApp" class="payment-option cursor-pointer">
             <div class="flex items-center gap-3">
               <span class="p-2 bg-white border border-gray-100 rounded">
                 <i class="fab fa-whatsapp text-green-600 text-lg"></i>
