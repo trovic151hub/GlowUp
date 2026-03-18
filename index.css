@@ -26,7 +26,7 @@ h1, h2, h3, h4 {
   line-height: 1.2;
 }
 
-p, li, input, button, a, span, label {
+p, li, input, button, span, label, a {
   font-family: 'Inter', 'DM Sans', sans-serif;
 }
 
@@ -107,7 +107,7 @@ p, li, input, button, a, span, label {
   color: #2C2420 !important;
 }
 #mainHeader a.nav-link {
-  font-size: 0.875rem;
+  font-size: 0.8rem;
   font-weight: 500;
   letter-spacing: 0.04em;
   text-transform: uppercase;
@@ -131,9 +131,9 @@ p, li, input, button, a, span, label {
 }
 h1.brand-title {
   font-family: 'Cormorant Garamond', Georgia, serif;
-  font-weight: 600;
-  font-size: 1.6rem;
-  letter-spacing: 0.05em;
+  font-weight: 400;
+  font-size: 1.3rem;
+  letter-spacing: 0.06em;
 }
 
 /* ================= HERO SLIDER ================= */
@@ -406,7 +406,8 @@ h1.brand-title {
   cursor: pointer;
 }
 .category-btn:hover,
-.category-btn.active-cat {
+.category-btn.active-cat,
+.category-btn.active {
   background: #8B4F6B;
   border-color: #8B4F6B;
   color: #fff;
@@ -634,17 +635,10 @@ footer input:focus {
   .hero-tabs { gap: 0.5rem; bottom: 8px; width: 100%; padding-left: 20px; transform: translateX(-50%); overflow: hidden; }
   .hero-tabs span { padding: 10px 16px; font-size: 0.78rem; min-width: 110px; text-align: center; }
   .hero-tabs span.active { color: #8B4F6B !important; font-weight: 600; }
-  .main-head { display: none !important; }
-  .logo { text-align: center; display: block !important; }
-  .cart-tag { position: absolute !important; right: 16% !important; }
-  .icon { margin-top: -25px; }
-  .log-btn { position: absolute !important; right: 4% !important; }
-  .log-btn i { display: flex !important; color: #2C2420 !important; font-size: 15px; }
   #product-list { grid-template-columns: repeat(2, 1fr) !important; }
   #categories .grid { grid-template-columns: repeat(2, 1fr) !important; gap: 10px; }
   .category-btn { padding: 14px; font-size: 0.85rem; }
   #skinTip { font-size: 1.05rem; }
-  .openSearchBtn { position: absolute !important; right: 15px !important; }
 }
 @media (max-width: 480px) {
   .hero-slider { height: 220px; }
@@ -656,9 +650,6 @@ footer input:focus {
   .hero-tabs span { padding: 0.75rem 1.5rem; font-size: 0.88rem; }
 }
 
-@media (min-width: 641px) {
-  .logo { display: none; }
-}
 
 /* Notification responsive */
 @media (max-width: 640px) {

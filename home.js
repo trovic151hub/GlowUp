@@ -919,11 +919,14 @@ async function filterProducts(category="All"){
   // skeleton
   productList.innerHTML = "";
   for(let i=0; i<perPage; i++){
-    productList.innerHTML += `<div class="animate-pulse border rounded-xl p-4 text-center shadow">
-      <div class="h-32 bg-gray-300 mb-2 rounded"></div>
-      <div class="h-5 bg-gray-300 mb-1 rounded"></div>
-      <div class="h-5 bg-gray-300 w-1/2 mx-auto rounded"></div>
-    </div>`;
+    productList.innerHTML += `
+      <div class="bg-white border border-[#f0ebe7] rounded-lg overflow-hidden">
+        <div class="h-44 bg-[#f0ebe7] animate-pulse"></div>
+        <div class="p-4">
+          <div class="h-4 bg-[#f0ebe7] rounded animate-pulse mb-2 w-3/4"></div>
+          <div class="h-3 bg-[#f0ebe7] rounded animate-pulse w-1/2"></div>
+        </div>
+      </div>`;
   }
 
   showPageLoader();
@@ -947,11 +950,9 @@ async function filterProducts(category="All"){
     // category highlight
     document.querySelectorAll(".category-btn").forEach(btn => {
       if(btn.dataset.category === category){
-        btn.classList.add("bg-[#8B4F6B]","text-white");
-        btn.classList.remove("bg-pink-100","text-gray-800");
+        btn.classList.add("active");
       } else {
-        btn.classList.remove("bg-[#8B4F6B]","text-white");
-        btn.classList.add("bg-pink-100","text-gray-800");
+        btn.classList.remove("active");
       }
     });
 
@@ -1039,33 +1040,32 @@ function renderProducts(reset=false){
       const image = product.image || 'https://via.placeholder.com/300x200?text=No+Image';
       const card = document.createElement('div');
       // card.className = "border rounded-xl p-4 text-center shadow opacity-0 transition-opacity duration-500";
-      card.className = `
-  border rounded-xl p-4 shadow
-  flex flex-col
-  text-center
-  opacity-0 transition-opacity duration-500
-`;
+      card.className = "bg-white border border-[#f0ebe7] rounded-lg overflow-hidden flex flex-col opacity-0 transition-opacity duration-500 hover:shadow-lg hover:-translate-y-0.5 transition-transform";
       card.innerHTML = `
-  <img src="${image}" class="mx-auto mb-2 h-32 w-full object-cover rounded" />
-
-  <h4 class="font-semibold text-sm line-clamp-2 min-h-[2.5em]">
-    ${escapeHtml(product.name||'Untitled')}
-  </h4>
-
-  <p class="text-pink-500 font-bold mt-1">
-    ₦${(Number(product.price||0)).toLocaleString()}
-  </p>
-
-  <div class="mt-auto pt-2 flex justify-center gap-2">
-    <button data-id="${product.id}"
-      class="view-btn text-xs px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600">
-      View
-    </button>
-
-    <button data-id="${product.id}"
-      class="add-btn text-xs px-3 py-1 bg-pink-600 text-white rounded hover:bg-pink-700">
-      Cart
-    </button>
+  <img src="${image}" class="w-full h-44 object-cover bg-[#f8f4f2]" onerror="this.src='https://via.placeholder.com/300x180'" />
+  <div class="p-4 flex flex-col flex-1">
+    <h4 style="font-family:'Cormorant Garamond',Georgia,serif;font-size:1rem;font-weight:600;color:#2C2420;line-height:1.3;margin-bottom:4px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;">
+      ${escapeHtml(product.name||'Untitled')}
+    </h4>
+    <p style="font-size:0.875rem;font-weight:600;color:#8B4F6B;margin-bottom:12px;">
+      ₦${(Number(product.price||0)).toLocaleString()}
+    </p>
+    <div style="margin-top:auto;display:flex;gap:6px;">
+      <button data-id="${product.id}"
+        class="view-btn"
+        style="flex:1;padding:8px 0;font-size:0.72rem;font-weight:500;letter-spacing:0.05em;text-transform:uppercase;background:#FAF8F5;color:#6B5B55;border:1px solid #e0d3cc;border-radius:3px;cursor:pointer;font-family:'Inter',sans-serif;transition:all 0.2s;"
+        onmouseover="this.style.borderColor='#8B4F6B';this.style.color='#8B4F6B';"
+        onmouseout="this.style.borderColor='#e0d3cc';this.style.color='#6B5B55';">
+        View
+      </button>
+      <button data-id="${product.id}"
+        class="add-btn"
+        style="flex:1.4;padding:8px 0;font-size:0.72rem;font-weight:500;letter-spacing:0.05em;text-transform:uppercase;background:#8B4F6B;color:#fff;border:1px solid #8B4F6B;border-radius:3px;cursor:pointer;font-family:'Inter',sans-serif;transition:background 0.2s;"
+        onmouseover="this.style.background='#7A3F5A';"
+        onmouseout="this.style.background='#8B4F6B';">
+        Add to Cart
+      </button>
+    </div>
   </div>
 `;
 
@@ -1105,7 +1105,7 @@ function renderProducts(reset=false){
           const btn = document.createElement("button");
           btn.id="loadMoreBtn";
           btn.textContent="Load More";
-          btn.className="mt-4 px-6 py-2 bg-[#8B4F6B] text-white rounded hover:bg-[#8B4F6B]/90 block mx-auto";
+          btn.className="mt-6 px-8 py-3 text-[#8B4F6B] border border-[#8B4F6B] rounded-sm text-xs font-medium tracking-widest uppercase block mx-auto hover:bg-[#8B4F6B] hover:text-white transition-colors";
           btn.onclick=()=> renderProducts();
           productList.parentElement.appendChild(btn);
       }
@@ -1127,38 +1127,42 @@ function renderProducts(reset=false){
   }
 
   modal.innerHTML = `
-  <div class="
-    bg-white rounded-lg relative
-    w-11/12 max-w-lg
-    p-4 md:p-6
-    max-h-[85vh] overflow-y-auto
-  ">
+  <div style="background:#fff;border-radius:10px;box-shadow:0 24px 60px rgba(44,36,32,0.2);width:92%;max-width:520px;max-height:88vh;overflow-y:auto;position:relative;">
     <button id="closeProductModal"
-      class="absolute top-2 right-2 text-gray-500 hover:text-gray-800 text-xl">
+      style="position:absolute;top:14px;right:14px;background:#FAF8F5;border:1px solid #e0d3cc;color:#6B5B55;width:30px;height:30px;border-radius:50%;font-size:1.1rem;display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:1;line-height:1;"
+      onmouseover="this.style.background='#8B4F6B';this.style.color='#fff';"
+      onmouseout="this.style.background='#FAF8F5';this.style.color='#6B5B55';">
       &times;
     </button>
 
     <img id="modalProductImage"
-      class="w-full h-40 md:h-64 object-cover mb-3 rounded">
+      style="width:100%;height:260px;object-fit:cover;background:#f8f4f2;display:block;">
 
-    <h2 id="modalProductName"
-      class="text-lg md:text-xl font-bold mb-1"></h2>
+    <div style="padding:24px;">
+      <h2 id="modalProductName"
+        style="font-family:'Cormorant Garamond',Georgia,serif;font-size:1.5rem;font-weight:600;color:#2C2420;margin-bottom:6px;line-height:1.2;"></h2>
 
-    <p id="modalProductPrice"
-      class="text-pink-500 font-semibold text-base md:text-lg mb-2"></p>
+      <p id="modalProductPrice"
+        style="font-size:1.2rem;font-weight:600;color:#8B4F6B;margin-bottom:14px;"></p>
 
-    <p id="modalProductDescription"
-      class="text-sm text-gray-700 mb-3 line-clamp-3 md:line-clamp-none"></p>
+      <p id="modalProductDescription"
+        style="font-size:0.875rem;color:#6B5B55;line-height:1.7;margin-bottom:24px;"></p>
 
-    <button id="modalAddToCartBtn"
-      class="w-full mb-2 px-4 py-2 text-sm md:text-base bg-pink-600 text-white rounded hover:bg-pink-700">
-      Add to Cart
-    </button>
-
-    <button id="buyNowBtn"
-      class="w-full px-4 py-2 text-sm md:text-base border rounded hover:bg-gray-100">
-      Buy Now
-    </button>
+      <div style="display:flex;flex-direction:column;gap:10px;">
+        <button id="modalAddToCartBtn"
+          style="width:100%;padding:13px;font-size:0.78rem;font-weight:500;letter-spacing:0.08em;text-transform:uppercase;background:#8B4F6B;color:#fff;border:none;border-radius:3px;cursor:pointer;font-family:'Inter',sans-serif;"
+          onmouseover="this.style.background='#7A3F5A';"
+          onmouseout="this.style.background='#8B4F6B';">
+          Add to Cart
+        </button>
+        <button id="buyNowBtn"
+          style="width:100%;padding:13px;font-size:0.78rem;font-weight:500;letter-spacing:0.08em;text-transform:uppercase;background:transparent;color:#8B4F6B;border:1px solid #8B4F6B;border-radius:3px;cursor:pointer;font-family:'Inter',sans-serif;"
+          onmouseover="this.style.background='#8B4F6B';this.style.color='#fff';"
+          onmouseout="this.style.background='transparent';this.style.color='#8B4F6B';">
+          Buy Now
+        </button>
+      </div>
+    </div>
   </div>
 `;
 
