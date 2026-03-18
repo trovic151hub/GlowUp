@@ -369,6 +369,7 @@ function calculateDeliveryFee(deliveryInfo, totalWeight) {
           <img src="${item.image || item.images?.[0] || ''}" class="w-24 h-24 object-cover rounded">
           <div>
             <p class="text-gray-800 font-medium">${item.name}</p>
+            <p style="font-size:0.875rem;color:#6B5B55;line-height:1.7;margin-bottom:24px;">${item.description}</p>
             <p class="text-sm text-gray-500">Qty: ${item.quantity}${item.color ? " | " + item.color : ""}</p>
             <p class="font-bold text-gray-900">₦${((item.price || 0) * item.quantity).toLocaleString()}</p>
           </div>

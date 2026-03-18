@@ -464,7 +464,7 @@
   </div>
   <div class="border-t border-white/5 max-w-screen-xl mx-auto px-8 py-5 flex flex-col md:flex-row justify-between items-center gap-3">
     <p class="text-xs text-[#5A4A44] tracking-wide">© 2025 Pearl Skin Care. All rights reserved.</p>
-    <p class="text-xs text-[#5A4A44] tracking-wide">Powered by <span class="text-[#8B4F6B]">VTec</span></p>
+    <p class="text-xs text-[#5A4A44] tracking-wide">Powered by <span class="text-[#8B4F6B] font-bold text-sm">Vic.Dev</span></p>
   </div>
 </footer>
 
@@ -708,7 +708,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if(!orderTableBody) return;
     orderTableBody.innerHTML = "";
     if(!orders.length){
-      orderTableBody.innerHTML = `<tr><td colspan="5" class="text-center text-[#9E8E88] py-10 text-sm">No orders found.</td></tr>`;
+      orderTableBody.innerHTML = `<tr><td colspan="5" class="text-center text-[#9E8E88] py-10 text-sm">No orders found. <i class="fa-solid fa-box-open block mt-4"></i></td></tr>`;
       return;
     }
     orders.forEach(order => {
