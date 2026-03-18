@@ -234,7 +234,7 @@ function createTabs() {
 
     const progressBar = document.createElement("div");
     progressBar.className =
-      "progress-bar absolute bottom-0 left-0 h-1 bg-pink-500 w-0 rounded-br-lg";
+      "progress-bar absolute bottom-[-1px] left-0 h-1 bg-[#8B4F6B] w-0 rounded-br-lg";
     tab.appendChild(progressBar);
 
     tab.addEventListener("click", e => {
@@ -947,10 +947,10 @@ async function filterProducts(category="All"){
     // category highlight
     document.querySelectorAll(".category-btn").forEach(btn => {
       if(btn.dataset.category === category){
-        btn.classList.add("bg-pink-500","text-white");
+        btn.classList.add("bg-[#8B4F6B]","text-white");
         btn.classList.remove("bg-pink-100","text-gray-800");
       } else {
-        btn.classList.remove("bg-pink-500","text-white");
+        btn.classList.remove("bg-[#8B4F6B]","text-white");
         btn.classList.add("bg-pink-100","text-gray-800");
       }
     });
@@ -1105,7 +1105,7 @@ function renderProducts(reset=false){
           const btn = document.createElement("button");
           btn.id="loadMoreBtn";
           btn.textContent="Load More";
-          btn.className="mt-4 px-6 py-2 bg-pink-500 text-white rounded hover:bg-pink-600 block mx-auto";
+          btn.className="mt-4 px-6 py-2 bg-[#8B4F6B] text-white rounded hover:bg-[#8B4F6B]/90 block mx-auto";
           btn.onclick=()=> renderProducts();
           productList.parentElement.appendChild(btn);
       }
