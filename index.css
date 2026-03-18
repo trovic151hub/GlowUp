@@ -131,9 +131,9 @@ p, li, input, button, a, span, label {
 }
 h1.brand-title {
   font-family: 'Cormorant Garamond', Georgia, serif;
-  font-weight: 600;
-  font-size: 1.6rem;
-  letter-spacing: 0.05em;
+  font-weight: 400;
+  font-size: 1.3rem;
+  letter-spacing: 0.06em;
 }
 
 /* ================= HERO SLIDER ================= */
