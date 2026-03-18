@@ -1063,7 +1063,7 @@ function renderProducts(reset=false){
         style="flex:1.4;padding:8px 0;font-size:0.72rem;font-weight:500;letter-spacing:0.05em;text-transform:uppercase;background:#8B4F6B;color:#fff;border:1px solid #8B4F6B;border-radius:3px;cursor:pointer;font-family:'Inter',sans-serif;transition:background 0.2s;"
         onmouseover="this.style.background='#7A3F5A';"
         onmouseout="this.style.background='#8B4F6B';">
-        Add to Cart
+        Cart
       </button>
     </div>
   </div>
