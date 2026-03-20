@@ -199,6 +199,10 @@
         <i class="fas fa-star"></i>
         <span class="nav-label">Featured Products</span>
       </div>
+      <div class="nav-item" data-section="admins">
+        <i class="fas fa-user-shield"></i>
+        <span class="nav-label">Admins</span>
+      </div>
     </nav>
     <!-- Bottom -->
     <div style="border-top:1px solid rgba(255,255,255,0.08);" class="py-3">
@@ -502,6 +506,52 @@
         </div>
       </div>
 
+      <!-- ===== ADMINS ===== -->
+      <div id="section-admins" class="section">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
+
+          <!-- Add New Admin -->
+          <div class="card">
+            <h3 class="text-2xl font-semibold text-gray-800 serif mb-1">Add New Admin</h3>
+            <p class="text-sm text-gray-400 mb-5">Create a login for a new admin. They will be able to sign in at <code class="bg-gray-100 px-1 rounded text-xs">/admin.html</code>.</p>
+            <form id="addAdminForm" class="space-y-4">
+              <div>
+                <label class="block text-xs font-medium text-gray-400 mb-1 uppercase tracking-widest">Full Name</label>
+                <input type="text" id="newAdminName" placeholder="e.g. Grace Okafor" class="border border-gray-200 p-2.5 rounded-xl w-full text-sm bg-gray-50" required />
+              </div>
+              <div>
+                <label class="block text-xs font-medium text-gray-400 mb-1 uppercase tracking-widest">Email Address</label>
+                <input type="email" id="newAdminEmail" placeholder="admin@example.com" class="border border-gray-200 p-2.5 rounded-xl w-full text-sm bg-gray-50" required />
+              </div>
+              <div>
+                <label class="block text-xs font-medium text-gray-400 mb-1 uppercase tracking-widest">Password</label>
+                <div class="relative">
+                  <input type="password" id="newAdminPassword" placeholder="Min 6 characters" class="border border-gray-200 p-2.5 rounded-xl w-full text-sm bg-gray-50 pr-10" required />
+                  <button type="button" id="toggleNewAdminPw" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                    <i class="fas fa-eye text-sm"></i>
+                  </button>
+                </div>
+              </div>
+              <p id="addAdminError" class="text-red-500 text-sm hidden"></p>
+              <button type="submit" id="addAdminBtn" class="btn-primary px-6 py-2.5 rounded-xl text-sm flex items-center gap-2 font-medium">
+                <span id="addAdminBtnText">Create Admin Account</span>
+                <span id="addAdminSpinner" class="hidden"><i class="fa-solid fa-circle-notch fa-spin"></i></span>
+              </button>
+            </form>
+          </div>
+
+          <!-- Current Admins List -->
+          <div class="card">
+            <h3 class="text-2xl font-semibold text-gray-800 serif mb-1">Current Admins</h3>
+            <p class="text-sm text-gray-400 mb-5">All accounts with admin access.</p>
+            <div id="adminsList" class="space-y-3">
+              <p class="text-gray-400 text-sm">Loading...</p>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
     </div>
   </div>
 </div>
@@ -570,8 +620,8 @@ document.getElementById('sidebarToggle').addEventListener('click', () => {
 function closeMobileSidebar() { if (window.innerWidth <= 768) sidebarEl.classList.remove('mobile-open'); }
 
 // ===== SECTION NAV =====
-let analyticsInitialized = false, ordersInitialized = false, homepageInitialized = false;
-const sectionTitles = { dashboard:'Dashboard', products:'Products', orders:'Orders', analytics:'Analytics', hero:'Hero Slider', homepage:'Featured Products' };
+let analyticsInitialized = false, ordersInitialized = false, homepageInitialized = false, adminsInitialized = false;
+const sectionTitles = { dashboard:'Dashboard', products:'Products', orders:'Orders', analytics:'Analytics', hero:'Hero Slider', homepage:'Featured Products', admins:'Admin Accounts' };
 
 function showSection(name) {
   document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
@@ -582,6 +632,7 @@ function showSection(name) {
   if (name === 'analytics' && !analyticsInitialized) { initAnalytics(); analyticsInitialized = true; }
   if (name === 'orders' && !ordersInitialized) { initOrders(); ordersInitialized = true; }
   if (name === 'homepage' && !homepageInitialized) { loadFeaturedProducts(); homepageInitialized = true; }
+  if (name === 'admins' && !adminsInitialized) { initAdmins(); adminsInitialized = true; }
   closeMobileSidebar();
 }
 
