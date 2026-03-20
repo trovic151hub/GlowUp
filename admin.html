@@ -1,0 +1,1649 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Pearl Admin</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/emailjs-com@3/dist/email.min.js"></script>
+  <script src="https://widget.cloudinary.com/v2.0/global/all.js" type="text/javascript"></script>
+  <style>
+    * { box-sizing: border-box; }
+    body { font-family: 'Inter', sans-serif; margin: 0; padding: 0; }
+    h1, h2, h3, .serif { font-family: 'Cormorant Garamond', serif; }
+
+    #sidebar {
+      width: 240px;
+      min-height: 100vh;
+      background: #1E1A23;
+      flex-shrink: 0;
+      display: flex;
+      flex-direction: column;
+      transition: width 0.25s ease;
+      overflow: hidden;
+    }
+    #sidebar.collapsed { width: 64px; }
+    #sidebar.collapsed .nav-label,
+    #sidebar.collapsed .sidebar-text { opacity: 0; width: 0; overflow: hidden; display: none; }
+    #sidebar.collapsed .sidebar-brand { justify-content: center; }
+
+    .nav-item {
+      display: flex; align-items: center; gap: 12px;
+      padding: 10px 16px; border-radius: 8px; cursor: pointer;
+      color: #C8B8C0; transition: background 0.15s, color 0.15s;
+      margin: 2px 8px; white-space: nowrap;
+    }
+    .nav-item:hover { background: #2D2235; color: #E8D5DC; }
+    .nav-item.active { background: #7C3A52; color: #fff; }
+    .nav-item i { width: 18px; text-align: center; flex-shrink: 0; font-size: 0.9rem; }
+
+    #content-area { flex: 1; background: #F5F2F3; min-height: 100vh; overflow-y: auto; display: flex; flex-direction: column; }
+
+    .section { display: none; }
+    .section.active { display: block; }
+
+    .card { background: #fff; border-radius: 14px; padding: 20px; box-shadow: 0 1px 8px rgba(0,0,0,0.06); }
+    .stat-card { background: #fff; border-radius: 14px; padding: 18px 20px; box-shadow: 0 1px 8px rgba(0,0,0,0.06); }
+
+    .btn-primary { background: #8B3A52; color: #fff; border: none; cursor: pointer; }
+    .btn-primary:hover { background: #6E2E41; }
+
+    .admin-table { width: 100%; border-collapse: collapse; }
+    .admin-table thead { background: #F3EEF0; }
+    .admin-table th { font-weight: 600; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.06em; color: #7A5465; padding: 10px 14px; text-align: left; }
+    .admin-table td { padding: 10px 14px; border-bottom: 1px solid #F3EEF0; font-size: 0.875rem; color: #374151; }
+    .admin-table tbody tr:hover td { background: #FDF8F9; }
+
+    .skeleton { background: linear-gradient(90deg,#f0f0f0 25%,#e6e6e6 50%,#f0f0f0 75%); background-size: 200% 100%; animation: skeleton 1.2s linear infinite; }
+    @keyframes skeleton { from { background-position: 200% 0; } to { background-position: -200% 0; } }
+
+    @keyframes slide-in { 0% { transform: translateY(-18px); opacity: 0; } 100% { transform: none; opacity: 1; } }
+    .animate-slide-in { animation: slide-in 0.2s ease-out; }
+
+    .timeline-step { width: 10px; height: 10px; border-radius: 50%; display: inline-block; margin-right: 6px; }
+
+    input:focus, select:focus, textarea:focus { outline: 2px solid #8B3A52; outline-offset: 0; }
+
+    #sidebar-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 40; }
+
+    @media (max-width: 768px) {
+      #sidebar { position: fixed; top: 0; left: 0; z-index: 50; transform: translateX(-100%); width: 240px !important; }
+      #sidebar.mobile-open { transform: translateX(0); }
+      #sidebar.mobile-open + #sidebar-overlay { display: block; }
+      #app-view { flex-direction: column; }
+      #content-area { width: 100%; }
+    }
+
+    @media (max-width: 640px) {
+      .admin-table thead { display: none; }
+      .admin-table, .admin-table tbody, .admin-table tr, .admin-table td { display: block; width: 100%; }
+      .admin-table tr { margin-bottom: 0.75rem; border: 1px solid #F3EEF0; border-radius: 10px; padding: 0.5rem; background: #fff; }
+      .admin-table td { display: flex; justify-content: space-between; padding: 0.4rem 0.5rem; font-size: 0.8rem; border: none; }
+      .admin-table td::before { content: attr(data-label); font-weight: 600; color: #9B7A87; margin-right: 0.5rem; flex-shrink: 0; }
+    }
+  </style>
+</head>
+<body class="bg-gray-100 overflow-hidden">
+
+<!-- GLOBAL LOADER -->
+<div id="global-loader" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[100] hidden">
+  <div class="flex flex-col items-center gap-3">
+    <i class="fas fa-spinner fa-spin text-white text-4xl"></i>
+    <p class="text-white text-sm">Loading...</p>
+  </div>
+</div>
+
+<!-- GLOBAL MODAL -->
+<div id="modalOverlay" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-[90]">
+  <div class="bg-white rounded-2xl shadow-lg max-w-sm w-full p-6 animate-slide-in mx-4">
+    <h3 id="modalTitle" class="text-lg font-semibold mb-3 text-gray-800 serif">Notice</h3>
+    <p id="modalMessage" class="mb-5 text-sm text-gray-600 leading-relaxed"></p>
+    <div class="flex justify-end gap-2">
+      <button id="modalCancelBtn" class="bg-gray-100 text-gray-600 px-4 py-2 rounded-lg text-sm hover:bg-gray-200 hidden">Cancel</button>
+      <button id="modalOkBtn" class="btn-primary px-5 py-2 rounded-lg text-sm font-medium">OK</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== LOGIN VIEW ===== -->
+<div id="login-view" class="min-h-screen flex items-center justify-center" style="background:#F5F2F3; overflow:auto;">
+  <div class="w-full max-w-sm px-4 py-8">
+    <div class="text-center mb-8">
+      <div class="w-12 h-12 rounded-full mx-auto mb-3 flex items-center justify-center" style="background:#7C3A52;">
+        <i class="fas fa-leaf text-white"></i>
+      </div>
+      <h1 class="text-4xl text-gray-800 serif font-semibold">Pearl Skin Care</h1>
+      <p class="text-sm text-gray-400 mt-1 tracking-wide uppercase" style="font-size:0.7rem; letter-spacing:0.12em;">Admin Portal</p>
+    </div>
+    <div class="bg-white rounded-2xl shadow-sm p-8">
+      <h2 class="text-2xl serif font-semibold text-gray-800 mb-6">Sign In</h2>
+      <form id="adminLoginForm" class="flex flex-col gap-4">
+        <div>
+          <label class="block text-xs font-medium text-gray-400 mb-1 uppercase tracking-widest">Email</label>
+          <input type="email" id="adminEmail" placeholder="admin@example.com"
+            class="border border-gray-200 p-3 rounded-xl w-full text-sm bg-gray-50" required />
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-gray-400 mb-1 uppercase tracking-widest">Password</label>
+          <div class="relative">
+            <input type="password" id="adminPassword" placeholder="••••••••"
+              autocomplete="current-password"
+              class="border border-gray-200 p-3 rounded-xl w-full text-sm bg-gray-50 pr-10" required />
+            <i id="toggleAdminPassword" class="fa-solid fa-eye absolute right-3 top-3.5 cursor-pointer text-gray-300 hover:text-gray-500"></i>
+          </div>
+        </div>
+        <div id="loginError" class="text-red-600 text-xs hidden bg-red-50 px-3 py-2.5 rounded-xl leading-relaxed"></div>
+        <button type="submit" id="loginBtn"
+          class="btn-primary px-4 py-3 rounded-xl flex justify-center items-center gap-2 font-medium text-sm mt-1 transition">
+          <span id="loginBtnText">Sign In</span>
+          <span id="loginSpinner" class="hidden"><i class="fa-solid fa-circle-notch fa-spin"></i></span>
+        </button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- ===== APP VIEW ===== -->
+<div id="app-view" class="hidden flex" style="height:100vh; overflow:hidden;">
+
+  <!-- SIDEBAR -->
+  <aside id="sidebar">
+    <!-- Brand -->
+    <div class="sidebar-brand flex items-center gap-3 px-4 py-5 border-b" style="border-color:rgba(255,255,255,0.08);">
+      <div class="w-8 h-8 rounded-full flex-shrink-0 flex items-center justify-center" style="background:#7C3A52;">
+        <i class="fas fa-leaf text-white text-xs"></i>
+      </div>
+      <div class="sidebar-text">
+        <p class="text-white font-semibold text-sm leading-tight serif">Pearl Skin Care</p>
+        <p class="text-xs" style="color:#9B7A87;">Admin Panel</p>
+      </div>
+    </div>
+    <!-- Admin name -->
+    <div class="px-4 py-3 sidebar-text" style="border-bottom:1px solid rgba(255,255,255,0.05);">
+      <p class="text-xs" style="color:#6D5060;">Welcome back</p>
+      <p id="adminNameDisplay" class="text-sm font-medium" style="color:#E8D5DC;">Admin</p>
+    </div>
+    <!-- Nav -->
+    <nav class="flex-1 py-4 overflow-y-auto">
+      <div class="nav-item active" data-section="dashboard">
+        <i class="fas fa-chart-line"></i>
+        <span class="nav-label">Dashboard</span>
+      </div>
+      <div class="nav-item" data-section="products">
+        <i class="fas fa-box"></i>
+        <span class="nav-label">Products</span>
+      </div>
+      <div class="nav-item" data-section="orders">
+        <i class="fas fa-clipboard-list"></i>
+        <span class="nav-label">Orders</span>
+        <span id="newOrderBadge" class="hidden ml-auto bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center nav-label" style="flex-shrink:0;"></span>
+      </div>
+      <div class="nav-item" data-section="analytics">
+        <i class="fas fa-chart-bar"></i>
+        <span class="nav-label">Analytics</span>
+      </div>
+      <div class="nav-item" data-section="hero">
+        <i class="fas fa-images"></i>
+        <span class="nav-label">Hero Slider</span>
+      </div>
+      <div class="nav-item" data-section="homepage">
+        <i class="fas fa-star"></i>
+        <span class="nav-label">Featured Products</span>
+      </div>
+      <div class="nav-item" data-section="admins">
+        <i class="fas fa-user-shield"></i>
+        <span class="nav-label">Admins</span>
+      </div>
+    </nav>
+    <!-- Bottom -->
+    <div style="border-top:1px solid rgba(255,255,255,0.08);" class="py-3">
+      <div class="px-4 py-2 sidebar-text">
+        <a href="index.html" target="_blank" class="flex items-center gap-2 text-xs transition hover:opacity-80" style="color:#6D5060;">
+          <i class="fas fa-external-link-alt"></i><span>View Store</span>
+        </a>
+      </div>
+      <div class="nav-item mt-1" id="logoutBtn" style="color:#f87171;">
+        <i class="fas fa-sign-out-alt"></i>
+        <span class="nav-label">Logout</span>
+      </div>
+    </div>
+  </aside>
+
+  <div id="sidebar-overlay" onclick="closeMobileSidebar()"></div>
+
+  <!-- CONTENT AREA -->
+  <div id="content-area">
+    <!-- Top Bar -->
+    <header class="bg-white shadow-sm px-5 py-4 flex items-center gap-4 sticky top-0 z-30">
+      <button id="sidebarToggle" class="text-gray-400 hover:text-gray-700 transition">
+        <i class="fas fa-bars"></i>
+      </button>
+      <h2 id="pageTitle" class="text-xl font-semibold text-gray-800 serif">Dashboard</h2>
+      <div id="newOrderNotif" class="hidden ml-auto flex items-center gap-2 bg-amber-50 border border-amber-200 text-amber-800 px-3 py-1.5 rounded-xl text-sm">
+        <i class="fas fa-bell text-amber-500 text-xs"></i>
+        <span id="newOrderText" class="text-xs font-medium"></span>
+        <button onclick="clearNewOrders()" class="ml-1 text-xs text-amber-600 underline hover:text-amber-800">Clear</button>
+      </div>
+    </header>
+
+    <!-- SECTIONS -->
+    <div class="flex-1 p-5 md:p-6">
+
+      <!-- ===== DASHBOARD ===== -->
+      <div id="section-dashboard" class="section active">
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-5">
+          <div class="stat-card">
+            <p class="text-xs font-medium uppercase tracking-widest mb-1" style="color:#9B7A87;">Total Sales</p>
+            <p id="dash-totalSales" class="text-2xl font-semibold text-gray-800 serif">₦0</p>
+          </div>
+          <div class="stat-card">
+            <p class="text-xs font-medium uppercase tracking-widest mb-1" style="color:#9B7A87;">Total Orders</p>
+            <p id="dash-totalOrders" class="text-2xl font-semibold text-gray-800 serif">0</p>
+          </div>
+          <div class="stat-card">
+            <p class="text-xs font-medium uppercase tracking-widest mb-1" style="color:#9B7A87;">Avg Order Value</p>
+            <p id="dash-aov" class="text-2xl font-semibold text-gray-800 serif">₦0</p>
+          </div>
+          <div class="stat-card">
+            <p class="text-xs font-medium uppercase tracking-widest mb-1" style="color:#9B7A87;">Customers</p>
+            <p id="dash-customers" class="text-2xl font-semibold text-gray-800 serif">0</p>
+          </div>
+        </div>
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
+          <div class="card"><h3 class="font-semibold text-gray-600 text-sm mb-3">Daily Sales — Last 30 Days</h3><canvas id="dash-dailyChart" height="130"></canvas></div>
+          <div class="card"><h3 class="font-semibold text-gray-600 text-sm mb-3">Monthly Revenue</h3><canvas id="dash-monthlyChart" height="130"></canvas></div>
+        </div>
+        <div class="card">
+          <h3 class="font-semibold text-gray-600 text-sm mb-3">Recent Orders</h3>
+          <div id="dash-recentOrders" class="space-y-1 max-h-64 overflow-auto"></div>
+        </div>
+      </div>
+
+      <!-- ===== PRODUCTS ===== -->
+      <div id="section-products" class="section">
+        <div class="card mb-5">
+          <h3 id="productFormTitle" class="text-2xl font-semibold text-gray-800 serif mb-4">Add New Product</h3>
+          <form id="productForm" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-xs font-medium text-gray-400 mb-1 uppercase tracking-widest">Product Name</label>
+              <input type="text" id="prod-name" placeholder="e.g. Aqua Skin Supplement" class="border border-gray-200 p-2.5 rounded-xl w-full text-sm bg-gray-50" required />
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-gray-400 mb-1 uppercase tracking-widest">Price (₦)</label>
+              <input type="number" id="prod-price" placeholder="5000" class="border border-gray-200 p-2.5 rounded-xl w-full text-sm bg-gray-50" required />
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-gray-400 mb-1 uppercase tracking-widest">Weight (kg)</label>
+              <input type="number" id="prod-weight" placeholder="0.5" step="0.01" class="border border-gray-200 p-2.5 rounded-xl w-full text-sm bg-gray-50" required />
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-gray-400 mb-1 uppercase tracking-widest">Category</label>
+              <input type="text" id="prod-category" placeholder="e.g. Supplements" class="border border-gray-200 p-2.5 rounded-xl w-full text-sm bg-gray-50" required />
+            </div>
+            <div class="md:col-span-2">
+              <label class="block text-xs font-medium text-gray-400 mb-1 uppercase tracking-widest">Image</label>
+              <div class="flex gap-2">
+                <input type="text" id="prod-image" placeholder="Image URL (or use Upload button)" class="border border-gray-200 p-2.5 rounded-xl flex-1 text-sm bg-gray-50" />
+                <button type="button" id="uploadImageBtn" class="btn-primary px-4 py-2.5 rounded-xl text-sm flex items-center gap-2 flex-shrink-0">
+                  <i class="fas fa-upload text-xs"></i><span>Upload</span>
+                </button>
+              </div>
+            </div>
+            <div class="md:col-span-2">
+              <label class="block text-xs font-medium text-gray-400 mb-1 uppercase tracking-widest">Description</label>
+              <textarea id="prod-description" placeholder="Product description..." class="border border-gray-200 p-2.5 rounded-xl w-full text-sm bg-gray-50 resize-none" rows="3"></textarea>
+            </div>
+            <div class="md:col-span-2 flex gap-3">
+              <button type="submit" class="btn-primary px-6 py-2.5 rounded-xl text-sm flex items-center gap-2 font-medium">
+                <span id="saveBtnText">Save Product</span>
+                <span id="saveSpinner" class="hidden"><i class="fa-solid fa-circle-notch fa-spin"></i></span>
+              </button>
+              <button type="button" id="cancelEditBtn" class="hidden bg-gray-100 text-gray-500 px-4 py-2.5 rounded-xl text-sm hover:bg-gray-200">Cancel</button>
+            </div>
+          </form>
+        </div>
+        <div class="card">
+          <h3 class="text-2xl font-semibold text-gray-800 serif mb-4">Product List</h3>
+          <div class="overflow-auto">
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th>Image</th><th>Name</th><th>Price</th><th>Category</th><th>Weight</th><th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="productTableBody"></tbody>
+            </table>
+          </div>
+          <div class="mt-4 text-center">
+            <button id="loadMoreProductsBtn" class="hidden bg-gray-100 text-gray-500 px-5 py-2 rounded-xl text-sm hover:bg-gray-200">Load More</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== ORDERS ===== -->
+      <div id="section-orders" class="section">
+        <div class="card mb-4">
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mb-3">
+            <input id="ord-qText" placeholder="Search name / product / ref" class="border border-gray-200 p-2.5 rounded-xl text-sm bg-gray-50 w-full" />
+            <select id="ord-filterStatus" class="border border-gray-200 p-2.5 rounded-xl text-sm bg-gray-50 w-full">
+              <option value="all">All Status</option>
+              <option value="pending">Pending</option>
+              <option value="completed">Completed</option>
+            </select>
+            <select id="ord-filterShipment" class="border border-gray-200 p-2.5 rounded-xl text-sm bg-gray-50 w-full">
+              <option value="all">All Shipment</option>
+              <option value="processing">Processing</option>
+              <option value="shipped">Shipped</option>
+              <option value="delivered">Delivered</option>
+            </select>
+            <select id="ord-filterPayment" class="border border-gray-200 p-2.5 rounded-xl text-sm bg-gray-50 w-full">
+              <option value="all">All Payment</option>
+              <option value="Paystack">Paystack</option>
+              <option value="Flutterwave">Flutterwave</option>
+              <option value="WhatsApp">WhatsApp</option>
+            </select>
+          </div>
+          <div class="flex flex-wrap gap-2">
+            <input id="ord-dateFrom" type="date" class="border border-gray-200 p-2.5 rounded-xl text-sm bg-gray-50" />
+            <input id="ord-dateTo" type="date" class="border border-gray-200 p-2.5 rounded-xl text-sm bg-gray-50" />
+            <button id="ord-applyFilters" class="btn-primary px-4 py-2.5 rounded-xl text-sm">Apply</button>
+            <button id="ord-clearFilters" class="bg-gray-100 text-gray-500 px-4 py-2.5 rounded-xl text-sm hover:bg-gray-200">Clear</button>
+            <button id="ord-refreshBtn" class="bg-gray-100 text-gray-500 px-4 py-2.5 rounded-xl text-sm hover:bg-gray-200 ml-auto"><i class="fas fa-sync-alt mr-1 text-xs"></i>Refresh</button>
+          </div>
+        </div>
+        <div id="ordersSummary" class="text-xs text-gray-400 mb-3 px-1">Loading...</div>
+        <div class="card">
+          <div class="overflow-x-auto">
+            <table class="admin-table" style="min-width:600px;">
+              <thead>
+                <tr>
+                  <th>Date</th><th>Customer</th><th>Total</th><th>Payment</th><th>Shipment</th><th>Status</th><th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="ordersTbody"></tbody>
+            </table>
+          </div>
+          <div class="flex justify-center mt-4">
+            <button id="ord-loadMoreBtn" class="bg-gray-100 text-gray-500 px-5 py-2 rounded-xl text-sm hover:bg-gray-200">Load More</button>
+          </div>
+        </div>
+
+        <!-- Order Detail Modal -->
+        <div id="orderDetailModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
+          <div class="bg-white w-full max-w-2xl rounded-2xl shadow-lg animate-slide-in max-h-[90vh] overflow-auto">
+            <div class="flex justify-between items-center p-6 border-b border-gray-100">
+              <h2 class="text-2xl font-semibold text-gray-800 serif">Order Details</h2>
+              <button id="orderModalClose" class="text-gray-300 hover:text-gray-600 text-2xl leading-none w-8 h-8 flex items-center justify-center">&times;</button>
+            </div>
+            <div class="p-6">
+              <div id="orderInternationalControls" class="mb-4"></div>
+              <div id="orderDetailContent" class="text-sm text-gray-700 space-y-4"></div>
+              <div class="mt-6 flex flex-wrap gap-2 pt-4 border-t border-gray-100">
+                <button id="orderDownloadPdfBtn" class="btn-primary px-4 py-2 rounded-xl text-sm">Download Receipt</button>
+                <button id="orderEmailReceiptBtn" class="bg-blue-600 text-white px-4 py-2 rounded-xl text-sm hover:bg-blue-700">Email Receipt</button>
+                <div id="orderModalStatusControls" class="flex flex-wrap gap-2"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== ANALYTICS ===== -->
+      <div id="section-analytics" class="section">
+        <div class="card mb-4">
+          <div class="flex flex-wrap gap-3 items-center">
+            <input id="ana-searchQ" placeholder="Search product, customer, ref..." class="border border-gray-200 p-2.5 rounded-xl text-sm bg-gray-50 flex-1 min-w-[150px]" />
+            <input id="ana-fromDate" type="date" class="border border-gray-200 p-2.5 rounded-xl text-sm bg-gray-50" />
+            <input id="ana-toDate" type="date" class="border border-gray-200 p-2.5 rounded-xl text-sm bg-gray-50" />
+            <button id="ana-applyFilters" class="btn-primary px-4 py-2.5 rounded-xl text-sm">Apply</button>
+            <button id="ana-clearFilters" class="bg-gray-100 text-gray-500 px-4 py-2.5 rounded-xl text-sm hover:bg-gray-200">Clear</button>
+            <button id="ana-refreshBtn" class="bg-gray-100 text-gray-500 px-4 py-2.5 rounded-xl text-sm hover:bg-gray-200"><i class="fas fa-sync-alt text-xs mr-1"></i>Refresh</button>
+          </div>
+        </div>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+          <div class="stat-card text-center"><p class="text-xs font-medium uppercase tracking-widest mb-1" style="color:#9B7A87;">Total Sales</p><p id="totalSales" class="text-2xl font-semibold serif" style="color:#8B3A52;">₦0</p></div>
+          <div class="stat-card text-center"><p class="text-xs font-medium uppercase tracking-widest mb-1" style="color:#9B7A87;">Total Orders</p><p id="totalOrders" class="text-2xl font-semibold serif" style="color:#8B3A52;">0</p></div>
+          <div class="stat-card text-center"><p class="text-xs font-medium uppercase tracking-widest mb-1" style="color:#9B7A87;">Avg Order Value</p><p id="aov" class="text-2xl font-semibold serif" style="color:#8B3A52;">₦0</p></div>
+          <div class="stat-card text-center"><p class="text-xs font-medium uppercase tracking-widest mb-1" style="color:#9B7A87;">Customers</p><p id="totalCustomers" class="text-2xl font-semibold serif" style="color:#8B3A52;">0</p></div>
+        </div>
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
+          <div class="card"><h3 class="text-sm font-semibold text-gray-500 mb-3">Daily Sales — Last 30 Days</h3><canvas id="dailySalesChart" height="120"></canvas></div>
+          <div class="card"><h3 class="text-sm font-semibold text-gray-500 mb-3">Monthly Revenue</h3><canvas id="monthlyChart" height="120"></canvas></div>
+          <div class="card"><h3 class="text-sm font-semibold text-gray-500 mb-3">Order Status</h3><canvas id="statusChart" height="120"></canvas></div>
+          <div class="card"><h3 class="text-sm font-semibold text-gray-500 mb-3">Payment Methods</h3><canvas id="paymentChart" height="120"></canvas></div>
+        </div>
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
+          <div class="card">
+            <h3 class="text-sm font-semibold text-gray-500 mb-3">Top Products (by qty)</h3>
+            <div class="overflow-auto"><table class="admin-table" style="min-width:280px;"><thead><tr><th>Product</th><th>Qty</th><th>Revenue</th></tr></thead><tbody id="topProductsBody"></tbody></table></div>
+            <div class="flex justify-end mt-2"><button id="ana-loadMoreProducts" class="btn-primary text-xs px-3 py-1.5 rounded-lg">Load More</button></div>
+          </div>
+          <div class="card">
+            <h3 class="text-sm font-semibold text-gray-500 mb-3">Top Customers (by spend)</h3>
+            <div class="overflow-auto"><table class="admin-table" style="min-width:280px;"><thead><tr><th>Customer</th><th>Orders</th><th>Spent</th></tr></thead><tbody id="topCustomersBody"></tbody></table></div>
+            <div class="flex justify-end mt-2"><button id="ana-loadMoreCustomers" class="btn-primary text-xs px-3 py-1.5 rounded-lg">Load More</button></div>
+          </div>
+        </div>
+        <div class="card">
+          <h3 class="text-sm font-semibold text-gray-500 mb-3">Real-time Orders Feed</h3>
+          <div id="ana-liveFeed" class="space-y-1 max-h-72 overflow-auto"></div>
+        </div>
+        <!-- Analytics Detail Modal -->
+        <div id="ana-detailModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm hidden items-center flex justify-center z-50 p-4">
+          <div class="bg-white rounded-2xl max-w-sm w-full p-6 animate-slide-in">
+            <div class="flex justify-between items-center mb-4">
+              <h2 id="ana-modalTitle" class="text-lg font-semibold text-gray-800 serif">Details</h2>
+              <button id="ana-closeModal" class="text-gray-300 hover:text-gray-600 text-2xl leading-none">&times;</button>
+            </div>
+            <div id="ana-modalContent" class="text-sm text-gray-600 space-y-2"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== HERO SLIDER ===== -->
+      <div id="section-hero" class="section">
+        <div class="card mb-5">
+          <h3 id="heroFormTitle" class="text-2xl font-semibold text-gray-800 serif mb-4">Add New Slide</h3>
+          <form id="heroForm" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="md:col-span-2">
+              <label class="block text-xs font-medium text-gray-400 mb-1 uppercase tracking-widest">Upload Image File</label>
+              <input type="file" id="heroImage" accept="image/*" class="border border-gray-200 p-2.5 rounded-xl w-full text-sm bg-gray-50" />
+            </div>
+            <div class="md:col-span-2">
+              <label class="block text-xs font-medium text-gray-400 mb-1 uppercase tracking-widest">Or Paste Image URL</label>
+              <input type="url" id="heroImageURL" placeholder="https://example.com/image.jpg" class="border border-gray-200 p-2.5 rounded-xl w-full text-sm bg-gray-50" />
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-gray-400 mb-1 uppercase tracking-widest">Slide Title</label>
+              <input type="text" id="heroTitle" placeholder="e.g. Glow Your Skin Naturally" class="border border-gray-200 p-2.5 rounded-xl w-full text-sm bg-gray-50" />
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-gray-400 mb-1 uppercase tracking-widest">Subtitle</label>
+              <input type="text" id="heroSubtitle" placeholder="e.g. Premium skincare supplements" class="border border-gray-200 p-2.5 rounded-xl w-full text-sm bg-gray-50" />
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-gray-400 mb-1 uppercase tracking-widest">Button Link (optional)</label>
+              <input type="text" id="heroLink" placeholder="e.g. /products.html" class="border border-gray-200 p-2.5 rounded-xl w-full text-sm bg-gray-50" />
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-gray-400 mb-1 uppercase tracking-widest">Display Order</label>
+              <input type="number" id="heroOrder" placeholder="e.g. 1" class="border border-gray-200 p-2.5 rounded-xl w-full text-sm bg-gray-50" />
+            </div>
+            <div class="md:col-span-2 flex gap-3">
+              <button type="submit" class="btn-primary px-6 py-2.5 rounded-xl text-sm font-medium flex items-center gap-2">
+                <span id="heroSubmitText">Add Slide</span>
+                <span id="heroSpinner" class="hidden"><i class="fa-solid fa-circle-notch fa-spin"></i></span>
+              </button>
+              <button type="button" id="heroCancelEditBtn" class="hidden bg-gray-100 text-gray-500 px-4 py-2.5 rounded-xl text-sm hover:bg-gray-200">Cancel</button>
+            </div>
+          </form>
+        </div>
+        <div class="card">
+          <h3 class="text-2xl font-semibold text-gray-800 serif mb-4">Existing Slides</h3>
+          <div id="slidesList" class="space-y-3"></div>
+        </div>
+      </div>
+
+      <!-- ===== FEATURED PRODUCTS ===== -->
+      <div id="section-homepage" class="section">
+        <div class="card">
+          <h3 class="text-2xl font-semibold text-gray-800 serif mb-1">Featured Products</h3>
+          <p class="text-sm text-gray-400 mb-4">Toggle which products appear in the "Featured Products" section on your homepage.</p>
+          <input id="featuredSearch" placeholder="Search products..." class="border border-gray-200 p-2.5 rounded-xl text-sm bg-gray-50 w-full max-w-xs mb-5" />
+          <div id="featuredProductsList" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4"></div>
+          <div class="mt-5 text-center">
+            <button id="loadMoreFeaturedBtn" class="hidden bg-gray-100 text-gray-500 px-5 py-2 rounded-xl text-sm hover:bg-gray-200">Load More</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== ADMINS ===== -->
+      <div id="section-admins" class="section">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
+
+          <!-- Add New Admin -->
+          <div class="card">
+            <h3 class="text-2xl font-semibold text-gray-800 serif mb-1">Add New Admin</h3>
+            <p class="text-sm text-gray-400 mb-5">Create a login for a new admin. They will be able to sign in at <code class="bg-gray-100 px-1 rounded text-xs">/admin.html</code>.</p>
+            <form id="addAdminForm" class="space-y-4">
+              <div>
+                <label class="block text-xs font-medium text-gray-400 mb-1 uppercase tracking-widest">Full Name</label>
+                <input type="text" id="newAdminName" placeholder="e.g. Grace Okafor" class="border border-gray-200 p-2.5 rounded-xl w-full text-sm bg-gray-50" required />
+              </div>
+              <div>
+                <label class="block text-xs font-medium text-gray-400 mb-1 uppercase tracking-widest">Email Address</label>
+                <input type="email" id="newAdminEmail" placeholder="admin@example.com" class="border border-gray-200 p-2.5 rounded-xl w-full text-sm bg-gray-50" required />
+              </div>
+              <div>
+                <label class="block text-xs font-medium text-gray-400 mb-1 uppercase tracking-widest">Password</label>
+                <div class="relative">
+                  <input type="password" id="newAdminPassword" placeholder="Min 6 characters" class="border border-gray-200 p-2.5 rounded-xl w-full text-sm bg-gray-50 pr-10" required />
+                  <button type="button" id="toggleNewAdminPw" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                    <i class="fas fa-eye text-sm"></i>
+                  </button>
+                </div>
+              </div>
+              <p id="addAdminError" class="text-red-500 text-sm hidden"></p>
+              <button type="submit" id="addAdminBtn" class="btn-primary px-6 py-2.5 rounded-xl text-sm flex items-center gap-2 font-medium">
+                <span id="addAdminBtnText">Create Admin Account</span>
+                <span id="addAdminSpinner" class="hidden"><i class="fa-solid fa-circle-notch fa-spin"></i></span>
+              </button>
+            </form>
+          </div>
+
+          <!-- Current Admins List -->
+          <div class="card">
+            <h3 class="text-2xl font-semibold text-gray-800 serif mb-1">Current Admins</h3>
+            <p class="text-sm text-gray-400 mb-5">All accounts with admin access.</p>
+            <div id="adminsList" class="space-y-3">
+              <p class="text-gray-400 text-sm">Loading...</p>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+emailjs.init("cRuLIat7A3PEivQCu");
+
+// ===== FIREBASE =====
+const firebaseConfig = {
+  apiKey: "AIzaSyDdTPmpaIPWSDWOmR-fXgvAb7hoxZUawcc",
+  authDomain: "e-commerce-39c74.firebaseapp.com",
+  projectId: "e-commerce-39c74",
+  storageBucket: "e-commerce-39c74.firebasestorage.app",
+  messagingSenderId: "863375033754",
+  appId: "1:863375033754:web:7ba248c8dbb1566c83e623"
+};
+const app = firebase.apps.length ? firebase.app() : firebase.initializeApp(firebaseConfig);
+const auth = app.auth();
+const db = app.firestore();
+window.isAdmin = false;
+
+// ===== LOADER =====
+const globalLoader = document.getElementById("global-loader");
+function showLoader() { globalLoader.classList.remove("hidden"); document.body.style.overflow = "hidden"; }
+function hideLoader() { globalLoader.classList.add("hidden"); document.body.style.overflow = ""; }
+
+// ===== MODAL =====
+const modalOverlay = document.getElementById("modalOverlay");
+const modalTitle = document.getElementById("modalTitle");
+const modalMessage = document.getElementById("modalMessage");
+const modalOkBtn = document.getElementById("modalOkBtn");
+const modalCancelBtn = document.getElementById("modalCancelBtn");
+
+function showAlert(message, title = "Notice") {
+  modalTitle.textContent = title;
+  modalMessage.textContent = message;
+  modalCancelBtn.classList.add("hidden");
+  modalOverlay.classList.remove("hidden");
+  return new Promise(resolve => {
+    modalOkBtn.onclick = () => { modalOverlay.classList.add("hidden"); resolve(true); };
+  });
+}
+function showConfirm(message, title = "Confirm") {
+  modalTitle.textContent = title;
+  modalMessage.innerHTML = message;
+  modalCancelBtn.classList.remove("hidden");
+  modalOverlay.classList.remove("hidden");
+  return new Promise(resolve => {
+    modalOkBtn.onclick = () => { modalOverlay.classList.add("hidden"); resolve(true); };
+    modalCancelBtn.onclick = () => { modalOverlay.classList.add("hidden"); resolve(false); };
+  });
+}
+
+// ===== HELPERS =====
+function escapeHtml(text) {
+  return (text || '').toString().replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+}
+function capitalize(str) { return str ? str.charAt(0).toUpperCase() + str.slice(1) : ''; }
+
+// ===== SIDEBAR =====
+const sidebarEl = document.getElementById('sidebar');
+document.getElementById('sidebarToggle').addEventListener('click', () => {
+  if (window.innerWidth <= 768) { sidebarEl.classList.toggle('mobile-open'); }
+  else { sidebarEl.classList.toggle('collapsed'); }
+});
+function closeMobileSidebar() { if (window.innerWidth <= 768) sidebarEl.classList.remove('mobile-open'); }
+
+// ===== SECTION NAV =====
+let analyticsInitialized = false, ordersInitialized = false, homepageInitialized = false, adminsInitialized = false;
+const sectionTitles = { dashboard:'Dashboard', products:'Products', orders:'Orders', analytics:'Analytics', hero:'Hero Slider', homepage:'Featured Products', admins:'Admin Accounts' };
+
+function showSection(name) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-item[data-section]').forEach(n => n.classList.remove('active'));
+  document.getElementById('section-' + name).classList.add('active');
+  document.querySelector('.nav-item[data-section="' + name + '"]').classList.add('active');
+  document.getElementById('pageTitle').textContent = sectionTitles[name] || name;
+  if (name === 'analytics' && !analyticsInitialized) { initAnalytics(); analyticsInitialized = true; }
+  if (name === 'orders' && !ordersInitialized) { initOrders(); ordersInitialized = true; }
+  if (name === 'homepage' && !homepageInitialized) { loadFeaturedProducts(); homepageInitialized = true; }
+  if (name === 'admins' && !adminsInitialized) { initAdmins(); adminsInitialized = true; }
+  closeMobileSidebar();
+}
+
+document.querySelectorAll('.nav-item[data-section]').forEach(item => {
+  item.addEventListener('click', () => showSection(item.dataset.section));
+});
+
+// ===== LOGOUT =====
+document.getElementById('logoutBtn').addEventListener('click', async () => {
+  const ok = await showConfirm("Are you sure you want to log out?", "Logout");
+  if (!ok) return;
+  await auth.signOut();
+  localStorage.removeItem("isAdminLoggedIn");
+  localStorage.removeItem("adminUid");
+  showAppView(false);
+});
+
+// ===== LOGIN =====
+document.getElementById('toggleAdminPassword').addEventListener('click', function () {
+  const pw = document.getElementById('adminPassword');
+  pw.type = pw.type === 'password' ? 'text' : 'password';
+  this.classList.toggle('fa-eye'); this.classList.toggle('fa-eye-slash');
+});
+
+document.getElementById('adminLoginForm').addEventListener('submit', async e => {
+  e.preventDefault();
+  const loginError = document.getElementById('loginError');
+  const loginBtn = document.getElementById('loginBtn');
+  const loginBtnText = document.getElementById('loginBtnText');
+  const loginSpinner = document.getElementById('loginSpinner');
+  loginError.classList.add('hidden');
+  loginBtn.disabled = true; loginBtnText.textContent = 'Signing in...'; loginSpinner.classList.remove('hidden');
+  const email = document.getElementById('adminEmail').value.trim();
+  const password = document.getElementById('adminPassword').value;
+  try {
+    await auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
+    const cred = await auth.signInWithEmailAndPassword(email, password);
+    const adminDoc = await db.collection('admins').doc(cred.user.uid).get();
+    if (!adminDoc.exists || adminDoc.data().role !== 'admin') {
+      loginError.textContent = 'You are not authorised as an admin.';
+      loginError.classList.remove('hidden');
+      await auth.signOut();
+    } else {
+      localStorage.setItem('isAdminLoggedIn', 'true');
+      localStorage.setItem('adminUid', cred.user.uid);
+    }
+  } catch (err) {
+    loginError.textContent = err.message;
+    loginError.classList.remove('hidden');
+  } finally {
+    loginBtn.disabled = false; loginBtnText.textContent = 'Sign In'; loginSpinner.classList.add('hidden');
+  }
+});
+
+// ===== AUTH STATE =====
+function showAppView(show) {
+  document.getElementById('login-view').classList.toggle('hidden', show);
+  document.getElementById('app-view').classList.toggle('hidden', !show);
+  if (!show) { document.body.style.overflow = ''; document.getElementById('login-view').style.display = show ? 'none' : ''; }
+  document.body.style.overflow = show ? 'hidden' : '';
+}
+
+auth.onAuthStateChanged(async user => {
+  if (!user || localStorage.getItem('isAdminLoggedIn') !== 'true') { showAppView(false); return; }
+  try {
+    const adminDoc = await db.collection('admins').doc(user.uid).get();
+    if (!adminDoc.exists) { await auth.signOut(); localStorage.removeItem('isAdminLoggedIn'); showAppView(false); return; }
+    window.isAdmin = true;
+    const name = adminDoc.data().name || 'Admin';
+    document.getElementById('adminNameDisplay').textContent = name.split(' ')[0];
+    showAppView(true);
+    initDashboard();
+    initProducts();
+    initHeroSlider();
+    initNewOrderListener();
+  } catch (err) { console.error(err); showAppView(false); }
+});
+
+// ====================================================
+// NEW ORDER LISTENER
+// ====================================================
+let newOrdersCount = Number(localStorage.getItem('newOrdersCount')) || 0;
+let seenOrders = JSON.parse(localStorage.getItem('seenOrders') || '[]');
+let firstLoadNotif = true;
+
+function updateNewOrderUI() {
+  const notif = document.getElementById('newOrderNotif');
+  const badge = document.getElementById('newOrderBadge');
+  const text = document.getElementById('newOrderText');
+  if (newOrdersCount > 0) {
+    notif.classList.remove('hidden'); badge.classList.remove('hidden');
+    badge.textContent = newOrdersCount;
+    text.textContent = newOrdersCount === 1 ? '1 new order' : `${newOrdersCount} new orders`;
+  } else { notif.classList.add('hidden'); badge.classList.add('hidden'); }
+}
+window.clearNewOrders = function() { newOrdersCount = 0; localStorage.setItem('newOrdersCount', 0); updateNewOrderUI(); };
+
+function playOrderSound() {
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    if (ctx.state === 'suspended') ctx.resume();
+    const osc = ctx.createOscillator(); osc.type = 'square';
+    osc.frequency.setValueAtTime(440, ctx.currentTime);
+    osc.connect(ctx.destination); osc.start(); osc.stop(ctx.currentTime + 0.15);
+  } catch(e) {}
+}
+
+function initNewOrderListener() {
+  db.collection('orders').orderBy('timestamp', 'desc').onSnapshot(snap => {
+    snap.docChanges().forEach(change => {
+      const id = change.doc.id;
+      if (change.type === 'added' && !seenOrders.includes(id)) {
+        seenOrders.push(id); localStorage.setItem('seenOrders', JSON.stringify(seenOrders));
+        if (!firstLoadNotif) { newOrdersCount++; localStorage.setItem('newOrdersCount', newOrdersCount); updateNewOrderUI(); playOrderSound(); }
+      }
+    });
+    firstLoadNotif = false; updateNewOrderUI();
+  });
+}
+
+// ====================================================
+// DASHBOARD
+// ====================================================
+async function initDashboard() {
+  try {
+    const snap = await db.collection('orders').orderBy('createdAt', 'desc').limit(5000).get();
+    const orders = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    const totalSales = orders.reduce((s, o) => s + Number(o.pricing?.total || 0), 0);
+    const totalOrders = orders.length;
+    const uniqueCustomers = new Set(orders.map(o => o.userId || o.shipping?.email || o.guestId || '')).size;
+    const aov = totalOrders ? totalSales / totalOrders : 0;
+    document.getElementById('dash-totalSales').textContent = '₦' + totalSales.toLocaleString();
+    document.getElementById('dash-totalOrders').textContent = totalOrders.toLocaleString();
+    document.getElementById('dash-aov').textContent = '₦' + Math.round(aov).toLocaleString();
+    document.getElementById('dash-customers').textContent = uniqueCustomers.toLocaleString();
+
+    const days = 30, dayMap = {};
+    for (let i = days - 1; i >= 0; i--) { const d = new Date(); d.setDate(d.getDate() - i); d.setHours(0,0,0,0); dayMap[d.toISOString().slice(0,10)] = 0; }
+    orders.forEach(o => { if (!o.createdAt) return; const d = o.createdAt.toDate ? o.createdAt.toDate() : new Date(o.createdAt); const k = d.toISOString().slice(0,10); if (k in dayMap) dayMap[k] += Number(o.pricing?.total || 0); });
+    new Chart(document.getElementById('dash-dailyChart').getContext('2d'), {
+      type: 'line',
+      data: { labels: Object.keys(dayMap), datasets: [{ data: Object.values(dayMap), fill: true, backgroundColor: 'rgba(139,58,82,0.07)', borderColor: '#8B3A52', tension: 0.4, pointRadius: 2 }] },
+      options: { responsive: true, plugins: { legend: { display: false } }, scales: { x: { grid: { display: false }, ticks: { maxTicksLimit: 6, font: { size: 9 } } }, y: { ticks: { callback: v => '₦' + v.toLocaleString(), font: { size: 9 } } } } }
+    });
+
+    const year = new Date().getFullYear(), monthMap = Array.from({length:12}, () => 0);
+    orders.forEach(o => { if (!o.createdAt) return; const d = o.createdAt.toDate ? o.createdAt.toDate() : new Date(o.createdAt); if (d.getFullYear() !== year) return; monthMap[d.getMonth()] += Number(o.pricing?.total || 0); });
+    new Chart(document.getElementById('dash-monthlyChart').getContext('2d'), {
+      type: 'bar',
+      data: { labels: ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'], datasets: [{ data: monthMap, backgroundColor: 'rgba(139,58,82,0.65)', borderRadius: 6 }] },
+      options: { responsive: true, plugins: { legend: { display: false } }, scales: { x: { grid: { display: false } }, y: { ticks: { callback: v => '₦' + v.toLocaleString(), font: { size: 9 } } } } }
+    });
+
+    const feed = document.getElementById('dash-recentOrders');
+    const recent = orders.slice(0, 10);
+    if (!recent.length) { feed.innerHTML = '<p class="text-gray-400 text-sm py-4">No orders yet.</p>'; return; }
+    feed.innerHTML = recent.map(o => {
+      const name = o.shipping ? `${o.shipping.firstName || ''} ${o.shipping.lastName || ''}`.trim() : 'Guest';
+      const time = o.createdAt ? (o.createdAt.toDate ? o.createdAt.toDate().toLocaleString() : new Date(o.createdAt).toLocaleString()) : '';
+      return `<div class="flex justify-between items-center py-2.5 border-b border-gray-50 text-sm">
+        <span class="font-medium text-gray-700">${escapeHtml(name)}</span>
+        <span class="text-gray-300 text-xs hidden sm:block">${time}</span>
+        <span class="font-semibold text-sm" style="color:#8B3A52;">₦${Number(o.pricing?.total || 0).toLocaleString()}</span>
+      </div>`;
+    }).join('');
+  } catch (err) { console.error('Dashboard:', err); }
+}
+
+// ====================================================
+// PRODUCTS
+// ====================================================
+let prodEditId = null, lastVisibleProduct = null;
+const PRODUCTS_PER_PAGE = 8;
+
+function initProducts() {
+  if (window.cloudinary) {
+    const widget = window.cloudinary.createUploadWidget({ cloudName: 'dut2dpxuc', uploadPreset: 'products', folder: 'products', multiple: false }, (err, result) => {
+      if (!err && result?.event === 'success') { document.getElementById('prod-image').value = result.info.secure_url; showAlert('Image uploaded!', 'Success'); }
+      else if (err) showAlert('Upload failed.', 'Error');
+    });
+    document.getElementById('uploadImageBtn').addEventListener('click', () => widget.open());
+  }
+  document.getElementById('productForm').addEventListener('submit', saveProduct);
+  document.getElementById('cancelEditBtn').addEventListener('click', resetProductForm);
+  document.getElementById('loadMoreProductsBtn').addEventListener('click', () => renderProductTable(true));
+  renderProductTable();
+}
+
+async function renderProductTable(append = false) {
+  const tbody = document.getElementById('productTableBody');
+  const loadMoreBtn = document.getElementById('loadMoreProductsBtn');
+  if (!append) { tbody.innerHTML = ''; showLoader(); }
+  try {
+    let q = db.collection('products').orderBy('name').limit(PRODUCTS_PER_PAGE);
+    if (append && lastVisibleProduct) q = q.startAfter(lastVisibleProduct);
+    const snap = await q.get();
+    lastVisibleProduct = snap.docs[snap.docs.length - 1];
+    snap.docs.forEach(doc => {
+      const p = { id: doc.id, ...doc.data() };
+      let imgUrl = p.image && p.image.includes('res.cloudinary.com') ? p.image.replace('/upload/', '/upload/w_120,h_120,c_fill/') : (p.image || 'https://via.placeholder.com/60');
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td data-label="Image"><img src="${imgUrl}" class="w-12 h-12 object-cover rounded-xl" /></td>
+        <td data-label="Name" class="font-medium text-gray-800">${escapeHtml(p.name)}</td>
+        <td data-label="Price">₦${Number(p.price).toLocaleString()}</td>
+        <td data-label="Category"><span class="px-2 py-1 rounded-full text-xs bg-gray-100 text-gray-500">${escapeHtml(p.category)}</span></td>
+        <td data-label="Weight">${p.weight || 0} kg</td>
+        <td data-label="Actions">
+          <div class="flex gap-2 flex-wrap">
+            <button onclick="editProduct('${p.id}')" class="text-xs px-3 py-1.5 rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-100">Edit</button>
+            <button onclick="deleteProduct('${p.id}')" class="text-xs px-3 py-1.5 rounded-lg bg-red-50 text-red-500 hover:bg-red-100">Delete</button>
+          </div>
+        </td>`;
+      tbody.appendChild(tr);
+    });
+    if (!append && snap.empty) tbody.innerHTML = `<tr><td colspan="6" class="p-6 text-center text-gray-400">No products found.</td></tr>`;
+    loadMoreBtn.classList.toggle('hidden', snap.size < PRODUCTS_PER_PAGE);
+  } catch (err) { showAlert('Failed to load products: ' + err.message, 'Error'); }
+  finally { hideLoader(); }
+}
+
+async function saveProduct(e) {
+  e.preventDefault();
+  const saveBtnText = document.getElementById('saveBtnText');
+  const saveSpinner = document.getElementById('saveSpinner');
+  saveBtnText.textContent = 'Saving...'; saveSpinner.classList.remove('hidden');
+  const data = {
+    name: document.getElementById('prod-name').value.trim(),
+    price: parseFloat(document.getElementById('prod-price').value),
+    category: document.getElementById('prod-category').value.trim(),
+    weight: parseFloat(document.getElementById('prod-weight').value),
+    image: document.getElementById('prod-image').value.trim(),
+    description: document.getElementById('prod-description').value.trim()
+  };
+  try {
+    if (prodEditId) await db.collection('products').doc(prodEditId).update(data);
+    else await db.collection('products').add(data);
+    resetProductForm();
+    await showAlert('Product saved!', 'Success');
+    renderProductTable();
+  } catch (err) { await showAlert('Failed: ' + err.message, 'Error'); }
+  finally { saveBtnText.textContent = 'Save Product'; saveSpinner.classList.add('hidden'); }
+}
+
+function resetProductForm() {
+  prodEditId = null;
+  document.getElementById('productForm').reset();
+  document.getElementById('productFormTitle').textContent = 'Add New Product';
+  document.getElementById('saveBtnText').textContent = 'Save Product';
+  document.getElementById('cancelEditBtn').classList.add('hidden');
+}
+
+window.editProduct = async id => {
+  const doc = await db.collection('products').doc(id).get();
+  const p = doc.data();
+  document.getElementById('prod-name').value = p.name;
+  document.getElementById('prod-price').value = p.price;
+  document.getElementById('prod-category').value = p.category;
+  document.getElementById('prod-image').value = p.image;
+  document.getElementById('prod-description').value = p.description || '';
+  document.getElementById('prod-weight').value = p.weight || 0;
+  document.getElementById('productFormTitle').textContent = 'Edit Product';
+  document.getElementById('saveBtnText').textContent = 'Update Product';
+  document.getElementById('cancelEditBtn').classList.remove('hidden');
+  prodEditId = id;
+  showSection('products');
+  document.getElementById('content-area').scrollTo({ top: 0, behavior: 'smooth' });
+};
+
+window.deleteProduct = async id => {
+  const ok = await showConfirm('Are you sure you want to delete this product?', 'Delete Product');
+  if (!ok) return;
+  showLoader();
+  try { await db.collection('products').doc(id).delete(); renderProductTable(); }
+  catch (err) { showAlert('Failed: ' + err.message, 'Error'); }
+  finally { hideLoader(); }
+};
+
+// ====================================================
+// ORDERS
+// ====================================================
+let ordPAGE = 6, ordLastDoc = null, ordLoading = false, ordFilters = {}, currentOpenOrder = null;
+
+function initOrders() {
+  document.getElementById('ord-applyFilters').onclick = () => {
+    ordFilters.q = document.getElementById('ord-qText').value;
+    ordFilters.status = document.getElementById('ord-filterStatus').value;
+    ordFilters.payment = document.getElementById('ord-filterPayment').value;
+    ordFilters.shipment = document.getElementById('ord-filterShipment').value;
+    ordFilters.from = document.getElementById('ord-dateFrom').value;
+    ordFilters.to = document.getElementById('ord-dateTo').value;
+    ordClearAndLoad();
+  };
+  document.getElementById('ord-clearFilters').onclick = () => {
+    ['ord-qText'].forEach(id => document.getElementById(id).value = '');
+    ['ord-filterStatus','ord-filterShipment','ord-filterPayment'].forEach(id => document.getElementById(id).value = 'all');
+    ['ord-dateFrom','ord-dateTo'].forEach(id => document.getElementById(id).value = '');
+    ordFilters = {}; ordClearAndLoad();
+  };
+  document.getElementById('ord-qText').addEventListener('input', () => { ordFilters.q = document.getElementById('ord-qText').value; ordClearAndLoad(); });
+  document.getElementById('ord-refreshBtn').onclick = ordClearAndLoad;
+  document.getElementById('ord-loadMoreBtn').onclick = () => ordLoadMore();
+  document.getElementById('orderModalClose').onclick = closeOrderModal;
+  document.getElementById('orderDetailModal').addEventListener('click', e => { if (e.target === document.getElementById('orderDetailModal')) closeOrderModal(); });
+  document.getElementById('orderDownloadPdfBtn').onclick = () => { if (currentOpenOrder) downloadPdf(currentOpenOrder); };
+  document.getElementById('orderEmailReceiptBtn').onclick = async () => {
+    if (!currentOpenOrder) return;
+    const btn = document.getElementById('orderEmailReceiptBtn');
+    btn.disabled = true; btn.textContent = 'Sending...';
+    try { await sendReceiptEmail(currentOpenOrder); showAlert('Receipt sent!', 'Success'); }
+    catch (err) { showAlert(err.message || 'Failed', 'Error'); }
+    finally { btn.disabled = false; btn.textContent = 'Email Receipt'; }
+  };
+
+  db.collection('orders').orderBy('createdAt','desc').onSnapshot(snap => {
+    snap.docChanges().forEach(change => {
+      const order = { id: change.doc.id, ...change.doc.data() };
+      const tbody = document.getElementById('ordersTbody');
+      if (change.type === 'modified') {
+        const row = Array.from(tbody.children).find(r => r.__order?.id === order.id);
+        if (row) tbody.replaceChild(ordOrderRow(order), row);
+        if (currentOpenOrder?.id === order.id) renderOrderModal(order);
+      }
+      if (change.type === 'removed') {
+        const row = Array.from(tbody.children).find(r => r.__order?.id === order.id);
+        if (row) row.remove();
+        if (currentOpenOrder?.id === order.id) closeOrderModal();
+      }
+    });
+    ordUpdateSummary();
+  });
+
+  ordClearAndLoad();
+}
+
+function ordBuildQuery(pageSize, startAfterDoc = null) {
+  let q = db.collection('orders').orderBy('createdAt', 'desc');
+  if (ordFilters.payment && ordFilters.payment !== 'all') q = q.where('payment.method', '==', ordFilters.payment);
+  if (ordFilters.shipment && ordFilters.shipment !== 'all') q = q.where('shipping.status', '==', ordFilters.shipment);
+  if (ordFilters.from) q = q.where('createdAt', '>=', firebase.firestore.Timestamp.fromDate(new Date(ordFilters.from + 'T00:00:00')));
+  if (ordFilters.to) q = q.where('createdAt', '<=', firebase.firestore.Timestamp.fromDate(new Date(ordFilters.to + 'T23:59:59')));
+  if (startAfterDoc) q = q.startAfter(startAfterDoc);
+  return q.limit(pageSize);
+}
+
+async function ordClearAndLoad() {
+  showLoader();
+  document.getElementById('ordersTbody').innerHTML = '';
+  ordLastDoc = null;
+  document.getElementById('ord-loadMoreBtn').style.display = 'inline-block';
+  try { await ordLoadMore(true); } finally { hideLoader(); }
+}
+
+async function ordLoadMore(isInitial = false) {
+  if (ordLoading) return;
+  ordLoading = true;
+  const btn = document.getElementById('ord-loadMoreBtn');
+  btn.disabled = true;
+  try {
+    const snap = await ordBuildQuery(ordPAGE, ordLastDoc).get();
+    const tbody = document.getElementById('ordersTbody');
+    if (!snap.empty) {
+      if (isInitial) tbody.innerHTML = '';
+      const docs = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      const filtered = docs.filter(order => {
+        if (ordFilters.q) {
+          const q = ordFilters.q.toLowerCase();
+          const name = `${order.shipping?.firstName || ''} ${order.shipping?.lastName || ''}`.toLowerCase();
+          const ref = (order.payment?.reference || '').toLowerCase();
+          const prods = (order.items || []).map(i => (i.name || '').toLowerCase()).join(' ');
+          if (!name.includes(q) && !ref.includes(q) && !prods.includes(q)) return false;
+        }
+        if (ordFilters.status && ordFilters.status !== 'all') {
+          if (ordFilters.status === 'completed' && order.fulfilled !== true) return false;
+          if (ordFilters.status === 'pending' && order.fulfilled === true) return false;
+        }
+        return true;
+      });
+      filtered.forEach(order => tbody.appendChild(ordOrderRow(order)));
+      ordLastDoc = snap.docs[snap.docs.length - 1];
+      btn.style.display = snap.size < ordPAGE ? 'none' : 'inline-block';
+    } else if (isInitial) {
+      tbody.innerHTML = `<tr><td colspan="7" class="p-6 text-center text-gray-400">No orders found.</td></tr>`;
+      btn.style.display = 'none';
+    }
+  } catch (err) { document.getElementById('ordersTbody').innerHTML = `<tr><td colspan="7" class="p-4 text-red-500">Failed to load orders.</td></tr>`; }
+  finally { ordLoading = false; btn.disabled = false; ordUpdateSummary(); }
+}
+
+function ordUpdateSummary() {
+  const rows = Array.from(document.getElementById('ordersTbody').children).filter(r => r.__order);
+  const total = rows.length;
+  const fee = rows.reduce((s, r) => s + Number(r.__order?.delivery?.deliveryFee || 0) + Number(r.__order?.pricing?.shippingFee || 0), 0);
+  const weight = rows.reduce((s, r) => s + (r.__order.items || []).reduce((ws, i) => ws + (Number(i.weight || 0) * Number(i.quantity || 1)), 0), 0);
+  document.getElementById('ordersSummary').innerHTML = `Showing <strong>${total}</strong> orders &mdash; Delivery: <strong>₦${fee.toLocaleString()}</strong> &mdash; Weight: <strong>${weight.toLocaleString()} kg</strong>`;
+}
+
+function ordOrderRow(order) {
+  const tr = document.createElement('tr');
+  const when = order.createdAt?.toDate?.()?.toLocaleString() || '';
+  const adminId = firebase.auth().currentUser?.uid;
+  const isNew = !order.viewedBy || !order.viewedBy[adminId];
+  const name = order.shipping ? `${order.shipping.firstName || ''} ${order.shipping.lastName || ''}`.trim() : 'Guest';
+  const paymentMethod = order.payment?.method || '';
+  const shipmentStatus = order.shipping?.status || 'processing';
+  const total = Number(order.pricing?.total || 0);
+  tr.innerHTML = `
+    <td data-label="Date" class="text-xs text-gray-400">${when}</td>
+    <td data-label="Customer">
+      <div class="flex items-center gap-2">
+        <span class="font-medium text-gray-800">${escapeHtml(name)}</span>
+        ${isNew ? `<span class="px-1.5 py-0.5 text-xs font-semibold rounded-full bg-red-500 text-white" style="animation:pulse 1.5s infinite;">NEW</span>` : ''}
+      </div>
+    </td>
+    <td data-label="Total" class="font-semibold">₦${total.toLocaleString()}</td>
+    <td data-label="Payment"><span class="px-2 py-1 rounded-full text-xs bg-gray-100 text-gray-500">${paymentMethod}</span></td>
+    <td data-label="Shipment"><span class="px-2 py-1 rounded-full text-xs bg-blue-50 text-blue-500">${shipmentStatus}</span></td>
+    <td data-label="Status">
+      <span class="px-2 py-1 rounded-full text-xs ${order.fulfilled ? 'bg-green-100 text-green-600' : 'bg-amber-100 text-amber-600'}">
+        ${order.fulfilled ? 'Completed' : 'Pending'}
+      </span>
+    </td>
+    <td data-label="Actions">
+      <div class="flex gap-1.5 flex-wrap">
+        <button onclick='ordOpenDetail("${order.id}")' class="text-xs px-2.5 py-1.5 rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-100">Detail</button>
+        <button onclick='ordToggleFulfilled("${order.id}", ${!!order.fulfilled})' class="text-xs px-2.5 py-1.5 rounded-lg ${order.fulfilled ? 'bg-gray-100 text-gray-500' : 'bg-green-50 text-green-600'} hover:opacity-80">
+          ${order.fulfilled ? 'Mark Pending' : 'Mark Complete'}
+        </button>
+      </div>
+    </td>`;
+  tr.__order = order;
+  return tr;
+}
+
+window.ordOpenDetail = function(orderId) {
+  const row = Array.from(document.getElementById('ordersTbody').children).find(r => r.__order?.id === orderId);
+  if (!row) return;
+  currentOpenOrder = row.__order;
+  markOrderAsViewed(orderId);
+  document.getElementById('ordersTbody').replaceChild(ordOrderRow(currentOpenOrder), row);
+  renderOrderModal(currentOpenOrder);
+};
+
+async function markOrderAsViewed(orderId) {
+  const user = firebase.auth().currentUser;
+  if (!user) return;
+  try { await db.collection('orders').doc(orderId).update({ [`viewedBy.${user.uid}`]: true }); } catch(e) {}
+}
+
+window.ordToggleFulfilled = async function(orderId, oldStatus) {
+  try {
+    await db.collection('orders').doc(orderId).update({ fulfilled: !oldStatus });
+    const tbody = document.getElementById('ordersTbody');
+    const row = Array.from(tbody.children).find(r => r.__order?.id === orderId);
+    if (row) { row.__order.fulfilled = !oldStatus; tbody.replaceChild(ordOrderRow(row.__order), row); }
+    ordUpdateSummary();
+  } catch (err) { showAlert('Failed: ' + err.message, 'Error'); }
+};
+
+function isInternationalOrder(order) {
+  const country = (order?.delivery?.country || '').toLowerCase().trim();
+  return country && country !== 'nigeria';
+}
+function getOrderDeliveryFee(order) {
+  const d = order?.delivery || {};
+  const country = (d.country || '').toLowerCase();
+  if (country && country !== 'nigeria') return Number(d.deliveryFee || 0);
+  if (d.deliveryFee != null) return Number(d.deliveryFee);
+  return 0;
+}
+function shipmentTimelineHtml(status) {
+  const steps = ['processing','shipped','delivered'];
+  return `<div class="flex items-center gap-3 flex-wrap">${steps.map((s, idx) => {
+    const done = steps.indexOf(status) >= idx;
+    return `<div class="flex items-center gap-1.5"><span class="timeline-step ${done ? 'bg-green-500' : 'bg-gray-200'}"></span><span class="text-xs ${done ? 'text-green-600 font-semibold' : 'text-gray-400'}">${capitalize(s)}</span></div>${idx < 2 ? '<span class="text-gray-200 text-xs">→</span>' : ''}`;
+  }).join('')}</div>`;
+}
+
+function renderOrderModal(order) {
+  currentOpenOrder = order;
+  const modal = document.getElementById('orderDetailModal');
+  const intControls = document.getElementById('orderInternationalControls');
+  const statusControls = document.getElementById('orderModalStatusControls');
+  intControls.innerHTML = ''; statusControls.innerHTML = '';
+
+  const shipping = order.shipping || {}, delivery = order.delivery || {}, pricing = order.pricing || {}, items = order.items || [];
+  const orderTotal = Number(pricing.total || 0);
+  const deliveryFee = getOrderDeliveryFee(order);
+  const totalWithFee = isInternationalOrder(order) ? orderTotal + (delivery.deliveryFee || 0) : orderTotal;
+  const totalWeight = items.reduce((s, i) => s + (Number(i.weight || 0) * Number(i.quantity || 1)), 0);
+
+  let deliveryText = '';
+  const country = (delivery.country || '').toLowerCase();
+  if (country && country !== 'nigeria') {
+    deliveryText = `${delivery.company || 'International'} — ${delivery.country || ''}, ${delivery.state || ''}`;
+  } else if ((delivery.state || '').toLowerCase().includes('lagos')) {
+    deliveryText = `Home Delivery — LGA: ${delivery.lga || shipping.lga || '—'}, ${delivery.address || shipping.street || '—'}`;
+  } else if (delivery.company) {
+    deliveryText = `${delivery.company} — ${delivery.type === 'home' ? 'Home Delivery' : 'Terminal Pickup'}, ${delivery.state || '—'}`;
+  }
+
+  document.getElementById('orderDetailContent').innerHTML = `
+    <div class="flex justify-between items-start pb-4 border-b border-gray-100">
+      <div>
+        <p class="text-base font-semibold text-gray-800">${escapeHtml(shipping.firstName || '')} ${escapeHtml(shipping.lastName || '')}</p>
+        <p class="text-xs text-gray-400 mt-0.5">${escapeHtml(shipping.email || '')} · ${escapeHtml(shipping.phone || '')}</p>
+        <p class="text-xs text-gray-300 mt-0.5">Ref: ${escapeHtml(order.payment?.reference || '')}</p>
+      </div>
+      <div class="text-right">
+        <p class="text-xs text-gray-400">Total</p>
+        <p class="text-xl font-bold" style="color:#8B3A52;">₦${totalWithFee.toLocaleString()}</p>
+      </div>
+    </div>
+    <div>
+      <p class="text-xs font-semibold uppercase tracking-widest text-gray-400 mb-2">Items</p>
+      ${items.map(i => `<div class="flex justify-between py-2 border-b border-gray-50">
+        <div><p class="font-medium text-sm">${escapeHtml(i.name)}</p><p class="text-xs text-gray-300">₦${Number(i.price).toLocaleString()} each</p></div>
+        <div class="text-right"><p class="text-xs text-gray-300">${i.quantity} ×</p><p class="font-semibold text-sm">₦${(Number(i.price) * Number(i.quantity)).toLocaleString()}</p></div>
+      </div>`).join('') || '<p class="text-gray-400 text-sm">No items</p>'}
+    </div>
+    ${deliveryText ? `<div>
+      <p class="text-xs font-semibold uppercase tracking-widest text-gray-400 mb-2">Delivery</p>
+      <p class="text-sm text-gray-600 mb-2">${deliveryText}</p>
+      ${shipmentTimelineHtml(order.shipping?.status || 'processing')}
+      <p class="text-xs text-gray-400 mt-2">Fee: ₦${deliveryFee.toLocaleString()} · Weight: ${totalWeight} kg</p>
+    </div>` : ''}
+    <div>
+      <p class="text-xs font-semibold uppercase tracking-widest text-gray-400 mb-1">Payment</p>
+      <p class="text-sm text-gray-600">${escapeHtml(order.payment?.method || '')} — Ref: ${escapeHtml(order.payment?.reference || '')}</p>
+    </div>`;
+
+  const sel = document.createElement('select');
+  sel.className = 'border border-gray-200 p-2 rounded-xl text-sm bg-gray-50';
+  sel.innerHTML = `<option value="processing">Processing</option><option value="shipped">Shipped</option><option value="delivered">Delivered</option>`;
+  sel.value = order.shipping?.status || 'processing';
+  sel.onchange = () => updateOrdShipmentStatus(order.id, sel.value);
+  statusControls.appendChild(sel);
+
+  if (window.isAdmin) {
+    const delBtn = document.createElement('button');
+    delBtn.className = 'bg-red-50 text-red-500 px-3 py-2 rounded-xl text-sm hover:bg-red-100';
+    delBtn.innerText = 'Delete Order';
+    delBtn.onclick = () => ordDeleteOrder(order.id);
+    statusControls.appendChild(delBtn);
+
+    if (isInternationalOrder(order)) {
+      const div = document.createElement('div');
+      div.className = 'mt-3 p-4 border border-gray-100 rounded-xl bg-gray-50 flex flex-col gap-2 w-full';
+      div.innerHTML = '<p class="text-xs font-semibold text-gray-500 uppercase tracking-wider">International Order Controls</p>';
+      const confirmBtn = document.createElement('button');
+      confirmBtn.className = 'bg-green-600 text-white px-3 py-2 rounded-xl text-sm hover:bg-green-700';
+      confirmBtn.innerText = delivery.fulfilled ? 'Payment Confirmed ✓' : 'Confirm Payment';
+      confirmBtn.disabled = !!delivery.fulfilled;
+      confirmBtn.onclick = async () => {
+        try { await db.collection('orders').doc(order.id).update({'delivery.fulfilled': true, 'shipping.status': 'processing'}); confirmBtn.innerText = 'Payment Confirmed ✓'; confirmBtn.disabled = true; showAlert('Payment confirmed!', 'Success'); }
+        catch (err) { showAlert(err.message, 'Error'); }
+      };
+      div.appendChild(confirmBtn);
+      const feeInput = document.createElement('input');
+      feeInput.type = 'number'; feeInput.placeholder = 'Delivery Fee (₦)'; feeInput.value = delivery.deliveryFee || 0;
+      feeInput.className = 'border border-gray-200 p-2 rounded-xl text-sm bg-white';
+      div.appendChild(feeInput);
+      const typeSelect = document.createElement('select');
+      typeSelect.className = 'border border-gray-200 p-2 rounded-xl text-sm bg-white';
+      typeSelect.innerHTML = `<option value="home" ${delivery.type === 'home' ? 'selected' : ''}>Home Delivery</option><option value="terminal" ${delivery.type === 'terminal' ? 'selected' : ''}>Terminal Pickup</option>`;
+      div.appendChild(typeSelect);
+      const saveBtn = document.createElement('button');
+      saveBtn.className = 'bg-blue-600 text-white px-3 py-2 rounded-xl text-sm hover:bg-blue-700';
+      saveBtn.innerText = 'Update Delivery Info';
+      saveBtn.onclick = async () => {
+        try { await db.collection('orders').doc(order.id).update({'delivery.deliveryFee': Number(feeInput.value) || 0, 'delivery.type': typeSelect.value}); showAlert('Delivery updated!', 'Success'); }
+        catch (err) { showAlert(err.message, 'Error'); }
+      };
+      div.appendChild(saveBtn);
+      intControls.appendChild(div);
+    }
+  }
+
+  modal.classList.remove('hidden'); modal.classList.add('flex');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeOrderModal() {
+  const modal = document.getElementById('orderDetailModal');
+  modal.classList.add('hidden'); modal.classList.remove('flex');
+  currentOpenOrder = null; document.body.style.overflow = '';
+}
+
+async function updateOrdShipmentStatus(orderId, newStatus) {
+  if (!window.isAdmin) return showAlert('Admins only', 'Error');
+  try {
+    await db.collection('orders').doc(orderId).update({'shipping.status': newStatus});
+    const tbody = document.getElementById('ordersTbody');
+    const row = Array.from(tbody.children).find(r => r.__order?.id === orderId);
+    if (row) { row.__order.shipping = row.__order.shipping || {}; row.__order.shipping.status = newStatus; tbody.replaceChild(ordOrderRow(row.__order), row); }
+    if (currentOpenOrder?.id === orderId) { currentOpenOrder.shipping = currentOpenOrder.shipping || {}; currentOpenOrder.shipping.status = newStatus; }
+    showAlert('Shipment status updated!', 'Success');
+  } catch (err) { showAlert('Failed: ' + err.message, 'Error'); }
+}
+
+async function ordDeleteOrder(orderId) {
+  if (!window.isAdmin) return showAlert('Admins only', 'Error');
+  const ok = await showConfirm('Delete this order? This cannot be undone.', 'Delete Order');
+  if (!ok) return;
+  showLoader();
+  try { await db.collection('orders').doc(orderId).delete(); closeOrderModal(); ordClearAndLoad(); showAlert('Order deleted.', 'Success'); }
+  catch (err) { showAlert('Failed: ' + err.message, 'Error'); }
+  finally { hideLoader(); }
+}
+
+async function downloadPdf(order) {
+  if (!order) return;
+  try {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF('p', 'mm', 'a4');
+    const dark = '#222222', gray = '#555555', rose = '#8B3A52', pageWidth = doc.internal.pageSize.getWidth(), margin = 15;
+    let y = 20;
+    try {
+      const res = await fetch('https://res.cloudinary.com/dut2dpxuc/image/upload/v1764188839/e1232d47-ee66-47c9-97fa-b9b86232fb80_n35lqo.png');
+      const blob = await res.blob();
+      const b64 = await new Promise((resolve, reject) => { const r = new FileReader(); r.onloadend = () => resolve(r.result); r.onerror = reject; r.readAsDataURL(blob); });
+      doc.addImage(b64, 'PNG', (pageWidth - 50) / 2, 10, 50, 25); y = 45;
+    } catch(e) {}
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(18); doc.setTextColor(dark);
+    doc.text('ORDER RECEIPT', margin, y); y += 15;
+    doc.setDrawColor('#e0e0e0'); doc.setLineWidth(0.5); doc.line(margin, y, pageWidth - margin, y); y += 5;
+    const shipping = order.shipping || {};
+    const fullName = `${shipping.firstName || ''} ${shipping.lastName || ''}`.trim() || 'Customer';
+    const email = shipping.email || '—', phone = shipping.phone || '—', paymentRef = order.payment?.reference || order.id;
+    doc.setFillColor('#f9f9f9'); doc.roundedRect(margin, y, pageWidth - margin * 2, 45, 3, 3, 'F');
+    doc.setFontSize(12); doc.setTextColor(dark); y += 10;
+    doc.text(`Name: ${fullName}`, margin + 5, y); y += 7;
+    doc.text(`Email: ${email}`, margin + 5, y); y += 7;
+    doc.text(`Phone: ${phone}`, margin + 5, y); y += 7;
+    doc.text(`Payment Ref: ${paymentRef}`, margin + 5, y); y += 15;
+    const tableX = margin, tableWidth = pageWidth - margin * 2, rowH = 8;
+    doc.setFillColor(rose); doc.setTextColor('#ffffff'); doc.setFontSize(11);
+    doc.rect(tableX, y, tableWidth, rowH, 'F');
+    doc.text('Item', tableX + 2, y + 6); doc.text('Qty', tableX + 80, y + 6);
+    doc.text('Price', tableX + 110, y + 6, { align: 'right' }); doc.text('Total', tableX + 150, y + 6, { align: 'right' });
+    y += rowH;
+    const items = order.items || [];
+    doc.setTextColor('#000');
+    items.forEach((i, idx) => {
+      if (y > 260) { doc.addPage(); y = 20; }
+      if (idx % 2 === 0) { doc.setFillColor('#f7f7f7'); doc.rect(tableX, y, tableWidth, rowH, 'F'); }
+      doc.text(i.name || '—', tableX + 2, y + 6); doc.text(`${i.quantity || 0}`, tableX + 80, y + 6);
+      doc.text(`₦${Number(i.price || 0).toLocaleString()}`, tableX + 110, y + 6, { align: 'right' });
+      doc.text(`₦${(Number(i.price || 0) * Number(i.quantity || 0)).toLocaleString()}`, tableX + 150, y + 6, { align: 'right' });
+      doc.rect(tableX, y, tableWidth, rowH); y += rowH;
+    });
+    const delivery = order.delivery || {}, deliveryFee = order.delivery?.deliveryFee || order.pricing?.shippingFee || 0;
+    const subtotal = order.total || items.reduce((s, i) => s + (Number(i.price || 0) * Number(i.quantity || 0)), 0);
+    const finalTotal = (delivery.country && delivery.country.toLowerCase() !== 'nigeria') ? subtotal + (deliveryFee || 0) : subtotal;
+    if (deliveryFee > 0) {
+      doc.setFillColor('#f0f0f0'); doc.rect(tableX, y, tableWidth, rowH, 'F'); doc.setFont('helvetica', 'normal'); doc.setFontSize(11);
+      doc.text('Delivery Fee', tableX + 110, y + 6, { align: 'right' }); doc.text(`₦${deliveryFee.toLocaleString()}`, tableX + 150, y + 6, { align: 'right' });
+      doc.rect(tableX, y, tableWidth, rowH); y += rowH;
+    }
+    doc.setFillColor('#eaeaea'); doc.rect(tableX, y, tableWidth, rowH, 'F'); doc.setFont('helvetica', 'bold');
+    doc.text('Order Total', tableX + 110, y + 6, { align: 'right' }); doc.text(`₦${finalTotal.toLocaleString()}`, tableX + 150, y + 6, { align: 'right' });
+    doc.rect(tableX, y, tableWidth, rowH); y += rowH + 5;
+    doc.setFont('helvetica', 'normal'); doc.setFontSize(10); doc.setTextColor(gray);
+    doc.text('Thank you for shopping with Pearl Skin Care!', pageWidth / 2, 285, { align: 'center' });
+    doc.save(`Order_${paymentRef}.pdf`);
+  } catch (err) { showAlert('PDF failed: ' + (err.message || err), 'Error'); }
+}
+
+async function sendReceiptEmail(order) {
+  const shipping = order.shipping || {}, payment = order.payment || {}, delivery = order.delivery || {}, items = order.items || [], pricing = order.pricing || {};
+  const fullName = `${shipping.firstName || ''} ${shipping.lastName || ''}`.trim() || 'Customer';
+  const email = shipping.email || 'no-email@example.com';
+  const deliveryFee = Number(delivery.deliveryFee ?? pricing.shippingFee ?? 0);
+  const totalWeight = items.reduce((s, i) => s + ((i.weight || 0) * (i.quantity || 0)), 0);
+  const subtotal = items.reduce((s, i) => s + ((Number(i.price) || 0) * (i.quantity || 0)), 0);
+  const orderTotal = Number(order.total ?? subtotal + deliveryFee);
+  const orderItemsHtml = items.map(i => `<tr><td>${i.name || '—'}</td><td align="center">${i.quantity || 0}</td><td align="right">₦${Number(i.price || 0).toLocaleString()}</td><td align="right">₦${(Number(i.price || 0) * (i.quantity || 0)).toLocaleString()}</td></tr>`).join('');
+  await emailjs.send('service_k1xpqh8', 'template_nlno322', {
+    to_email: email, customer_name: fullName, order_id: payment.reference || order.id,
+    logo_url: 'https://res.cloudinary.com/dut2dpxuc/image/upload/v1764188839/e1232d47-ee66-47c9-97fa-b9b86232fb80_n35lqo.png',
+    order_name: fullName, order_email: email, order_phone: shipping.phone || '—',
+    payment_method: payment.method || '—', payment_ref: payment.reference || order.id,
+    order_items: orderItemsHtml, order_total: orderTotal.toLocaleString(),
+    delivery_company: delivery.company || '—', delivery_type: delivery.type || '—',
+    delivery_terminal: delivery.terminal || '—', delivery_state: delivery.state || '—',
+    delivery_lga: delivery.lga || '—', delivery_address: delivery.address || '—',
+    delivery_fee: deliveryFee.toLocaleString(), total_weight: totalWeight
+  });
+}
+
+// ====================================================
+// ANALYTICS
+// ====================================================
+let anaCharts = {}, anaOrdersUnsub = null, anaProdsLimit = 5, anaCustsLimit = 5, anaLastProds = [], anaLastCusts = [];
+
+function initAnalytics() {
+  const chartOpts = (type, color, fill) => ({
+    type,
+    data: { labels: [], datasets: [{ label: '', data: [], ...(fill ? { fill: true, backgroundColor: 'rgba(139,58,82,0.07)', tension: 0.4, pointRadius: 2 } : { backgroundColor: color || 'rgba(139,58,82,0.65)', borderRadius: type === 'bar' ? 6 : 0 }), borderColor: type === 'line' ? '#8B3A52' : undefined }] },
+    options: { responsive: true, plugins: { legend: { display: false } }, scales: { x: { grid: { display: false }, ticks: { maxTicksLimit: 6, font: { size: 9 } } }, y: { ticks: { callback: v => '₦' + v.toLocaleString(), font: { size: 9 } } } } }
+  });
+  anaCharts.daily = new Chart(document.getElementById('dailySalesChart').getContext('2d'), chartOpts('line', '#8B3A52', true));
+  anaCharts.monthly = new Chart(document.getElementById('monthlyChart').getContext('2d'), chartOpts('bar', 'rgba(139,58,82,0.65)', false));
+  anaCharts.status = new Chart(document.getElementById('statusChart').getContext('2d'), { type: 'doughnut', data: { labels: ['Completed','Pending'], datasets: [{ data: [0,0], backgroundColor: ['#10b981','#f59e0b'] }] }, options: { responsive: true, plugins: { legend: { position: 'bottom' } } } });
+  anaCharts.payment = new Chart(document.getElementById('paymentChart').getContext('2d'), { type: 'pie', data: { labels: [], datasets: [{ data: [], backgroundColor: [] }] }, options: { responsive: true, plugins: { legend: { position: 'bottom' } } } });
+
+  document.getElementById('ana-applyFilters').onclick = () => { anaLoadAll(); anaStartFeed(); };
+  document.getElementById('ana-clearFilters').onclick = () => { ['ana-searchQ','ana-fromDate','ana-toDate'].forEach(id => document.getElementById(id).value = ''); anaLoadAll(); anaStartFeed(); };
+  document.getElementById('ana-refreshBtn').onclick = () => { anaLoadAll(); anaStartFeed(); };
+  document.getElementById('ana-loadMoreProducts').onclick = () => { anaProdsLimit += 5; anaDisplayProds(); };
+  document.getElementById('ana-loadMoreCustomers').onclick = () => { anaCustsLimit += 5; anaDisplayCusts(); };
+  document.getElementById('ana-closeModal').onclick = () => { document.getElementById('ana-detailModal').classList.add('hidden'); document.getElementById('ana-detailModal').classList.remove('flex'); };
+  document.getElementById('ana-detailModal').addEventListener('click', e => { if (e.target === document.getElementById('ana-detailModal')) { document.getElementById('ana-detailModal').classList.add('hidden'); document.getElementById('ana-detailModal').classList.remove('flex'); } });
+  document.getElementById('topProductsBody').addEventListener('click', e => {
+    const tr = e.target.closest('tr'); if (!tr) return;
+    const t = anaLastProds[Number(tr.dataset.index)]; if (!t) return;
+    document.getElementById('ana-modalTitle').textContent = `Product: ${t.name}`;
+    document.getElementById('ana-modalContent').innerHTML = `<p><strong>Qty Sold:</strong> ${t.qty}</p><p><strong>Revenue:</strong> ₦${Math.round(t.revenue).toLocaleString()}</p><p><strong>Last Ordered:</strong> ${t.lastOrder.toLocaleString()}</p>`;
+    document.getElementById('ana-detailModal').classList.remove('hidden'); document.getElementById('ana-detailModal').classList.add('flex');
+  });
+  document.getElementById('topCustomersBody').addEventListener('click', e => {
+    const tr = e.target.closest('tr'); if (!tr) return;
+    const c = anaLastCusts[Number(tr.dataset.index)]; if (!c) return;
+    document.getElementById('ana-modalTitle').textContent = `Customer: ${c.name}`;
+    document.getElementById('ana-modalContent').innerHTML = `<p><strong>Email:</strong> ${escapeHtml(c.email)}</p><p><strong>Orders:</strong> ${c.orders}</p><p><strong>Spent:</strong> ₦${Math.round(c.spent).toLocaleString()}</p><p><strong>Last Order:</strong> ${c.lastOrder.toLocaleString()}</p>`;
+    document.getElementById('ana-detailModal').classList.remove('hidden'); document.getElementById('ana-detailModal').classList.add('flex');
+  });
+
+  anaLoadAll(); anaStartFeed();
+}
+
+async function anaLoadAll() {
+  showLoader();
+  const searchQ = document.getElementById('ana-searchQ').value;
+  const fromDate = document.getElementById('ana-fromDate').value;
+  const toDate = document.getElementById('ana-toDate').value;
+  ['totalSales','totalOrders','aov','totalCustomers'].forEach(id => document.getElementById(id).textContent = '...');
+  let q = db.collection('orders').orderBy('createdAt', 'desc');
+  if (fromDate) q = q.where('createdAt', '>=', firebase.firestore.Timestamp.fromDate(new Date(fromDate + 'T00:00:00')));
+  if (toDate) q = q.where('createdAt', '<=', firebase.firestore.Timestamp.fromDate(new Date(toDate + 'T23:59:59')));
+  try {
+    const snap = await q.limit(5000).get();
+    let orders = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    const term = (searchQ || '').trim().toLowerCase();
+    if (term) orders = orders.filter(o =>
+      (o.shipping?.firstName || '').toLowerCase().includes(term) ||
+      (o.shipping?.email || '').toLowerCase().includes(term) ||
+      (o.payment?.reference || '').toLowerCase().includes(term) ||
+      (Array.isArray(o.items) && o.items.some(it => (it.name || '').toLowerCase().includes(term)))
+    );
+
+    const totalOrders = orders.length, totalSales = orders.reduce((s, o) => s + Number(o.pricing?.total || 0), 0);
+    const uniqueCustomers = new Set(orders.map(o => o.userId || o.shipping?.email || o.guestId || '')).size;
+    const aov = totalOrders ? totalSales / totalOrders : 0;
+    document.getElementById('totalSales').textContent = '₦' + totalSales.toLocaleString();
+    document.getElementById('totalOrders').textContent = totalOrders.toLocaleString();
+    document.getElementById('aov').textContent = '₦' + Math.round(aov).toLocaleString();
+    document.getElementById('totalCustomers').textContent = uniqueCustomers.toLocaleString();
+
+    const days = 30, dayMap = {};
+    for (let i = days - 1; i >= 0; i--) { const d = new Date(); d.setDate(d.getDate() - i); d.setHours(0,0,0,0); dayMap[d.toISOString().slice(0,10)] = 0; }
+    orders.forEach(o => { if (!o.createdAt) return; const d = o.createdAt.toDate ? o.createdAt.toDate() : new Date(o.createdAt); const k = d.toISOString().slice(0,10); if (k in dayMap) dayMap[k] += Number(o.pricing?.total || 0); });
+    anaCharts.daily.data.labels = Object.keys(dayMap); anaCharts.daily.data.datasets[0].data = Object.values(dayMap); anaCharts.daily.update();
+
+    const year = new Date().getFullYear(), mMap = Array.from({length:12}, () => 0);
+    orders.forEach(o => { if (!o.createdAt) return; const d = o.createdAt.toDate ? o.createdAt.toDate() : new Date(o.createdAt); if (d.getFullYear() !== year) return; mMap[d.getMonth()] += Number(o.pricing?.total || 0); });
+    anaCharts.monthly.data.labels = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']; anaCharts.monthly.data.datasets[0].data = mMap; anaCharts.monthly.update();
+
+    let completed = 0, pending = 0;
+    orders.forEach(o => { if ((o.shipping?.status || '').toLowerCase() === 'completed') completed++; else pending++; });
+    anaCharts.status.data.datasets[0].data = [completed, pending]; anaCharts.status.update();
+
+    const pmCounts = {};
+    orders.forEach(o => { const pm = o.payment?.method || 'Unknown'; pmCounts[pm] = (pmCounts[pm] || 0) + 1; });
+    anaCharts.payment.data.labels = Object.keys(pmCounts);
+    anaCharts.payment.data.datasets[0].data = Object.values(pmCounts);
+    anaCharts.payment.data.datasets[0].backgroundColor = Object.keys(pmCounts).map((_, i) => `hsl(${(i * 73) % 360} 55% 55%)`);
+    anaCharts.payment.update();
+
+    const pmap = {};
+    orders.forEach(o => (o.items || []).forEach(it => {
+      const name = it.name || 'Untitled';
+      if (!pmap[name]) pmap[name] = { qty: 0, revenue: 0, lastOrder: new Date() };
+      pmap[name].qty += Number(it.quantity || 0); pmap[name].revenue += Number(it.quantity || 0) * Number(it.price || 0);
+      if (o.createdAt?.toDate) pmap[name].lastOrder = o.createdAt.toDate();
+    }));
+    anaLastProds = Object.entries(pmap).map(([name, v]) => ({ name, ...v })).sort((a, b) => b.qty - a.qty);
+    anaDisplayProds();
+
+    const cmap = {};
+    orders.forEach(o => {
+      const fullName = o.shipping ? `${o.shipping.firstName || ''} ${o.shipping.lastName || ''}`.trim() : (o.name || 'Customer');
+      const key = o.userId || o.email || fullName || ('guest-' + (o.payment?.reference || ''));
+      if (!cmap[key]) cmap[key] = { name: fullName, email: o.shipping?.email || o.email || '', orders: 0, spent: 0, lastOrder: new Date() };
+      cmap[key].orders++; cmap[key].spent += Number(o.pricing?.total || 0);
+      if (o.timestamp?.toDate) cmap[key].lastOrder = o.timestamp.toDate();
+    });
+    anaLastCusts = Object.values(cmap).sort((a, b) => b.spent - a.spent);
+    anaDisplayCusts();
+  } catch (err) { console.error(err); }
+  finally { hideLoader(); }
+}
+
+function anaDisplayProds() {
+  const body = document.getElementById('topProductsBody');
+  const top = anaLastProds.slice(0, anaProdsLimit);
+  body.innerHTML = top.length ? top.map((t, i) => `<tr class="cursor-pointer hover:bg-gray-50" data-index="${i}"><td class="p-2">${escapeHtml(t.name)}</td><td class="p-2">${t.qty.toLocaleString()}</td><td class="p-2">₦${Math.round(t.revenue).toLocaleString()}</td></tr>`).join('') : `<tr><td colspan="3" class="p-3 text-gray-400 text-sm">No data</td></tr>`;
+}
+function anaDisplayCusts() {
+  const body = document.getElementById('topCustomersBody');
+  const top = anaLastCusts.slice(0, anaCustsLimit);
+  body.innerHTML = top.length ? top.map((c, i) => `<tr class="cursor-pointer hover:bg-gray-50" data-index="${i}"><td class="p-2">${escapeHtml(c.name)}</td><td class="p-2">${c.orders}</td><td class="p-2">₦${Math.round(c.spent).toLocaleString()}</td></tr>`).join('') : `<tr><td colspan="3" class="p-3 text-gray-400 text-sm">No data</td></tr>`;
+}
+
+function anaStartFeed() {
+  if (anaOrdersUnsub) anaOrdersUnsub();
+  const fromDate = document.getElementById('ana-fromDate').value;
+  const toDate = document.getElementById('ana-toDate').value;
+  let q = db.collection('orders').orderBy('createdAt', 'desc').limit(15);
+  if (fromDate) q = q.where('createdAt', '>=', firebase.firestore.Timestamp.fromDate(new Date(fromDate + 'T00:00:00')));
+  if (toDate) q = q.where('createdAt', '<=', firebase.firestore.Timestamp.fromDate(new Date(toDate + 'T23:59:59')));
+  const feed = document.getElementById('ana-liveFeed');
+  anaOrdersUnsub = q.onSnapshot(snap => {
+    feed.innerHTML = '';
+    snap.docs.forEach(d => {
+      const o = d.data();
+      const time = o.createdAt ? (o.createdAt.toDate ? o.createdAt.toDate().toLocaleTimeString() : new Date(o.createdAt).toLocaleTimeString()) : '';
+      const fullName = o.shipping ? `${o.shipping.firstName || ''} ${o.shipping.lastName || ''}`.trim() : 'Guest';
+      const div = document.createElement('div');
+      div.className = 'flex justify-between items-center py-2.5 border-b border-gray-50 text-sm hover:bg-gray-50 px-1';
+      div.innerHTML = `<span class="font-medium text-gray-700">${escapeHtml(fullName)}</span><span class="text-gray-300 text-xs">${time}</span><span class="font-semibold text-sm" style="color:#8B3A52;">₦${Math.round(o.pricing?.total || 0).toLocaleString()}</span>`;
+      feed.appendChild(div);
+    });
+  });
+}
+
+// ====================================================
+// HERO SLIDER
+// ====================================================
+let heroEditId = null;
+
+function initHeroSlider() {
+  document.getElementById('heroForm').addEventListener('submit', heroSaveSlide);
+  document.getElementById('heroCancelEditBtn').addEventListener('click', heroResetForm);
+  loadHeroSlides();
+}
+
+async function heroSaveSlide(e) {
+  e.preventDefault();
+  const spinner = document.getElementById('heroSpinner');
+  const submitText = document.getElementById('heroSubmitText');
+  submitText.textContent = heroEditId ? 'Updating...' : 'Uploading...';
+  spinner.classList.remove('hidden');
+  showLoader();
+  try {
+    const file = document.getElementById('heroImage').files[0];
+    const imageURL = document.getElementById('heroImageURL').value.trim();
+    const orderVal = document.getElementById('heroOrder').value.trim();
+    if (!orderVal || isNaN(orderVal)) { await showAlert('Please enter a valid display order number.'); return; }
+    let finalImageURL = null;
+    if (file) {
+      const fd = new FormData(); fd.append('file', file); fd.append('upload_preset', 'products');
+      const res = await fetch('https://api.cloudinary.com/v1_1/dut2dpxuc/image/upload', { method: 'POST', body: fd });
+      const data = await res.json(); if (!data.secure_url) throw new Error('File upload failed'); finalImageURL = data.secure_url;
+    } else if (imageURL) {
+      const fd = new FormData(); fd.append('file', imageURL); fd.append('upload_preset', 'products');
+      const res = await fetch('https://api.cloudinary.com/v1_1/dut2dpxuc/image/upload', { method: 'POST', body: fd });
+      const data = await res.json(); if (!data.secure_url) throw new Error('URL upload failed'); finalImageURL = data.secure_url;
+    }
+    const slideData = { title: document.getElementById('heroTitle').value.trim(), subtitle: document.getElementById('heroSubtitle').value.trim() || '', link: document.getElementById('heroLink').value.trim() || '', order: Number(orderVal) };
+    if (finalImageURL) slideData.imageUrl = finalImageURL;
+    if (heroEditId) {
+      await db.collection('heroSliders').doc(heroEditId).update(slideData);
+      await showAlert('Slide updated!', 'Success');
+    } else {
+      slideData.active = true; slideData.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+      await db.collection('heroSliders').add(slideData);
+      await showAlert('Slide added!', 'Success');
+    }
+    heroResetForm();
+  } catch (err) { await showAlert('Failed: ' + err.message, 'Error'); }
+  finally { hideLoader(); submitText.textContent = heroEditId ? 'Update Slide' : 'Add Slide'; spinner.classList.add('hidden'); }
+}
+
+function heroResetForm() {
+  heroEditId = null;
+  document.getElementById('heroForm').reset();
+  document.getElementById('heroFormTitle').textContent = 'Add New Slide';
+  document.getElementById('heroSubmitText').textContent = 'Add Slide';
+  document.getElementById('heroCancelEditBtn').classList.add('hidden');
+}
+
+function loadHeroSlides() {
+  const container = document.getElementById('slidesList');
+  let firstLoad = true;
+  db.collection('heroSliders').orderBy('order', 'asc').onSnapshot(snapshot => {
+    container.innerHTML = '';
+    if (snapshot.empty) { container.innerHTML = '<p class="text-gray-400 text-sm py-4">No slides yet. Add your first one above.</p>'; }
+    snapshot.forEach(doc => {
+      const s = doc.data();
+      const div = document.createElement('div');
+      div.className = 'flex items-center gap-4 border border-gray-100 p-3 rounded-2xl bg-gray-50 hover:bg-white transition';
+      div.innerHTML = `
+        <img src="${s.imageUrl || ''}" class="w-28 h-18 object-cover rounded-xl flex-shrink-0" style="height:72px;" onerror="this.src='https://via.placeholder.com/112x72?text=No+Image'" />
+        <div class="flex-1 min-w-0">
+          <p class="font-medium text-gray-800 truncate">${escapeHtml(s.title || '—')}</p>
+          <p class="text-sm text-gray-400 truncate">${escapeHtml(s.subtitle || '')}</p>
+          <p class="text-xs text-gray-300 mt-0.5">Order: ${s.order}</p>
+        </div>
+        <div class="flex flex-col sm:flex-row gap-2 flex-shrink-0">
+          <button onclick="heroToggleSlide('${doc.id}', ${s.active})" class="px-3 py-1.5 rounded-xl text-xs font-medium ${s.active ? 'bg-green-100 text-green-600' : 'bg-gray-200 text-gray-500'}">${s.active ? 'Active' : 'Inactive'}</button>
+          <button onclick="heroEditSlide('${doc.id}')" class="px-3 py-1.5 rounded-xl text-xs bg-blue-50 text-blue-600 hover:bg-blue-100">Edit</button>
+          <button onclick="heroDeleteSlide('${doc.id}')" class="px-3 py-1.5 rounded-xl text-xs bg-red-50 text-red-500 hover:bg-red-100">Delete</button>
+        </div>`;
+      container.appendChild(div);
+    });
+    if (firstLoad) firstLoad = false;
+  }, err => { console.error(err); showAlert('Failed to load slides', 'Error'); });
+}
+
+window.heroEditSlide = async id => {
+  const snap = await db.collection('heroSliders').doc(id).get();
+  if (!snap.exists) return showAlert('Slide not found');
+  const data = snap.data();
+  document.getElementById('heroTitle').value = data.title || '';
+  document.getElementById('heroSubtitle').value = data.subtitle || '';
+  document.getElementById('heroLink').value = data.link || '';
+  document.getElementById('heroOrder').value = data.order || 0;
+  document.getElementById('heroFormTitle').textContent = 'Edit Slide';
+  document.getElementById('heroSubmitText').textContent = 'Update Slide';
+  document.getElementById('heroCancelEditBtn').classList.remove('hidden');
+  heroEditId = id;
+  document.getElementById('content-area').scrollTo({ top: 0, behavior: 'smooth' });
+};
+window.heroToggleSlide = async (id, current) => {
+  try { await db.collection('heroSliders').doc(id).update({ active: !current }); }
+  catch (err) { showAlert('Failed to toggle slide', 'Error'); }
+};
+window.heroDeleteSlide = async id => {
+  const ok = await showConfirm('Delete this slide? This cannot be undone.', 'Delete Slide');
+  if (!ok) return;
+  showLoader();
+  try { await db.collection('heroSliders').doc(id).delete(); await showAlert('Slide deleted.', 'Success'); }
+  catch (err) { showAlert('Failed: ' + err.message, 'Error'); }
+  finally { hideLoader(); }
+};
+
+// ====================================================
+// FEATURED PRODUCTS (HOMEPAGE)
+// ====================================================
+let featLastVisible = null;
+const FEAT_PAGE = 12;
+
+async function loadFeaturedProducts(append = false) {
+  if (!append) { featLastVisible = null; document.getElementById('featuredProductsList').innerHTML = ''; showLoader(); }
+  try {
+    let q = db.collection('products').orderBy('name').limit(FEAT_PAGE);
+    if (append && featLastVisible) q = q.startAfter(featLastVisible);
+    const snap = await q.get();
+    featLastVisible = snap.docs[snap.docs.length - 1];
+    const container = document.getElementById('featuredProductsList');
+    snap.docs.forEach(doc => container.appendChild(renderFeatCard({ id: doc.id, ...doc.data() })));
+    document.getElementById('loadMoreFeaturedBtn').classList.toggle('hidden', snap.size < FEAT_PAGE);
+  } catch (err) { showAlert('Failed to load products: ' + err.message, 'Error'); }
+  finally { hideLoader(); }
+}
+
+function renderFeatCard(p) {
+  let imgUrl = p.image && p.image.includes('res.cloudinary.com') ? p.image.replace('/upload/', '/upload/w_200,h_200,c_fill/') : (p.image || 'https://via.placeholder.com/200');
+  const div = document.createElement('div');
+  div.className = `border rounded-2xl overflow-hidden bg-white hover:shadow-md transition ${p.isFeatured ? 'ring-2' : 'border-gray-100'}`;
+  if (p.isFeatured) div.style.setProperty('--tw-ring-color', '#8B3A52');
+  div.innerHTML = `
+    <div class="relative">
+      <img src="${imgUrl}" class="w-full h-32 object-cover" onerror="this.src='https://via.placeholder.com/200'" />
+      ${p.isFeatured ? `<span class="absolute top-2 right-2 bg-white text-xs font-semibold px-2 py-0.5 rounded-full" style="color:#8B3A52;"><i class="fas fa-star mr-1 text-xs"></i>Featured</span>` : ''}
+    </div>
+    <div class="p-3">
+      <p class="text-sm font-medium text-gray-800 truncate">${escapeHtml(p.name)}</p>
+      <p class="text-xs text-gray-300 mb-3">₦${Number(p.price).toLocaleString()}</p>
+      <button onclick="toggleFeatured('${p.id}', ${!!p.isFeatured})"
+        class="w-full py-1.5 rounded-xl text-xs font-medium transition ${p.isFeatured ? 'bg-rose-50 text-rose-600 hover:bg-rose-100' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'}">
+        ${p.isFeatured ? 'Remove from Featured' : 'Add to Featured'}
+      </button>
+    </div>`;
+  return div;
+}
+
+window.toggleFeatured = async (id, isFeatured) => {
+  try {
+    await db.collection('products').doc(id).update({ isFeatured: !isFeatured });
+    loadFeaturedProducts();
+  } catch (err) { showAlert('Failed: ' + err.message, 'Error'); }
+};
+
+document.getElementById('loadMoreFeaturedBtn').addEventListener('click', () => loadFeaturedProducts(true));
+
+document.getElementById('featuredSearch').addEventListener('input', async function () {
+  const term = this.value.trim().toLowerCase();
+  const container = document.getElementById('featuredProductsList');
+  if (!term) { loadFeaturedProducts(); return; }
+  showLoader();
+  try {
+    const snap = await db.collection('products').orderBy('name').limit(100).get();
+    const results = snap.docs.map(d => ({ id: d.id, ...d.data() })).filter(p => p.name.toLowerCase().includes(term));
+    container.innerHTML = '';
+    if (!results.length) { container.innerHTML = '<p class="text-gray-400 text-sm col-span-4 py-4">No products found.</p>'; }
+    else results.forEach(p => container.appendChild(renderFeatCard(p)));
+  } catch (err) { showAlert('Search failed: ' + err.message, 'Error'); }
+  finally { hideLoader(); }
+});
+</script>
+</body>
+</html>
