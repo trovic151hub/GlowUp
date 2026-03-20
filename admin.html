@@ -863,7 +863,7 @@ window.deleteProduct = async id => {
 // ====================================================
 // ORDERS
 // ====================================================
-let ordAllOrders = [], ordDisplayCount = 20, ordListener = null, ordFilters = {}, currentOpenOrder = null;
+let ordPAGE = 6, ordLastDoc = null, ordLoading = false, ordFilters = {}, currentOpenOrder = null;
 
 function initOrders() {
   document.getElementById('ord-applyFilters').onclick = () => {
@@ -873,21 +873,17 @@ function initOrders() {
     ordFilters.shipment = document.getElementById('ord-filterShipment').value;
     ordFilters.from = document.getElementById('ord-dateFrom').value;
     ordFilters.to = document.getElementById('ord-dateTo').value;
-    ordDisplayCount = 20;
-    ordRenderTable();
+    ordClearAndLoad();
   };
   document.getElementById('ord-clearFilters').onclick = () => {
-    document.getElementById('ord-qText').value = '';
+    ['ord-qText'].forEach(id => document.getElementById(id).value = '');
     ['ord-filterStatus','ord-filterShipment','ord-filterPayment'].forEach(id => document.getElementById(id).value = 'all');
     ['ord-dateFrom','ord-dateTo'].forEach(id => document.getElementById(id).value = '');
-    ordFilters = {}; ordDisplayCount = 20; ordRenderTable();
+    ordFilters = {}; ordClearAndLoad();
   };
-  document.getElementById('ord-qText').addEventListener('input', () => {
-    ordFilters.q = document.getElementById('ord-qText').value;
-    ordDisplayCount = 20; ordRenderTable();
-  });
-  document.getElementById('ord-refreshBtn').onclick = () => { ordStartListener(); };
-  document.getElementById('ord-loadMoreBtn').onclick = () => { ordDisplayCount += 20; ordRenderTable(); };
+  document.getElementById('ord-qText').addEventListener('input', () => { ordFilters.q = document.getElementById('ord-qText').value; ordClearAndLoad(); });
+  document.getElementById('ord-refreshBtn').onclick = ordClearAndLoad;
+  document.getElementById('ord-loadMoreBtn').onclick = () => ordLoadMore();
   document.getElementById('orderModalClose').onclick = closeOrderModal;
   document.getElementById('orderDetailModal').addEventListener('click', e => { if (e.target === document.getElementById('orderDetailModal')) closeOrderModal(); });
   document.getElementById('orderDownloadPdfBtn').onclick = () => { if (currentOpenOrder) downloadPdf(currentOpenOrder); };
@@ -900,107 +896,87 @@ function initOrders() {
     finally { btn.disabled = false; btn.textContent = 'Email Receipt'; }
   };
 
-  ordStartListener();
-}
-
-function ordGetTimestamp(order) {
-  if (order.createdAt?.toDate) return order.createdAt.toDate();
-  if (order.timestamp?.toDate) return order.timestamp.toDate();
-  if (order.createdAt) return new Date(order.createdAt);
-  if (order.timestamp) return new Date(order.timestamp);
-  return new Date(0);
-}
-
-function ordStartListener() {
-  if (ordListener) { ordListener(); ordListener = null; }
-  ordAllOrders = [];
-  document.getElementById('ordersTbody').innerHTML = '';
-  showLoader();
-  let firstSnap = true;
-
-  ordListener = db.collection('orders').onSnapshot(
-    snap => {
-      snap.docChanges().forEach(change => {
-        const order = { id: change.doc.id, ...change.doc.data() };
-        if (change.type === 'added') {
-          ordAllOrders.push(order);
-        } else if (change.type === 'modified') {
-          const idx = ordAllOrders.findIndex(o => o.id === order.id);
-          if (idx !== -1) ordAllOrders[idx] = order; else ordAllOrders.push(order);
-          if (currentOpenOrder?.id === order.id) renderOrderModal(order);
-        } else if (change.type === 'removed') {
-          ordAllOrders = ordAllOrders.filter(o => o.id !== order.id);
-          if (currentOpenOrder?.id === order.id) closeOrderModal();
-        }
-      });
-      if (firstSnap) { hideLoader(); firstSnap = false; }
-      ordRenderTable();
-    },
-    err => {
-      console.error('Orders listener error:', err);
-      hideLoader();
-      document.getElementById('ordersTbody').innerHTML = `<tr><td colspan="7" class="p-4 text-red-500">Failed to load orders: ${err.message}</td></tr>`;
-    }
-  );
-}
-
-function ordRenderTable() {
-  const tbody = document.getElementById('ordersTbody');
-  const btn = document.getElementById('ord-loadMoreBtn');
-
-  // Sort newest first
-  const sorted = [...ordAllOrders].sort((a, b) => ordGetTimestamp(b) - ordGetTimestamp(a));
-
-  // Apply all filters client-side
-  const filtered = sorted.filter(order => {
-    if (ordFilters.q) {
-      const q = ordFilters.q.toLowerCase();
-      const name = `${order.shipping?.firstName || ''} ${order.shipping?.lastName || ''}`.toLowerCase();
-      const ref = (order.payment?.reference || '').toLowerCase();
-      const prods = (order.items || []).map(i => (i.name || '').toLowerCase()).join(' ');
-      if (!name.includes(q) && !ref.includes(q) && !prods.includes(q)) return false;
-    }
-    if (ordFilters.status && ordFilters.status !== 'all') {
-      if (ordFilters.status === 'completed' && order.fulfilled !== true) return false;
-      if (ordFilters.status === 'pending' && order.fulfilled === true) return false;
-    }
-    if (ordFilters.payment && ordFilters.payment !== 'all') {
-      if ((order.payment?.method || '') !== ordFilters.payment) return false;
-    }
-    if (ordFilters.shipment && ordFilters.shipment !== 'all') {
-      if ((order.shipping?.status || '') !== ordFilters.shipment) return false;
-    }
-    if (ordFilters.from) {
-      const from = new Date(ordFilters.from + 'T00:00:00');
-      if (ordGetTimestamp(order) < from) return false;
-    }
-    if (ordFilters.to) {
-      const to = new Date(ordFilters.to + 'T23:59:59');
-      if (ordGetTimestamp(order) > to) return false;
-    }
-    return true;
+  db.collection('orders').orderBy('createdAt','desc').onSnapshot(snap => {
+    snap.docChanges().forEach(change => {
+      const order = { id: change.doc.id, ...change.doc.data() };
+      const tbody = document.getElementById('ordersTbody');
+      if (change.type === 'modified') {
+        const row = Array.from(tbody.children).find(r => r.__order?.id === order.id);
+        if (row) tbody.replaceChild(ordOrderRow(order), row);
+        if (currentOpenOrder?.id === order.id) renderOrderModal(order);
+      }
+      if (change.type === 'removed') {
+        const row = Array.from(tbody.children).find(r => r.__order?.id === order.id);
+        if (row) row.remove();
+        if (currentOpenOrder?.id === order.id) closeOrderModal();
+      }
+    });
+    ordUpdateSummary();
   });
 
-  tbody.innerHTML = '';
-  if (!filtered.length) {
-    tbody.innerHTML = `<tr><td colspan="7" class="p-6 text-center text-gray-400">No orders found.</td></tr>`;
-    btn.style.display = 'none';
-    ordUpdateSummary(filtered);
-    return;
-  }
-
-  filtered.slice(0, ordDisplayCount).forEach(order => tbody.appendChild(ordOrderRow(order)));
-  btn.style.display = filtered.length > ordDisplayCount ? 'inline-block' : 'none';
-  ordUpdateSummary(filtered);
+  ordClearAndLoad();
 }
 
-function ordUpdateSummary(filtered) {
-  const orders = filtered || ordAllOrders;
-  const shown = Math.min(orders.length, ordDisplayCount);
-  const total = orders.length;
-  const fee = orders.reduce((s, o) => s + Number(o.delivery?.deliveryFee || 0) + Number(o.pricing?.shippingFee || 0), 0);
-  const weight = orders.reduce((s, o) => s + (o.items || []).reduce((ws, i) => ws + (Number(i.weight || 0) * Number(i.quantity || 1)), 0), 0);
-  document.getElementById('ordersSummary').innerHTML = `Showing <strong>${shown}</strong> of <strong>${total}</strong> orders &mdash; Delivery: <strong>₦${fee.toLocaleString()}</strong> &mdash; Weight: <strong>${weight.toLocaleString()} kg</strong>`;
+function ordBuildQuery(pageSize, startAfterDoc = null) {
+  let q = db.collection('orders').orderBy('createdAt', 'desc');
+  if (ordFilters.payment && ordFilters.payment !== 'all') q = q.where('payment.method', '==', ordFilters.payment);
+  if (ordFilters.shipment && ordFilters.shipment !== 'all') q = q.where('shipping.status', '==', ordFilters.shipment);
+  if (ordFilters.from) q = q.where('createdAt', '>=', firebase.firestore.Timestamp.fromDate(new Date(ordFilters.from + 'T00:00:00')));
+  if (ordFilters.to) q = q.where('createdAt', '<=', firebase.firestore.Timestamp.fromDate(new Date(ordFilters.to + 'T23:59:59')));
+  if (startAfterDoc) q = q.startAfter(startAfterDoc);
+  return q.limit(pageSize);
+}
+
+async function ordClearAndLoad() {
+  showLoader();
+  document.getElementById('ordersTbody').innerHTML = '';
+  ordLastDoc = null;
+  document.getElementById('ord-loadMoreBtn').style.display = 'inline-block';
+  try { await ordLoadMore(true); } finally { hideLoader(); }
+}
+
+async function ordLoadMore(isInitial = false) {
+  if (ordLoading) return;
+  ordLoading = true;
+  const btn = document.getElementById('ord-loadMoreBtn');
+  btn.disabled = true;
+  try {
+    const snap = await ordBuildQuery(ordPAGE, ordLastDoc).get();
+    const tbody = document.getElementById('ordersTbody');
+    if (!snap.empty) {
+      if (isInitial) tbody.innerHTML = '';
+      const docs = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      const filtered = docs.filter(order => {
+        if (ordFilters.q) {
+          const q = ordFilters.q.toLowerCase();
+          const name = `${order.shipping?.firstName || ''} ${order.shipping?.lastName || ''}`.toLowerCase();
+          const ref = (order.payment?.reference || '').toLowerCase();
+          const prods = (order.items || []).map(i => (i.name || '').toLowerCase()).join(' ');
+          if (!name.includes(q) && !ref.includes(q) && !prods.includes(q)) return false;
+        }
+        if (ordFilters.status && ordFilters.status !== 'all') {
+          if (ordFilters.status === 'completed' && order.fulfilled !== true) return false;
+          if (ordFilters.status === 'pending' && order.fulfilled === true) return false;
+        }
+        return true;
+      });
+      filtered.forEach(order => tbody.appendChild(ordOrderRow(order)));
+      ordLastDoc = snap.docs[snap.docs.length - 1];
+      btn.style.display = snap.size < ordPAGE ? 'none' : 'inline-block';
+    } else if (isInitial) {
+      tbody.innerHTML = `<tr><td colspan="7" class="p-6 text-center text-gray-400">No orders found.</td></tr>`;
+      btn.style.display = 'none';
+    }
+  } catch (err) { document.getElementById('ordersTbody').innerHTML = `<tr><td colspan="7" class="p-4 text-red-500">Failed to load orders.</td></tr>`; }
+  finally { ordLoading = false; btn.disabled = false; ordUpdateSummary(); }
+}
+
+function ordUpdateSummary() {
+  const rows = Array.from(document.getElementById('ordersTbody').children).filter(r => r.__order);
+  const total = rows.length;
+  const fee = rows.reduce((s, r) => s + Number(r.__order?.delivery?.deliveryFee || 0) + Number(r.__order?.pricing?.shippingFee || 0), 0);
+  const weight = rows.reduce((s, r) => s + (r.__order.items || []).reduce((ws, i) => ws + (Number(i.weight || 0) * Number(i.quantity || 1)), 0), 0);
+  document.getElementById('ordersSummary').innerHTML = `Showing <strong>${total}</strong> orders &mdash; Delivery: <strong>₦${fee.toLocaleString()}</strong> &mdash; Weight: <strong>${weight.toLocaleString()} kg</strong>`;
 }
 
 function ordOrderRow(order) {
