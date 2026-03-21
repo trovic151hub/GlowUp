@@ -782,7 +782,9 @@ async function initDashboard() {
     const days = 30, dayMap = {};
     for (let i = days - 1; i >= 0; i--) { const d = new Date(); d.setDate(d.getDate() - i); d.setHours(0,0,0,0); dayMap[d.toISOString().slice(0,10)] = 0; }
     orders.forEach(o => { if (!o.createdAt) return; const d = o.createdAt.toDate ? o.createdAt.toDate() : new Date(o.createdAt); const k = d.toISOString().slice(0,10); if (k in dayMap) dayMap[k] += Number(o.pricing?.total || 0); });
-    new Chart(document.getElementById('dash-dailyChart').getContext('2d'), {
+    const dailyCanvas = document.getElementById('dash-dailyChart');
+    if (Chart.getChart(dailyCanvas)) Chart.getChart(dailyCanvas).destroy();
+    new Chart(dailyCanvas.getContext('2d'), {
       type: 'line',
       data: { labels: Object.keys(dayMap), datasets: [{ data: Object.values(dayMap), fill: true, backgroundColor: 'rgba(139,58,82,0.07)', borderColor: '#8B3A52', tension: 0.4, pointRadius: 2 }] },
       options: { responsive: true, plugins: { legend: { display: false } }, scales: { x: { grid: { display: false }, ticks: { maxTicksLimit: 6, font: { size: 9 } } }, y: { ticks: { callback: v => '₦' + v.toLocaleString(), font: { size: 9 } } } } }
@@ -790,7 +792,9 @@ async function initDashboard() {
 
     const year = new Date().getFullYear(), monthMap = Array.from({length:12}, () => 0);
     orders.forEach(o => { if (!o.createdAt) return; const d = o.createdAt.toDate ? o.createdAt.toDate() : new Date(o.createdAt); if (d.getFullYear() !== year) return; monthMap[d.getMonth()] += Number(o.pricing?.total || 0); });
-    new Chart(document.getElementById('dash-monthlyChart').getContext('2d'), {
+    const monthlyCanvas = document.getElementById('dash-monthlyChart');
+    if (Chart.getChart(monthlyCanvas)) Chart.getChart(monthlyCanvas).destroy();
+    new Chart(monthlyCanvas.getContext('2d'), {
       type: 'bar',
       data: { labels: ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'], datasets: [{ data: monthMap, backgroundColor: 'rgba(139,58,82,0.65)', borderRadius: 6 }] },
       options: { responsive: true, plugins: { legend: { display: false } }, scales: { x: { grid: { display: false } }, y: { ticks: { callback: v => '₦' + v.toLocaleString(), font: { size: 9 } } } } }
