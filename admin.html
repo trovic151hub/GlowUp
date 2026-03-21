@@ -1630,6 +1630,113 @@ window.toggleFeatured = async (id, isFeatured) => {
 
 document.getElementById('loadMoreFeaturedBtn').addEventListener('click', () => loadFeaturedProducts(true));
 
+// ====================================================
+// ADMIN ACCOUNTS
+// ====================================================
+function initAdmins() {
+  const form = document.getElementById('addAdminForm');
+  const errorEl = document.getElementById('addAdminError');
+  const spinner = document.getElementById('addAdminSpinner');
+  const btn = document.getElementById('addAdminBtn');
+  const adminsList = document.getElementById('adminsList');
+
+  // Password visibility toggle
+  document.getElementById('toggleNewAdminPw').addEventListener('click', function () {
+    const pwInput = document.getElementById('newAdminPassword');
+    const icon = this.querySelector('i');
+    if (pwInput.type === 'password') {
+      pwInput.type = 'text';
+      icon.classList.replace('fa-eye', 'fa-eye-slash');
+    } else {
+      pwInput.type = 'password';
+      icon.classList.replace('fa-eye-slash', 'fa-eye');
+    }
+  });
+
+  // Load current admins
+  async function loadAdmins() {
+    adminsList.innerHTML = '<p class="text-gray-400 text-sm">Loading...</p>';
+    try {
+      const snap = await db.collection('admins').get();
+      if (snap.empty) {
+        adminsList.innerHTML = '<p class="text-gray-400 text-sm">No admins found.</p>';
+        return;
+      }
+      adminsList.innerHTML = '';
+      snap.forEach(doc => {
+        const data = doc.data();
+        const card = document.createElement('div');
+        card.className = 'flex items-center gap-3 p-3 rounded-xl border border-gray-100 bg-gray-50';
+        card.innerHTML = `
+          <div class="w-9 h-9 rounded-full bg-gray-200 flex items-center justify-center flex-shrink-0">
+            <i class="fas fa-user text-gray-400 text-sm"></i>
+          </div>
+          <div>
+            <p class="text-sm font-medium text-gray-800">${escapeHtml(data.name || 'Unnamed')}</p>
+            <p class="text-xs text-gray-400">${escapeHtml(data.email || '')}</p>
+          </div>`;
+        adminsList.appendChild(card);
+      });
+    } catch (err) {
+      adminsList.innerHTML = `<p class="text-red-400 text-sm">Failed to load admins: ${escapeHtml(err.message)}</p>`;
+    }
+  }
+
+  loadAdmins();
+
+  // Create admin form submission
+  form.addEventListener('submit', async function (e) {
+    e.preventDefault();
+    errorEl.classList.add('hidden');
+    errorEl.textContent = '';
+    spinner.classList.remove('hidden');
+    btn.disabled = true;
+
+    const name = document.getElementById('newAdminName').value.trim();
+    const email = document.getElementById('newAdminEmail').value.trim();
+    const password = document.getElementById('newAdminPassword').value;
+
+    try {
+      // Use Firebase Auth REST API so the current admin session is not affected
+      const apiKey = firebaseConfig.apiKey;
+      const signUpRes = await fetch(
+        `https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=${apiKey}`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password, returnSecureToken: true })
+        }
+      );
+      const signUpData = await signUpRes.json();
+      if (!signUpRes.ok) {
+        throw new Error(signUpData.error?.message || 'Failed to create auth user');
+      }
+      const uid = signUpData.localId;
+
+      // Write admin record to Firestore
+      await db.collection('admins').doc(uid).set({
+        uid,
+        name,
+        email,
+        role: 'admin',
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+
+      form.reset();
+      document.getElementById('newAdminPassword').type = 'password';
+      document.getElementById('toggleNewAdminPw').querySelector('i').className = 'fas fa-eye text-sm';
+      showAlert('Admin account created successfully.', 'Success');
+      loadAdmins();
+    } catch (err) {
+      errorEl.textContent = err.message || 'An error occurred. Please try again.';
+      errorEl.classList.remove('hidden');
+    } finally {
+      spinner.classList.add('hidden');
+      btn.disabled = false;
+    }
+  });
+}
+
 document.getElementById('featuredSearch').addEventListener('input', async function () {
   const term = this.value.trim().toLowerCase();
   const container = document.getElementById('featuredProductsList');

@@ -46,6 +46,15 @@ const server = http.createServer((req, res) => {
   });
 });
 
+server.on('error', (err) => {
+  if (err.code === 'EADDRINUSE') {
+    console.error(`Port ${PORT} is already in use. Please stop the existing process and restart.`);
+    process.exit(1);
+  } else {
+    throw err;
+  }
+});
+
 server.listen(PORT, HOST, () => {
   console.log(`Server running at http://${HOST}:${PORT}/`);
 });
