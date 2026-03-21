@@ -1712,15 +1712,29 @@ function initAdmins() {
         throw new Error(signUpData.error?.message || 'Failed to create auth user');
       }
       const uid = signUpData.localId;
+      const idToken = signUpData.idToken;
 
-      // Write admin record to Firestore
-      await db.collection('admins').doc(uid).set({
-        uid,
-        name,
-        email,
-        role: 'admin',
-        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      // Write admin record to Firestore using the new user's own token
+      // (current admin's token can't write to another user's doc due to security rules)
+      const projectId = firebaseConfig.projectId;
+      const fsUrl = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/(default)/documents/admins/${uid}`;
+      const fsRes = await fetch(fsUrl, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${idToken}` },
+        body: JSON.stringify({
+          fields: {
+            uid:       { stringValue: uid },
+            name:      { stringValue: name },
+            email:     { stringValue: email },
+            role:      { stringValue: 'admin' },
+            createdAt: { timestampValue: new Date().toISOString() }
+          }
+        })
       });
+      if (!fsRes.ok) {
+        const fsErr = await fsRes.json();
+        throw new Error(fsErr.error?.message || 'Failed to save admin record');
+      }
 
       form.reset();
       document.getElementById('newAdminPassword').type = 'password';
