@@ -647,6 +647,7 @@ document.getElementById('logoutBtn').addEventListener('click', async () => {
   await auth.signOut();
   localStorage.removeItem("isAdminLoggedIn");
   localStorage.removeItem("adminUid");
+  appInitialized = false;
   showAppView(false);
 });
 
@@ -678,6 +679,7 @@ document.getElementById('adminLoginForm').addEventListener('submit', async e => 
     } else {
       localStorage.setItem('isAdminLoggedIn', 'true');
       localStorage.setItem('adminUid', cred.user.uid);
+      initApp(adminDoc.data());
     }
   } catch (err) {
     loginError.textContent = err.message;
@@ -688,6 +690,8 @@ document.getElementById('adminLoginForm').addEventListener('submit', async e => 
 });
 
 // ===== AUTH STATE =====
+let appInitialized = false;
+
 function showAppView(show) {
   document.getElementById('login-view').classList.toggle('hidden', show);
   document.getElementById('app-view').classList.toggle('hidden', !show);
@@ -695,19 +699,25 @@ function showAppView(show) {
   document.body.style.overflow = show ? 'hidden' : '';
 }
 
+function initApp(adminData) {
+  if (appInitialized) return;
+  appInitialized = true;
+  window.isAdmin = true;
+  const name = adminData.name || 'Admin';
+  document.getElementById('adminNameDisplay').textContent = name.split(' ')[0];
+  showAppView(true);
+  initDashboard();
+  initProducts();
+  initHeroSlider();
+  initNewOrderListener();
+}
+
 auth.onAuthStateChanged(async user => {
   if (!user || localStorage.getItem('isAdminLoggedIn') !== 'true') { showAppView(false); return; }
   try {
     const adminDoc = await db.collection('admins').doc(user.uid).get();
     if (!adminDoc.exists) { await auth.signOut(); localStorage.removeItem('isAdminLoggedIn'); showAppView(false); return; }
-    window.isAdmin = true;
-    const name = adminDoc.data().name || 'Admin';
-    document.getElementById('adminNameDisplay').textContent = name.split(' ')[0];
-    showAppView(true);
-    initDashboard();
-    initProducts();
-    initHeroSlider();
-    initNewOrderListener();
+    initApp(adminDoc.data());
   } catch (err) { console.error(err); showAppView(false); }
 });
 
