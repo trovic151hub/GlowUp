@@ -632,7 +632,7 @@ function showSection(name) {
   if (name === 'analytics' && !analyticsInitialized) { initAnalytics(); analyticsInitialized = true; }
   if (name === 'orders' && !ordersInitialized) { initOrders(); ordersInitialized = true; }
   if (name === 'homepage' && !homepageInitialized) { loadFeaturedProducts(); homepageInitialized = true; }
-  if (name === 'admins' && !adminsInitialized) { loadAdmins(); adminsInitialized = true; }
+  if (name === 'admins' && !adminsInitialized) { initAdmins(); adminsInitialized = true; }
   closeMobileSidebar();
 }
 
