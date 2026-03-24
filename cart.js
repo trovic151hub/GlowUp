@@ -241,9 +241,9 @@ function calculateDeliveryFee(deliveryInfo, totalWeight) {
 
   // GUO pricing
   else if (company === "GUO" && guoSupportedStates.includes(state)) {
-    if (totalWeight <= 3) fee = 3500;
-    else if (totalWeight <= 6) fee = 3500 + 800;
-    else fee = 3500 + 800 * Math.ceil((totalWeight - 3) / 3);
+    if (totalWeight <= 3) fee = 5000;
+    else if (totalWeight <= 6) fee = 5000 + 800;
+    else fee = 5000 + 800 * Math.ceil((totalWeight - 3) / 3);
 
     if (deliveryType === "home") fee += 800;
   }
@@ -897,7 +897,7 @@ else if (isLagos) {
 
 // 🚚 GUO
 else if (deliveryInfo.company === "GUO") {
-  minFee = 3500;
+  minFee = 5000;
   minFee = Math.min(minFee, shippingFee);
   maxFee = shippingFee + buffer;
 
@@ -1162,6 +1162,7 @@ Thank you! 🙏
     }
 
     function handlePaystackClose() {
+      hideLoader();
       showNotification("Payment window closed. You can retry your payment.");
     }
 
