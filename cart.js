@@ -181,8 +181,62 @@ countrySelect.addEventListener("change", async () => {
   }
 });
 
+// ==================== FORM PERSISTENCE ====================
+const FORM_STORAGE_KEY = "checkoutFormData";
+
+const persistedFields = [
+  { id: "email",            event: "input"  },
+  { id: "first-name",       event: "input"  },
+  { id: "last-name",        event: "input"  },
+  { id: "street",           event: "input"  },
+  { id: "country",          event: "input"  },
+  { id: "state",            event: "input"  },
+  { id: "area-code",        event: "input"  },
+  { id: "phone",            event: "input"  },
+  { id: "delivery-company", event: "change" },
+  { id: "delivery-type",    event: "change" },
+  { id: "terminal",         event: "change" },
+  { id: "lga",              event: "change" }
+];
+
+function saveFormData() {
+  const data = {};
+  persistedFields.forEach(({ id }) => {
+    const el = document.getElementById(id);
+    if (el) data[id] = el.value;
+  });
+  localStorage.setItem(FORM_STORAGE_KEY, JSON.stringify(data));
+}
+
+function restoreFormData() {
+  const raw = localStorage.getItem(FORM_STORAGE_KEY);
+  if (!raw) return;
+  let data;
+  try { data = JSON.parse(raw); } catch(e) { return; }
+  persistedFields.forEach(({ id }) => {
+    const el = document.getElementById(id);
+    if (el && data[id] !== undefined) el.value = data[id];
+  });
+}
+
+function clearFormData() {
+  localStorage.removeItem(FORM_STORAGE_KEY);
+  persistedFields.forEach(({ id }) => {
+    const el = document.getElementById(id);
+    if (el) el.value = "";
+  });
+}
+
+// Attach save listeners to all persisted fields
+persistedFields.forEach(({ id, event }) => {
+  const el = document.getElementById(id);
+  if (el) el.addEventListener(event, saveFormData);
+});
+
 // Auto go to checkout if triggered from homepage
 window.addEventListener("DOMContentLoaded", () => {
+    restoreFormData();
+
     const gotoCheckout = localStorage.getItem("gotoCheckout");
 
     if (gotoCheckout === "true") {
@@ -1072,6 +1126,7 @@ summaryPlaceOrderBtn.addEventListener("click", async () => {
     // Clear guest cart
     await guestCartRef.set({ guestId, items: [] });
     renderCart([]);
+    clearFormData();
 
     // Build WhatsApp message
     const billing = {
@@ -1151,6 +1206,7 @@ Thank you! 🙏
         // Clear guest cart
         await guestCartRef.set({ guestId, items: [] });
         renderCart([]);
+        clearFormData();
 
         // Show success page
         checkoutStep.classList.add("hidden");
