@@ -157,28 +157,40 @@ const stateSelect = document.getElementById("state");
 const lgaWrapper = document.getElementById("lga-wrapper");
 const lgaSelect = document.getElementById("lga");
 
-// Area Code
-countrySelect.addEventListener("change", async () => {
-  const selectedCountry = countrySelect.value;
-
-  if (!selectedCountry) return;
-
-  try {
-    const res = await fetch(
-      `https://restcountries.com/v3.1/name/${selectedCountry}?fullText=true`
-    );
-
-    const data = await res.json();
-
-    const root = data[0]?.idd?.root || "";
-    const suffix = data[0]?.idd?.suffixes?.[0] || "";
-
-    document.getElementById("area-code").value = root + suffix;
-
-  } catch (err) {
-    console.error("Dial code fetch error:", err);
-    document.getElementById("area-code").value = "";
+// ==================== TOM SELECT INIT ====================
+const countryTomSelect = new TomSelect("#country", {
+  placeholder: "Search country...",
+  searchField: "text",
+  create: false,
+  allowEmptyOption: false,
+  maxOptions: null,
+  closeAfterSelect: true,
+  plugins: ["dropdown_input"],
+  render: {
+    no_results: () => '<div style="padding:10px 14px;color:#9E8E88;font-size:0.88rem;">No countries found</div>'
   }
+});
+
+const stateTomSelect = new TomSelect("#state", {
+  placeholder: "Select country first",
+  searchField: "text",
+  create: false,
+  allowEmptyOption: false,
+  maxOptions: null,
+  closeAfterSelect: true,
+  plugins: ["dropdown_input"],
+  render: {
+    no_results: () => '<div style="padding:10px 14px;color:#9E8E88;font-size:0.88rem;">No states found</div>'
+  }
+});
+stateTomSelect.disable();
+
+// ==================== INTL-TEL-INPUT INIT ====================
+const iti = window.intlTelInput(document.getElementById("phone"), {
+  initialCountry: "ng",
+  preferredCountries: ["ng", "gh", "gb", "us", "ca", "za"],
+  separateDialCode: true,
+  utilsScript: "https://cdn.jsdelivr.net/npm/intl-tel-input@18/build/js/utils.js"
 });
 
 // ==================== FORM PERSISTENCE ====================
@@ -189,9 +201,6 @@ const persistedFields = [
   { id: "first-name",       event: "input"  },
   { id: "last-name",        event: "input"  },
   { id: "street",           event: "input"  },
-  { id: "country",          event: "input"  },
-  { id: "state",            event: "input"  },
-  { id: "area-code",        event: "input"  },
   { id: "phone",            event: "input"  },
   { id: "delivery-company", event: "change" },
   { id: "delivery-type",    event: "change" },
@@ -202,9 +211,13 @@ const persistedFields = [
 function saveFormData() {
   const data = {};
   persistedFields.forEach(({ id }) => {
+    if (id === "phone") return;
     const el = document.getElementById(id);
     if (el) data[id] = el.value;
   });
+  data.phone = iti ? iti.getNumber() : "";
+  data.country = countryTomSelect ? countryTomSelect.getValue() : "";
+  data.state = stateTomSelect ? stateTomSelect.getValue() : "";
   localStorage.setItem(FORM_STORAGE_KEY, JSON.stringify(data));
 }
 
@@ -214,17 +227,24 @@ function restoreFormData() {
   let data;
   try { data = JSON.parse(raw); } catch(e) { return; }
   persistedFields.forEach(({ id }) => {
+    if (id === "phone") return;
     const el = document.getElementById(id);
     if (el && data[id] !== undefined) el.value = data[id];
   });
+  if (iti && data.phone) iti.setNumber(data.phone);
+  // Country/state are restored in loadCountries() after options are populated
 }
 
 function clearFormData() {
   localStorage.removeItem(FORM_STORAGE_KEY);
   persistedFields.forEach(({ id }) => {
+    if (id === "phone") return;
     const el = document.getElementById(id);
     if (el) el.value = "";
   });
+  if (iti) iti.setNumber("");
+  if (countryTomSelect) countryTomSelect.setValue("", true);
+  if (stateTomSelect) { stateTomSelect.clearOptions(); stateTomSelect.setValue("", true); }
 }
 
 // Attach save listeners to all persisted fields
@@ -498,35 +518,15 @@ if(summaryTotal) summaryTotal.textContent = `₦${(subtotal + shippingFee).toLoc
   });
 });
 
-// Country
-async function loadCountries() {
-  try {
-    const res = await fetch("https://countriesnow.space/api/v0.1/countries");
-    const data = await res.json();
-
-    const countryDatalist = document.getElementById("country-list");
-    countryDatalist.innerHTML = ""; // clear old options
-
-    data.data.forEach(c => {
-      const option = document.createElement("option");
-      option.value = c.country;
-      countryDatalist.appendChild(option);
-    });
-
-  } catch (error) {
-    const countryDatalist = document.getElementById("country-list");
-    countryDatalist.innerHTML = `<option value="Error loading countries"></option>`;
+// ==================== COUNTRY / STATE LOADING ====================
+async function loadStatesForCountry(countryName, savedState = null) {
+  stateTomSelect.enable();
+  stateTomSelect.clearOptions();
+  stateTomSelect.setValue("", true);
+  if (lgaWrapper) {
+    lgaWrapper.classList.add("hidden");
+    lgaSelect.innerHTML = `<option value="">Select LGA</option>`;
   }
-}
-
-loadCountries();
-
-// State / Province
-country.addEventListener("input", async () => {
-  const countryName = country.value;
-  const stateDatalist = document.getElementById("state-list");
-  stateDatalist.innerHTML = `<option value="Loading states..."></option>`;
-
   try {
     const res = await fetch("https://countriesnow.space/api/v0.1/countries/states", {
       method: "POST",
@@ -534,92 +534,69 @@ country.addEventListener("input", async () => {
       body: JSON.stringify({ country: countryName })
     });
     const data = await res.json();
-
-    stateDatalist.innerHTML = ""; // clear old options
-    if(data.data && data.data.states.length){
-      data.data.states.forEach(s => {
-        const option = document.createElement("option");
-        option.value = s.name;
-        stateDatalist.appendChild(option);
-      });
-    } else {
-      stateDatalist.innerHTML = `<option value="No states found"></option>`;
+    stateTomSelect.clearOptions();
+    if (data.data && data.data.states && data.data.states.length) {
+      data.data.states.forEach(s => stateTomSelect.addOption({ value: s.name, text: s.name }));
     }
-
-    // Hide LGA when country changes
-    lgaWrapper.classList.add("hidden");
-    lgaSelect.innerHTML = `<option value="">Select LGA</option>`;
-
-  } catch (error) {
-    stateDatalist.innerHTML = `<option value="Error loading states"></option>`;
+    stateTomSelect.refreshOptions(false);
+    if (savedState) stateTomSelect.setValue(savedState, true);
+  } catch {
+    stateTomSelect.addOption({ value: "", text: "Error loading states" });
+    stateTomSelect.refreshOptions(false);
   }
-});
-
-// Load states when country changes
-countrySelect.addEventListener("change", async () => {
-  const country = countrySelect.value;
-
-  if (!country) return;
-
-  stateSelect.innerHTML = `<option>Loading states...</option>`;
-
-  try {
-    const res = await fetch("https://countriesnow.space/api/v0.1/countries/states", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ country })
-    });
-
-    const data = await res.json();
-
-    stateSelect.innerHTML = `<option value="">Select State</option>`;
-
-    data.data.states.forEach(s => {
-      const option = document.createElement("option");
-      option.value = s.name;
-      option.textContent = s.name;
-      stateSelect.appendChild(option);
-    });
-
-    // Hide LGA when country changes
-if (lgaWrapper) {
-  lgaWrapper.classList.add("hidden");
-  lgaSelect.innerHTML = `<option value="">Select LGA</option>`;
 }
 
-  } catch (error) {
-    stateSelect.innerHTML = `<option>Error loading states</option>`;
+async function loadCountries() {
+  try {
+    const res = await fetch("https://countriesnow.space/api/v0.1/countries");
+    const data = await res.json();
+    countryTomSelect.clearOptions();
+    data.data.forEach(c => countryTomSelect.addOption({ value: c.country, text: c.country }));
+    countryTomSelect.refreshOptions(false);
+    const saved = JSON.parse(localStorage.getItem(FORM_STORAGE_KEY) || "{}");
+    if (saved.country) {
+      countryTomSelect.setValue(saved.country, true);
+      await loadStatesForCountry(saved.country, saved.state || null);
+      updatePaymentVisibility();
+      updateDeliveryVisibility();
+    }
+  } catch {
+    countryTomSelect.addOption({ value: "", text: "Error loading countries" });
+    countryTomSelect.refreshOptions(false);
   }
+}
+
+loadCountries();
+
+// Tom Select event callbacks
+countryTomSelect.on("change", async (value) => {
+  if (!value) return;
+  updatePaymentVisibility();
+  updateDeliveryVisibility();
+  await loadStatesForCountry(value);
+  saveFormData();
 });
 
-// State Select
-stateSelect.addEventListener("change", () => {
-
-  const country = countrySelect.value;
-  const state = stateSelect.value; 
-    localStorage.setItem("checkoutState", state); // store selected state
+stateTomSelect.on("change", (value) => {
+  if (!value) return;
+  localStorage.setItem("checkoutState", value);
   updateDeliveryVisibility();
-
-  if (
-    country === "Nigeria" &&
-    state.toLowerCase().includes("lagos")
-  ) {
-
+  updateDeliveryCompanyAvailability();
+  populateTerminals();
+  const country = countryTomSelect.getValue();
+  if (country === "Nigeria" && value.toLowerCase().includes("lagos")) {
     lgaWrapper.classList.remove("hidden");
     lgaSelect.innerHTML = `<option value="">Select LGA</option>`;
-
     Object.keys(lagosLGAs).forEach(lga => {
-  const option = document.createElement("option");
-  option.value = lga;
-  option.textContent = lga;
-  lgaSelect.appendChild(option);
-});
-
+      const opt = document.createElement("option");
+      opt.value = lga; opt.textContent = lga;
+      lgaSelect.appendChild(opt);
+    });
   } else {
     lgaWrapper.classList.add("hidden");
     lgaSelect.innerHTML = `<option value="">Select LGA</option>`;
   }
-
+  saveFormData();
 });
 
 // ==================== TERMINALS DATA ====================
@@ -713,10 +690,6 @@ function updateDeliveryCompanyAvailability() {
   }
 }
 
-stateInput.addEventListener("input", () => {
-  updateDeliveryCompanyAvailability();
-  populateTerminals();
-});
 
 function populateTerminals() {
   const stateRaw = stateInput.value.trim().toLowerCase();
@@ -797,7 +770,6 @@ stateSelect.addEventListener("change", () => {
   }
 });
 
-stateInput.addEventListener("input", populateTerminals);
 deliveryCompany.addEventListener("change", populateTerminals);
 deliveryType.addEventListener("change", populateTerminals);
 
@@ -829,8 +801,6 @@ function updateDeliveryVisibility() {
   deliveryOptionsWrapper.classList.add("hidden");
 }
 
-countrySelect.addEventListener("input", updateDeliveryVisibility);
-stateSelect.addEventListener("input", updateDeliveryVisibility);
 
   // ==================== CART LISTENER ====================
   async function startCartListener() {
@@ -875,8 +845,7 @@ stateSelect.addEventListener("input", updateDeliveryVisibility);
     street: document.getElementById("street").value,
     state: document.getElementById("state").value,
     lga: document.getElementById("lga").value,
-    areaCode: document.getElementById("area-code").value,
-    phone: document.getElementById("phone").value,
+    phone: iti ? iti.getNumber() : document.getElementById("phone").value,
     country: countrySelect.value
   };
 
@@ -892,7 +861,7 @@ stateSelect.addEventListener("input", updateDeliveryVisibility);
   // Populate shipping summary
   document.getElementById("sum-email").textContent = shippingData.email;
   document.getElementById("sum-name").textContent = `${shippingData.firstName} ${shippingData.lastName}`;
-  document.getElementById("sum-phone").textContent = shippingData.areaCode + shippingData.phone;
+  document.getElementById("sum-phone").textContent = shippingData.phone;
   document.getElementById("sum-address").textContent = `${shippingData.street}, ${shippingData.lga}, ${shippingData.state}`;
 
   // 3️⃣ Build shipment summary with shipping fee
@@ -1073,8 +1042,7 @@ summaryPlaceOrderBtn.addEventListener("click", async () => {
     street: document.getElementById("street").value,
     state: document.getElementById("state").value,
     lga: document.getElementById("lga").value,
-    areaCode: document.getElementById("area-code").value,
-    phone: document.getElementById("phone").value,
+    phone: iti ? iti.getNumber() : document.getElementById("phone").value,
     country: countrySelect.value
   };
 
@@ -1132,7 +1100,7 @@ summaryPlaceOrderBtn.addEventListener("click", async () => {
     // Build WhatsApp message
     const billing = {
       name: `${shippingData.firstName} ${shippingData.lastName}`,
-      phone: shippingData.areaCode + shippingData.phone,
+      phone: shippingData.phone,
       email: shippingData.email
     };
 
@@ -1252,9 +1220,7 @@ Thank you! 🙏
     "last-name",
     "street",
     "country",
-    "state",
-    "area-code",
-    "phone"
+    "state"
   ];
 
   let isValid = true;
@@ -1307,17 +1273,14 @@ if (!deliveryOptionsWrapper.classList.contains("hidden")) {
   }
 }
 
-// Inside validateShippingForm()
 const phoneField = document.getElementById("phone");
 if (phoneField) {
-  const phoneValue = phoneField.value.trim();
-  // Check if it's exactly 11 digits
-  const phoneRegex = /^\d{11}$/;
-  if (!phoneRegex.test(phoneValue)) {
+  const phoneNumber = iti ? iti.getNumber() : phoneField.value.trim();
+  if (!phoneNumber) {
     isValid = false;
-    phoneField.classList.add("border-red-500");
+    phoneField.closest(".iti") ? phoneField.closest(".iti").classList.add("border-red-500") : phoneField.classList.add("border-red-500");
   } else {
-    phoneField.classList.remove("border-red-500");
+    phoneField.closest(".iti") ? phoneField.closest(".iti").classList.remove("border-red-500") : phoneField.classList.remove("border-red-500");
   }
 }
 
@@ -1351,7 +1314,6 @@ function updatePaymentVisibility() {
   }
 }
 
-countrySelect.addEventListener("change", updatePaymentVisibility);
 
   // ==================== BREADCRUMBS ====================
 const bcGuestCarts = document.getElementById("bc-guestCarts");

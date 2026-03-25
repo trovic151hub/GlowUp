@@ -10,6 +10,8 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tom-select/dist/css/tom-select.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/intl-tel-input@18/build/css/intlTelInput.css">
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
@@ -479,6 +481,74 @@
       #notification-container { top: 6% !important; left: 50%; right: auto; transform: translate(-50%,-50%); align-items: center; width: 90%; }
       #notification-container > div { width: 100%; max-width: 300px; }
     }
+
+    /* ── Tom Select Brand Overrides ── */
+    .ts-wrapper { width: 100%; }
+    .ts-wrapper .ts-control {
+      min-height: 48px; padding: 0 14px;
+      background: #FAF8F5; border: 1px solid #e0d3cc;
+      border-radius: 4px; font-size: 0.9rem;
+      color: #2C2420; font-family: 'Inter', sans-serif;
+      display: flex; align-items: center; flex-wrap: nowrap;
+      box-shadow: none; cursor: pointer; gap: 0;
+    }
+    .ts-wrapper.focus .ts-control {
+      border-color: #8B4F6B;
+      box-shadow: 0 0 0 2px rgba(139,79,107,0.12);
+      outline: none;
+    }
+    .ts-wrapper .ts-control input {
+      font-family: 'Inter', sans-serif; font-size: 0.9rem;
+      color: #2C2420; flex: 1; min-width: 0;
+    }
+    .ts-wrapper .ts-control input::placeholder { color: #b0a09a; }
+    .ts-wrapper .ts-control .item { color: #2C2420; font-size: 0.9rem; }
+    .ts-wrapper .ts-control .ts-placeholder { color: #b0a09a; font-size: 0.9rem; }
+    .ts-wrapper .ts-dropdown {
+      border: 1px solid #e0d3cc; border-radius: 4px;
+      margin-top: 4px; box-shadow: 0 4px 20px rgba(44,36,32,0.1);
+      font-family: 'Inter', sans-serif; font-size: 0.9rem;
+    }
+    .ts-wrapper .ts-dropdown .ts-option {
+      padding: 10px 14px; color: #2C2420;
+      transition: background 0.12s;
+    }
+    .ts-wrapper .ts-dropdown .ts-option:hover { background: #fff9f7; color: #8B4F6B; }
+    .ts-wrapper .ts-dropdown .ts-option.selected { background: #f4edf1; color: #8B4F6B; }
+    .ts-wrapper .ts-dropdown .ts-option.active { background: #8B4F6B !important; color: #fff; }
+    .ts-wrapper .ts-dropdown-content { max-height: 220px; }
+    .ts-dropdown input.dropdown-input {
+      padding: 8px 14px; border-bottom: 1px solid #f0ebe7;
+      font-family: 'Inter', sans-serif; font-size: 0.88rem;
+      background: #FAF8F5; outline: none; width: 100%;
+    }
+    .ts-wrapper .ts-control:after { border-top-color: #6B5B55; }
+    .ts-wrapper.single.has-items .ts-control:after { border-bottom-color: #6B5B55; }
+
+    /* ── intl-tel-input Brand Overrides ── */
+    .iti { width: 100%; }
+    .iti--separate-dial-code .iti__selected-flag {
+      background: #FAF8F5; border: 1px solid #e0d3cc;
+      border-right: none; border-radius: 4px 0 0 4px;
+      padding: 0 10px; height: 48px;
+    }
+    .iti--separate-dial-code input#phone {
+      border-radius: 0 4px 4px 0; padding-left: 14px;
+    }
+    .iti__country-list {
+      border: 1px solid #e0d3cc; border-radius: 4px;
+      box-shadow: 0 4px 20px rgba(44,36,32,0.1);
+      font-family: 'Inter', sans-serif; font-size: 0.88rem;
+      max-height: 240px;
+    }
+    .iti__country:hover { background: #fff9f7; }
+    .iti__country.iti__active { background: #f4edf1; }
+    .iti__search-input {
+      font-family: 'Inter', sans-serif; font-size: 0.88rem;
+      border-bottom: 1px solid #f0ebe7; padding: 8px 10px;
+      outline: none; width: 100%;
+    }
+    .iti__selected-dial-code { color: #2C2420; font-size: 0.88rem; }
   </style>
 </head>
 
@@ -600,13 +670,11 @@
             <div class="grid grid-cols-2 gap-3 mb-3">
               <div class="form-group mb-0">
                 <label class="form-label">Country <span class="text-[#8B4F6B]">*</span></label>
-                <input list="country-list" id="country" placeholder="Type country..." class="form-input" />
-                <datalist id="country-list"><option value="Loading countries..."></option></datalist>
+                <select id="country"></select>
               </div>
               <div class="form-group mb-0">
                 <label class="form-label">State / Province <span class="text-[#8B4F6B]">*</span></label>
-                <input list="state-list" id="state" placeholder="Type state..." class="form-input" />
-                <datalist id="state-list"><option value="Select country first"></option></datalist>
+                <select id="state"></select>
               </div>
             </div>
 
@@ -619,15 +687,9 @@
             </div>
 
             <!-- Phone -->
-            <div class="flex flex-col sm:flex-row gap-3 mb-4">
-              <div class="form-group mb-0 sm:w-1/4">
-                <label class="form-label">Code <span class="text-[#8B4F6B]">*</span></label>
-                <input id="area-code" value="" placeholder="+234" class="form-input" readonly />
-              </div>
-              <div class="form-group mb-0 flex-1">
-                <label class="form-label">Phone Number <span class="text-[#8B4F6B]">*</span></label>
-                <input id="phone" placeholder="Phone number" class="form-input" />
-              </div>
+            <div class="form-group mb-4">
+              <label class="form-label">Phone Number <span class="text-[#8B4F6B]">*</span></label>
+              <input id="phone" type="tel" placeholder="Phone number" class="form-input" />
             </div>
 
             <!-- Delivery Options -->
@@ -794,8 +856,9 @@
     </div>
   </a>
 
-  <script src="cart.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/tom-select/dist/js/tom-select.complete.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/intl-tel-input@18/build/js/intlTelInput.min.js"></script>
+  <script src="cart.js"></script>
 </body>
 
 </html>
