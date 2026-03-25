@@ -887,6 +887,7 @@ stateSelect.addEventListener("input", updateDeliveryVisibility);
   document.getElementById("shipping-summary-card").classList.remove("hidden");
   document.getElementById("shipment-summary-card").classList.remove("hidden");
   document.getElementById("payment-summary-card").classList.remove("hidden");
+  updatePaymentVisibility();
 
   // Populate shipping summary
   document.getElementById("sum-email").textContent = shippingData.email;
