@@ -745,31 +745,35 @@
         <div id="payment-summary-card" class="hidden section-card">
           <div class="section-card-title">Payment Method</div>
 
-          <div id="paystack-option" class="payment-option cursor-pointer flex items-center justify-between">
-            <div class="flex items-center gap-3">
-              <span class="p-2 bg-white border border-gray-100 rounded">
-                <img class="w-20 h-6 object-contain"
+          <!-- Paystack -->
+          <div id="paystack-option" class="payment-option cursor-pointer"
+            style="display:flex !important; align-items:center; justify-content:space-between; flex-direction:row; flex-wrap:nowrap;">
+            <div style="display:flex; align-items:center; gap:12px;">
+              <span style="padding:8px; background:#fff; border:1px solid #f3f4f6; border-radius:4px; display:flex; align-items:center;">
+                <img style="width:80px; height:24px; object-fit:contain; display:block;"
                   src="https://cdn.brandfetch.io/idM5mrwtDs/theme/dark/logo.svg?c=1bxid64Mup7aczewSAYMX&t=1667559828449"
                   alt="Paystack">
               </span>
-              <span class="text-sm text-[#6B5B55]">Card / Bank Transfer</span>
+              <span style="font-size:0.875rem; color:#6B5B55;">Card / Bank Transfer</span>
             </div>
-            <div class="flex items-center gap-2">
-              <i class="fas fa-credit-card text-[#9E8E88] text-sm"></i>
-              <i class="check-icon hidden fas fa-check-circle text-[#8B4F6B]"></i>
+            <div style="display:flex; align-items:center; gap:8px; flex-shrink:0;">
+              <i class="fas fa-credit-card" style="color:#9E8E88; font-size:0.875rem;"></i>
+              <i class="check-icon fas fa-check-circle" style="color:#8B4F6B; display:none;"></i>
             </div>
           </div>
 
-          <div id="WhatsApp" class="payment-option cursor-pointer flex items-center justify-between">
-            <div class="flex items-center gap-3">
-              <span class="p-2 bg-white border border-gray-100 rounded">
-                <i class="fab fa-whatsapp text-green-600 text-lg"></i>
+          <!-- WhatsApp -->
+          <div id="WhatsApp" class="payment-option cursor-pointer"
+            style="display:flex !important; align-items:center; justify-content:space-between; flex-direction:row; flex-wrap:nowrap;">
+            <div style="display:flex; align-items:center; gap:12px;">
+              <span style="padding:8px; background:#fff; border:1px solid #f3f4f6; border-radius:4px; display:flex; align-items:center;">
+                <i class="fab fa-whatsapp" style="color:#16a34a; font-size:1.125rem;"></i>
               </span>
-              <span class="text-sm text-[#6B5B55]">WhatsApp Order</span>
+              <span style="font-size:0.875rem; color:#6B5B55;">WhatsApp Order</span>
             </div>
-            <div class="flex items-center gap-2">
-              <i class="fas fa-comment text-[#9E8E88] text-sm"></i>
-              <i class="check-icon hidden fas fa-check-circle text-[#8B4F6B]"></i>
+            <div style="display:flex; align-items:center; gap:8px; flex-shrink:0;">
+              <i class="fas fa-comment" style="color:#9E8E88; font-size:0.875rem;"></i>
+              <i class="check-icon fas fa-check-circle" style="color:#8B4F6B; display:none;"></i>
             </div>
           </div>
         </div>

@@ -483,7 +483,7 @@ if(summaryTotal) summaryTotal.textContent = `₦${(subtotal + shippingFee).toLoc
       o.classList.remove("border-pink-600", "bg-pink-50");
 
       const icon = o.querySelector(".check-icon");
-      if (icon) icon.classList.add("hidden");
+      if (icon) icon.style.display = "none";
     });
 
     // If clicking already selected → unselect
@@ -501,7 +501,7 @@ if(summaryTotal) summaryTotal.textContent = `₦${(subtotal + shippingFee).toLoc
     option.classList.add("border-pink-600", "bg-pink-50");
 
     const selectedIcon = option.querySelector(".check-icon");
-    if (selectedIcon) selectedIcon.classList.remove("hidden");
+    if (selectedIcon) selectedIcon.style.display = "inline";
 
     gsap.from(selectedIcon, { scale: 0, opacity: 0, duration: 0.3, ease: "back.out(1.7)" });
 
