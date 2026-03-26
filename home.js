@@ -930,7 +930,7 @@ async function filterProducts(category="All"){
 
   showPageLoader();
   try {
-    const snapshot = await adminDb.collection("products").get();
+    const snapshot = await adminDb.collection("products").where("isFeatured", "==", true).get();
 
     // Map products and ensure weight is included
     const allProducts = snapshot.docs.map(d => ({
@@ -940,7 +940,7 @@ async function filterProducts(category="All"){
       image: d.data().image || "https://via.placeholder.com/300x200?text=No+Image",
       category: d.data().category || "Misc",
       description: d.data().description || "",
-      weight: Number(d.data().weight || 0) // ✅ ensures weight is saved
+      weight: Number(d.data().weight || 0)
     }));
 
     const filtered = category === "All" ? allProducts : allProducts.filter(p => p.category === category);
