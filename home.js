@@ -786,7 +786,6 @@ async function renderMiniCart(cartData = null) {
 
     // Attach click event to the existing button
 const viewCartBtn = document.getElementById("view-cart-btn");
-const cartCountEl = document.getElementById("cart-count");
 
 // if (viewCartBtn) {
 //   viewCartBtn.addEventListener("click", () => {
@@ -1328,8 +1327,6 @@ async function updateCartCount() {
 updateCartCount();
 
   // ---------- INITIAL LOAD ----------
-  rotateTipsFade();
-  setInterval(rotateTipsFade,5000);
   // setInterval(()=>slideImages(true),3000);
   filterProducts("All");
 

@@ -283,7 +283,6 @@ const lagosLGAs = {"Agege":3000,"Ajeromi-Ifelodun":3000,
 };
 
 const deliveryTypeSelect = document.getElementById("delivery-type");
-console.log("Delivery Type:", deliveryTypeSelect.value);
 
 function calculateDeliveryFee(deliveryInfo, totalWeight) {
   let fee = 0;
@@ -696,47 +695,6 @@ function populateTerminals() {
   const company = deliveryCompany.value.trim().toUpperCase();
   const type = deliveryType.value;
 
-  // reset terminal dropdown
-  terminalSelect.innerHTML = `<option value="">Select Terminal</option>`;
-
-  // Only show terminals if terminal pickup is selected
-  if (!stateRaw || !company || type !== "terminal") {
-    terminalWrapper.classList.add("hidden");
-    return;
-  }
-
-  // Map state input to key
-  const stateKey = stateKeyMap[stateRaw];
-  if (!stateKey || skipTerminalStates.includes(stateKey)) {
-    terminalWrapper.classList.add("hidden");
-    return; // do not populate for skip-list states
-  }
-
-  // Only populate terminals if there is data
-  let terminals = [];
-  if (company === "GUO") terminals = GUOTerminals[stateKey] || [];
-  if (company === "GIG") terminals = GIGTerminals[stateKey] || [];
-
-  if (terminals.length === 0) {
-    terminalWrapper.classList.add("hidden");
-    return;
-  }
-
-  // Show and populate terminals
-  terminalWrapper.classList.remove("hidden");
-  terminals.forEach(t => {
-    const option = document.createElement("option");
-    option.value = t;
-    option.textContent = t;
-    terminalSelect.appendChild(option);
-  });
-}
-
-function populateTerminals() {
-  const stateRaw = stateInput.value.trim().toLowerCase();
-  const company = deliveryCompany.value.trim().toUpperCase();
-  const type = deliveryType.value;
-
   // Normalize state key
   const stateKey = stateRaw.replace(" state", ""); // removes " state" if typed
 
@@ -798,7 +756,6 @@ function updateDeliveryVisibility() {
   deliveryCompany.value = "";
   deliveryType.value = "";
   terminalSelect.innerHTML = `<option value="">Select Terminal</option>`;
-  deliveryOptionsWrapper.classList.add("hidden");
 }
 
 
@@ -911,7 +868,7 @@ const isLagos = deliveryInfo.state?.toLowerCase().includes("lagos");
 
 // 🌍 INTERNATIONAL
 if (!isNigeria) {
-  feeEl.textContent = "Delivery fee will be confirmed via WhatsAppp";
+  feeEl.textContent = "Delivery fee will be confirmed via WhatsApp";
 }
 
 // 🏙 LAGOS DELIVERY (show exact fee only)
@@ -1086,9 +1043,8 @@ summaryPlaceOrderBtn.addEventListener("click", async () => {
         total
       },
       shipment: {
-  status: "pending"
-},
-      status: "pending",
+        status: "pending"
+      },
       createdAt: firebase.firestore.FieldValue.serverTimestamp()
     });
 
