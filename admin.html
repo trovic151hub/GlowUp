@@ -90,6 +90,8 @@
       .admin-table td { display: flex; justify-content: space-between; padding: 0.4rem 0.5rem; font-size: 0.8rem; border: none; }
       .admin-table td::before { content: attr(data-label); font-weight: 600; color: #9B7A87; margin-right: 0.5rem; flex-shrink: 0; }
     }
+    *, *::before, *::after { scrollbar-width: none; -ms-overflow-style: none; }
+    ::-webkit-scrollbar { display: none; width: 0; height: 0; }
   </style>
 </head>
 <body class="bg-gray-100 overflow-hidden">

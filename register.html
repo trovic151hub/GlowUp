@@ -64,6 +64,8 @@
   body.modal-open {
     overflow: hidden;
   }
+    *, *::before, *::after { scrollbar-width: none; -ms-overflow-style: none; }
+    ::-webkit-scrollbar { display: none; width: 0; height: 0; }
   </style>
 </head>
 <body class="min-h-screen flex items-center justify-center p-4
