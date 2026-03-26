@@ -931,6 +931,48 @@ window.deleteProduct = async id => {
 // ORDERS
 // ====================================================
 let ordPAGE = 6, ordLastDoc = null, ordLoading = false, ordFilters = {}, currentOpenOrder = null;
+let allFilteredOrders = null, ordDisplayedCount = 0;
+
+// Returns true when any filter or search is active
+function ordHasFilters() {
+  return !!(
+    ordFilters.q ||
+    (ordFilters.status && ordFilters.status !== 'all') ||
+    (ordFilters.payment && ordFilters.payment !== 'all') ||
+    (ordFilters.shipment && ordFilters.shipment !== 'all') ||
+    ordFilters.from || ordFilters.to
+  );
+}
+
+// Client-side filter: text search + order status
+function ordClientFilter(order) {
+  if (ordFilters.q) {
+    const q = ordFilters.q.toLowerCase();
+    const name = `${order.shipping?.firstName || ''} ${order.shipping?.lastName || ''}`.toLowerCase();
+    const ref = (order.payment?.reference || '').toLowerCase();
+    const prods = (order.items || []).map(i => (i.name || '').toLowerCase()).join(' ');
+    if (!name.includes(q) && !ref.includes(q) && !prods.includes(q)) return false;
+  }
+  if (ordFilters.status && ordFilters.status !== 'all') {
+    if (ordFilters.status === 'completed' && order.fulfilled !== true) return false;
+    if (ordFilters.status === 'pending' && order.fulfilled === true) return false;
+  }
+  return true;
+}
+
+// Render next page from cached filtered results
+function ordRenderFromCache(tbody, btn) {
+  if (!allFilteredOrders) return;
+  if (allFilteredOrders.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="7" class="p-6 text-center text-gray-400">No orders found.</td></tr>`;
+    btn.style.display = 'none';
+    return;
+  }
+  const nextBatch = allFilteredOrders.slice(ordDisplayedCount, ordDisplayedCount + ordPAGE);
+  nextBatch.forEach(order => tbody.appendChild(ordOrderRow(order)));
+  ordDisplayedCount += nextBatch.length;
+  btn.style.display = ordDisplayedCount >= allFilteredOrders.length ? 'none' : 'inline-block';
+}
 
 function initOrders() {
   document.getElementById('ord-applyFilters').onclick = () => {
@@ -984,6 +1026,7 @@ function initOrders() {
   ordClearAndLoad();
 }
 
+// Build Firestore query — pass null pageSize to fetch everything (filter mode)
 function ordBuildQuery(pageSize, startAfterDoc = null) {
   let q = db.collection('orders').orderBy('createdAt', 'desc');
   if (ordFilters.payment && ordFilters.payment !== 'all') q = q.where('payment.method', '==', ordFilters.payment);
@@ -991,18 +1034,49 @@ function ordBuildQuery(pageSize, startAfterDoc = null) {
   if (ordFilters.from) q = q.where('createdAt', '>=', firebase.firestore.Timestamp.fromDate(new Date(ordFilters.from + 'T00:00:00')));
   if (ordFilters.to) q = q.where('createdAt', '<=', firebase.firestore.Timestamp.fromDate(new Date(ordFilters.to + 'T23:59:59')));
   if (startAfterDoc) q = q.startAfter(startAfterDoc);
-  return q.limit(pageSize);
+  return pageSize ? q.limit(pageSize) : q;
 }
 
 async function ordClearAndLoad() {
   showLoader();
-  document.getElementById('ordersTbody').innerHTML = '';
+  const tbody = document.getElementById('ordersTbody');
+  const btn = document.getElementById('ord-loadMoreBtn');
+  tbody.innerHTML = '';
   ordLastDoc = null;
-  document.getElementById('ord-loadMoreBtn').style.display = 'inline-block';
-  try { await ordLoadMore(true); } finally { hideLoader(); }
+  allFilteredOrders = null;
+  ordDisplayedCount = 0;
+  try {
+    if (ordHasFilters()) {
+      // Filter mode: fetch ALL from DB (DB-level filters applied), then filter client-side and cache
+      const snap = await ordBuildQuery(null).get();
+      const docs = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      allFilteredOrders = docs.filter(ordClientFilter);
+      ordRenderFromCache(tbody, btn);
+    } else {
+      // Normal mode: cursor-based pagination from Firestore
+      btn.style.display = 'inline-block';
+      await ordLoadMore(true);
+    }
+  } catch (err) {
+    tbody.innerHTML = `<tr><td colspan="7" class="p-4 text-red-500">Failed to load orders.</td></tr>`;
+    btn.style.display = 'none';
+  } finally {
+    hideLoader();
+    ordUpdateSummary();
+  }
 }
 
 async function ordLoadMore(isInitial = false) {
+  // Filter mode: render next page from cached results
+  if (allFilteredOrders !== null) {
+    const tbody = document.getElementById('ordersTbody');
+    const btn = document.getElementById('ord-loadMoreBtn');
+    ordRenderFromCache(tbody, btn);
+    ordUpdateSummary();
+    return;
+  }
+
+  // Normal mode: fetch next page from Firestore
   if (ordLoading) return;
   ordLoading = true;
   const btn = document.getElementById('ord-loadMoreBtn');
@@ -1012,30 +1086,18 @@ async function ordLoadMore(isInitial = false) {
     const tbody = document.getElementById('ordersTbody');
     if (!snap.empty) {
       if (isInitial) tbody.innerHTML = '';
-      const docs = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-      const filtered = docs.filter(order => {
-        if (ordFilters.q) {
-          const q = ordFilters.q.toLowerCase();
-          const name = `${order.shipping?.firstName || ''} ${order.shipping?.lastName || ''}`.toLowerCase();
-          const ref = (order.payment?.reference || '').toLowerCase();
-          const prods = (order.items || []).map(i => (i.name || '').toLowerCase()).join(' ');
-          if (!name.includes(q) && !ref.includes(q) && !prods.includes(q)) return false;
-        }
-        if (ordFilters.status && ordFilters.status !== 'all') {
-          if (ordFilters.status === 'completed' && order.fulfilled !== true) return false;
-          if (ordFilters.status === 'pending' && order.fulfilled === true) return false;
-        }
-        return true;
-      });
-      filtered.forEach(order => tbody.appendChild(ordOrderRow(order)));
+      snap.docs.map(d => ({ id: d.id, ...d.data() })).forEach(order => tbody.appendChild(ordOrderRow(order)));
       ordLastDoc = snap.docs[snap.docs.length - 1];
       btn.style.display = snap.size < ordPAGE ? 'none' : 'inline-block';
     } else if (isInitial) {
       tbody.innerHTML = `<tr><td colspan="7" class="p-6 text-center text-gray-400">No orders found.</td></tr>`;
       btn.style.display = 'none';
     }
-  } catch (err) { document.getElementById('ordersTbody').innerHTML = `<tr><td colspan="7" class="p-4 text-red-500">Failed to load orders.</td></tr>`; }
-  finally { ordLoading = false; btn.disabled = false; ordUpdateSummary(); }
+  } catch (err) {
+    document.getElementById('ordersTbody').innerHTML = `<tr><td colspan="7" class="p-4 text-red-500">Failed to load orders.</td></tr>`;
+  } finally {
+    ordLoading = false; btn.disabled = false; ordUpdateSummary();
+  }
 }
 
 function ordUpdateSummary() {
