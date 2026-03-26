@@ -753,7 +753,7 @@ function playOrderSound() {
 }
 
 function initNewOrderListener() {
-  db.collection('orders').orderBy('timestamp', 'desc').onSnapshot(snap => {
+  db.collection('orders').orderBy('createdAt', 'desc').onSnapshot(snap => {
     snap.docChanges().forEach(change => {
       const id = change.doc.id;
       if (change.type === 'added' && !seenOrders.includes(id)) {
