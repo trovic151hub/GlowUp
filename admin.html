@@ -1248,9 +1248,11 @@ function isInternationalOrder(order) {
 }
 function getOrderDeliveryFee(order) {
   const d = order?.delivery || {};
+  const p = order?.pricing || {};
   const country = (d.country || '').toLowerCase();
   if (country && country !== 'nigeria') return Number(d.deliveryFee || 0);
   if (d.deliveryFee != null) return Number(d.deliveryFee);
+  if (p.shippingFee != null) return Number(p.shippingFee);
   return 0;
 }
 function shipmentTimelineHtml(status) {
