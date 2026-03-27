@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Pearl Admin</title>
+  <title>Skinova Admin</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
@@ -1401,7 +1401,7 @@ async function downloadPdf(order) {
     const dark = '#222222', gray = '#555555', rose = '#8B3A52', pageWidth = doc.internal.pageSize.getWidth(), margin = 15;
     let y = 20;
     try {
-      const res = await fetch('https://res.cloudinary.com/dut2dpxuc/image/upload/v1764188839/e1232d47-ee66-47c9-97fa-b9b86232fb80_n35lqo.png');
+      const res = await fetch('https://raw.githubusercontent.com/trovic151hub/GlowUp/master/attached_assets/skinova_logo.png');
       const blob = await res.blob();
       const b64 = await new Promise((resolve, reject) => { const r = new FileReader(); r.onloadend = () => resolve(r.result); r.onerror = reject; r.readAsDataURL(blob); });
       doc.addImage(b64, 'PNG', (pageWidth - 50) / 2, 10, 50, 25); y = 45;
@@ -1462,7 +1462,7 @@ async function sendReceiptEmail(order) {
   const orderItemsHtml = items.map(i => `<tr><td>${i.name || '—'}</td><td align="center">${i.quantity || 0}</td><td align="right">₦${Number(i.price || 0).toLocaleString()}</td><td align="right">₦${(Number(i.price || 0) * (i.quantity || 0)).toLocaleString()}</td></tr>`).join('');
   await emailjs.send('service_k1xpqh8', 'template_nlno322', {
     to_email: email, customer_name: fullName, order_id: payment.reference || order.id,
-    logo_url: 'https://res.cloudinary.com/dut2dpxuc/image/upload/v1764188839/e1232d47-ee66-47c9-97fa-b9b86232fb80_n35lqo.png',
+    logo_url: 'https://raw.githubusercontent.com/trovic151hub/GlowUp/master/attached_assets/skinova_logo.png',
     order_name: fullName, order_email: email, order_phone: shipping.phone || '—',
     payment_method: payment.method || '—', payment_ref: payment.reference || order.id,
     order_items: orderItemsHtml, order_total: orderTotal.toLocaleString(),
