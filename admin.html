@@ -1276,14 +1276,26 @@ function renderOrderModal(order) {
   const totalWithFee = isInternationalOrder(order) ? orderTotal + (delivery.deliveryFee || 0) : orderTotal;
   const totalWeight = items.reduce((s, i) => s + (Number(i.weight || 0) * Number(i.quantity || 1)), 0);
 
-  let deliveryText = '';
   const country = (delivery.country || '').toLowerCase();
+  const row = (label, val) => `<div class="flex gap-2 text-sm"><span class="text-gray-400 w-24 flex-shrink-0">${label}:</span><span class="text-gray-700">${val || '—'}</span></div>`;
+  let deliveryHtml = '';
   if (country && country !== 'nigeria') {
-    deliveryText = `${delivery.company || 'International'} — ${delivery.country || ''}, ${delivery.state || ''}`;
+    deliveryHtml = row('Country', escapeHtml(delivery.country))
+      + row('State', escapeHtml(delivery.state))
+      + row('Type', delivery.type === 'home' ? 'Home Delivery' : delivery.type === 'terminal' ? 'Terminal Pickup' : escapeHtml(delivery.type))
+      + row('Address', escapeHtml(delivery.address || shipping.street));
   } else if ((delivery.state || '').toLowerCase().includes('lagos')) {
-    deliveryText = `Home Delivery — LGA: ${delivery.lga || shipping.lga || '—'}, ${delivery.address || shipping.street || '—'}`;
+    deliveryHtml = row('Address', escapeHtml(delivery.address || shipping.street))
+      + row('LGA', escapeHtml(delivery.lga || shipping.lga))
+      + row('State', 'Lagos')
+      + row('Country', 'Nigeria');
   } else if (delivery.company) {
-    deliveryText = `${delivery.company} — ${delivery.type === 'home' ? 'Home Delivery' : 'Terminal Pickup'}, ${delivery.state || '—'}`;
+    const isHome = delivery.type === 'home';
+    deliveryHtml = row('Company', escapeHtml(delivery.company))
+      + row('Type', isHome ? 'Home Delivery' : 'Terminal Pickup')
+      + (isHome ? row('Address', escapeHtml(delivery.address || shipping.street)) : row('Terminal', escapeHtml(delivery.terminal)))
+      + row('State', escapeHtml(delivery.state))
+      + row('Country', 'Nigeria');
   }
 
   document.getElementById('orderDetailContent').innerHTML = `
@@ -1305,9 +1317,9 @@ function renderOrderModal(order) {
         <div class="text-right"><p class="text-xs text-gray-300">${i.quantity} ×</p><p class="font-semibold text-sm">₦${(Number(i.price) * Number(i.quantity)).toLocaleString()}</p></div>
       </div>`).join('') || '<p class="text-gray-400 text-sm">No items</p>'}
     </div>
-    ${deliveryText ? `<div>
+    ${deliveryHtml ? `<div>
       <p class="text-xs font-semibold uppercase tracking-widest text-gray-400 mb-2">Delivery</p>
-      <p class="text-sm text-gray-600 mb-2">${deliveryText}</p>
+      <div class="flex flex-col gap-1 mb-3">${deliveryHtml}</div>
       ${shipmentTimelineHtml(order.shipping?.status || 'processing')}
       <p class="text-xs text-gray-400 mt-2">Fee: ₦${deliveryFee.toLocaleString()} · Weight: ${totalWeight} kg</p>
     </div>` : ''}
