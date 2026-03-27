@@ -20,7 +20,9 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.13.0/gsap.min.js"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; scrollbar-width: none; -ms-overflow-style: none; }
-    *::-webkit-scrollbar { display: none; }
+    *::-webkit-scrollbar { display: none; width: 0; height: 0; }
+    html, body { scrollbar-width: none; -ms-overflow-style: none; -webkit-overflow-scrolling: touch; }
+    html::-webkit-scrollbar, body::-webkit-scrollbar { display: none; width: 0; height: 0; }
 
     html { scroll-behavior: smooth; }
 
