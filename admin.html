@@ -633,6 +633,7 @@ function showSection(name) {
   document.getElementById('pageTitle').textContent = sectionTitles[name] || name;
   if (name === 'analytics' && !analyticsInitialized) { initAnalytics(); analyticsInitialized = true; }
   if (name === 'orders' && !ordersInitialized) { initOrders(); ordersInitialized = true; }
+  if (name === 'orders') clearNewOrders();
   if (name === 'homepage' && !homepageInitialized) { loadFeaturedProducts(); homepageInitialized = true; }
   if (name === 'admins' && !adminsInitialized) { initAdmins(); adminsInitialized = true; }
   closeMobileSidebar();
@@ -726,8 +727,13 @@ auth.onAuthStateChanged(async user => {
 // ====================================================
 // NEW ORDER LISTENER
 // ====================================================
-let newOrdersCount = Number(localStorage.getItem('newOrdersCount')) || 0;
-let seenOrders = JSON.parse(localStorage.getItem('seenOrders') || '[]');
+
+// Initialise lastClearedAt — set to now on first ever install so existing orders don't flood the badge
+if (!localStorage.getItem('lastClearedAt')) {
+  localStorage.setItem('lastClearedAt', Date.now().toString());
+}
+let lastClearedAt = Number(localStorage.getItem('lastClearedAt'));
+let newOrdersCount = 0;
 let firstLoadNotif = true;
 
 function updateNewOrderUI() {
@@ -740,7 +746,13 @@ function updateNewOrderUI() {
     text.textContent = newOrdersCount === 1 ? '1 new order' : `${newOrdersCount} new orders`;
   } else { notif.classList.add('hidden'); badge.classList.add('hidden'); }
 }
-window.clearNewOrders = function() { newOrdersCount = 0; localStorage.setItem('newOrdersCount', 0); updateNewOrderUI(); };
+
+window.clearNewOrders = function() {
+  lastClearedAt = Date.now();
+  localStorage.setItem('lastClearedAt', lastClearedAt.toString());
+  newOrdersCount = 0;
+  updateNewOrderUI();
+};
 
 function playOrderSound() {
   try {
@@ -754,14 +766,26 @@ function playOrderSound() {
 
 function initNewOrderListener() {
   db.collection('orders').orderBy('createdAt', 'desc').onSnapshot(snap => {
-    snap.docChanges().forEach(change => {
-      const id = change.doc.id;
-      if (change.type === 'added' && !seenOrders.includes(id)) {
-        seenOrders.push(id); localStorage.setItem('seenOrders', JSON.stringify(seenOrders));
-        if (!firstLoadNotif) { newOrdersCount++; localStorage.setItem('newOrdersCount', newOrdersCount); updateNewOrderUI(); playOrderSound(); }
-      }
+    // Recount all orders newer than lastClearedAt on every snapshot
+    let count = 0;
+    snap.forEach(doc => {
+      const createdAt = doc.data().createdAt?.toDate?.()?.getTime() || 0;
+      if (createdAt > lastClearedAt) count++;
     });
-    firstLoadNotif = false; updateNewOrderUI();
+
+    // Play sound only for orders that arrive in real-time (after initial load)
+    if (!firstLoadNotif) {
+      snap.docChanges().forEach(change => {
+        if (change.type === 'added') {
+          const createdAt = change.doc.data().createdAt?.toDate?.()?.getTime() || 0;
+          if (createdAt > lastClearedAt) playOrderSound();
+        }
+      });
+    }
+
+    firstLoadNotif = false;
+    newOrdersCount = count;
+    updateNewOrderUI();
   });
 }
 

@@ -1021,8 +1021,47 @@ summaryPlaceOrderBtn.addEventListener("click", async () => {
   const total = subtotal + shippingFee;
 
   if (selectedPayment === "whatsapp") {
-    // Generate order reference
+    // --- Build everything synchronously so window.open runs before any await ---
     const whatsappPaymentRef = generateWhatsappPaymentRef();
+
+    const billing = {
+      name: `${shippingData.firstName} ${shippingData.lastName}`,
+      phone: shippingData.phone,
+      email: shippingData.email
+    };
+
+    const itemsText = cartItems.map(i => `- ${i.name} x${i.quantity} - ₦${(i.price * i.quantity).toLocaleString()}`).join("%0A");
+    const isInternational = shippingData.country.toLowerCase() !== "nigeria";
+
+    const message = `
+*🛒 New ${isInternational ? "International" : "Local"} Order*
+*🧾 Payment Ref:* ${whatsappPaymentRef}
+
+*👤 Customer Details*
+- Name: ${billing.name}
+- Phone: ${billing.phone}
+- Email: ${billing.email}
+
+*🌍 Delivery Info*
+- Country: ${deliveryInfo.country}
+- Address: ${deliveryInfo.address}
+- Delivery Type: ${deliveryInfo.type || "Home Delivery"}
+
+*📦 Order Items*
+${itemsText}
+
+*💰 Payment Summary*
+- Subtotal: ₦${subtotal.toLocaleString()}
+- Delivery Fee: ${isInternational ? "To be confirmed" : `₦${shippingFee.toLocaleString()}`}
+- Total: ₦${total.toLocaleString()}
+
+⚠️ Please confirm stock availability and delivery cost with the customer.
+Thank you! 🙏
+`;
+
+    // Open WhatsApp BEFORE any await — keeps iOS from blocking the popup
+    const url = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
+    window.open(url, "_blank");
 
     // Save order to Firestore
     const orderRef = db.collection("orders").doc();
@@ -1052,47 +1091,6 @@ summaryPlaceOrderBtn.addEventListener("click", async () => {
     await guestCartRef.set({ guestId, items: [] });
     renderCart([]);
     clearFormData();
-
-    // Build WhatsApp message
-    const billing = {
-      name: `${shippingData.firstName} ${shippingData.lastName}`,
-      phone: shippingData.phone,
-      email: shippingData.email
-    };
-
-    const itemsText = cartItems.map(i => `- ${i.name} x${i.quantity} - ₦${(i.price * i.quantity).toLocaleString()}`).join("%0A");
-
-    const isInternational = shippingData.country.toLowerCase() !== "nigeria";
-
-    const message = `
-*🛒 New ${isInternational ? "International" : "Local"} Order*
-*🧾 Payment Ref:* ${whatsappPaymentRef}
-
-*👤 Customer Details*
-- Name: ${billing.name}
-- Phone: ${billing.phone}
-- Email: ${billing.email}
-
-*🌍 Delivery Info*
-- Country: ${deliveryInfo.country}
-- Address: ${deliveryInfo.address}
-- Delivery Type: ${deliveryInfo.type || "Home Delivery"}
-
-*📦 Order Items*
-${itemsText}
-
-*💰 Payment Summary*
-- Subtotal: ₦${subtotal.toLocaleString()}
-- Delivery Fee: ${isInternational ? "To be confirmed" : `₦${shippingFee.toLocaleString()}`}
-- Total: ₦${total.toLocaleString()}
-
-⚠️ Please confirm stock availability and delivery cost with the customer.
-Thank you! 🙏
-`;
-
-    // Open WhatsApp with message
-    const url = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
-    window.open(url, "_blank");
 
     // Show success page
     checkoutStep.classList.add("hidden");
