@@ -635,6 +635,7 @@ function showSection(name) {
   if (name === 'orders') clearNewOrders();
   if (name === 'homepage' && !homepageInitialized) { loadFeaturedProducts(); homepageInitialized = true; }
   if (name === 'admins' && !adminsInitialized) { initAdmins(); adminsInitialized = true; }
+  localStorage.setItem('adminActiveSection', name);
   closeMobileSidebar();
 }
 
@@ -723,6 +724,10 @@ async function initApp(adminData, uid) {
   initProducts();
   initHeroSlider();
   initNewOrderListener();
+  const savedSection = localStorage.getItem('adminActiveSection');
+  if (savedSection && document.getElementById('section-' + savedSection)) {
+    showSection(savedSection);
+  }
 }
 
 auth.onAuthStateChanged(async user => {
