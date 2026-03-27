@@ -705,13 +705,24 @@ function showAppView(show) {
   document.body.style.overflow = show ? 'hidden' : '';
 }
 
-function initApp(adminData) {
+async function initApp(adminData, uid) {
   if (appInitialized) return;
   appInitialized = true;
   window.isAdmin = true;
+  window.adminUid = uid;
   const name = adminData.name || 'Admin';
   document.getElementById('adminNameDisplay').textContent = name.split(' ')[0];
   showAppView(true);
+
+  // Load lastClearedAt from Firestore so it stays consistent across all devices
+  if (adminData.notifClearedAt) {
+    lastClearedAt = adminData.notifClearedAt;
+  } else {
+    // First login ever — set to now so existing orders don't flood the badge
+    lastClearedAt = Date.now();
+    await db.collection('admins').doc(uid).update({ notifClearedAt: lastClearedAt }).catch(() => {});
+  }
+
   initDashboard();
   initProducts();
   initHeroSlider();
@@ -723,7 +734,7 @@ auth.onAuthStateChanged(async user => {
   try {
     const adminDoc = await db.collection('admins').doc(user.uid).get();
     if (!adminDoc.exists) { await auth.signOut(); localStorage.removeItem('isAdminLoggedIn'); showAppView(false); return; }
-    initApp(adminDoc.data());
+    initApp(adminDoc.data(), user.uid);
   } catch (err) { console.error(err); showAppView(false); }
 });
 
@@ -731,11 +742,8 @@ auth.onAuthStateChanged(async user => {
 // NEW ORDER LISTENER
 // ====================================================
 
-// Initialise lastClearedAt — set to now on first ever install so existing orders don't flood the badge
-if (!localStorage.getItem('lastClearedAt')) {
-  localStorage.setItem('lastClearedAt', Date.now().toString());
-}
-let lastClearedAt = Number(localStorage.getItem('lastClearedAt'));
+// lastClearedAt is loaded from Firestore in initApp for cross-device consistency
+let lastClearedAt = 0;
 let newOrdersCount = 0;
 let firstLoadNotif = true;
 
@@ -752,9 +760,12 @@ function updateNewOrderUI() {
 
 window.clearNewOrders = function() {
   lastClearedAt = Date.now();
-  localStorage.setItem('lastClearedAt', lastClearedAt.toString());
   newOrdersCount = 0;
   updateNewOrderUI();
+  // Sync to Firestore so all devices see the cleared state
+  if (window.adminUid) {
+    db.collection('admins').doc(window.adminUid).update({ notifClearedAt: lastClearedAt }).catch(() => {});
+  }
 };
 
 function playOrderSound() {
