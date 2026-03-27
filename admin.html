@@ -120,10 +120,8 @@
 <div id="login-view" class="min-h-screen flex items-center justify-center" style="background:#F5F2F3; overflow:auto;">
   <div class="w-full max-w-sm px-4 py-8">
     <div class="text-center mb-8">
-      <div class="w-12 h-12 rounded-full mx-auto mb-3 flex items-center justify-center" style="background:#7C3A52;">
-        <i class="fas fa-leaf text-white"></i>
-      </div>
-      <h1 class="text-4xl text-gray-800 serif font-semibold">Pearl Skin Care</h1>
+      <img src="attached_assets/skinova_logo.png" class="w-14 h-14 object-contain mx-auto mb-3" alt="Skinova Logo">
+      <h1 class="text-4xl text-gray-800 serif font-semibold">Skinova</h1>
       <p class="text-sm text-gray-400 mt-1 tracking-wide uppercase" style="font-size:0.7rem; letter-spacing:0.12em;">Admin Portal</p>
     </div>
     <div class="bg-white rounded-2xl shadow-sm p-8">
@@ -161,11 +159,9 @@
   <aside id="sidebar">
     <!-- Brand -->
     <div class="sidebar-brand flex items-center gap-3 px-4 py-5 border-b" style="border-color:rgba(255,255,255,0.08);">
-      <div class="w-8 h-8 rounded-full flex-shrink-0 flex items-center justify-center" style="background:#7C3A52;">
-        <i class="fas fa-leaf text-white text-xs"></i>
-      </div>
+      <img src="attached_assets/skinova_logo.png" class="w-8 h-8 object-contain flex-shrink-0" alt="Skinova Logo">
       <div class="sidebar-text">
-        <p class="text-white font-semibold text-sm leading-tight serif">Pearl Skin Care</p>
+        <p class="text-white font-semibold text-sm leading-tight serif">Skinova</p>
         <p class="text-xs" style="color:#9B7A87;">Admin Panel</p>
       </div>
     </div>
@@ -1450,7 +1446,7 @@ async function downloadPdf(order) {
     doc.text('Order Total', tableX + 110, y + 6, { align: 'right' }); doc.text(`₦${finalTotal.toLocaleString()}`, tableX + 150, y + 6, { align: 'right' });
     doc.rect(tableX, y, tableWidth, rowH); y += rowH + 5;
     doc.setFont('helvetica', 'normal'); doc.setFontSize(10); doc.setTextColor(gray);
-    doc.text('Thank you for shopping with Pearl Skin Care!', pageWidth / 2, 285, { align: 'center' });
+    doc.text('Thank you for shopping with Skinova!', pageWidth / 2, 285, { align: 'center' });
     doc.save(`Order_${paymentRef}.pdf`);
   } catch (err) { showAlert('PDF failed: ' + (err.message || err), 'Error'); }
 }
