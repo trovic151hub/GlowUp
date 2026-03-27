@@ -1182,6 +1182,10 @@ function ordUpdateSummary() {
 
 function ordOrderRow(order) {
   const tr = document.createElement('tr');
+  tr.style.cursor = 'pointer';
+  tr.addEventListener('click', () => ordOpenDetail(order.id));
+  tr.addEventListener('mouseenter', () => tr.style.background = '#f9f5f7');
+  tr.addEventListener('mouseleave', () => tr.style.background = '');
   const when = order.createdAt?.toDate?.()?.toLocaleString() || '';
   const adminId = firebase.auth().currentUser?.uid;
   const isNew = !order.viewedBy || !order.viewedBy[adminId];
@@ -1206,12 +1210,9 @@ function ordOrderRow(order) {
       </span>
     </td>
     <td data-label="Actions">
-      <div class="flex gap-1.5 flex-wrap">
-        <button onclick='ordOpenDetail("${order.id}")' class="text-xs px-2.5 py-1.5 rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-100">Detail</button>
-        <button onclick='ordToggleFulfilled("${order.id}", ${!!order.fulfilled})' class="text-xs px-2.5 py-1.5 rounded-lg ${order.fulfilled ? 'bg-gray-100 text-gray-500' : 'bg-green-50 text-green-600'} hover:opacity-80">
-          ${order.fulfilled ? 'Mark Pending' : 'Mark Complete'}
-        </button>
-      </div>
+      <button onclick='event.stopPropagation(); ordToggleFulfilled("${order.id}", ${!!order.fulfilled})' class="text-xs px-2.5 py-1.5 rounded-lg ${order.fulfilled ? 'bg-gray-100 text-gray-500' : 'bg-green-50 text-green-600'} hover:opacity-80">
+        ${order.fulfilled ? 'Mark Pending' : 'Mark Complete'}
+      </button>
     </td>`;
   tr.__order = order;
   return tr;
