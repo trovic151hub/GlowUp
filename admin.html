@@ -314,7 +314,10 @@
           </form>
         </div>
         <div class="card">
-          <h3 class="text-2xl font-semibold text-gray-800 serif mb-4">Product List</h3>
+          <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
+            <h3 class="text-2xl font-semibold text-gray-800 serif">Product List</h3>
+            <input id="productSearchInput" type="text" placeholder="Search by name or category..." class="border border-gray-200 p-2.5 rounded-xl text-sm bg-gray-50 w-full sm:w-72" />
+          </div>
           <div class="overflow-auto">
             <table class="admin-table">
               <thead>
@@ -846,6 +849,25 @@ async function initDashboard() {
 // ====================================================
 let prodEditId = null, lastVisibleProduct = null;
 const PRODUCTS_PER_PAGE = 8;
+let prodSearchTerm = '', allSearchedProducts = null, prodSearchDisplayed = 0;
+
+function prodBuildRow(p) {
+  let imgUrl = p.image && p.image.includes('res.cloudinary.com') ? p.image.replace('/upload/', '/upload/w_120,h_120,c_fill/') : (p.image || 'https://via.placeholder.com/60');
+  const tr = document.createElement('tr');
+  tr.innerHTML = `
+    <td data-label="Image"><img src="${imgUrl}" class="w-12 h-12 object-cover rounded-xl" /></td>
+    <td data-label="Name" class="font-medium text-gray-800">${escapeHtml(p.name)}</td>
+    <td data-label="Price">₦${Number(p.price).toLocaleString()}</td>
+    <td data-label="Category"><span class="px-2 py-1 rounded-full text-xs bg-gray-100 text-gray-500">${escapeHtml(p.category)}</span></td>
+    <td data-label="Weight">${p.weight || 0} kg</td>
+    <td data-label="Actions">
+      <div class="flex gap-2 flex-wrap">
+        <button onclick="editProduct('${p.id}')" class="text-xs px-3 py-1.5 rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-100">Edit</button>
+        <button onclick="deleteProduct('${p.id}')" class="text-xs px-3 py-1.5 rounded-lg bg-red-50 text-red-500 hover:bg-red-100">Delete</button>
+      </div>
+    </td>`;
+  return tr;
+}
 
 function initProducts() {
   if (window.cloudinary) {
@@ -858,36 +880,55 @@ function initProducts() {
   document.getElementById('productForm').addEventListener('submit', saveProduct);
   document.getElementById('cancelEditBtn').addEventListener('click', resetProductForm);
   document.getElementById('loadMoreProductsBtn').addEventListener('click', () => renderProductTable(true));
+  document.getElementById('productSearchInput').addEventListener('input', e => {
+    prodSearchTerm = e.target.value.trim();
+    renderProductTable();
+  });
   renderProductTable();
 }
 
 async function renderProductTable(append = false) {
   const tbody = document.getElementById('productTableBody');
   const loadMoreBtn = document.getElementById('loadMoreProductsBtn');
+
+  // ── Search mode: fetch all, filter client-side, paginate from cache ──
+  if (prodSearchTerm) {
+    if (!append) {
+      showLoader();
+      tbody.innerHTML = '';
+      prodSearchDisplayed = 0;
+      try {
+        const snap = await db.collection('products').orderBy('name').get();
+        const term = prodSearchTerm.toLowerCase();
+        allSearchedProducts = snap.docs
+          .map(d => ({ id: d.id, ...d.data() }))
+          .filter(p => p.name?.toLowerCase().includes(term) || p.category?.toLowerCase().includes(term));
+      } catch (err) { showAlert('Search failed: ' + err.message, 'Error'); hideLoader(); return; }
+      finally { hideLoader(); }
+    }
+    if (!allSearchedProducts) return;
+    if (allSearchedProducts.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="6" class="p-6 text-center text-gray-400">No products match your search.</td></tr>`;
+      loadMoreBtn.classList.add('hidden');
+      return;
+    }
+    const batch = allSearchedProducts.slice(prodSearchDisplayed, prodSearchDisplayed + PRODUCTS_PER_PAGE);
+    batch.forEach(p => tbody.appendChild(prodBuildRow(p)));
+    prodSearchDisplayed += batch.length;
+    loadMoreBtn.classList.toggle('hidden', prodSearchDisplayed >= allSearchedProducts.length);
+    return;
+  }
+
+  // ── Normal mode: cursor-based Firestore pagination ──
+  allSearchedProducts = null;
+  prodSearchDisplayed = 0;
   if (!append) { tbody.innerHTML = ''; showLoader(); }
   try {
     let q = db.collection('products').orderBy('name').limit(PRODUCTS_PER_PAGE);
     if (append && lastVisibleProduct) q = q.startAfter(lastVisibleProduct);
     const snap = await q.get();
     lastVisibleProduct = snap.docs[snap.docs.length - 1];
-    snap.docs.forEach(doc => {
-      const p = { id: doc.id, ...doc.data() };
-      let imgUrl = p.image && p.image.includes('res.cloudinary.com') ? p.image.replace('/upload/', '/upload/w_120,h_120,c_fill/') : (p.image || 'https://via.placeholder.com/60');
-      const tr = document.createElement('tr');
-      tr.innerHTML = `
-        <td data-label="Image"><img src="${imgUrl}" class="w-12 h-12 object-cover rounded-xl" /></td>
-        <td data-label="Name" class="font-medium text-gray-800">${escapeHtml(p.name)}</td>
-        <td data-label="Price">₦${Number(p.price).toLocaleString()}</td>
-        <td data-label="Category"><span class="px-2 py-1 rounded-full text-xs bg-gray-100 text-gray-500">${escapeHtml(p.category)}</span></td>
-        <td data-label="Weight">${p.weight || 0} kg</td>
-        <td data-label="Actions">
-          <div class="flex gap-2 flex-wrap">
-            <button onclick="editProduct('${p.id}')" class="text-xs px-3 py-1.5 rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-100">Edit</button>
-            <button onclick="deleteProduct('${p.id}')" class="text-xs px-3 py-1.5 rounded-lg bg-red-50 text-red-500 hover:bg-red-100">Delete</button>
-          </div>
-        </td>`;
-      tbody.appendChild(tr);
-    });
+    snap.docs.forEach(doc => tbody.appendChild(prodBuildRow({ id: doc.id, ...doc.data() })));
     if (!append && snap.empty) tbody.innerHTML = `<tr><td colspan="6" class="p-6 text-center text-gray-400">No products found.</td></tr>`;
     loadMoreBtn.classList.toggle('hidden', snap.size < PRODUCTS_PER_PAGE);
   } catch (err) { showAlert('Failed to load products: ' + err.message, 'Error'); }
