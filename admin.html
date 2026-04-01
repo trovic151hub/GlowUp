@@ -664,6 +664,9 @@ document.querySelectorAll('.nav-item[data-section]').forEach(item => {
 document.getElementById('logoutBtn').addEventListener('click', async () => {
   const ok = await showConfirm("Are you sure you want to log out?", "Logout");
   if (!ok) return;
+  const uid = firebase.auth().currentUser?.uid;
+  if (uid) await setPresence(uid, false).catch(() => {});
+  clearInterval(window._presenceInterval);
   await auth.signOut();
   localStorage.removeItem("isAdminLoggedIn");
   localStorage.removeItem("adminUid");
@@ -719,6 +722,14 @@ function showAppView(show) {
   document.body.style.overflow = show ? 'hidden' : '';
 }
 
+function setPresence(uid, online) {
+  if (!uid) return Promise.resolve();
+  return db.collection('admins').doc(uid).update({
+    isOnline: online,
+    lastSeen: firebase.firestore.FieldValue.serverTimestamp()
+  }).catch(() => {});
+}
+
 async function initApp(adminData, uid) {
   if (appInitialized) return;
   appInitialized = true;
@@ -727,6 +738,12 @@ async function initApp(adminData, uid) {
   const name = adminData.name || 'Admin';
   document.getElementById('adminNameDisplay').textContent = name.split(' ')[0];
   showAppView(true);
+
+  // Mark this admin as online and keep a heartbeat running
+  setPresence(uid, true);
+  clearInterval(window._presenceInterval);
+  window._presenceInterval = setInterval(() => setPresence(uid, true), 30000);
+  window.addEventListener('beforeunload', () => setPresence(uid, false));
 
   // Load lastClearedAt from Firestore so it stays consistent across all devices
   if (adminData.notifClearedAt) {
@@ -1916,33 +1933,44 @@ function initAdmins() {
     }
   });
 
-  // Load current admins
-  async function loadAdmins() {
+  // Real-time admins list with online presence
+  function loadAdmins() {
     adminsList.innerHTML = '<p class="text-gray-400 text-sm">Loading...</p>';
-    try {
-      const snap = await db.collection('admins').get();
+    if (window._adminsUnsubscribe) window._adminsUnsubscribe();
+    window._adminsUnsubscribe = db.collection('admins').onSnapshot(snap => {
       if (snap.empty) {
         adminsList.innerHTML = '<p class="text-gray-400 text-sm">No admins found.</p>';
         return;
       }
       adminsList.innerHTML = '';
+      const currentUid = firebase.auth().currentUser?.uid;
       snap.forEach(doc => {
         const data = doc.data();
+        const isCurrentUser = doc.id === currentUid;
+        const lastSeenMs = data.lastSeen?.toDate?.()?.getTime?.() || 0;
+        const isOnline = data.isOnline === true && (Date.now() - lastSeenMs < 90000);
         const card = document.createElement('div');
-        card.className = 'flex items-center gap-3 p-3 rounded-xl border border-gray-100 bg-gray-50';
+        card.className = `flex items-center gap-3 p-3 rounded-xl border ${isCurrentUser ? 'border-[#C9A28F] bg-[#FDF8F5]' : 'border-gray-100 bg-gray-50'}`;
         card.innerHTML = `
-          <div class="w-9 h-9 rounded-full bg-gray-200 flex items-center justify-center flex-shrink-0">
-            <i class="fas fa-user text-gray-400 text-sm"></i>
+          <div class="relative flex-shrink-0">
+            <div class="w-9 h-9 rounded-full ${isCurrentUser ? 'bg-[#F0E0D6]' : 'bg-gray-200'} flex items-center justify-center">
+              <i class="fas fa-user ${isCurrentUser ? 'text-[#8B4F6B]' : 'text-gray-400'} text-sm"></i>
+            </div>
+            <span class="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-white ${isOnline ? 'bg-green-400' : 'bg-gray-300'}"></span>
           </div>
-          <div>
-            <p class="text-sm font-medium text-gray-800">${escapeHtml(data.name || 'Unnamed')}</p>
-            <p class="text-xs text-gray-400">${escapeHtml(data.email || '')}</p>
-          </div>`;
+          <div class="flex-1 min-w-0">
+            <div class="flex items-center gap-2 flex-wrap">
+              <p class="text-sm font-medium text-gray-800 truncate">${escapeHtml(data.name || 'Unnamed')}</p>
+              ${isCurrentUser ? '<span class="text-xs px-1.5 py-0.5 rounded-full bg-[#8B4F6B] text-white font-medium flex-shrink-0">You</span>' : ''}
+            </div>
+            <p class="text-xs text-gray-400 truncate">${escapeHtml(data.email || '')}</p>
+          </div>
+          <span class="text-xs px-2 py-1 rounded-full flex-shrink-0 ${isOnline ? 'bg-green-100 text-green-600' : 'bg-gray-100 text-gray-400'}">${isOnline ? 'Online' : 'Offline'}</span>`;
         adminsList.appendChild(card);
       });
-    } catch (err) {
+    }, err => {
       adminsList.innerHTML = `<p class="text-red-400 text-sm">Failed to load admins: ${escapeHtml(err.message)}</p>`;
-    }
+    });
   }
 
   loadAdmins();
@@ -2002,8 +2030,20 @@ function initAdmins() {
       form.reset();
       document.getElementById('newAdminPassword').type = 'password';
       document.getElementById('toggleNewAdminPw').querySelector('i').className = 'fas fa-eye text-sm';
-      showAlert('Admin account created successfully.', 'Success');
-      loadAdmins();
+      const switchNow = await showConfirm(
+        `Admin account for ${name} (${email}) created successfully! Would you like to switch to this new account now?`,
+        'Account Created'
+      );
+      if (switchNow) {
+        const oldUid = firebase.auth().currentUser?.uid;
+        if (oldUid) await setPresence(oldUid, false).catch(() => {});
+        clearInterval(window._presenceInterval);
+        appInitialized = false;
+        localStorage.setItem('isAdminLoggedIn', 'true');
+        await auth.signInWithEmailAndPassword(email, password);
+      } else {
+        loadAdmins();
+      }
     } catch (err) {
       errorEl.textContent = err.message || 'An error occurred. Please try again.';
       errorEl.classList.remove('hidden');
