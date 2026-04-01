@@ -972,8 +972,9 @@ function initProducts() {
   });
   document.getElementById('productModalEditBtn').onclick = () => {
     if (!currentOpenProduct) return;
+    const id = currentOpenProduct.id;
     closeProductModal();
-    editProduct(currentOpenProduct.id);
+    editProduct(id);
   };
   document.getElementById('productModalDeleteBtn').onclick = () => {
     if (!currentOpenProduct) return;
