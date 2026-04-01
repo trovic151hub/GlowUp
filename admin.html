@@ -328,6 +328,23 @@
             <button id="loadMoreProductsBtn" class="hidden bg-gray-100 text-gray-500 px-5 py-2 rounded-xl text-sm hover:bg-gray-200">Load More</button>
           </div>
         </div>
+
+        <!-- Product Detail Modal -->
+        <div id="productDetailModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
+          <div class="bg-white w-full max-w-lg rounded-2xl shadow-lg animate-slide-in max-h-[90vh] overflow-auto">
+            <div class="flex justify-between items-center p-6 border-b border-gray-100">
+              <h2 class="text-2xl font-semibold text-gray-800 serif">Product Details</h2>
+              <button id="productModalClose" class="text-gray-300 hover:text-gray-600 text-2xl leading-none w-8 h-8 flex items-center justify-center">&times;</button>
+            </div>
+            <div class="p-6">
+              <div id="productDetailContent" class="text-sm text-gray-700 space-y-4"></div>
+              <div class="mt-6 flex flex-wrap gap-2 pt-4 border-t border-gray-100">
+                <button id="productModalEditBtn" class="btn-primary px-4 py-2 rounded-xl text-sm">Edit Product</button>
+                <button id="productModalDeleteBtn" class="bg-red-50 text-red-500 px-4 py-2 rounded-xl text-sm hover:bg-red-100">Delete Product</button>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
       <!-- ===== ORDERS ===== -->
@@ -866,6 +883,10 @@ let prodSearchTerm = '', allSearchedProducts = null, prodSearchDisplayed = 0;
 function prodBuildRow(p) {
   let imgUrl = p.image && p.image.includes('res.cloudinary.com') ? p.image.replace('/upload/', '/upload/w_120,h_120,c_fill/') : (p.image || 'https://via.placeholder.com/60');
   const tr = document.createElement('tr');
+  tr.style.cursor = 'pointer';
+  tr.addEventListener('click', () => openProductDetail(p));
+  tr.addEventListener('mouseenter', () => tr.style.background = '#f9f5f7');
+  tr.addEventListener('mouseleave', () => tr.style.background = '');
   tr.innerHTML = `
     <td data-label="Image"><img src="${imgUrl}" class="w-12 h-12 object-cover rounded-xl" /></td>
     <td data-label="Name" class="font-medium text-gray-800">${escapeHtml(p.name)}</td>
@@ -874,11 +895,67 @@ function prodBuildRow(p) {
     <td data-label="Weight">${p.weight || 0} kg</td>
     <td data-label="Actions">
       <div class="flex gap-2 flex-wrap">
-        <button onclick="editProduct('${p.id}')" class="text-xs px-3 py-1.5 rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-100">Edit</button>
-        <button onclick="deleteProduct('${p.id}')" class="text-xs px-3 py-1.5 rounded-lg bg-red-50 text-red-500 hover:bg-red-100">Delete</button>
+        <button onclick="event.stopPropagation(); editProduct('${p.id}')" class="text-xs px-3 py-1.5 rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-100">Edit</button>
+        <button onclick="event.stopPropagation(); deleteProduct('${p.id}')" class="text-xs px-3 py-1.5 rounded-lg bg-red-50 text-red-500 hover:bg-red-100">Delete</button>
       </div>
     </td>`;
+  tr.__product = p;
   return tr;
+}
+
+let currentOpenProduct = null;
+
+function openProductDetail(p) {
+  currentOpenProduct = p;
+  const modal = document.getElementById('productDetailModal');
+  const imgUrl = p.image && p.image.includes('res.cloudinary.com')
+    ? p.image.replace('/upload/', '/upload/w_600,h_600,c_fill/')
+    : (p.image || 'https://via.placeholder.com/300');
+  document.getElementById('productDetailContent').innerHTML = `
+    <div class="flex flex-col sm:flex-row gap-5">
+      <img src="${imgUrl}" class="w-full sm:w-40 h-40 object-cover rounded-2xl flex-shrink-0" onerror="this.src='https://via.placeholder.com/160'" />
+      <div class="flex-1 space-y-3">
+        <div>
+          <p class="text-xs font-medium uppercase tracking-widest text-gray-400 mb-0.5">Name</p>
+          <p class="font-semibold text-gray-800 text-base">${escapeHtml(p.name)}</p>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <p class="text-xs font-medium uppercase tracking-widest text-gray-400 mb-0.5">Price</p>
+            <p class="font-semibold" style="color:#8B4F6B;">₦${Number(p.price).toLocaleString()}</p>
+          </div>
+          <div>
+            <p class="text-xs font-medium uppercase tracking-widest text-gray-400 mb-0.5">Category</p>
+            <span class="px-2 py-1 rounded-full text-xs bg-gray-100 text-gray-500">${escapeHtml(p.category || '—')}</span>
+          </div>
+          <div>
+            <p class="text-xs font-medium uppercase tracking-widest text-gray-400 mb-0.5">Weight</p>
+            <p class="text-gray-700">${p.weight || 0} kg</p>
+          </div>
+          <div>
+            <p class="text-xs font-medium uppercase tracking-widest text-gray-400 mb-0.5">Featured</p>
+            <span class="px-2 py-1 rounded-full text-xs ${p.isFeatured ? 'bg-green-100 text-green-600' : 'bg-gray-100 text-gray-400'}">${p.isFeatured ? 'Yes' : 'No'}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    ${p.description ? `<div>
+      <p class="text-xs font-medium uppercase tracking-widest text-gray-400 mb-1">Description</p>
+      <p class="text-gray-600 leading-relaxed">${escapeHtml(p.description)}</p>
+    </div>` : ''}
+    <div>
+      <p class="text-xs font-medium uppercase tracking-widest text-gray-400 mb-1">Product ID</p>
+      <p class="text-gray-400 text-xs font-mono">${p.id}</p>
+    </div>`;
+  modal.classList.remove('hidden');
+  modal.classList.add('flex');
+}
+
+function closeProductModal() {
+  const modal = document.getElementById('productDetailModal');
+  modal.classList.add('hidden');
+  modal.classList.remove('flex');
+  currentOpenProduct = null;
 }
 
 function initProducts() {
@@ -889,6 +966,21 @@ function initProducts() {
     });
     document.getElementById('uploadImageBtn').addEventListener('click', () => widget.open());
   }
+  document.getElementById('productModalClose').onclick = closeProductModal;
+  document.getElementById('productDetailModal').addEventListener('click', e => {
+    if (e.target === document.getElementById('productDetailModal')) closeProductModal();
+  });
+  document.getElementById('productModalEditBtn').onclick = () => {
+    if (!currentOpenProduct) return;
+    closeProductModal();
+    editProduct(currentOpenProduct.id);
+  };
+  document.getElementById('productModalDeleteBtn').onclick = () => {
+    if (!currentOpenProduct) return;
+    const id = currentOpenProduct.id;
+    closeProductModal();
+    deleteProduct(id);
+  };
   document.getElementById('productForm').addEventListener('submit', saveProduct);
   document.getElementById('cancelEditBtn').addEventListener('click', resetProductForm);
   document.getElementById('loadMoreProductsBtn').addEventListener('click', () => renderProductTable(true));
