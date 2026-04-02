@@ -238,7 +238,7 @@
 
       <!-- ===== DASHBOARD ===== -->
       <div id="section-dashboard" class="section active">
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-5">
+        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-5">
           <div class="stat-card">
             <p class="text-xs font-medium uppercase tracking-widest mb-1" style="color:#9B7A87;">Total Sales</p>
             <p id="dash-totalSales" class="text-2xl font-semibold text-gray-800 serif">₦0</p>
@@ -254,6 +254,11 @@
           <div class="stat-card">
             <p class="text-xs font-medium uppercase tracking-widest mb-1" style="color:#9B7A87;">Customers</p>
             <p id="dash-customers" class="text-2xl font-semibold text-gray-800 serif">0</p>
+          </div>
+          <div class="stat-card">
+            <p class="text-xs font-medium uppercase tracking-widest mb-1" style="color:#9B7A87;">Total Products</p>
+            <p id="dash-totalProducts" class="text-2xl font-semibold text-gray-800 serif">0</p>
+            <p id="dash-stockBreakdown" class="text-xs text-gray-400 mt-1">— in stock</p>
           </div>
         </div>
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
@@ -300,6 +305,15 @@
               <label class="block text-xs font-medium text-gray-400 mb-1 uppercase tracking-widest">Description</label>
               <textarea id="prod-description" placeholder="Product description..." class="border border-gray-200 p-2.5 rounded-xl w-full text-sm bg-gray-50 resize-none" rows="3"></textarea>
             </div>
+            <div class="md:col-span-2 flex items-center gap-3">
+              <label class="text-xs font-medium text-gray-400 uppercase tracking-widest">In Stock</label>
+              <label class="relative inline-flex items-center cursor-pointer">
+                <input type="checkbox" id="prod-inStock" class="sr-only peer" checked />
+                <div class="w-10 h-5 bg-gray-200 peer-checked:bg-[#8B4F6B] rounded-full transition-colors peer-focus:outline-none"></div>
+                <div class="absolute left-0.5 top-0.5 w-4 h-4 bg-white rounded-full transition-transform peer-checked:translate-x-5 shadow"></div>
+              </label>
+              <span id="prod-inStockLabel" class="text-xs text-gray-500">In Stock</span>
+            </div>
             <div class="md:col-span-2 flex gap-3">
               <button type="submit" class="btn-primary px-6 py-2.5 rounded-xl text-sm flex items-center gap-2 font-medium">
                 <span id="saveBtnText">Save Product</span>
@@ -318,7 +332,7 @@
             <table class="admin-table">
               <thead>
                 <tr>
-                  <th>Image</th><th>Name</th><th>Price</th><th>Category</th><th>Weight</th><th>Actions</th>
+                  <th>Image</th><th>Name</th><th>Price</th><th>Category</th><th>Weight</th><th>Stock</th><th>Actions</th>
                 </tr>
               </thead>
               <tbody id="productTableBody"></tbody>
@@ -854,6 +868,14 @@ async function initDashboard() {
     document.getElementById('dash-aov').textContent = '₦' + Math.round(aov).toLocaleString();
     document.getElementById('dash-customers').textContent = uniqueCustomers.toLocaleString();
 
+    const prodSnap = await db.collection('products').get();
+    const prodDocs = prodSnap.docs.map(d => d.data());
+    const totalProducts = prodDocs.length;
+    const inStockCount = prodDocs.filter(p => p.inStock !== false).length;
+    const outOfStockCount = totalProducts - inStockCount;
+    document.getElementById('dash-totalProducts').textContent = totalProducts.toLocaleString();
+    document.getElementById('dash-stockBreakdown').textContent = `${inStockCount} in stock · ${outOfStockCount} out`;
+
     const days = 30, dayMap = {};
     for (let i = days - 1; i >= 0; i--) { const d = new Date(); d.setDate(d.getDate() - i); d.setHours(0,0,0,0); dayMap[d.toISOString().slice(0,10)] = 0; }
     orders.forEach(o => { if (!o.createdAt) return; const d = o.createdAt.toDate ? o.createdAt.toDate() : new Date(o.createdAt); const k = d.toISOString().slice(0,10); if (k in dayMap) dayMap[k] += Number(o.pricing?.total || 0); });
@@ -910,6 +932,7 @@ function prodBuildRow(p) {
     <td data-label="Price">₦${Number(p.price).toLocaleString()}</td>
     <td data-label="Category"><span class="px-2 py-1 rounded-full text-xs bg-gray-100 text-gray-500">${escapeHtml(p.category)}</span></td>
     <td data-label="Weight">${p.weight || 0} kg</td>
+    <td data-label="Stock"><span class="px-2 py-1 rounded-full text-xs ${p.inStock !== false ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-500'}">${p.inStock !== false ? 'In Stock' : 'Out of Stock'}</span></td>
     <td data-label="Actions">
       <div class="flex gap-2 flex-wrap">
         <button onclick="event.stopPropagation(); editProduct('${p.id}')" class="text-xs px-3 py-1.5 rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-100">Edit</button>
@@ -952,6 +975,10 @@ function openProductDetail(p) {
           <div>
             <p class="text-xs font-medium uppercase tracking-widest text-gray-400 mb-0.5">Featured</p>
             <span class="px-2 py-1 rounded-full text-xs ${p.isFeatured ? 'bg-green-100 text-green-600' : 'bg-gray-100 text-gray-400'}">${p.isFeatured ? 'Yes' : 'No'}</span>
+          </div>
+          <div>
+            <p class="text-xs font-medium uppercase tracking-widest text-gray-400 mb-0.5">Stock</p>
+            <span class="px-2 py-1 rounded-full text-xs ${p.inStock !== false ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-500'}">${p.inStock !== false ? 'In Stock' : 'Out of Stock'}</span>
           </div>
         </div>
       </div>
@@ -999,6 +1026,9 @@ function initProducts() {
     closeProductModal();
     deleteProduct(id);
   };
+  document.getElementById('prod-inStock').addEventListener('change', function () {
+    document.getElementById('prod-inStockLabel').textContent = this.checked ? 'In Stock' : 'Out of Stock';
+  });
   document.getElementById('productForm').addEventListener('submit', saveProduct);
   document.getElementById('cancelEditBtn').addEventListener('click', resetProductForm);
   document.getElementById('loadMoreProductsBtn').addEventListener('click', () => renderProductTable(true));
@@ -1068,7 +1098,8 @@ async function saveProduct(e) {
     category: document.getElementById('prod-category').value.trim(),
     weight: parseFloat(document.getElementById('prod-weight').value),
     image: document.getElementById('prod-image').value.trim(),
-    description: document.getElementById('prod-description').value.trim()
+    description: document.getElementById('prod-description').value.trim(),
+    inStock: document.getElementById('prod-inStock').checked
   };
   try {
     if (prodEditId) await db.collection('products').doc(prodEditId).update(data);
@@ -1083,6 +1114,8 @@ async function saveProduct(e) {
 function resetProductForm() {
   prodEditId = null;
   document.getElementById('productForm').reset();
+  document.getElementById('prod-inStock').checked = true;
+  document.getElementById('prod-inStockLabel').textContent = 'In Stock';
   document.getElementById('productFormTitle').textContent = 'Add New Product';
   document.getElementById('saveBtnText').textContent = 'Save Product';
   document.getElementById('cancelEditBtn').classList.add('hidden');
@@ -1097,6 +1130,9 @@ window.editProduct = async id => {
   document.getElementById('prod-image').value = p.image;
   document.getElementById('prod-description').value = p.description || '';
   document.getElementById('prod-weight').value = p.weight || 0;
+  const stockChecked = p.inStock !== false;
+  document.getElementById('prod-inStock').checked = stockChecked;
+  document.getElementById('prod-inStockLabel').textContent = stockChecked ? 'In Stock' : 'Out of Stock';
   document.getElementById('productFormTitle').textContent = 'Edit Product';
   document.getElementById('saveBtnText').textContent = 'Update Product';
   document.getElementById('cancelEditBtn').classList.remove('hidden');
