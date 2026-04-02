@@ -1911,6 +1911,16 @@ window.toggleFeatured = async (id, isFeatured) => {
 document.getElementById('loadMoreFeaturedBtn').addEventListener('click', () => loadFeaturedProducts(true));
 
 // ====================================================
+function timeAgo(ms) {
+  if (!ms) return 'Never';
+  const diff = Math.floor((Date.now() - ms) / 1000);
+  if (diff < 60) return 'Just now';
+  if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
+  if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
+  if (diff < 604800) return `${Math.floor(diff / 86400)}d ago`;
+  return new Date(ms).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' });
+}
+
 // ADMIN ACCOUNTS
 // ====================================================
 function initAdmins() {
@@ -1964,6 +1974,7 @@ function initAdmins() {
               ${isCurrentUser ? '<span class="text-xs px-1.5 py-0.5 rounded-full bg-[#8B4F6B] text-white font-medium flex-shrink-0">You</span>' : ''}
             </div>
             <p class="text-xs text-gray-400 truncate">${escapeHtml(data.email || '')}</p>
+            <p class="text-xs mt-0.5 ${isOnline ? 'text-green-500' : 'text-gray-300'}">${isOnline ? 'Active now' : 'Last seen: ' + timeAgo(lastSeenMs)}</p>
           </div>
           <span class="text-xs px-2 py-1 rounded-full flex-shrink-0 ${isOnline ? 'bg-green-100 text-green-600' : 'bg-gray-100 text-gray-400'}">${isOnline ? 'Online' : 'Offline'}</span>`;
         adminsList.appendChild(card);
