@@ -769,6 +769,7 @@ async function initApp(adminData, uid) {
   }
 
   initDashboard();
+  initProductStatsListener();
   initProducts();
   initHeroSlider();
   initNewOrderListener();
@@ -868,13 +869,6 @@ async function initDashboard() {
     document.getElementById('dash-aov').textContent = '₦' + Math.round(aov).toLocaleString();
     document.getElementById('dash-customers').textContent = uniqueCustomers.toLocaleString();
 
-    const prodSnap = await db.collection('products').get();
-    const prodDocs = prodSnap.docs.map(d => d.data());
-    const totalProducts = prodDocs.length;
-    const inStockCount = prodDocs.filter(p => p.inStock !== false).length;
-    const outOfStockCount = totalProducts - inStockCount;
-    document.getElementById('dash-totalProducts').textContent = totalProducts.toLocaleString();
-    document.getElementById('dash-stockBreakdown').textContent = `${inStockCount} in stock · ${outOfStockCount} out`;
 
     const days = 30, dayMap = {};
     for (let i = days - 1; i >= 0; i--) { const d = new Date(); d.setDate(d.getDate() - i); d.setHours(0,0,0,0); dayMap[d.toISOString().slice(0,10)] = 0; }
@@ -910,6 +904,19 @@ async function initDashboard() {
       </div>`;
     }).join('');
   } catch (err) { console.error('Dashboard:', err); }
+}
+
+function initProductStatsListener() {
+  db.collection('products').onSnapshot(snap => {
+    const docs = snap.docs.map(d => d.data());
+    const total = docs.length;
+    const inStock = docs.filter(p => p.inStock !== false).length;
+    const out = total - inStock;
+    const totalEl = document.getElementById('dash-totalProducts');
+    const breakEl = document.getElementById('dash-stockBreakdown');
+    if (totalEl) totalEl.textContent = total.toLocaleString();
+    if (breakEl) breakEl.textContent = `${inStock} in stock · ${out} out`;
+  }, err => console.error('Product stats listener:', err));
 }
 
 // ====================================================
@@ -1060,7 +1067,7 @@ async function renderProductTable(append = false) {
     }
     if (!allSearchedProducts) return;
     if (allSearchedProducts.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="6" class="p-6 text-center text-gray-400">No products match your search.</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="7" class="p-6 text-center text-gray-400">No products match your search.</td></tr>`;
       loadMoreBtn.classList.add('hidden');
       return;
     }
@@ -1081,7 +1088,7 @@ async function renderProductTable(append = false) {
     const snap = await q.get();
     lastVisibleProduct = snap.docs[snap.docs.length - 1];
     snap.docs.forEach(doc => tbody.appendChild(prodBuildRow({ id: doc.id, ...doc.data() })));
-    if (!append && snap.empty) tbody.innerHTML = `<tr><td colspan="6" class="p-6 text-center text-gray-400">No products found.</td></tr>`;
+    if (!append && snap.empty) tbody.innerHTML = `<tr><td colspan="7" class="p-6 text-center text-gray-400">No products found.</td></tr>`;
     loadMoreBtn.classList.toggle('hidden', snap.size < PRODUCTS_PER_PAGE);
   } catch (err) { showAlert('Failed to load products: ' + err.message, 'Error'); }
   finally { hideLoader(); }
