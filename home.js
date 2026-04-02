@@ -270,6 +270,7 @@ function createImages() {
 
 // ===== SHOW SLIDE =====
 function showSlide(index) {
+  if (!slides.length || !slides[index]) return;
   trackIndex = index + 1;
 
   heroImageTrack.style.transition =
