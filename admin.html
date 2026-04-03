@@ -59,7 +59,7 @@
 
     .admin-table { width: 100%; border-collapse: collapse; }
     .admin-table thead { background: #F3EEF0; }
-    .admin-table th { font-weight: 600; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.06em; color: #7A5465; padding: 10px 14px; text-align: left; }
+    .admin-table th { font-weight: 600; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.06em; color: #7A5465; padding: 10px 14px; text-align: left; position: sticky; top: 0; z-index: 1; background: #F3EEF0; }
     .admin-table td { padding: 10px 14px; border-bottom: 1px solid #F3EEF0; font-size: 0.875rem; color: #374151; }
     .admin-table tbody tr:hover td { background: #FDF8F9; }
 
@@ -456,13 +456,11 @@
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
           <div class="card">
             <h3 class="text-sm font-semibold text-gray-500 mb-3">Top Products (by qty)</h3>
-            <div class="overflow-auto"><table class="admin-table" style="min-width:280px;"><thead><tr><th>Product</th><th>Qty</th><th>Revenue</th></tr></thead><tbody id="topProductsBody"></tbody></table></div>
-            <div class="flex justify-end mt-2"><button id="ana-loadMoreProducts" class="btn-primary text-xs px-3 py-1.5 rounded-lg">Load More</button></div>
+            <div style="max-height:320px;overflow-y:auto;"><table class="admin-table" style="min-width:280px;"><thead><tr><th>Product</th><th>Qty</th><th>Revenue</th></tr></thead><tbody id="topProductsBody"></tbody></table></div>
           </div>
           <div class="card">
             <h3 class="text-sm font-semibold text-gray-500 mb-3">Top Customers (by spend)</h3>
-            <div class="overflow-auto"><table class="admin-table" style="min-width:280px;"><thead><tr><th>Customer</th><th>Orders</th><th>Spent</th></tr></thead><tbody id="topCustomersBody"></tbody></table></div>
-            <div class="flex justify-end mt-2"><button id="ana-loadMoreCustomers" class="btn-primary text-xs px-3 py-1.5 rounded-lg">Load More</button></div>
+            <div style="max-height:320px;overflow-y:auto;"><table class="admin-table" style="min-width:280px;"><thead><tr><th>Customer</th><th>Orders</th><th>Spent</th></tr></thead><tbody id="topCustomersBody"></tbody></table></div>
           </div>
         </div>
         <div class="card">
@@ -1649,7 +1647,7 @@ async function sendReceiptEmail(order) {
 // ====================================================
 // ANALYTICS
 // ====================================================
-let anaCharts = {}, anaOrdersUnsub = null, anaProdsLimit = 5, anaCustsLimit = 5, anaLastProds = [], anaLastCusts = [];
+let anaCharts = {}, anaOrdersUnsub = null, anaLastProds = [], anaLastCusts = [];
 
 function initAnalytics() {
   const chartOpts = (type, color, fill) => ({
@@ -1665,8 +1663,6 @@ function initAnalytics() {
   document.getElementById('ana-applyFilters').onclick = () => { anaLoadAll(); anaStartFeed(); };
   document.getElementById('ana-clearFilters').onclick = () => { ['ana-searchQ','ana-fromDate','ana-toDate'].forEach(id => document.getElementById(id).value = ''); anaLoadAll(); anaStartFeed(); };
   document.getElementById('ana-refreshBtn').onclick = () => { anaLoadAll(); anaStartFeed(); };
-  document.getElementById('ana-loadMoreProducts').onclick = () => { anaProdsLimit += 5; anaDisplayProds(); };
-  document.getElementById('ana-loadMoreCustomers').onclick = () => { anaCustsLimit += 5; anaDisplayCusts(); };
   document.getElementById('ana-closeModal').onclick = () => { document.getElementById('ana-detailModal').classList.add('hidden'); document.getElementById('ana-detailModal').classList.remove('flex'); };
   document.getElementById('ana-detailModal').addEventListener('click', e => { if (e.target === document.getElementById('ana-detailModal')) { document.getElementById('ana-detailModal').classList.add('hidden'); document.getElementById('ana-detailModal').classList.remove('flex'); } });
   document.getElementById('topProductsBody').addEventListener('click', e => {
@@ -1761,13 +1757,23 @@ async function anaLoadAll() {
 
 function anaDisplayProds() {
   const body = document.getElementById('topProductsBody');
-  const top = anaLastProds.slice(0, anaProdsLimit);
-  body.innerHTML = top.length ? top.map((t, i) => `<tr class="cursor-pointer hover:bg-gray-50" data-index="${i}"><td class="p-2">${escapeHtml(t.name)}</td><td class="p-2">${t.qty.toLocaleString()}</td><td class="p-2">₦${Math.round(t.revenue).toLocaleString()}</td></tr>`).join('') : `<tr><td colspan="3" class="p-3 text-gray-400 text-sm">No data</td></tr>`;
+  body.innerHTML = anaLastProds.length
+    ? anaLastProds.map((t, i) => `<tr class="cursor-pointer hover:bg-gray-50" data-index="${i}">
+        <td class="p-2">${escapeHtml(t.name)}</td>
+        <td class="p-2">${t.qty.toLocaleString()}</td>
+        <td class="p-2">₦${Math.round(t.revenue).toLocaleString()}</td>
+      </tr>`).join('')
+    : `<tr><td colspan="3" class="p-3 text-gray-400 text-sm">No data</td></tr>`;
 }
 function anaDisplayCusts() {
   const body = document.getElementById('topCustomersBody');
-  const top = anaLastCusts.slice(0, anaCustsLimit);
-  body.innerHTML = top.length ? top.map((c, i) => `<tr class="cursor-pointer hover:bg-gray-50" data-index="${i}"><td class="p-2">${escapeHtml(c.name)}</td><td class="p-2">${c.orders}</td><td class="p-2">₦${Math.round(c.spent).toLocaleString()}</td></tr>`).join('') : `<tr><td colspan="3" class="p-3 text-gray-400 text-sm">No data</td></tr>`;
+  body.innerHTML = anaLastCusts.length
+    ? anaLastCusts.map((c, i) => `<tr class="cursor-pointer hover:bg-gray-50" data-index="${i}">
+        <td class="p-2">${escapeHtml(c.name)}</td>
+        <td class="p-2">${c.orders}</td>
+        <td class="p-2">₦${Math.round(c.spent).toLocaleString()}</td>
+      </tr>`).join('')
+    : `<tr><td colspan="3" class="p-3 text-gray-400 text-sm">No data</td></tr>`;
 }
 
 function anaStartFeed() {
