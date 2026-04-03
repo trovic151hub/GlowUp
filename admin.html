@@ -1189,6 +1189,10 @@ function ordClientFilter(order) {
     const shipStatus = (order.shipping?.status || 'processing').toLowerCase();
     if (shipStatus !== ordFilters.shipment.toLowerCase()) return false;
   }
+  if (ordFilters.payment && ordFilters.payment !== 'all') {
+    const method = (order.payment?.method || order.paymentMethod || '').toLowerCase();
+    if (method !== ordFilters.payment.toLowerCase()) return false;
+  }
   return true;
 }
 
@@ -1261,7 +1265,6 @@ function initOrders() {
 // Build Firestore query — pass null pageSize to fetch everything (filter mode)
 function ordBuildQuery(pageSize, startAfterDoc = null) {
   let q = db.collection('orders').orderBy('createdAt', 'desc');
-  if (ordFilters.payment && ordFilters.payment !== 'all') q = q.where('payment.method', '==', ordFilters.payment);
   if (ordFilters.from) q = q.where('createdAt', '>=', firebase.firestore.Timestamp.fromDate(new Date(ordFilters.from + 'T00:00:00')));
   if (ordFilters.to) q = q.where('createdAt', '<=', firebase.firestore.Timestamp.fromDate(new Date(ordFilters.to + 'T23:59:59')));
   if (startAfterDoc) q = q.startAfter(startAfterDoc);
