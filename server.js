@@ -1,13 +1,10 @@
 const http = require('http');
 const fs = require('fs');
 const path = require('path');
-const { execSync } = require('child_process');
 
 const PORT = 5000;
 const HOST = '0.0.0.0';
 
-// Free the port before starting in case a previous process is still holding it
-try { execSync(`fuser -k ${PORT}/tcp`, { stdio: 'ignore' }); } catch (_) {}
 
 const mimeTypes = {
   '.html': 'text/html',
