@@ -305,9 +305,7 @@ function calculateDeliveryFee(deliveryInfo, totalWeight) {
 
   // GIG pricing
   if (company === "GIG") {
-    if (totalWeight <= 3) fee = 6800;
-    else if (totalWeight <= 6) fee = 6800 + 900;
-    else fee = 6800 + 900 * Math.ceil((totalWeight - 3) / 3);
+    fee = totalWeight <= 2 ? 6800 : 6800 + 800 * Math.ceil(totalWeight - 2);
 
     if (deliveryType === "home") fee += 800;
   }

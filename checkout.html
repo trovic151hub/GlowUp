@@ -900,7 +900,7 @@ console.log("Guest ID READY:", window.guestId);
     if (stateLower === "lagos" && deliveryInfo.lga) {
       fee = lagosLGAFees[deliveryInfo.lga] || 0;
     } else if (company === "GIG") {
-      fee = 6700 + Math.max(totalWeight - 1, 0) * 800;
+      fee = totalWeight <= 2 ? 6800 : 6800 + 800 * Math.ceil(totalWeight - 2);
     } else if (company === "GUO" && guoSupportedStates.includes(stateLower)) {
       const isNorth = guoNorthernStates.includes(stateLower);
       const base = isNorth ? 9000 : 5000;
@@ -1316,7 +1316,7 @@ async function saveOrder(order) {
     const state = billing.state.toLowerCase();
     const option = deliverySelect.value.toLowerCase();
     if(state==="lagos" && billing.lga) fee = lagosLGAFees[billing.lga]||0;
-    else if(option==="gig") fee = 6700 + Math.max(totalWeight-1,0)*800;
+    else if(option==="gig") fee = totalWeight <= 2 ? 6800 : 6800 + 800 * Math.ceil(totalWeight - 2);
     else if(option==="guo" && guoSupportedStates.includes(state)){
       const isNorth = guoNorthernStates.includes(state);
       const base = isNorth ? 9000 : 5000;
