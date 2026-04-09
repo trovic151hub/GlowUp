@@ -312,13 +312,12 @@ function calculateDeliveryFee(deliveryInfo, totalWeight) {
     if (deliveryType === "home") fee += 800;
   }
 
-  // GUO pricing
+  // GUO pricing (terminal only — no home delivery)
   else if (company === "GUO" && guoSupportedStates.includes(state)) {
-    if (totalWeight <= 3) fee = 5000;
-    else if (totalWeight <= 6) fee = 5000 + 800;
-    else fee = 5000 + 800 * Math.ceil((totalWeight - 3) / 3);
-
-    if (deliveryType === "home") fee += 800;
+    const isNorth = guoNorthernStates.includes(state);
+    const base = isNorth ? 9000 : 5000;
+    if (totalWeight <= 2) fee = base;
+    else fee = base + 800 * Math.ceil(totalWeight - 2);
   }
 
   return fee;
@@ -659,6 +658,7 @@ const GIGTerminals = {
 const stateInput = document.getElementById("state");
 // Auto-generate supported states from GUO terminals object
 const guoSupportedStates = Object.keys(GUOTerminals);
+const guoNorthernStates = ["federal capital territory", "kaduna", "kano", "plateau", "yola", "bauchi"];
 
 // const deliveryCompany = document.getElementById("delivery-company");
 
@@ -728,7 +728,23 @@ stateSelect.addEventListener("change", () => {
   }
 });
 
-deliveryCompany.addEventListener("change", populateTerminals);
+deliveryCompany.addEventListener("change", () => {
+  const company = deliveryCompany.value.trim().toUpperCase();
+  const homeOption = deliveryType.querySelector('option[value="home"]');
+  if (company === "GUO") {
+    if (homeOption) homeOption.remove();
+    if (deliveryType.value === "home") deliveryType.value = "";
+  } else {
+    if (!homeOption) {
+      const opt = document.createElement("option");
+      opt.value = "home";
+      opt.textContent = "Home Delivery";
+      const terminalOpt = deliveryType.querySelector('option[value="terminal"]');
+      deliveryType.insertBefore(opt, terminalOpt);
+    }
+  }
+  populateTerminals();
+});
 deliveryType.addEventListener("change", populateTerminals);
 
 

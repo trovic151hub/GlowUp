@@ -558,11 +558,12 @@ function togglePaymentByCountry() {
   "Oshodi-Isolo":3000,"Shomolu":3000,"Surulere":3000
 };
 
-  const guoSupportedStates=["lagos","abuja","abia", "Aba", "anambra",
+  const guoSupportedStates=["lagos","abuja","abia","aba","anambra",
   "benin","enugu","imo","rivers","delta","edo","benue","kaduna","kano",
-  "benin","ebonyi","plateau","warri","asaba", "Umuahia", "Yola", "Awka",
-  "Bauchi"
+  "ebonyi","plateau","warri","asaba","umuahia","yola","awka","bauchi",
+  "federal capital territory"
 ];
+  const guoNorthernStates=["federal capital territory","kaduna","kano","plateau","yola","bauchi","abuja"];
 
   const states=["Abia", "Aba","Adamawa","Akwa Ibom", "Awka","Anambra","Benin",
   "Bauchi","Bayelsa","Benue","Borno","Cross River","Delta",
@@ -701,6 +702,19 @@ const GIGTerminals = {
     resetDeliveryType();
     if(deliverySelect.value){
       deliveryType.style.display="inline-block"; deliveryTypeLabel.style.display="inline-block";
+      const isGUO = deliverySelect.value.toLowerCase() === "guo";
+      const homeOpt = deliveryType.querySelector('option[value="home"]');
+      if(isGUO){
+        if(homeOpt) homeOpt.remove();
+        if(deliveryType.value === "home") deliveryType.value = "";
+      } else {
+        if(!homeOpt){
+          const opt = document.createElement("option");
+          opt.value = "home"; opt.textContent = "Home Delivery";
+          const termOpt = deliveryType.querySelector('option[value="terminal"]');
+          deliveryType.insertBefore(opt, termOpt);
+        }
+      }
     }
     renderOrderWithDelivery();
   }
@@ -888,10 +902,12 @@ console.log("Guest ID READY:", window.guestId);
     } else if (company === "GIG") {
       fee = 6700 + Math.max(totalWeight - 1, 0) * 800;
     } else if (company === "GUO" && guoSupportedStates.includes(stateLower)) {
-      fee = 3500 + Math.max(totalWeight - 1, 0) * 700;
+      const isNorth = guoNorthernStates.includes(stateLower);
+      const base = isNorth ? 9000 : 5000;
+      fee = totalWeight <= 2 ? base : base + 800 * Math.ceil(totalWeight - 2);
     }
 
-    if (deliveryInfo.type === "home") fee += 800;
+    if (deliveryInfo.type === "home" && company !== "GUO") fee += 800;
 
     return fee;
   }
@@ -1301,8 +1317,12 @@ async function saveOrder(order) {
     const option = deliverySelect.value.toLowerCase();
     if(state==="lagos" && billing.lga) fee = lagosLGAFees[billing.lga]||0;
     else if(option==="gig") fee = 6700 + Math.max(totalWeight-1,0)*800;
-    else if(option==="guo" && guoSupportedStates.includes(state)) fee = 3500 + Math.max(totalWeight-1,0)*700;
-    if(deliveryType.value==="home") fee += 800;
+    else if(option==="guo" && guoSupportedStates.includes(state)){
+      const isNorth = guoNorthernStates.includes(state);
+      const base = isNorth ? 9000 : 5000;
+      fee = totalWeight <= 2 ? base : base + 800 * Math.ceil(totalWeight - 2);
+    }
+    if(deliveryType.value==="home" && option !== "guo") fee += 800;
 
     const total = subtotal + fee;
     if(total <= 0){ showNotification("Total amount is zero. Cannot proceed.","error"); return; }
