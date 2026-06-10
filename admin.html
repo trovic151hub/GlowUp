@@ -83,6 +83,7 @@
       #content-area { width: 100%; }
       #content-area > header { position: fixed; top: 0; left: 0; right: 0; z-index: 35; }
       #content-area > div { padding-top: 64px; }
+      .admin-table th { top: 60px; }
     }
 
     @media (max-width: 640px) {
@@ -92,8 +93,8 @@
       .admin-table td { display: flex; justify-content: space-between; padding: 0.4rem 0.5rem; font-size: 0.8rem; border: none; }
       .admin-table td::before { content: attr(data-label); font-weight: 600; color: #9B7A87; margin-right: 0.5rem; flex-shrink: 0; }
     }
-    *, *::before, *::after { scrollbar-width: none; -ms-overflow-style: none; }
-    ::-webkit-scrollbar { display: none; width: 0; height: 0; }
+    *, *::before, *::after { scrollbar-width: none !important; -ms-overflow-style: none !important; }
+    ::-webkit-scrollbar { display: none !important; width: 0 !important; height: 0 !important; }
   </style>
 </head>
 <body class="bg-gray-100 overflow-hidden">
@@ -649,6 +650,7 @@ let analyticsInitialized = false, ordersInitialized = false, homepageInitialized
 const sectionTitles = { dashboard:'Dashboard', products:'Products', orders:'Orders', analytics:'Analytics', hero:'Hero Slider', homepage:'Featured Products', admins:'Admin Accounts' };
 
 function showSection(name) {
+  document.getElementById('content-area').scrollTo({ top: 0 });
   document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
   document.querySelectorAll('.nav-item[data-section]').forEach(n => n.classList.remove('active'));
   document.getElementById('section-' + name).classList.add('active');

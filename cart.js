@@ -1139,7 +1139,7 @@ Thank you! 🙏
     // Paystack callback function
     function handlePaystackSuccess(response) {
       (async () => {
-        // showNotification("Payment successful! Transaction ref: " + response.reference);
+        showLoader();
 
         const orderRef = db.collection("orders").doc();
         await orderRef.set({
