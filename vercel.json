@@ -1,9 +1,5 @@
 {
-  "version": 2,
-  "builds": [
-    { "src": "**/*", "use": "@vercel/static" }
-  ],
-  "routes": [
-    { "src": "/", "dest": "/index.html" }
+  "rewrites": [
+    { "source": "/config.js", "destination": "/api/config" }
   ]
 }
