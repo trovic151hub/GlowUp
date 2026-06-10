@@ -40,7 +40,9 @@
         <i class="fas fa-bars"></i>
       </button>
       <!-- Brand -->
-      <h1 class="main-head brand-title text-white">Skinova</h1>
+      <div class="flex items-center gap-2">
+        <img src="attached_assets/skinova-logo-transparent.png" class="h-9 w-auto object-contain" alt="Skinova" style="mix-blend-mode:multiply;" />
+      </div>
     </div>
 
     <!-- Overlay -->
@@ -51,8 +53,8 @@
       class="fixed top-0 left-0 w-64 h-full bg-white shadow-2xl p-6 transform -translate-x-full transition-transform duration-300 z-50">
       <button id="closeMenu" class="text-2xl text-gray-400 hover:text-[#8B4F6B] absolute top-5 right-5 transition-colors">&times;</button>
 
-      <div class="mt-3 mb-6">
-        <p style="font-family:'Cormorant Garamond',serif;" class="text-lg font-semibold text-[#2C2420] tracking-wide">Skinova</p>
+      <div class="mt-3 mb-6 flex items-center gap-2.5">
+        <img src="attached_assets/skinova-logo-transparent.png" class="h-12 w-auto object-contain" alt="Skinova" style="mix-blend-mode:multiply;" />
         <p class="text-xs text-[#9E8E88] tracking-widest uppercase mt-0.5">Premium Supplements</p>
       </div>
 
@@ -137,6 +139,16 @@
     </div>
   </div>
 
+  <!-- Trust Bar -->
+  <div class="bg-[#2C2420] text-[#D4C5BE] py-3 px-6 overflow-x-auto">
+    <div class="max-w-screen-xl mx-auto flex items-center justify-center gap-8 md:gap-16 text-xs tracking-widest uppercase whitespace-nowrap">
+      <span class="flex items-center gap-2"><i class="fas fa-flask text-[#C9A28F]"></i> Science-Backed Formulas</span>
+      <span class="hidden sm:flex items-center gap-2"><i class="fas fa-leaf text-[#C9A28F]"></i> Clean Ingredients</span>
+      <span class="flex items-center gap-2"><i class="fas fa-truck text-[#C9A28F]"></i> Ships Nationwide</span>
+      <span class="hidden sm:flex items-center gap-2"><i class="fas fa-heart text-[#C9A28F]"></i> Made for African Skin</span>
+    </div>
+  </div>
+
   <!-- Search Bar (Hidden by default) -->
   <div id="featuredSearchWrapper" class="hidden sticky top-16 px-5 py-3 z-40 bg-[#FAF8F5]/95 shadow-sm border-b border-[#e0d3cc] mb-2">
     <div class="max-w-xl mx-auto flex items-center gap-3 border border-[#e0d3cc] rounded-full px-4 py-2 bg-white">
@@ -150,6 +162,38 @@
       </button>
     </div>
   </div>
+
+  <!-- Brand Story -->
+  <section class="px-6 pt-14 pb-10 max-w-screen-xl mx-auto">
+    <div class="text-center mb-10">
+      <p class="text-xs font-semibold tracking-[0.2em] uppercase text-[#8B4F6B] mb-3">Our Philosophy</p>
+      <h2 class="section-heading text-3xl md:text-4xl" style="font-family:'Cormorant Garamond',serif;">Why Skinova?</h2>
+      <p class="mt-5 text-sm text-[#6B5B55] max-w-xl mx-auto leading-relaxed">We believe beautiful skin isn't just about what you put on it — it starts from within. Skinova was built in Lagos for people who want real results from clean, science-backed supplements that work with your body, not against it.</p>
+    </div>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div class="bg-white rounded-xl p-7 border border-[#f0ebe7] text-center shadow-sm hover:shadow-md transition-shadow">
+        <div class="w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-4" style="background:#F3EEF0;">
+          <i class="fas fa-microscope text-sm" style="color:#8B4F6B;"></i>
+        </div>
+        <h3 style="font-family:'Cormorant Garamond',serif;" class="text-lg font-semibold text-[#2C2420] mb-2">Science-Backed</h3>
+        <p class="text-sm text-[#6B5B55] leading-relaxed">Every formula is developed with research behind it — not trends. What we put in our supplements is there for a reason.</p>
+      </div>
+      <div class="bg-white rounded-xl p-7 border border-[#f0ebe7] text-center shadow-sm hover:shadow-md transition-shadow">
+        <div class="w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-4" style="background:#F3EEF0;">
+          <i class="fas fa-seedling text-sm" style="color:#8B4F6B;"></i>
+        </div>
+        <h3 style="font-family:'Cormorant Garamond',serif;" class="text-lg font-semibold text-[#2C2420] mb-2">Clean Ingredients</h3>
+        <p class="text-sm text-[#6B5B55] leading-relaxed">No unnecessary fillers, no harsh additives. We choose ingredients you can trust and formulations your body will absorb.</p>
+      </div>
+      <div class="bg-white rounded-xl p-7 border border-[#f0ebe7] text-center shadow-sm hover:shadow-md transition-shadow">
+        <div class="w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-4" style="background:#F3EEF0;">
+          <i class="fas fa-sun text-sm" style="color:#8B4F6B;"></i>
+        </div>
+        <h3 style="font-family:'Cormorant Garamond',serif;" class="text-lg font-semibold text-[#2C2420] mb-2">Made for You</h3>
+        <p class="text-sm text-[#6B5B55] leading-relaxed">Formulated with African skin in mind — our products work with your melanin, your climate, and your lifestyle.</p>
+      </div>
+    </div>
+  </section>
 
   <!-- Featured Products -->
   <section class="px-6 py-10 max-w-screen-xl mx-auto">
@@ -232,8 +276,7 @@
       <!-- Brand -->
       <div>
         <div class="flex items-center gap-2 mb-3">
-          <img src="attached_assets/skinova_logo.png" class="w-8 h-8 object-contain" alt="Skinova Logo">
-          <p class="footer-brand">Skinova</p>
+          <img src="attached_assets/skinova-logo-transparent.png" class="h-10 w-auto object-contain" alt="Skinova Logo" style="mix-blend-mode:multiply;" />
         </div>
         <p class="text-sm leading-relaxed text-[#6B5B55]">Premium skincare supplements for radiant, healthy skin. Beauty starts from within.</p>
         <div class="flex gap-4 mt-5">
@@ -250,7 +293,7 @@
             <i class="fas fa-phone-alt text-[#8B4F6B]"></i> +2347036594806
           </p>
           <p class="flex items-start gap-2">
-            <i class="fas fa-map-marker-alt text-[#8B4F6B] mt-0.5"></i> Lagos, Nigeria
+            <i class="fas fa-map-marker-alt text-[#8B4F6B] mt-0.5"></i> Lagos, Nigeria — Orders ship nationwide
           </p>
           <a href="mailto:ibitoyeifeoluwafunmi@gmail.com" class="flex items-center gap-2 hover:text-[#C9A28F] transition-colors">
             <i class="fas fa-envelope text-[#8B4F6B]"></i> ibitoyeifeoluwafunmi@gmail.com
