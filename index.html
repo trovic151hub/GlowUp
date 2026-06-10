@@ -14,6 +14,13 @@
   <style>
     *, *::before, *::after { scrollbar-width: none; -ms-overflow-style: none; }
     ::-webkit-scrollbar { display: none; width: 0; height: 0; }
+    #featuredSearchWrapper:not(.hidden) {
+      animation: searchSlideDown 0.2s ease forwards;
+    }
+    @keyframes searchSlideDown {
+      from { opacity: 0; transform: translateY(-8px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
   </style>
 </head>
 
@@ -131,13 +138,15 @@
   </div>
 
   <!-- Search Bar (Hidden by default) -->
-  <div id="featuredSearchWrapper" class="hidden sticky search top-16 px-5 py-3 z-40 bg-white/95 shadow-sm border-b border-gray-100 mb-2">
-    <div class="flex items-center gap-3 max-w-xl mx-auto">
-      <i class="fas fa-search text-[#9E8E88] text-sm"></i>
+  <div id="featuredSearchWrapper" class="hidden sticky top-16 px-5 py-3 z-40 bg-[#FAF8F5]/95 shadow-sm border-b border-[#e0d3cc] mb-2">
+    <div class="max-w-xl mx-auto flex items-center gap-3 border border-[#e0d3cc] rounded-full px-4 py-2 bg-white">
+      <i class="fas fa-search text-[#9E8E88] text-sm flex-shrink-0"></i>
       <input id="featuredSearchInput" type="text" placeholder="Search products..."
         class="flex-1 border-0 bg-transparent text-sm text-[#2C2420] placeholder-[#9E8E88] focus:outline-none" />
-      <button id="closeSearchBtn" class="text-[#9E8E88] hover:text-[#8B4F6B] text-xl font-light transition-colors">
-        &times;
+      <button id="closeSearchBtn" class="text-[#9E8E88] hover:text-[#8B4F6B] transition-colors flex-shrink-0">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" viewBox="0 0 24 24">
+          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
       </button>
     </div>
   </div>
@@ -243,7 +252,7 @@
           <p class="flex items-start gap-2">
             <i class="fas fa-map-marker-alt text-[#8B4F6B] mt-0.5"></i> Lagos, Nigeria
           </p>
-          <a href="mailto:victoradeyimika0@gmail.com" class="flex items-center gap-2 hover:text-[#C9A28F] transition-colors">
+          <a href="mailto:ibitoyeifeoluwafunmi@gmail.com" class="flex items-center gap-2 hover:text-[#C9A28F] transition-colors">
             <i class="fas fa-envelope text-[#8B4F6B]"></i> ibitoyeifeoluwafunmi@gmail.com
           </a>
         </div>
@@ -278,6 +287,7 @@
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+  <script src="/config.js"></script>
   <script src="home.js"></script>
   <script src="https://unpkg.com/gsap@3/dist/gsap.min.js"></script>
   <script src="https://unpkg.com/gsap@3/dist/ScrollTrigger.min.js"></script>

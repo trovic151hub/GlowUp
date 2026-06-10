@@ -99,38 +99,70 @@
   }
   .filter-inner {
     max-width: 960px; margin: 0 auto;
-    display: flex; flex-wrap: wrap; gap: 12px; align-items: center;
+    display: flex; flex-wrap: wrap; gap: 10px; align-items: center;
   }
-  .filter-group { display: flex; align-items: center; gap: 8px; }
-  .filter-label-text {
-    font-size: 0.72rem; font-weight: 600;
-    letter-spacing: 0.08em; text-transform: uppercase;
-    color: #9E8E88; white-space: nowrap;
-  }
-  .filter-select, .filter-input {
-    height: 36px; padding: 0 12px;
-    background: #FAF8F5;
-    border: 1px solid #e0d3cc; border-radius: 3px;
-    font-size: 0.8rem; color: #2C2420;
+  /* Custom Dropdown */
+  .filter-dropdown { position: relative; }
+  .filter-dropdown-btn {
+    display: flex; align-items: center; gap: 8px;
+    height: 38px; padding: 0 14px;
+    background: #fff; border: 1.5px solid #e0d3cc;
+    border-radius: 999px; cursor: pointer;
+    font-size: 0.82rem; font-weight: 500; color: #2C2420;
     font-family: 'Inter', sans-serif;
-    outline: none; transition: border-color 0.2s;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    white-space: nowrap;
   }
-  .filter-select:focus, .filter-input:focus { border-color: #8B4F6B; }
-  .filter-input { width: 200px; }
-  .filter-input::placeholder { color: #b0a09a; }
+  .filter-dropdown-btn:hover,
+  .filter-dropdown-btn.open { border-color: #8B4F6B; box-shadow: 0 0 0 3px rgba(139,79,107,0.1); }
+  .filter-chevron { transition: transform 0.25s; flex-shrink: 0; }
+  .filter-dropdown-btn.open .filter-chevron { transform: rotate(180deg); }
+  .filter-dropdown-menu {
+    position: absolute; top: calc(100% + 8px); left: 0;
+    min-width: 190px; background: #fff;
+    border: 1px solid #e0d3cc; border-radius: 14px;
+    box-shadow: 0 8px 24px rgba(44,36,32,0.12);
+    padding: 6px; z-index: 200;
+    opacity: 0; transform: translateY(-6px);
+    pointer-events: none; transition: opacity 0.2s, transform 0.2s;
+  }
+  .filter-dropdown-menu.open { opacity: 1; transform: translateY(0); pointer-events: all; }
+  .filter-option {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 9px 12px; border-radius: 8px;
+    font-size: 0.82rem; color: #2C2420; cursor: pointer;
+    transition: background 0.15s;
+  }
+  .filter-option:hover { background: #faf5f8; }
+  .filter-option.active { color: #8B4F6B; font-weight: 600; }
+  .filter-option .opt-check { opacity: 0; transition: opacity 0.15s; }
+  .filter-option.active .opt-check { opacity: 1; }
+  /* Search pill */
+  .filter-search-wrap {
+    display: flex; align-items: center; gap: 8px;
+    height: 38px; padding: 0 14px;
+    background: #fff; border: 1.5px solid #e0d3cc; border-radius: 999px;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  .filter-search-wrap:focus-within { border-color: #8B4F6B; box-shadow: 0 0 0 3px rgba(139,79,107,0.1); }
+  .filter-search-wrap input {
+    border: none; background: transparent; outline: none;
+    font-size: 0.82rem; color: #2C2420; width: 180px;
+    font-family: 'Inter', sans-serif;
+  }
+  .filter-search-wrap input::placeholder { color: #b0a09a; }
+  /* Close button (mobile) */
   .close-filter-btn {
-    margin-left: auto;
-    background: none; border: none;
+    margin-left: auto; background: none; border: none;
     color: #9E8E88; font-size: 1.4rem;
-    cursor: pointer; display: none;
-    line-height: 1;
+    cursor: pointer; display: none; line-height: 1;
     transition: color 0.2s;
   }
   .close-filter-btn:hover { color: #8B4F6B; }
   @media (max-width: 768px) {
     #filterSortSection { top: 52px; }
     .filter-inner { flex-direction: column; align-items: flex-start; }
-    .filter-input { width: 100%; }
+    .filter-search-wrap input { width: 140px; }
     .close-filter-btn { display: block; }
     #filterSortSection.hidden { display: none; }
   }
@@ -425,28 +457,43 @@
 <!-- Filter & Sort Bar -->
 <section id="filterSortSection" class="hidden md:block">
   <div class="filter-inner">
-    <div class="filter-group">
-      <span class="filter-label-text">Category</span>
-      <select id="categoryFilter" class="filter-select">
-        <option value="All">All</option>
-        <option value="Brightening">Brightening</option>
-        <option value="Anti-Aging">Anti-Aging</option>
-        <option value="Hydration">Hydration</option>
-        <option value="Supplements">Supplements</option>
-      </select>
+
+    <!-- Category Dropdown -->
+    <div class="filter-dropdown" id="categoryDropdown">
+      <button type="button" class="filter-dropdown-btn" id="categoryBtn">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+        <span id="categoryLabel">All Categories</span>
+        <svg class="filter-chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+      </button>
+      <div class="filter-dropdown-menu" id="categoryMenu">
+        <div class="filter-option active" data-value="All"><span>All Categories</span><svg class="opt-check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#8B4F6B" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
+        <div class="filter-option" data-value="Brightening"><span>Brightening</span><svg class="opt-check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#8B4F6B" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
+        <div class="filter-option" data-value="Anti-Aging"><span>Anti-Aging</span><svg class="opt-check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#8B4F6B" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
+        <div class="filter-option" data-value="Hydration"><span>Hydration</span><svg class="opt-check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#8B4F6B" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
+        <div class="filter-option" data-value="Supplements"><span>Supplements</span><svg class="opt-check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#8B4F6B" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
+      </div>
     </div>
-    <div class="filter-group">
-      <span class="filter-label-text">Search</span>
-      <input type="text" id="searchInput" placeholder="Search products…" class="filter-input" />
+
+    <!-- Search -->
+    <div class="filter-search-wrap">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#9E8E88" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input type="text" id="searchInput" placeholder="Search products…" />
     </div>
-    <div class="filter-group">
-      <span class="filter-label-text">Price</span>
-      <select id="priceSort" class="filter-select">
-        <option value="default">Default</option>
-        <option value="asc">Low to High</option>
-        <option value="desc">High to Low</option>
-      </select>
+
+    <!-- Price Sort Dropdown -->
+    <div class="filter-dropdown" id="priceSortDropdown">
+      <button type="button" class="filter-dropdown-btn" id="priceSortBtn">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="12" x2="14" y2="12"/><line x1="4" y1="18" x2="9" y2="18"/></svg>
+        <span id="priceSortLabel">Default</span>
+        <svg class="filter-chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+      </button>
+      <div class="filter-dropdown-menu" id="priceSortMenu">
+        <div class="filter-option active" data-value="default"><span>Default</span><svg class="opt-check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#8B4F6B" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
+        <div class="filter-option" data-value="asc"><span>Price: Low to High</span><svg class="opt-check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#8B4F6B" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
+        <div class="filter-option" data-value="desc"><span>Price: High to Low</span><svg class="opt-check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#8B4F6B" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
+      </div>
     </div>
+
     <button id="closeFilterSort" class="close-filter-btn">&times;</button>
   </div>
 </section>
@@ -507,7 +554,7 @@
       <div class="space-y-2 text-sm text-[#6B5B55]">
         <p class="flex items-center gap-2"><i class="fas fa-phone-alt text-[#8B4F6B]"></i> +2347036594806</p>
         <p class="flex items-start gap-2"><i class="fas fa-map-marker-alt text-[#8B4F6B] mt-0.5"></i> Lagos, Nigeria</p>
-        <a href="mailto:victoradeyimika0@gmail.com" class="flex items-center gap-2 hover:text-[#C9A28F] transition-colors">
+        <a href="mailto:ibitoyeifeoluwafunmi@gmail.com" class="flex items-center gap-2 hover:text-[#C9A28F] transition-colors">
           <i class="fas fa-envelope text-[#8B4F6B]"></i> ibitoyeifeoluwafunmi@gmail.com
         </a>
       </div>
@@ -539,17 +586,11 @@
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+<script src="/config.js"></script>
 
 <script>
 (function(){
-  const firebaseConfig = {
-    apiKey: "AIzaSyDdTPmpaIPWSDWOmR-fXgvAb7hoxZUawcc",
-    authDomain: "e-commerce-39c74.firebaseapp.com",
-    projectId: "e-commerce-39c74",
-    storageBucket: "e-commerce-39c74.firebasestorage.app",
-    messagingSenderId: "863375033754",
-    appId: "1:863375033754:web:7ba248c8dbb1566c83e623"
-  };
+  const firebaseConfig = window.CONFIG.firebase;
 
   if(!firebase.apps.length){ firebase.initializeApp(firebaseConfig); }
 
@@ -635,9 +676,9 @@
   const productGrid = document.getElementById("productGrid");
   const loadMoreBtn = document.getElementById("loadMoreBtn");
   const loadMoreText = document.getElementById("loadMoreText");
-  const categoryFilter = document.getElementById("categoryFilter");
   const searchInput = document.getElementById("searchInput");
-  const priceSort = document.getElementById("priceSort");
+  let selectedCategory = "All";
+  let selectedSort = "default";
   const productModal = document.getElementById("productModal");
   const modalContent = document.getElementById("modalContent");
   const cartCountEl = document.getElementById("cartCount");
@@ -730,9 +771,9 @@
 
   // ---------- Filtering / Sorting ----------
   function applyFilters(){
-    const cat = categoryFilter?.value || "All";
+    const cat = selectedCategory;
     const q = searchInput?.value.trim().toLowerCase() || "";
-    const sort = priceSort?.value || "default";
+    const sort = selectedSort;
 
     filteredProducts = allProducts.filter(p=>{
       const matchCat = cat==="All" || p.category===cat;
@@ -749,6 +790,12 @@
     hideSkeleton();
   }
 
+  // ---------- Image Optimization ----------
+  function optimizeImage(url, w = 400, h = 360) {
+    if (!url || !url.includes('res.cloudinary.com')) return url;
+    return url.replace('/upload/', `/upload/w_${w},h_${h},c_fill,q_auto,f_auto/`);
+  }
+
   // ---------- Render Products ----------
   function createProductCard(product){
     const wrapper = document.createElement("div");
@@ -760,9 +807,10 @@
     imgWrap.style.cssText = "position:relative;overflow:hidden;";
 
     const img = document.createElement("img");
-    img.src = product.image || "https://via.placeholder.com/300x200";
+    img.src = optimizeImage(product.image) || "https://via.placeholder.com/400x360";
     img.alt = product.name || "Product";
     img.className = "product-card-img";
+    img.loading = "lazy";
     img.onerror = () => { img.src = "https://via.placeholder.com/300x200"; };
     if (isOutOfStock) img.style.opacity = "0.55";
     imgWrap.appendChild(img);
@@ -800,9 +848,9 @@
       addBtn.disabled = true;
       addBtn.style.cssText = "opacity:0.45;cursor:not-allowed;";
     } else {
-      addBtn.onclick = async ()=>{
+      addBtn.onclick = ()=>{
         showButtonSpinner(addBtn, true);
-        await addToCartFromPage(product);
+        addToCartFromPage(product);
         showButtonSpinner(addBtn, false);
       };
     }
@@ -836,23 +884,25 @@
     }
   }
 
-  async function addToCartFromPage(product){
+  function addToCartFromPage(product){
+    // Phase 1: instant optimistic update from localStorage
+    let items = [];
+    try { items = JSON.parse(localStorage.getItem("cart")) || []; } catch {}
+    const existing = items.find(i => i.id === product.id);
+    if(existing) existing.quantity += 1;
+    else items.push({ id:product.id, name:product.name, price:Number(product.price)||0, image:product.image||"", quantity:1, weight:Number(product.weight||0) });
+    localStorage.setItem("cart", JSON.stringify(items));
+    showNotification("Added to cart!", "success");
+    updateCartCount();
+
+    // Phase 2: background Firestore sync
     const cartDocRef = userDb.collection("guestCarts").doc(guestId);
-    try{
-      await ensureGuestCart();
-      const snap = await cartDocRef.get();
-      let items = snap.exists ? snap.data().items || [] : [];
-      const existing = items.find(i=> i.id===product.id);
-      if(existing) existing.quantity += 1;
-      else items.push({ id:product.id, name:product.name, price:Number(product.price)||0, image:product.image||"", quantity:1, weight:Number(product.weight||0) });
-      await cartDocRef.set({ guestId, items, updatedAt:firebase.firestore.FieldValue.serverTimestamp() }, { merge:true });
-      localStorage.setItem("cart", JSON.stringify(items));
-      showNotification("Added to cart!", "success");
-      updateCartCount();
-    }catch(err){
-      console.error(err);
-      showNotification("Failed to add to cart", "error");
-    }
+    ensureGuestCart()
+      .then(() => cartDocRef.set(
+        { guestId, items, updatedAt: firebase.firestore.FieldValue.serverTimestamp() },
+        { merge: true }
+      ))
+      .catch(err => console.error("Cart sync error:", err));
   }
 
   let cartUnsub = null;
@@ -876,8 +926,37 @@
   updateCartCount();
 
   // ---------- Events ----------
-  categoryFilter?.addEventListener("change", applyFilters);
-  priceSort?.addEventListener("change", applyFilters);
+  // Custom dropdown logic
+  function setupDropdown(btnId, menuId, labelId, onSelect) {
+    const btn = document.getElementById(btnId);
+    const menu = document.getElementById(menuId);
+    const label = document.getElementById(labelId);
+    if (!btn || !menu) return;
+    btn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      const isOpen = menu.classList.contains("open");
+      document.querySelectorAll(".filter-dropdown-menu").forEach(m => m.classList.remove("open"));
+      document.querySelectorAll(".filter-dropdown-btn").forEach(b => b.classList.remove("open"));
+      if (!isOpen) { menu.classList.add("open"); btn.classList.add("open"); }
+    });
+    menu.querySelectorAll(".filter-option").forEach(opt => {
+      opt.addEventListener("click", () => {
+        menu.querySelectorAll(".filter-option").forEach(o => o.classList.remove("active"));
+        opt.classList.add("active");
+        if (label) label.textContent = opt.querySelector("span").textContent;
+        menu.classList.remove("open");
+        btn.classList.remove("open");
+        onSelect(opt.dataset.value);
+      });
+    });
+  }
+  setupDropdown("categoryBtn", "categoryMenu", "categoryLabel", (val) => { selectedCategory = val; applyFilters(); });
+  setupDropdown("priceSortBtn", "priceSortMenu", "priceSortLabel", (val) => { selectedSort = val; applyFilters(); });
+  document.addEventListener("click", () => {
+    document.querySelectorAll(".filter-dropdown-menu").forEach(m => m.classList.remove("open"));
+    document.querySelectorAll(".filter-dropdown-btn").forEach(b => b.classList.remove("open"));
+  });
+
   if(searchInput){
     let debounce;
     searchInput.addEventListener("input",()=>{
@@ -885,13 +964,17 @@
       debounce = setTimeout(()=> applyFilters(), 300);
     });
   }
-  loadMoreBtn?.addEventListener("click", async ()=>{
+  loadMoreBtn?.addEventListener("click", ()=>{
+    loadMoreBtn.disabled = true;
+    const spinner = document.getElementById("spinner");
+    if(spinner) spinner.classList.remove("hidden");
     if(loadMoreText) loadMoreText.textContent = "Loading…";
-    showLoader(true);
-    await new Promise(res=>setTimeout(res,350));
-    renderNextBatch();
-    if(loadMoreText) loadMoreText.textContent = "Load More";
-    showLoader(false);
+    setTimeout(()=>{
+      renderNextBatch();
+      if(loadMoreText) loadMoreText.textContent = "Load More";
+      if(spinner) spinner.classList.add("hidden");
+      loadMoreBtn.disabled = false;
+    }, 400);
   });
 
   const openFilterSort = document.getElementById("openFilterSort");

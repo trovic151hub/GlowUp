@@ -34,19 +34,16 @@
   #dashboard-loader {
     position: fixed; inset: 0;
     display: flex; align-items: center; justify-content: center;
-    background: rgba(250, 248, 245, 0.88);
+    background: rgba(0, 0, 0, 0.45);
     backdrop-filter: blur(4px);
     z-index: 9999;
+    transition: opacity 0.3s ease;
   }
   #dashboard-loader.hidden { display: none; }
-  .loader-spinner {
-    width: 44px; height: 44px;
-    border-radius: 50%;
-    border: 3px solid #e8d5cd;
-    border-top-color: #8B4F6B;
-    animation: spin 0.8s linear infinite;
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.35; }
   }
-  @keyframes spin { to { transform: rotate(360deg); } }
 
   /* ── Header ── */
   #dashHeader {
@@ -201,11 +198,6 @@
   }
   .action-btn-view { background: #f4edf1; color: #8B4F6B; }
   .action-btn-view:hover { background: #8B4F6B; color: #fff; }
-  .action-btn-edit { background: #f0faf4; color: #065F46; }
-  .action-btn-edit:hover { background: #065F46; color: #fff; }
-  .action-btn-edit:disabled { opacity: 0.35; cursor: not-allowed; }
-  .action-btn-edit:disabled:hover { background: #f0faf4; color: #065F46; }
-
   /* ── Pagination ── */
   #paginationControls button {
     padding: 6px 14px;
@@ -222,76 +214,50 @@
   #paginationControls span { font-size: 0.8rem; color: #9E8E88; }
 
   /* ── Modal ── */
-  .modal-bg { background: rgba(30, 20, 24, 0.55); backdrop-filter: blur(4px); }
-  #orderModal > div {
+  .modal-bg { background: rgba(30,20,24,0.6); backdrop-filter: blur(6px); }
+  .modal-sheet {
     background: #fff;
-    border-radius: 10px;
-    box-shadow: 0 20px 60px rgba(44,36,32,0.22);
-    width: 92%; max-width: 520px;
-    padding: 28px;
-    max-height: 85vh;
-    overflow-y: auto;
+    border-radius: 20px 20px 0 0;
+    box-shadow: 0 -4px 40px rgba(44,36,32,0.18);
+    width: 100%; max-height: 88vh;
+    display: flex; flex-direction: column;
+    animation: modalSlideUp 0.28s cubic-bezier(0.34,1.1,0.64,1) forwards;
   }
-  #orderModal h2 {
-    font-size: 1.3rem;
-    border-bottom: 1px solid #f0ebe7;
-    padding-bottom: 12px;
-    margin-bottom: 18px;
-    color: #2C2420;
+  @media (min-width: 640px) {
+    .modal-sheet { border-radius: 20px; max-width: 500px; box-shadow: 0 24px 64px rgba(44,36,32,0.22); }
   }
-  /* Modal form inputs */
-  #orderModal input, #orderModal select {
-    width: 100%;
-    height: 44px;
-    padding: 0 12px;
-    background: #FAF8F5;
-    border: 1px solid #e0d3cc;
-    border-radius: 4px;
-    font-size: 0.875rem;
-    color: #2C2420;
-    font-family: 'Inter', sans-serif;
-    outline: none;
-    transition: border-color 0.2s;
+  @keyframes modalSlideUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to   { opacity: 1; transform: translateY(0); }
   }
-  #orderModal input:focus, #orderModal select:focus {
-    border-color: #8B4F6B;
-    box-shadow: 0 0 0 2px rgba(139,79,107,0.12);
+  .modal-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 20px 24px 16px; border-bottom: 1px solid #f0ebe7; flex-shrink: 0;
   }
-  .modal-label {
-    font-size: 0.72rem; font-weight: 600;
-    letter-spacing: 0.06em; text-transform: uppercase;
-    color: #6B5B55; display: block; margin-bottom: 5px;
+  .modal-header-label {
+    font-family: 'Cormorant Garamond', Georgia, serif;
+    font-size: 1.25rem; font-weight: 600; color: #2C2420;
   }
-  .modal-field { margin-bottom: 12px; }
+  .modal-close-btn {
+    width: 32px; height: 32px; border-radius: 50%;
+    background: #f8f4f2; border: none; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    color: #9E8E88; transition: all 0.2s; flex-shrink: 0;
+  }
+  .modal-close-btn:hover { background: #f0ebe7; color: #2C2420; }
+  .modal-body { overflow-y: auto; padding: 20px 24px 28px; flex: 1; }
+  .modal-info-card { background: #FAF8F5; border-radius: 12px; padding: 4px 14px; margin-bottom: 20px; }
   .modal-info-row {
-    display: flex; justify-content: space-between;
-    font-size: 0.875rem; padding: 7px 0;
-    border-bottom: 1px solid #f8f4f2;
-    color: #5A3D48;
+    display: flex; justify-content: space-between; align-items: center;
+    font-size: 0.875rem; padding: 9px 0; border-bottom: 1px solid #f0ebe7;
   }
+  .modal-info-row:last-child { border-bottom: none; }
   .modal-info-row span:first-child { color: #9E8E88; font-size: 0.8rem; }
-  .modal-info-row span:last-child { font-weight: 500; color: #2C2420; }
-  /* Modal close btn */
-  #orderModal .btn-close {
-    background: #FAF8F5; border: 1px solid #e0d3cc;
-    color: #6B5B55; padding: 8px 18px;
-    font-size: 0.8rem; font-weight: 500;
-    border-radius: 3px; cursor: pointer;
-    transition: all 0.2s;
-  }
-  #orderModal .btn-close:hover { border-color: #8B4F6B; color: #8B4F6B; }
-  #saveBtn {
-    background: #8B4F6B; color: #fff;
-    padding: 8px 18px; font-size: 0.8rem; font-weight: 500;
-    border: none; border-radius: 3px; cursor: pointer;
-    transition: background 0.25s;
-  }
-  #saveBtn:hover { background: #7A3F5A; }
-  #saveBtn:disabled { background: #c0b0aa; cursor: not-allowed; }
+  .modal-info-row span:last-child { font-weight: 500; color: #2C2420; text-align: right; max-width: 60%; }
 
   /* ── Timeline ── */
-  .timeline-step { transition: background-color 0.5s ease; }
-  .timeline-line { transition: background-color 0.5s ease; height: 4px; border-radius: 2px; }
+  .timeline-step { transition: background-color 0.4s ease; }
+  .timeline-line  { transition: background-color 0.4s ease; }
 
   /* ── Notifications ── */
   #notification-container { position: fixed; top: 1rem; right: 1rem; z-index: 9999; display: flex; flex-direction: column; gap: 0.5rem; }
@@ -362,7 +328,10 @@
 
 <!-- Loader -->
 <div id="dashboard-loader" class="hidden">
-  <div class="loader-spinner"></div>
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"
+    style="width:48px;height:48px;color:white;animation:pulse 1.5s ease-in-out infinite;">
+    <path fill="currentColor" d="M0 2.5A.5.5 0 0 1 .5 2H2a.5.5 0 0 1 .485.379L2.89 4H14.5a.5.5 0 0 1 .485.621l-1.5 6A.5.5 0 0 1 13 11H4a.5.5 0 0 1-.485-.379L1.61 3H.5a.5.5 0 0 1-.5-.5M3.14 5l.5 2H5V5zM6 5v2h2V5zm3 0v2h2V5zm3 0v2h1.36l.5-2zm1.11 3H12v2h.61zM11 8H9v2h2zM8 8H6v2h2zM5 8H3.89l.5 2H5zm0 5a1 1 0 1 0 0 2a1 1 0 0 0 0-2m-2 1a2 2 0 1 1 4 0a2 2 0 0 1-4 0m9-1a1 1 0 1 0 0 2a1 1 0 0 0 0-2m-2 1a2 2 0 1 1 4 0a2 2 0 0 1-4 0"/>
+  </svg>
 </div>
 
 <!-- Header -->
@@ -427,14 +396,17 @@
 </main>
 
 <!-- Order Detail Modal -->
-<div id="orderModal" class="hidden fixed inset-0 flex items-center justify-center z-40 modal-bg">
-  <div>
-    <h2>Order Details</h2>
-    <div id="modalContent" class="space-y-2"></div>
-    <div class="flex justify-end gap-3 mt-6 pt-4 border-t border-[#f0ebe7]">
-      <button onclick="closeModal()" class="btn-close">Close</button>
-      <button id="saveBtn" class="hidden">Save Changes</button>
+<div id="orderModal" class="hidden fixed inset-0 flex items-end sm:items-center justify-center z-40 modal-bg sm:pt-20 sm:pb-10">
+  <div class="modal-sheet">
+    <div class="modal-header">
+      <p class="modal-header-label">Order Details</p>
+      <button onclick="closeModal()" class="modal-close-btn" aria-label="Close">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" viewBox="0 0 24 24">
+          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
     </div>
+    <div id="modalContent" class="modal-body"></div>
   </div>
 </div>
 
@@ -457,7 +429,7 @@
       <div class="space-y-2 text-sm text-[#6B5B55]">
         <p class="flex items-center gap-2"><i class="fas fa-phone-alt text-[#8B4F6B]"></i> +2347036594806</p>
         <p class="flex items-start gap-2"><i class="fas fa-map-marker-alt text-[#8B4F6B] mt-0.5"></i> Lagos, Nigeria</p>
-        <a href="mailto:victoradeyimika0@gmail.com" class="flex items-center gap-2 hover:text-[#C9A28F] transition-colors">
+        <a href="mailto:ibitoyeifeoluwafunmi@gmail.com" class="flex items-center gap-2 hover:text-[#C9A28F] transition-colors">
           <i class="fas fa-envelope text-[#8B4F6B]"></i> ibitoyeifeoluwafunmi@gmail.com
         </a>
       </div>
@@ -489,6 +461,7 @@
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+<script src="/config.js"></script>
 
   <script>
   document.addEventListener("DOMContentLoaded", () => {
@@ -508,14 +481,7 @@
     }
 
     // ===== Firebase =====
-    const firebaseConfig = {
-      apiKey: "AIzaSyDdTPmpaIPWSDWOmR-fXgvAb7hoxZUawcc",
-      authDomain: "e-commerce-39c74.firebaseapp.com",
-      projectId: "e-commerce-39c74",
-      storageBucket: "e-commerce-39c74.firebasestorage.app",
-      messagingSenderId: "863375033754",
-      appId: "1:863375033754:web:7ba248c8dbb1566c83e623"
-    };
+    const firebaseConfig = window.CONFIG.firebase;
     firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
     const db = firebase.firestore();
@@ -536,9 +502,7 @@
     const orderTableBody = document.getElementById("orderTableBody");
     const orderModal = document.getElementById("orderModal");
     const modalContent = document.getElementById("modalContent");
-    const saveBtn = document.getElementById("saveBtn");
     const pageSize = 10;
-    const NON_EDITABLE_STATUSES = ["processing", "shipped", "delivered"];
 
     let currentUser = null;
     let allOrders = [];
@@ -546,7 +510,6 @@
     let currentPage = 1;
     let ordersUnsub = null;
     let openedOrderId = null;
-    let openedOrderMode = "view";
 
     // ===== Notifications =====
     const activeNotifications = new Set();
@@ -627,13 +590,7 @@
         if (!orderModal.classList.contains("hidden") && openedOrderId) {
           const updatedOrder = allOrders.find(o => o.id === openedOrderId);
           if (updatedOrder) {
-            const statusLower = updatedOrder.status.toLowerCase();
-            if (openedOrderMode === "edit" && NON_EDITABLE_STATUSES.includes(statusLower)) {
-              closeModal();
-              showNotification(`Order moved to "${updatedOrder.status}". Edit mode closed.`, "warning");
-              return;
-            }
-            modalContent.innerHTML = generateModalContent(updatedOrder, openedOrderMode === "edit");
+            modalContent.innerHTML = generateModalContent(updatedOrder);
           }
         }
         applyOrderFilter(currentFilter);
@@ -652,7 +609,6 @@
 
     // Filter Orders
     window.filterOrders = (status) => {
-      showLoader();
       currentFilter = status;
       document.querySelectorAll(".status-btn").forEach(btn => {
         if(btn.dataset.status === status){
@@ -664,7 +620,6 @@
         }
       });
       applyOrderFilter(status);
-      setTimeout(hideLoader, 400);
     };
 
     function applyOrderFilter(status){
@@ -727,7 +682,6 @@
         const totalStr = order.total?.toLocaleString() || "0";
         const itemsCount = order.items?.length || 0;
         const statusLower = order.status?.toLowerCase() || "";
-        const isEditable = ["pending","pending_confirmation"].includes(statusLower);
         const tr = document.createElement("tr");
         tr.innerHTML = `
           <td>${dateStr}</td>
@@ -735,10 +689,7 @@
           <td>${itemsCount}</td>
           <td>${getStatusBadge(statusLower, order.status)}</td>
           <td>
-            <div class="flex gap-2 whitespace-nowrap">
             <button onclick="viewOrder('${order.id}')" class="action-btn action-btn-view">View</button>
-            <button onclick="editOrder('${order.id}')" class="action-btn action-btn-edit" ${!isEditable?"disabled":""}>Edit</button>
-            </div>
           </td>
         `;
         orderTableBody.appendChild(tr);
@@ -751,9 +702,6 @@
       document.body.style.overflow = "";
       document.body.style.pointerEvents = "";
       openedOrderId = null;
-      openedOrderMode = "view";
-      saveBtn.classList.add("hidden");
-      saveBtn.onclick = null;
     };
 
     orderModal.addEventListener("click",(e) => {
@@ -764,10 +712,7 @@
       const order = allOrders.find(o => o.id === id);
       if (!order) return;
       openedOrderId = id;
-      openedOrderMode = "view";
-      saveBtn.classList.add("hidden");
-      saveBtn.onclick = null;
-      modalContent.innerHTML = generateModalContent(order, false);
+      modalContent.innerHTML = generateModalContent(order);
       openModal();
     };
 
@@ -778,58 +723,8 @@
       orderModal.style.pointerEvents = "auto";
     }
 
-    window.editOrder = (id) => {
-      const order = allOrders.find(o => o.id === id);
-      if (!order || !["pending", "pending_confirmation"].includes(order.status?.toLowerCase())) return;
-      openedOrderId = id;
-      openedOrderMode = "edit";
-      modalContent.innerHTML = generateModalContent(order, true);
-      saveBtn.classList.remove("hidden");
-      saveBtn.disabled = false;
-      saveBtn.onclick = async () => {
-        showLoader();
-        saveBtn.disabled = true;
-        try {
-          const name = document.getElementById("editName").value;
-          const phone = document.getElementById("editPhone").value;
-          const email = document.getElementById("editEmail").value;
-          const address = document.getElementById("editAddress").value;
-          const lga = document.getElementById("editLGA").value;
-          const state = document.getElementById("editState").value;
-              // ✅ WAIT before saving (2 seconds)
-    await new Promise(resolve => setTimeout(resolve, 2000));
-          await db.collection("orders").doc(id).update({
-  shipping: {
-    ...order.shipping,
-    firstName: name.split(" ")[0] || "",
-    lastName: name.split(" ").slice(1).join(" ") || "",
-    phone,
-    email
-  },
-  delivery: {
-    ...order.delivery,
-    address,
-    lga,
-    state
-  }
-});
-          showNotification("Order updated successfully!", "success");
-    closeModal();
-
-  } catch (err) {
-    console.error(err);
-    showNotification("Failed to update order.", "error");
-  } finally {
-    hideLoader();
-    saveBtn.disabled = false;
-    saveBtn.textContent = originalText;
-  }
-};
-      openModal();
-    };
-
     // Generate Modal Content
-    function generateModalContent(order, isEdit) {
+    function generateModalContent(order) {
       const steps = ["Pending", "Shipped", "Delivered"];
       const normalizedStatus = steps.find(s => s.toLowerCase() === order.status.toLowerCase()) || "Pending";
       const statusIndex = steps.indexOf(normalizedStatus);
@@ -839,6 +734,7 @@
         <div class="flex items-center mb-5">
           ${steps.map((step, i) => {
             const isActive = i <= statusIndex;
+            const iconMap = { Pending: "fa-clock", Shipped: "fa-truck", Delivered: "fa-box-open" };
             const dotColor = step === "Pending" ? (isActive ? "bg-yellow-400" : "bg-[#e8ddd9]")
               : step === "Shipped" ? (isActive ? "bg-blue-400" : "bg-[#e8ddd9]")
               : (isActive ? "bg-green-500" : "bg-[#e8ddd9]");
@@ -848,7 +744,9 @@
             return `
               <div class="flex items-center ${i < steps.length - 1 ? "flex-1" : ""}">
                 <div class="flex flex-col items-center">
-                  <div class="w-3 h-3 rounded-full ${dotColor} timeline-step"></div>
+                  <div class="w-7 h-7 rounded-full ${dotColor} timeline-step flex items-center justify-center">
+                    <i class="fas ${iconMap[step]} text-[10px] ${isActive ? "text-white" : "text-[#c0b0aa]"}"></i>
+                  </div>
                   <span class="text-[10px] mt-1 text-[#9E8E88] whitespace-nowrap">${step}</span>
                 </div>
                 ${i < steps.length - 1 ? `<div class="flex-1 mx-1 ${lineColor} timeline-line" style="height:3px;"></div>` : ""}
@@ -857,19 +755,6 @@
           }).join("")}
         </div>
       `;
-
-      if (isEdit) {
-        return `
-          ${timelineHTML}
-          <p class="text-xs font-semibold uppercase tracking-widest text-[#9E8E88] mb-3">Edit Details</p>
-          <div class="modal-field"><label class="modal-label">Full Name</label><input id="editName" value="${order.name || ''}" /></div>
-          <div class="modal-field"><label class="modal-label">Phone</label><input id="editPhone" value="${order.phone || ''}" /></div>
-          <div class="modal-field"><label class="modal-label">Email</label><input id="editEmail" value="${order.email || ''}" /></div>
-          <div class="modal-field"><label class="modal-label">Address</label><input id="editAddress" value="${order.delivery?.address || ''}" /></div>
-          <div class="modal-field"><label class="modal-label">LGA</label><input id="editLGA" value="${order.delivery?.lga || ''}" /></div>
-          <div class="modal-field"><label class="modal-label">State</label><input id="editState" value="${order.delivery?.state || ''}" /></div>
-        `;
-      }
 
       const itemsHTML = order.items?.length
         ? order.items.map(item => `
@@ -885,7 +770,7 @@
 
       return `
         ${timelineHTML}
-        <div class="space-y-1 mb-4">
+        <div class="modal-info-card">
           <div class="modal-info-row"><span>Name</span><span>${order.name || '—'}</span></div>
           <div class="modal-info-row"><span>Email</span><span>${order.email || '—'}</span></div>
           <div class="modal-info-row"><span>Phone</span><span>${order.phone || '—'}</span></div>
@@ -894,7 +779,7 @@
           <div class="modal-info-row"><span>Reference</span><span class="font-mono text-xs">${order.paymentRef}</span></div>
           <div class="modal-info-row"><span>Total</span><span class="text-[#8B4F6B] font-semibold">₦${order.total?.toLocaleString() || 0}</span></div>
         </div>
-        <p class="text-xs font-semibold uppercase tracking-widest text-[#9E8E88] mb-2">Items</p>
+        <p class="text-xs font-semibold uppercase tracking-widest text-[#9E8E88] mb-3">Items</p>
         <div>${itemsHTML}</div>
       `;
     }

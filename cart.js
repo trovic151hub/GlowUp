@@ -1,5 +1,5 @@
 (function() {
-  const WHATSAPP_NUMBER = "2349053380773"; // your number
+  const WHATSAPP_NUMBER = "2347036594806";
 
   function generateWhatsappPaymentRef() {
     return "WA-" + Date.now() + "-" + Math.floor(Math.random() * 1000);
@@ -7,6 +7,8 @@
 
   // ==================== LOADER ====================
   let loader = document.getElementById("cartLoader");
+  document.body.style.overflow = "hidden";
+  document.body.style.pointerEvents = "none";
   function showLoader() {
   if (!loader) return;
 
@@ -31,6 +33,8 @@
 
   loader.style.opacity = "1";
   loader.style.display = "flex";
+  document.body.style.overflow = "hidden";
+  document.body.style.pointerEvents = "none";
 }
 
   function hideLoader() {
@@ -38,17 +42,12 @@
       loader.style.opacity = "0";
       setTimeout(() => loader.remove(), 300);
     }
+    document.body.style.overflow = "";
+    document.body.style.pointerEvents = "";
   }
 
   // ==================== FIREBASE ====================
-  const firebaseConfig = {
-    apiKey: "AIzaSyDdTPmpaIPWSDWOmR-fXgvAb7hoxZUawcc",
-    authDomain: "e-commerce-39c74.firebaseapp.com",
-    projectId: "e-commerce-39c74",
-    storageBucket: "e-commerce-39c74.firebasestorage.app",
-    messagingSenderId: "863375033754",
-    appId: "1:863375033754:web:7ba248c8dbb1566c83e623"
-  };
+  const firebaseConfig = window.CONFIG.firebase;
   if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
   const db = firebase.firestore();
 
@@ -185,6 +184,50 @@ const stateTomSelect = new TomSelect("#state", {
 });
 stateTomSelect.disable();
 
+const lgaTomSelect = new TomSelect("#lga", {
+  placeholder: "Select LGA",
+  searchField: "text",
+  create: false,
+  closeAfterSelect: true,
+  plugins: ["dropdown_input"],
+  render: {
+    no_results: () => '<div style="padding:10px 14px;color:#9E8E88;font-size:0.88rem;">No LGA found</div>'
+  }
+});
+lgaTomSelect.disable();
+
+const deliveryCompanyTs = new TomSelect("#delivery-company", {
+  placeholder: "Select Delivery Company",
+  searchField: "text",
+  create: false,
+  closeAfterSelect: true,
+  render: {
+    no_results: () => '<div style="padding:10px 14px;color:#9E8E88;font-size:0.88rem;">No options found</div>'
+  }
+});
+
+const deliveryTypeTs = new TomSelect("#delivery-type", {
+  placeholder: "Select Delivery Type",
+  searchField: "text",
+  create: false,
+  closeAfterSelect: true,
+  render: {
+    no_results: () => '<div style="padding:10px 14px;color:#9E8E88;font-size:0.88rem;">No options found</div>'
+  }
+});
+
+const terminalTs = new TomSelect("#terminal", {
+  placeholder: "Select Terminal",
+  searchField: "text",
+  create: false,
+  closeAfterSelect: true,
+  plugins: ["dropdown_input"],
+  render: {
+    no_results: () => '<div style="padding:10px 14px;color:#9E8E88;font-size:0.88rem;">No terminals found</div>'
+  }
+});
+terminalTs.disable();
+
 // ==================== INTL-TEL-INPUT INIT ====================
 const iti = window.intlTelInput(document.getElementById("phone"), {
   initialCountry: "ng",
@@ -266,7 +309,7 @@ window.addEventListener("DOMContentLoaded", () => {
         cartContainer.classList.add("hidden");
         checkoutStep.classList.remove("hidden");
         completeStep.classList.add("hidden");
-        setBreadcrumb("checkout");
+        setActiveBreadcrumb("checkout");
 
         // Optional: scroll to checkout section
         checkoutStep.scrollIntoView({ behavior: "smooth" });
@@ -456,7 +499,7 @@ const totalWeight = cart.reduce((sum, item) => sum + (item.quantity || 0), 0);
 const deliveryInfo = {
   country: countrySelect.value,
   state: stateSelect.value,
-  company: deliveryCompany.value
+  company: deliveryCompanyTs.getValue()
 };
 
 // Calculate shipping fee dynamically
@@ -470,17 +513,17 @@ if(summaryTotal) summaryTotal.textContent = `₦${(subtotal + shippingFee).toLoc
 
   let selectedPayment = null;
 
-  document.querySelectorAll("#payment-summary-card .cursor-pointer").forEach(option => {
+  document.querySelectorAll("#payment-summary-card .payment-option").forEach(option => {
   option.addEventListener("click", () => {
 
     const isAlreadySelected = option.classList.contains("border-pink-600");
 
     // Remove highlight + hide all check icons
-    document.querySelectorAll("#payment-summary-card .cursor-pointer").forEach(o => {
+    document.querySelectorAll("#payment-summary-card .payment-option").forEach(o => {
       o.classList.remove("border-pink-600", "bg-pink-50");
 
       const icon = o.querySelector(".check-icon");
-      if (icon) icon.style.display = "none";
+      if (icon) icon.classList.add("hidden");
     });
 
     // If clicking already selected → unselect
@@ -498,7 +541,7 @@ if(summaryTotal) summaryTotal.textContent = `₦${(subtotal + shippingFee).toLoc
     option.classList.add("border-pink-600", "bg-pink-50");
 
     const selectedIcon = option.querySelector(".check-icon");
-    if (selectedIcon) selectedIcon.style.display = "inline";
+    if (selectedIcon) selectedIcon.classList.remove("hidden");
 
     gsap.from(selectedIcon, { scale: 0, opacity: 0, duration: 0.3, ease: "back.out(1.7)" });
 
@@ -521,7 +564,9 @@ async function loadStatesForCountry(countryName, savedState = null) {
   stateTomSelect.setValue("", true);
   if (lgaWrapper) {
     lgaWrapper.classList.add("hidden");
-    lgaSelect.innerHTML = `<option value="">Select LGA</option>`;
+    lgaTomSelect.clear(true);
+    lgaTomSelect.clearOptions();
+    lgaTomSelect.disable();
   }
   try {
     const res = await fetch("https://countriesnow.space/api/v0.1/countries/states", {
@@ -570,6 +615,11 @@ countryTomSelect.on("change", async (value) => {
   updatePaymentVisibility();
   updateDeliveryVisibility();
   await loadStatesForCountry(value);
+  if (iti) {
+    const match = (window.intlTelInputGlobals?.getCountryData() || [])
+      .find(c => c.name.toLowerCase() === value.toLowerCase());
+    if (match) iti.setCountry(match.iso2);
+  }
   saveFormData();
 });
 
@@ -582,15 +632,16 @@ stateTomSelect.on("change", (value) => {
   const country = countryTomSelect.getValue();
   if (country === "Nigeria" && value.toLowerCase().includes("lagos")) {
     lgaWrapper.classList.remove("hidden");
-    lgaSelect.innerHTML = `<option value="">Select LGA</option>`;
-    Object.keys(lagosLGAs).forEach(lga => {
-      const opt = document.createElement("option");
-      opt.value = lga; opt.textContent = lga;
-      lgaSelect.appendChild(opt);
-    });
+    lgaTomSelect.clear(true);
+    lgaTomSelect.clearOptions();
+    Object.keys(lagosLGAs).forEach(lga => lgaTomSelect.addOption({ value: lga, text: lga }));
+    lgaTomSelect.refreshOptions(false);
+    lgaTomSelect.enable();
   } else {
     lgaWrapper.classList.add("hidden");
-    lgaSelect.innerHTML = `<option value="">Select LGA</option>`;
+    lgaTomSelect.clear(true);
+    lgaTomSelect.clearOptions();
+    lgaTomSelect.disable();
   }
   saveFormData();
 });
@@ -666,84 +717,54 @@ function updateDeliveryCompanyAvailability() {
 
   if (!stateKey) return;
 
-  const guoOption = deliveryCompany.querySelector('option[value="GUO"]');
-  const gigOption = deliveryCompany.querySelector('option[value="GIG"]');
-
-  if (!guoOption || !gigOption) return; // safety check
-
   const guoSupportedStates = Object.keys(GUOTerminals);
 
   if (!guoSupportedStates.includes(stateKey)) {
-    // Disable GUO
-    guoOption.disabled = true;
-
-    // If GUO was selected, switch to GIG
-    if (deliveryCompany.value === "GUO") {
-      deliveryCompany.value = "GIG";
-    }
+    deliveryCompanyTs.updateOption("GUO", { value: "GUO", text: "GUO Transport", disabled: true });
+    if (deliveryCompanyTs.getValue() === "GUO") deliveryCompanyTs.setValue("GIG", true);
   } else {
-    // Enable GUO if supported
-    guoOption.disabled = false;
+    deliveryCompanyTs.updateOption("GUO", { value: "GUO", text: "GUO Transport", disabled: false });
   }
+  deliveryCompanyTs.refreshOptions(false);
 }
 
 
 function populateTerminals() {
   const stateRaw = stateInput.value.trim().toLowerCase();
-  const company = deliveryCompany.value.trim().toUpperCase();
-  const type = deliveryType.value;
+  const company = deliveryCompanyTs.getValue().trim().toUpperCase();
+  const type = deliveryTypeTs.getValue();
+  const stateKey = stateRaw.replace(" state", "");
 
-  // Normalize state key
-  const stateKey = stateRaw.replace(" state", ""); // removes " state" if typed
+  terminalTs.clear(true);
+  terminalTs.clearOptions();
 
-  terminalSelect.innerHTML = `<option value="">Select Terminal</option>`; // reset
-
-  // Only show terminals if terminal pickup is selected
   if (!stateKey || !company || type !== "terminal") {
     terminalWrapper.classList.add("hidden");
+    terminalTs.disable();
     return;
   }
 
-  terminalWrapper.classList.remove("hidden"); // show terminal select
+  terminalWrapper.classList.remove("hidden");
 
   let terminals = [];
-
   if (company === "GUO") terminals = GUOTerminals[stateKey] || [];
   if (company === "GIG") terminals = GIGTerminals[stateKey] || [];
 
-  terminals.forEach(t => {
-    const option = document.createElement("option");
-    option.value = t;
-    option.textContent = t;
-    terminalSelect.appendChild(option);
-  });
+  terminals.forEach(t => terminalTs.addOption({ value: t, text: t }));
+  terminalTs.refreshOptions(false);
+  terminalTs.enable();
 }
 
 stateSelect.addEventListener("change", () => {
   localStorage.setItem("checkoutState", stateSelect.value);
-  if (deliveryType.value === "terminal") {
-    terminalSelect.innerHTML = `<option value="">Select Terminal</option>`;
+  if (deliveryTypeTs.getValue() === "terminal") {
+    terminalTs.clear(true);
+    terminalTs.clearOptions();
   }
 });
 
-deliveryCompany.addEventListener("change", () => {
-  const company = deliveryCompany.value.trim().toUpperCase();
-  const homeOption = deliveryType.querySelector('option[value="home"]');
-  if (company === "GUO") {
-    if (homeOption) homeOption.remove();
-    if (deliveryType.value === "home") deliveryType.value = "";
-  } else {
-    if (!homeOption) {
-      const opt = document.createElement("option");
-      opt.value = "home";
-      opt.textContent = "Home Delivery";
-      const terminalOpt = deliveryType.querySelector('option[value="terminal"]');
-      deliveryType.insertBefore(opt, terminalOpt);
-    }
-  }
-  populateTerminals();
-});
-deliveryType.addEventListener("change", populateTerminals);
+deliveryCompanyTs.on("change", populateTerminals);
+deliveryTypeTs.on("change", populateTerminals);
 
 
 
@@ -767,9 +788,12 @@ function updateDeliveryVisibility() {
   deliveryOptionsWrapper.classList.add("hidden");
 
   // Clear values
-  deliveryCompany.value = "";
-  deliveryType.value = "";
-  terminalSelect.innerHTML = `<option value="">Select Terminal</option>`;
+  deliveryCompanyTs.setValue("", true);
+  deliveryTypeTs.setValue("", true);
+  terminalTs.clear(true);
+  terminalTs.clearOptions();
+  terminalTs.disable();
+  terminalWrapper.classList.add("hidden");
 }
 
 
@@ -851,10 +875,10 @@ function updateDeliveryVisibility() {
 const deliveryInfo = {
   country: countrySelect.value,
   state: stateSelect.value,
-  company: deliveryCompany.value,
-  lga: lgaSelect.value,
-  deliveryType: deliveryTypeSelect.value ,
-  terminal: terminalSelect?.value || ""
+  company: deliveryCompanyTs.getValue(),
+  lga: lgaTomSelect.getValue(),
+  deliveryType: deliveryTypeTs.getValue(),
+  terminal: terminalTs.getValue() || ""
 };
 
 // Calculate shipping fee
@@ -983,11 +1007,7 @@ document.getElementById("shipping-edit-btn").onclick = () => {
   document.getElementById("shipment-summary-card").classList.add("hidden");
   document.getElementById("payment-summary-card").classList.add("hidden");
   document.getElementById("shipping-edit-btn").classList.add("hidden");
-
-// Disable summaryPlaceOrderBtn again
-  summaryPlaceOrderBtn.disabled = true;
-  summaryPlaceOrderBtn.classList.add("bg-gray-400");
-  summaryPlaceOrderBtn.classList.remove("bg-pink-600", "hover:bg-pink-700");
+  updatePaymentVisibility();
 };
 
 // Summary Place Order Button
@@ -1021,10 +1041,10 @@ summaryPlaceOrderBtn.addEventListener("click", async () => {
   const deliveryInfo = {
     country: countrySelect.value,
     state: stateSelect.value,
-    company: deliveryCompany.value,
-    type: deliveryType.value,
-    terminal: terminalSelect.value || null,
-    lga: lgaSelect.value || null,
+    company: deliveryCompanyTs.getValue(),
+    type: deliveryTypeTs.getValue(),
+    terminal: terminalTs.getValue() || null,
+    lga: lgaTomSelect.getValue() || null,
     address: `${shippingData.street}, ${shippingData.lga ? shippingData.lga + ",": ""}${shippingData.state}`
   };
 
@@ -1160,7 +1180,7 @@ Thank you! 🙏
     }
 
     let handler = PaystackPop.setup({
-      key: "pk_test_0ed65a8011643dd303600706cb990c9ba067f199",
+      key: window.CONFIG.paystackKey,
       email: shippingData.email,
       amount: totalAmount * 100,
       currency: "NGN",
@@ -1175,6 +1195,7 @@ Thank you! 🙏
       onClose: handlePaystackClose
     });
 
+    hideLoader();
     handler.openIframe();
   }
 
@@ -1208,36 +1229,36 @@ Thank you! 🙏
     countrySelect.value === "Nigeria" &&
     stateSelect.value.toLowerCase().includes("lagos")
   ) {
-    if (!lgaSelect.value) {
+    if (!lgaTomSelect.getValue()) {
       isValid = false;
-      lgaSelect.classList.add("border-red-500");
+      lgaTomSelect.control.classList.add("border-red-500");
     } else {
-      lgaSelect.classList.remove("border-red-500");
+      lgaTomSelect.control.classList.remove("border-red-500");
     }
   }
 
   // Require delivery fields ONLY if delivery options are visible
 if (!deliveryOptionsWrapper.classList.contains("hidden")) {
-  if (!deliveryCompany.value) {
-    deliveryCompany.classList.add("border-red-500");
+  if (!deliveryCompanyTs.getValue()) {
+    deliveryCompanyTs.control.classList.add("border-red-500");
     isValid = false;
   } else {
-    deliveryCompany.classList.remove("border-red-500");
+    deliveryCompanyTs.control.classList.remove("border-red-500");
   }
 
-  if (!deliveryType.value) {
-    deliveryType.classList.add("border-red-500");
+  if (!deliveryTypeTs.getValue()) {
+    deliveryTypeTs.control.classList.add("border-red-500");
     isValid = false;
   } else {
-    deliveryType.classList.remove("border-red-500");
+    deliveryTypeTs.control.classList.remove("border-red-500");
   }
 
   // If terminal selected, ensure terminal chosen
-  if (deliveryType.value === "terminal" && !terminalSelect.value) {
-    terminalSelect.classList.add("border-red-500");
+  if (deliveryTypeTs.getValue() === "terminal" && !terminalTs.getValue()) {
+    terminalTs.control.classList.add("border-red-500");
     isValid = false;
   } else {
-    terminalSelect.classList.remove("border-red-500");
+    terminalTs.control.classList.remove("border-red-500");
   }
 }
 
@@ -1268,17 +1289,19 @@ function updatePaymentVisibility() {
   summaryPlaceOrderBtn.classList.add("bg-gray-400");
   summaryPlaceOrderBtn.classList.remove("bg-pink-600", "hover:bg-pink-700");
 
-  // Remove highlight
-  document.querySelectorAll("#payment-summary-card .cursor-pointer").forEach(o => {
+  // Remove highlight and check icons
+  document.querySelectorAll("#payment-summary-card .payment-option").forEach(o => {
     o.classList.remove("border-pink-600", "bg-pink-50");
+    const icon = o.querySelector(".check-icon");
+    if (icon) icon.classList.add("hidden");
   });
 
   if (isNigeria) {
-    paystackOption.style.display = "block";
-    whatsappOption.style.display = "none";
+    paystackOption.classList.remove("hidden");
+    whatsappOption.classList.add("hidden");
   } else {
-    paystackOption.style.display = "none";
-    whatsappOption.style.display = "block";
+    paystackOption.classList.add("hidden");
+    whatsappOption.classList.remove("hidden");
   }
 }
 

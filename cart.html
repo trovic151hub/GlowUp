@@ -16,6 +16,7 @@
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+  <script src="/config.js"></script>
   <script src="https://js.paystack.co/v1/inline.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.13.0/gsap.min.js"></script>
   <style>
@@ -44,18 +45,15 @@
     #cartLoader {
       position: fixed; inset: 0;
       display: flex; align-items: center; justify-content: center;
-      background: rgba(250, 248, 245, 0.88);
+      background: rgba(0, 0, 0, 0.45);
       backdrop-filter: blur(4px);
       z-index: 9999;
+      transition: opacity 0.3s ease;
     }
-    .loader-spinner {
-      width: 44px; height: 44px;
-      border-radius: 50%;
-      border: 3px solid #e8d5cd;
-      border-top-color: #8B4F6B;
-      animation: spin 0.8s linear infinite;
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.35; }
     }
-    @keyframes spin { to { transform: rotate(360deg); } }
 
     /* ── Header ── */
     #cartHeader {
@@ -253,7 +251,7 @@
       padding: 0 14px;
       background: #FAF8F5;
       border: 1px solid #e0d3cc;
-      border-radius: 4px;
+      border-radius: 8px;
       font-size: 0.9rem;
       color: #2C2420;
       font-family: 'Inter', sans-serif;
@@ -270,7 +268,7 @@
       padding: 0 14px;
       background: #FAF8F5;
       border: 1px solid #e0d3cc;
-      border-radius: 4px;
+      border-radius: 8px;
       font-size: 0.9rem;
       color: #2C2420;
       font-family: 'Inter', sans-serif;
@@ -327,21 +325,30 @@
 
     /* ── Payment options ── */
     .payment-option {
-      border-width: 1px;
-      border-style: solid;
-      border-color: #e0d3cc;
-      border-radius: 6px;
-      padding: 14px 16px;
+      border: 1px solid #e0d3cc;
+      border-radius: 12px;
+      padding: 16px 20px;
       margin-top: 10px;
       cursor: pointer;
-      display: flex; justify-content: space-between; align-items: center;
-      transition: border-color 0.2s, background 0.2s;
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: nowrap;
+      gap: 12px;
+      transition: border-color 0.2s, background 0.2s, box-shadow 0.2s;
       background: #fff;
     }
-    .payment-option:hover { border-color: #8B4F6B; background: #fff9f7; }
+    .payment-option:hover { border-color: #8B4F6B; background: #fff9f7; box-shadow: 0 2px 12px rgba(139,79,107,0.08); }
     /* JS adds border-pink-600 + bg-pink-50 — remap to brand colors */
-    .payment-option.border-pink-600 { border-color: #8B4F6B !important; }
+    .payment-option.border-pink-600 { border-color: #8B4F6B !important; background: #fff9f7 !important; box-shadow: 0 2px 12px rgba(139,79,107,0.10) !important; }
     .payment-option.bg-pink-50 { background: #fff9f7 !important; }
+    .payment-option-icon {
+      width: 40px; height: 40px; border-radius: 10px;
+      background: #FAF8F5; border: 1px solid #f0ebe7;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
 
     /* ── Right order panel ── */
     #order-summary-panel {
@@ -351,6 +358,8 @@
       padding: 20px;
       max-height: 700px;
       overflow: auto;
+      position: sticky;
+      top: 1.5rem;
     }
     #order-summary-panel h3 {
       font-size: 1rem;
@@ -490,7 +499,7 @@
     .ts-wrapper .ts-control {
       min-height: 48px; padding: 0 14px;
       background: #FAF8F5; border: 1px solid #e0d3cc;
-      border-radius: 4px; font-size: 0.9rem;
+      border-radius: 8px; font-size: 0.9rem;
       color: #2C2420; font-family: 'Inter', sans-serif;
       display: flex; align-items: center; flex-wrap: nowrap;
       box-shadow: none; cursor: pointer; gap: 0;
@@ -508,9 +517,10 @@
     .ts-wrapper .ts-control .item { color: #2C2420; font-size: 0.9rem; }
     .ts-wrapper .ts-control .ts-placeholder { color: #b0a09a; font-size: 0.9rem; }
     .ts-wrapper .ts-dropdown {
-      border: 1px solid #e0d3cc; border-radius: 4px;
-      margin-top: 4px; box-shadow: 0 4px 20px rgba(44,36,32,0.1);
+      border: 1px solid #e0d3cc; border-radius: 8px;
+      margin-top: 4px; box-shadow: 0 8px 32px rgba(44,36,32,0.15);
       font-family: 'Inter', sans-serif; font-size: 0.9rem;
+      overflow: hidden;
     }
     .ts-wrapper .ts-dropdown .ts-option {
       padding: 10px 14px; color: #2C2420;
@@ -525,22 +535,31 @@
       font-family: 'Inter', sans-serif; font-size: 0.88rem;
       background: #FAF8F5; outline: none; width: 100%;
     }
-    .ts-wrapper .ts-control:after { border-top-color: #6B5B55; }
-    .ts-wrapper.single.has-items .ts-control:after { border-bottom-color: #6B5B55; }
+    .ts-wrapper.single .ts-control {
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%236B5B55' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 14px center;
+      padding-right: 36px;
+    }
+    .ts-wrapper .ts-control:after { display: none; }
 
     /* ── intl-tel-input Brand Overrides ── */
     .iti { width: 100%; }
     .iti--separate-dial-code .iti__selected-flag {
-      background: #FAF8F5; border: 1px solid #e0d3cc;
-      border-right: none; border-radius: 4px 0 0 4px;
-      padding: 0 10px; height: 48px;
+      background: #FAF8F5;
+      border: none;
+      border-right: 1px solid #e0d3cc;
+      border-radius: 0;
+      padding: 0 12px;
+      height: 46px;
     }
     .iti--separate-dial-code input#phone {
-      border-radius: 0 4px 4px 0; padding-left: 14px;
+      border-radius: 8px;
+      padding-left: 14px;
     }
     .iti__country-list {
-      border: 1px solid #e0d3cc; border-radius: 4px;
-      box-shadow: 0 4px 20px rgba(44,36,32,0.1);
+      border: 1px solid #e0d3cc; border-radius: 8px;
+      box-shadow: 0 8px 32px rgba(44,36,32,0.15);
       font-family: 'Inter', sans-serif; font-size: 0.88rem;
       max-height: 240px;
     }
@@ -561,7 +580,10 @@
 
   <!-- Loader -->
   <div id="cartLoader">
-    <div class="loader-spinner"></div>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"
+      style="width:48px;height:48px;color:white;animation:pulse 1.5s ease-in-out infinite;">
+      <path fill="currentColor" d="M0 2.5A.5.5 0 0 1 .5 2H2a.5.5 0 0 1 .485.379L2.89 4H14.5a.5.5 0 0 1 .485.621l-1.5 6A.5.5 0 0 1 13 11H4a.5.5 0 0 1-.485-.379L1.61 3H.5a.5.5 0 0 1-.5-.5M3.14 5l.5 2H5V5zM6 5v2h2V5zm3 0v2h2V5zm3 0v2h1.36l.5-2zm1.11 3H12v2h.61zM11 8H9v2h2zM8 8H6v2h2zM5 8H3.89l.5 2H5zm0 5a1 1 0 1 0 0 2a1 1 0 0 0 0-2m-2 1a2 2 0 1 1 4 0a2 2 0 0 1-4 0m9-1a1 1 0 1 0 0 2a1 1 0 0 0 0-2m-2 1a2 2 0 1 1 4 0a2 2 0 0 1-4 0"/>
+    </svg>
   </div>
 
   <!-- Notification Container -->
@@ -633,8 +655,8 @@
   </main>
 
   <!-- Checkout Step -->
-  <section id="checkout-step" class="hidden max-w-5xl mx-auto px-4 pb-14">
-    <div class="grid md:grid-cols-3 gap-6">
+  <section id="checkout-step" class="hidden max-w-5xl mx-auto px-4 mt-4 pb-14">
+    <div class="grid md:grid-cols-3 gap-6 items-start">
 
       <!-- Left: Shipping Form -->
       <div class="md:col-span-2 space-y-4">
@@ -686,9 +708,7 @@
             <!-- LGA -->
             <div id="lga-wrapper" class="form-group hidden">
               <label class="form-label">LGA <span class="text-[#8B4F6B]">*</span></label>
-              <select id="lga" class="form-select">
-                <option value="">Select LGA</option>
-              </select>
+              <select id="lga"></select>
             </div>
 
             <!-- Phone -->
@@ -703,7 +723,7 @@
 
               <div class="form-group">
                 <label class="form-label">Delivery Company <span class="text-[#8B4F6B]">*</span></label>
-                <select id="delivery-company" class="form-select">
+                <select id="delivery-company">
                   <option value="">Select Delivery Company</option>
                   <option value="GIG">GIG Logistics</option>
                   <option value="GUO">GUO Transport</option>
@@ -712,7 +732,7 @@
 
               <div class="form-group">
                 <label class="form-label">Delivery Type <span class="text-[#8B4F6B]">*</span></label>
-                <select id="delivery-type" class="form-select">
+                <select id="delivery-type">
                   <option value="">Select Delivery Type</option>
                   <option value="home">Home Delivery</option>
                   <option value="terminal">Terminal Pickup</option>
@@ -721,9 +741,7 @@
 
               <div id="terminal-wrapper" class="form-group hidden">
                 <label class="form-label">Select Terminal <span class="text-[#8B4F6B]">*</span></label>
-                <select id="terminal" class="form-select">
-                  <option value="">Select Terminal</option>
-                </select>
+                <select id="terminal"></select>
               </div>
             </div>
 
@@ -751,34 +769,38 @@
           <div class="section-card-title">Payment Method</div>
 
           <!-- Paystack -->
-          <div id="paystack-option" class="payment-option cursor-pointer"
-            style="display:flex !important; align-items:center; justify-content:space-between; flex-direction:row; flex-wrap:nowrap;">
-            <div style="display:flex; align-items:center; gap:12px;">
-              <span style="padding:8px; background:#fff; border:1px solid #f3f4f6; border-radius:4px; display:flex; align-items:center;">
-                <img style="width:80px; height:24px; object-fit:contain; display:block;"
+          <div id="paystack-option" class="payment-option">
+            <div class="flex items-center gap-3 min-w-0">
+              <div class="payment-option-icon">
+                <img style="width:68px; height:20px; object-fit:contain; display:block;"
                   src="https://cdn.brandfetch.io/idM5mrwtDs/theme/dark/logo.svg?c=1bxid64Mup7aczewSAYMX&t=1667559828449"
                   alt="Paystack">
-              </span>
-              <span style="font-size:0.875rem; color:#6B5B55;">Card / Bank Transfer</span>
+              </div>
+              <div>
+                <div class="text-sm font-medium text-[#2C2420]">Card / Bank Transfer</div>
+                <div class="text-xs text-[#9E8E88] mt-0.5">Visa, Mastercard, Bank Transfer</div>
+              </div>
             </div>
-            <div style="display:flex; align-items:center; gap:8px; flex-shrink:0;">
-              <i class="fas fa-credit-card" style="color:#9E8E88; font-size:0.875rem;"></i>
-              <i class="check-icon fas fa-check-circle" style="color:#8B4F6B; display:none;"></i>
+            <div class="flex items-center gap-2 shrink-0">
+              <i class="fas fa-credit-card text-[#9E8E88]"></i>
+              <i class="check-icon fas fa-check-circle text-[#8B4F6B] hidden"></i>
             </div>
           </div>
 
           <!-- WhatsApp -->
-          <div id="WhatsApp" class="payment-option cursor-pointer"
-            style="display:flex !important; align-items:center; justify-content:space-between; flex-direction:row; flex-wrap:nowrap;">
-            <div style="display:flex; align-items:center; gap:12px;">
-              <span style="padding:8px; background:#fff; border:1px solid #f3f4f6; border-radius:4px; display:flex; align-items:center;">
-                <i class="fab fa-whatsapp" style="color:#16a34a; font-size:1.125rem;"></i>
-              </span>
-              <span style="font-size:0.875rem; color:#6B5B55;">WhatsApp Order</span>
+          <div id="WhatsApp" class="payment-option hidden">
+            <div class="flex items-center gap-3 min-w-0">
+              <div class="payment-option-icon">
+                <i class="fab fa-whatsapp" style="color:#16a34a; font-size:1.25rem;"></i>
+              </div>
+              <div>
+                <div class="text-sm font-medium text-[#2C2420]">WhatsApp Order</div>
+                <div class="text-xs text-[#9E8E88] mt-0.5">Confirm via WhatsApp chat</div>
+              </div>
             </div>
-            <div style="display:flex; align-items:center; gap:8px; flex-shrink:0;">
-              <i class="fas fa-comment" style="color:#9E8E88; font-size:0.875rem;"></i>
-              <i class="check-icon fas fa-check-circle" style="color:#8B4F6B; display:none;"></i>
+            <div class="flex items-center gap-2 shrink-0">
+              <i class="fas fa-comment text-[#9E8E88]"></i>
+              <i class="check-icon fas fa-check-circle text-[#8B4F6B] hidden"></i>
             </div>
           </div>
         </div>
@@ -840,7 +862,7 @@
         <div class="space-y-2 text-sm text-[#6B5B55]">
           <p class="flex items-center gap-2"><i class="fas fa-phone-alt text-[#8B4F6B]"></i> +2347036594806</p>
           <p class="flex items-start gap-2"><i class="fas fa-map-marker-alt text-[#8B4F6B] mt-0.5"></i> Lagos, Nigeria</p>
-          <a href="mailto:victoradeyimika0@gmail.com" class="flex items-center gap-2 hover:text-[#C9A28F] transition-colors">
+          <a href="mailto:ibitoyeifeoluwafunmi@gmail.com" class="flex items-center gap-2 hover:text-[#C9A28F] transition-colors">
             <i class="fas fa-envelope text-[#8B4F6B]"></i> ibitoyeifeoluwafunmi@gmail.com
           </a>
         </div>

@@ -12,6 +12,7 @@
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+  <script src="/config.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/emailjs-com@3/dist/email.min.js"></script>
@@ -46,7 +47,7 @@
     .nav-item.active { background: #7C3A52; color: #fff; }
     .nav-item i { width: 18px; text-align: center; flex-shrink: 0; font-size: 0.9rem; }
 
-    #content-area { flex: 1; background: #F5F2F3; min-height: 100vh; overflow-y: auto; display: flex; flex-direction: column; }
+    #content-area { flex: 1; min-height: 0; background: #F5F2F3; overflow-y: auto; display: flex; flex-direction: column; -webkit-overflow-scrolling: touch; }
 
     .section { display: none; }
     .section.active { display: block; }
@@ -79,8 +80,9 @@
       #sidebar { position: fixed; top: 0; left: 0; z-index: 50; transform: translateX(-100%); width: 240px !important; }
       #sidebar.mobile-open { transform: translateX(0); }
       #sidebar.mobile-open + #sidebar-overlay { display: block; }
-      #app-view { flex-direction: column; }
       #content-area { width: 100%; }
+      #content-area > header { position: fixed; top: 0; left: 0; right: 0; z-index: 35; }
+      #content-area > div { padding-top: 64px; }
     }
 
     @media (max-width: 640px) {
@@ -590,14 +592,7 @@
 emailjs.init("cRuLIat7A3PEivQCu");
 
 // ===== FIREBASE =====
-const firebaseConfig = {
-  apiKey: "AIzaSyDdTPmpaIPWSDWOmR-fXgvAb7hoxZUawcc",
-  authDomain: "e-commerce-39c74.firebaseapp.com",
-  projectId: "e-commerce-39c74",
-  storageBucket: "e-commerce-39c74.firebasestorage.app",
-  messagingSenderId: "863375033754",
-  appId: "1:863375033754:web:7ba248c8dbb1566c83e623"
-};
+const firebaseConfig = window.CONFIG.firebase;
 const app = firebase.apps.length ? firebase.app() : firebase.initializeApp(firebaseConfig);
 const auth = app.auth();
 const db = app.firestore();
@@ -1009,7 +1004,7 @@ function closeProductModal() {
 
 function initProducts() {
   if (window.cloudinary) {
-    const widget = window.cloudinary.createUploadWidget({ cloudName: 'dut2dpxuc', uploadPreset: 'products', folder: 'products', multiple: false }, (err, result) => {
+    const widget = window.cloudinary.createUploadWidget({ cloudName: window.CONFIG.cloudinary.cloudName, uploadPreset: window.CONFIG.cloudinary.uploadPreset, folder: 'products', multiple: false }, (err, result) => {
       if (!err && result?.event === 'success') { document.getElementById('prod-image').value = result.info.secure_url; showAlert('Image uploaded!', 'Success'); }
       else if (err) showAlert('Upload failed.', 'Error');
     });
@@ -1575,56 +1570,198 @@ async function downloadPdf(order) {
   try {
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF('p', 'mm', 'a4');
-    const dark = '#222222', gray = '#555555', rose = '#8B3A52', pageWidth = doc.internal.pageSize.getWidth(), margin = 15;
-    let y = 20;
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const pageHeight = doc.internal.pageSize.getHeight();
+    const margin = 15;
+    const contentWidth = pageWidth - margin * 2;
+
+    // Brand palette
+    const brand = '#8B4F6B', brandDark = '#2C2420', muted = '#9E8E88', subtle = '#6B5B55';
+    const cream = '#FAF8F5', borderCol = '#E8DDD8';
+
+    // Order data
+    const shipping = order.shipping || {}, delivery = order.delivery || {};
+    const payment = order.payment || {}, pricing = order.pricing || {};
+    const items = order.items || [];
+    const fullName = `${shipping.firstName || ''} ${shipping.lastName || ''}`.trim() || 'Customer';
+    const email = shipping.email || '—', phone = shipping.phone || '—';
+    const paymentRef = payment.reference || order.id || '—';
+    let orderDate = '—';
+    try {
+      const ts = order.createdAt;
+      const d = ts?.toDate ? ts.toDate() : (ts ? new Date(ts) : null);
+      if (d) orderDate = d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+    } catch(e) {}
+    const status = (order.shipping?.status || order.status || 'Pending');
+    const statusLabel = status.charAt(0).toUpperCase() + status.slice(1).toLowerCase();
+    const payMethod = payment.method === 'whatsapp' ? 'WhatsApp' : 'Card / Transfer';
+    const deliveryFee = Number(delivery.deliveryFee ?? pricing.shippingFee ?? 0);
+    const subtotal = items.reduce((s, i) => s + (Number(i.price || 0) * Number(i.quantity || 0)), 0);
+    const finalTotal = subtotal + deliveryFee;
+
+    let y = 0;
+
+    // ── HEADER BAND ───────────────────────────────────────────────
+    doc.setFillColor(brand);
+    doc.rect(0, 0, pageWidth, 36, 'F');
+
+    // Logo — white rounded card so PNG background blends cleanly
     try {
       const res = await fetch('https://raw.githubusercontent.com/trovic151hub/GlowUp/master/attached_assets/skinova_logo.png');
       const blob = await res.blob();
-      const b64 = await new Promise((resolve, reject) => { const r = new FileReader(); r.onloadend = () => resolve(r.result); r.onerror = reject; r.readAsDataURL(blob); });
-      doc.addImage(b64, 'PNG', (pageWidth - 50) / 2, 10, 50, 25); y = 45;
-    } catch(e) {}
-    doc.setFont('helvetica', 'bold'); doc.setFontSize(18); doc.setTextColor(dark);
-    doc.text('ORDER RECEIPT', margin, y); y += 15;
-    doc.setDrawColor('#e0e0e0'); doc.setLineWidth(0.5); doc.line(margin, y, pageWidth - margin, y); y += 5;
-    const shipping = order.shipping || {};
-    const fullName = `${shipping.firstName || ''} ${shipping.lastName || ''}`.trim() || 'Customer';
-    const email = shipping.email || '—', phone = shipping.phone || '—', paymentRef = order.payment?.reference || order.id;
-    doc.setFillColor('#f9f9f9'); doc.roundedRect(margin, y, pageWidth - margin * 2, 45, 3, 3, 'F');
-    doc.setFontSize(12); doc.setTextColor(dark); y += 10;
-    doc.text(`Name: ${fullName}`, margin + 5, y); y += 7;
-    doc.text(`Email: ${email}`, margin + 5, y); y += 7;
-    doc.text(`Phone: ${phone}`, margin + 5, y); y += 7;
-    doc.text(`Payment Ref: ${paymentRef}`, margin + 5, y); y += 15;
-    const tableX = margin, tableWidth = pageWidth - margin * 2, rowH = 8;
-    doc.setFillColor(rose); doc.setTextColor('#ffffff'); doc.setFontSize(11);
-    doc.rect(tableX, y, tableWidth, rowH, 'F');
-    doc.text('Item', tableX + 2, y + 6); doc.text('Qty', tableX + 80, y + 6);
-    doc.text('Price', tableX + 110, y + 6, { align: 'right' }); doc.text('Total', tableX + 150, y + 6, { align: 'right' });
-    y += rowH;
-    const items = order.items || [];
-    doc.setTextColor('#000');
-    items.forEach((i, idx) => {
-      if (y > 260) { doc.addPage(); y = 20; }
-      if (idx % 2 === 0) { doc.setFillColor('#f7f7f7'); doc.rect(tableX, y, tableWidth, rowH, 'F'); }
-      doc.text(i.name || '—', tableX + 2, y + 6); doc.text(`${i.quantity || 0}`, tableX + 80, y + 6);
-      doc.text(`₦${Number(i.price || 0).toLocaleString()}`, tableX + 110, y + 6, { align: 'right' });
-      doc.text(`₦${(Number(i.price || 0) * Number(i.quantity || 0)).toLocaleString()}`, tableX + 150, y + 6, { align: 'right' });
-      doc.rect(tableX, y, tableWidth, rowH); y += rowH;
-    });
-    const delivery = order.delivery || {}, deliveryFee = order.delivery?.deliveryFee || order.pricing?.shippingFee || 0;
-    const subtotal = order.total || items.reduce((s, i) => s + (Number(i.price || 0) * Number(i.quantity || 0)), 0);
-    const finalTotal = (delivery.country && delivery.country.toLowerCase() !== 'nigeria') ? subtotal + (deliveryFee || 0) : subtotal;
-    if (deliveryFee > 0) {
-      doc.setFillColor('#f0f0f0'); doc.rect(tableX, y, tableWidth, rowH, 'F'); doc.setFont('helvetica', 'normal'); doc.setFontSize(11);
-      doc.text('Delivery Fee', tableX + 110, y + 6, { align: 'right' }); doc.text(`₦${deliveryFee.toLocaleString()}`, tableX + 150, y + 6, { align: 'right' });
-      doc.rect(tableX, y, tableWidth, rowH); y += rowH;
+      const b64 = await new Promise((resolve, reject) => {
+        const r = new FileReader(); r.onloadend = () => resolve(r.result); r.onerror = reject; r.readAsDataURL(blob);
+      });
+      doc.setFillColor('#ffffff');
+      doc.roundedRect(margin - 2, 3, 46, 26, 3, 3, 'F');
+      doc.addImage(b64, 'PNG', margin, 6, 42, 20);
+    } catch(e) {
+      doc.setFont('helvetica', 'bold'); doc.setFontSize(18); doc.setTextColor('#ffffff');
+      doc.text('SKINOVA', margin, 22);
     }
-    doc.setFillColor('#eaeaea'); doc.rect(tableX, y, tableWidth, rowH, 'F'); doc.setFont('helvetica', 'bold');
-    doc.text('Order Total', tableX + 110, y + 6, { align: 'right' }); doc.text(`₦${finalTotal.toLocaleString()}`, tableX + 150, y + 6, { align: 'right' });
-    doc.rect(tableX, y, tableWidth, rowH); y += rowH + 5;
-    doc.setFont('helvetica', 'normal'); doc.setFontSize(10); doc.setTextColor(gray);
-    doc.text('Thank you for shopping with Skinova!', pageWidth / 2, 285, { align: 'center' });
-    doc.save(`Order_${paymentRef}.pdf`);
+
+    // RECEIPT label (right side)
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(20); doc.setTextColor('#ffffff');
+    doc.text('RECEIPT', pageWidth - margin, 18, { align: 'right' });
+    doc.setFont('helvetica', 'normal'); doc.setFontSize(8); doc.setTextColor(230, 200, 215);
+    doc.text('Order Confirmation', pageWidth - margin, 26, { align: 'right' });
+
+    // ── META STRIP ────────────────────────────────────────────────
+    doc.setFillColor(cream); doc.rect(0, 36, pageWidth, 20, 'F');
+    doc.setDrawColor(borderCol); doc.setLineWidth(0.3);
+    doc.line(0, 36, pageWidth, 36); doc.line(0, 56, pageWidth, 56);
+
+    const metaCols = [
+      { label: 'ORDER ID', value: paymentRef.length > 22 ? paymentRef.slice(0, 20) + '…' : paymentRef },
+      { label: 'DATE', value: orderDate },
+      { label: 'STATUS', value: statusLabel },
+      { label: 'PAYMENT', value: payMethod }
+    ];
+    const metaColW = contentWidth / 4;
+    metaCols.forEach((m, i) => {
+      const x = margin + i * metaColW;
+      doc.setFont('helvetica', 'bold'); doc.setFontSize(6.5); doc.setTextColor(muted);
+      doc.text(m.label, x, 43);
+      doc.setFont('helvetica', 'bold'); doc.setFontSize(8.5); doc.setTextColor(brandDark);
+      doc.text(m.value, x, 51);
+      if (i < 3) { doc.setDrawColor(borderCol); doc.line(margin + (i + 1) * metaColW, 39, margin + (i + 1) * metaColW, 53); }
+    });
+
+    y = 64;
+
+    // ── TWO-COLUMN INFO CARDS ─────────────────────────────────────
+    const halfW = (contentWidth - 6) / 2;
+
+    // Customer card
+    doc.setFillColor(cream); doc.setDrawColor(borderCol); doc.setLineWidth(0.3);
+    doc.roundedRect(margin, y, halfW, 34, 2, 2, 'FD');
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(6.5); doc.setTextColor(muted);
+    doc.text('CUSTOMER', margin + 4, y + 7);
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(10); doc.setTextColor(brandDark);
+    doc.text(fullName, margin + 4, y + 15);
+    doc.setFont('helvetica', 'normal'); doc.setFontSize(8.5); doc.setTextColor(subtle);
+    doc.text(email, margin + 4, y + 22);
+    doc.text(phone, margin + 4, y + 29);
+
+    // Shipping address card
+    const rx = margin + halfW + 6;
+    const addrParts = [
+      shipping.street || shipping.address || '',
+      delivery.lga || '',
+      delivery.state || '',
+      delivery.country || ''
+    ].filter(Boolean);
+    const addrLines = doc.splitTextToSize(addrParts.join(', '), halfW - 8);
+
+    doc.setFillColor(cream); doc.setDrawColor(borderCol);
+    doc.roundedRect(rx, y, halfW, 34, 2, 2, 'FD');
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(6.5); doc.setTextColor(muted);
+    doc.text('SHIP TO', rx + 4, y + 7);
+    doc.setFont('helvetica', 'normal'); doc.setFontSize(8.5); doc.setTextColor(subtle);
+    doc.text(addrLines.slice(0, 3), rx + 4, y + 15);
+
+    y += 42;
+
+    // ── ITEMS TABLE ───────────────────────────────────────────────
+    const tableX = margin, tableW = contentWidth, rowH = 9;
+    // Col positions (right-aligned anchors)
+    const colQty = tableX + 100, colPrice = tableX + 148, colTotal = tableX + tableW;
+
+    // Header
+    doc.setFillColor(brand); doc.rect(tableX, y, tableW, rowH, 'F');
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(8.5); doc.setTextColor('#ffffff');
+    doc.text('ITEM', tableX + 4, y + 6);
+    doc.text('QTY', colQty - 2, y + 6, { align: 'right' });
+    doc.text('UNIT PRICE', colPrice, y + 6, { align: 'right' });
+    doc.text('TOTAL', colTotal - 2, y + 6, { align: 'right' });
+    y += rowH;
+
+    // Rows
+    doc.setFont('helvetica', 'normal'); doc.setFontSize(8.5);
+    items.forEach((item, idx) => {
+      if (y > 250) { doc.addPage(); y = 20; }
+      if (idx % 2 === 0) { doc.setFillColor(252, 250, 248); doc.rect(tableX, y, tableW, rowH, 'F'); }
+      const name = (item.name || '—').length > 45 ? (item.name || '—').slice(0, 43) + '…' : (item.name || '—');
+      doc.setTextColor(brandDark); doc.text(name, tableX + 4, y + 6);
+      doc.setTextColor(subtle);
+      doc.text(`${item.quantity || 0}`, colQty - 2, y + 6, { align: 'right' });
+      doc.text(`NGN ${Number(item.price || 0).toLocaleString()}`, colPrice, y + 6, { align: 'right' });
+      doc.setTextColor(brandDark);
+      doc.text(`NGN ${(Number(item.price || 0) * Number(item.quantity || 0)).toLocaleString()}`, colTotal - 2, y + 6, { align: 'right' });
+      y += rowH;
+    });
+
+    // Table bottom border
+    doc.setDrawColor(borderCol); doc.setLineWidth(0.4);
+    doc.line(tableX, y, tableX + tableW, y);
+    y += 8;
+
+    // ── TOTALS ────────────────────────────────────────────────────
+    const totW = 80, totX = margin + contentWidth - totW;
+
+    const drawTotalRow = (label, value, bold = false) => {
+      doc.setFont('helvetica', bold ? 'bold' : 'normal');
+      doc.setFontSize(9); doc.setTextColor(subtle);
+      doc.text(label, totX + totW * 0.5, y + 5, { align: 'right' });
+      doc.setTextColor(bold ? brandDark : subtle);
+      doc.text(value, totX + totW - 2, y + 5, { align: 'right' });
+      y += 8;
+    };
+
+    drawTotalRow('Subtotal', `NGN ${subtotal.toLocaleString()}`);
+    if (deliveryFee > 0) drawTotalRow('Delivery Fee', `NGN ${deliveryFee.toLocaleString()}`);
+
+    // Divider
+    doc.setDrawColor(borderCol); doc.setLineWidth(0.3);
+    doc.line(totX, y - 2, totX + totW, y - 2);
+
+    // Grand total — brand colour band
+    doc.setFillColor(brand);
+    doc.roundedRect(totX, y, totW, 11, 2, 2, 'F');
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(9.5); doc.setTextColor('#ffffff');
+    doc.text('TOTAL', totX + totW * 0.5, y + 7.5, { align: 'right' });
+    doc.text(`NGN ${finalTotal.toLocaleString()}`, totX + totW - 4, y + 7.5, { align: 'right' });
+    y += 18;
+
+    // ── FOOTER ───────────────────────────────────────────────────
+    // Sit just below content; only push to page bottom if content is long
+    const footerH = 22;
+    const fy = Math.max(y + 10, pageHeight - footerH - 4);
+    doc.setFillColor(cream); doc.rect(0, fy - 2, pageWidth, footerH + 4, 'F');
+    doc.setDrawColor(borderCol); doc.setLineWidth(0.4); doc.line(0, fy - 2, pageWidth, fy - 2);
+
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(9); doc.setTextColor(brand);
+    doc.text('Skinova', margin, fy + 5);
+    doc.setFont('helvetica', 'normal'); doc.setFontSize(7.5); doc.setTextColor(subtle);
+    doc.text('ibitoyeifeoluwafunmi@gmail.com  |  +2347036594806', margin, fy + 11);
+
+    doc.setFont('helvetica', 'italic'); doc.setFontSize(8.5); doc.setTextColor(muted);
+    doc.text('Thank you for shopping with Skinova!', pageWidth / 2, fy + 8, { align: 'center' });
+
+    doc.setFont('helvetica', 'normal'); doc.setFontSize(7.5); doc.setTextColor(muted);
+    doc.text(`Ref: ${paymentRef}`, pageWidth - margin, fy + 11, { align: 'right' });
+
+    doc.save(`Skinova_Receipt_${paymentRef}.pdf`);
   } catch (err) { showAlert('PDF failed: ' + (err.message || err), 'Error'); }
 }
 
@@ -1829,12 +1966,12 @@ async function heroSaveSlide(e) {
     if (!orderVal || isNaN(orderVal)) { await showAlert('Please enter a valid display order number.'); return; }
     let finalImageURL = null;
     if (file) {
-      const fd = new FormData(); fd.append('file', file); fd.append('upload_preset', 'products');
-      const res = await fetch('https://api.cloudinary.com/v1_1/dut2dpxuc/image/upload', { method: 'POST', body: fd });
+      const fd = new FormData(); fd.append('file', file); fd.append('upload_preset', window.CONFIG.cloudinary.uploadPreset);
+      const res = await fetch(`https://api.cloudinary.com/v1_1/${window.CONFIG.cloudinary.cloudName}/image/upload`, { method: 'POST', body: fd });
       const data = await res.json(); if (!data.secure_url) throw new Error('File upload failed'); finalImageURL = data.secure_url;
     } else if (imageURL) {
-      const fd = new FormData(); fd.append('file', imageURL); fd.append('upload_preset', 'products');
-      const res = await fetch('https://api.cloudinary.com/v1_1/dut2dpxuc/image/upload', { method: 'POST', body: fd });
+      const fd = new FormData(); fd.append('file', imageURL); fd.append('upload_preset', window.CONFIG.cloudinary.uploadPreset);
+      const res = await fetch(`https://api.cloudinary.com/v1_1/${window.CONFIG.cloudinary.cloudName}/image/upload`, { method: 'POST', body: fd });
       const data = await res.json(); if (!data.secure_url) throw new Error('URL upload failed'); finalImageURL = data.secure_url;
     }
     const slideData = { title: document.getElementById('heroTitle').value.trim(), subtitle: document.getElementById('heroSubtitle').value.trim() || '', link: document.getElementById('heroLink').value.trim() || '', order: Number(orderVal) };

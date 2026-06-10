@@ -144,6 +144,7 @@
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+  <script src="/config.js"></script>
 
   <script>
     /* ===== Success / Error Modals ===== */
@@ -244,14 +245,7 @@ function closeErrorModal() {
     }
 
     /* ===== Firebase Config ===== */
-    const firebaseConfig = {
-      apiKey: "AIzaSyDdTPmpaIPWSDWOmR-fXgvAb7hoxZUawcc",
-      authDomain: "e-commerce-39c74.firebaseapp.com",
-      projectId: "e-commerce-39c74",
-      storageBucket: "e-commerce-39c74.firebasestorage.app",
-      messagingSenderId: "863375033754",
-      appId: "1:863375033754:web:7ba248c8dbb1566c83e623"
-    };
+    const firebaseConfig = window.CONFIG.firebase;
     firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
     const db = firebase.firestore();

@@ -10,6 +10,7 @@
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+  <script src="/config.js"></script>
   <script src="https://js.paystack.co/v1/inline.js"></script>
   <style>
   *{
@@ -786,14 +787,7 @@ function updateTerminal() {
   }
 
   // ===== Firebase Init =====
-  const firebaseConfig = {
-    apiKey: "AIzaSyDdTPmpaIPWSDWOmR-fXgvAb7hoxZUawcc",
-    authDomain: "e-commerce-39c74.firebaseapp.com",
-    projectId: "e-commerce-39c74",
-    storageBucket: "e-commerce-39c74.firebasestorage.app",
-    messagingSenderId: "863375033754",
-    appId: "1:863375033754:web:7ba248c8dbb1566c83e623"
-  };
+  const firebaseConfig = window.CONFIG.firebase;
   if (!firebase.apps.length) {
   firebase.initializeApp(firebaseConfig);
 }
@@ -1328,7 +1322,7 @@ async function saveOrder(order) {
     if(total <= 0){ showNotification("Total amount is zero. Cannot proceed.","error"); return; }
 
     const handler = PaystackPop.setup({
-      key: "pk_test_0ed65a8011643dd303600706cb990c9ba067f199",
+      key: window.CONFIG.paystackKey,
       email: billing.email,
       amount: total*100,
       ref: "REF_"+Date.now(),

@@ -1,13 +1,6 @@
 (function(){
   // --- SINGLE Firebase App for Users + Admins ---
-  const firebaseConfig = {
-    apiKey: "AIzaSyDdTPmpaIPWSDWOmR-fXgvAb7hoxZUawcc",
-    authDomain: "e-commerce-39c74.firebaseapp.com",
-    projectId: "e-commerce-39c74",
-    storageBucket: "e-commerce-39c74.firebasestorage.app",
-    messagingSenderId: "863375033754",
-    appId: "1:863375033754:web:7ba248c8dbb1566c83e623"
-  };
+  const firebaseConfig = window.CONFIG.firebase;
 
   if(!firebase.apps.length){
     firebase.initializeApp(firebaseConfig);
@@ -981,8 +974,11 @@ function filterFeaturedProducts(term){
   displayedCount = 0;
 
   // If input is empty, show all currentProducts
-  const filtered = featuredSearchTerm 
-    ? currentProducts.filter(p => p.name.toLowerCase().includes(featuredSearchTerm)) 
+  const filtered = featuredSearchTerm
+    ? currentProducts.filter(p =>
+        p.name.toLowerCase().includes(featuredSearchTerm) ||
+        (p.description || "").toLowerCase().includes(featuredSearchTerm)
+      )
     : currentProducts;
 
   // Temporarily replace currentProducts with filtered list for render
@@ -1017,9 +1013,11 @@ closeSearchBtn.addEventListener("click", () => {
   filterFeaturedProducts("");
 });
 
-// Real-time search as user types
+// Real-time search as user types (debounced)
+let searchDebounce;
 searchInput.addEventListener("input", e => {
-  filterFeaturedProducts(e.target.value.trim());
+  clearTimeout(searchDebounce);
+  searchDebounce = setTimeout(() => filterFeaturedProducts(e.target.value.trim()), 300);
 });
 
 // Optional: Enter key triggers search
@@ -1075,6 +1073,18 @@ function renderProducts(reset=false){
 
   displayedCount += chunk.length;
 
+  // Empty state when search yields no results
+  if (featuredSearchTerm && displayedCount === 0) {
+    productList.innerHTML = `
+      <div class="col-span-full flex flex-col items-center py-16 text-center">
+        <svg class="w-12 h-12 mb-4" style="color:#e0d3cc" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z"/>
+        </svg>
+        <p style="color:#2C2420;font-weight:500;font-family:'Inter',sans-serif;">No products found</p>
+        <p style="color:#9E8E88;font-size:0.875rem;margin-top:4px;font-family:'Inter',sans-serif;">Try a different search term</p>
+      </div>`;
+  }
+
   // Bind buttons
   productList.querySelectorAll('.view-btn').forEach(btn=>{
     if(!btn.dataset.bound){
@@ -1090,10 +1100,8 @@ function renderProducts(reset=false){
   productList.querySelectorAll('.add-btn').forEach(btn=>{
     if(!btn.dataset.bound){
         btn.dataset.bound='1';
-        btn.addEventListener('click', async ()=>{
-            const resetLoader = showLoader(btn);
-            await window.addToCart(btn.dataset.id);
-            resetLoader && resetLoader();
+        btn.addEventListener('click', ()=>{
+            window.addToCart(btn.dataset.id);
         });
     }
   });
@@ -1103,10 +1111,25 @@ function renderProducts(reset=false){
   if(displayedCount < currentProducts.length){
       if(!existing){
           const btn = document.createElement("button");
-          btn.id="loadMoreBtn";
-          btn.textContent="Load More";
-          btn.className="mt-6 px-8 py-3 text-[#8B4F6B] border border-[#8B4F6B] rounded-sm text-xs font-medium tracking-widest uppercase block mx-auto hover:bg-[#8B4F6B] hover:text-white transition-colors";
-          btn.onclick=()=> renderProducts();
+          btn.id = "loadMoreBtn";
+          btn.innerHTML = '<span id="loadMoreText">Load More</span><i id="loadMoreSpinner" class="fas fa-spinner fa-spin hidden" style="font-size:0.75rem;margin-left:8px;"></i>';
+          btn.className = "mt-6 px-8 py-3 text-[#8B4F6B] border border-[#8B4F6B] rounded-sm text-xs font-medium tracking-widest uppercase mx-auto hover:bg-[#8B4F6B] hover:text-white transition-colors inline-flex items-center";
+          btn.style.display = "flex";
+          btn.onclick = () => {
+            btn.disabled = true;
+            const txt = btn.querySelector("#loadMoreText");
+            const sp = btn.querySelector("#loadMoreSpinner");
+            if (txt) txt.textContent = "Loading…";
+            if (sp) sp.classList.remove("hidden");
+            setTimeout(() => {
+              renderProducts();
+              if (btn.isConnected) {
+                btn.disabled = false;
+                if (txt) txt.textContent = "Load More";
+                if (sp) sp.classList.add("hidden");
+              }
+            }, 400);
+          };
           productList.parentElement.appendChild(btn);
       }
   } else if(existing) existing.remove();
@@ -1236,47 +1259,38 @@ async function ensureGuestCart() {
 }
 
 // ---------- ADD TO CART ----------
-window.addToCart = async function(productId) {
+window.addToCart = function(productId) {
   const product = currentProducts.find(p => p.id === productId);
   if (!product) return showNotification("Product not found", "error");
 
-  try {
-    const cartDocRef = await ensureGuestCart();
-    const snap = await cartDocRef.get();
-    const items = snap.exists ? snap.data().items || [] : [];
-
-    // Check if product already exists
-    const existing = items.find(i => i.id === product.id);
-    if (existing) {
-      existing.quantity += 1;
-    } else {
-      items.push({
-        id: product.id,
-        name: product.name,
-        price: Number(product.price) || 0,
-        image: product.image || "",
-        quantity: 1,
-        weight: Number(product.weight || 0)
-      });
-    }
-
-    // Update Firestore
-    await cartDocRef.set({
-      guestId,
-      items,
-      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-    }, { merge: true });
-
-    // Update localStorage instantly
-    localStorage.setItem("cart", JSON.stringify(items));
-
-    showNotification("Added to cart!", "success");
-    updateCartCount();
-
-  } catch (err) {
-    console.error(err);
-    showNotification("Failed to add to cart", "error");
+  // Phase 1: instant optimistic update from localStorage
+  let items = [];
+  try { items = JSON.parse(localStorage.getItem("cart")) || []; } catch {}
+  const existing = items.find(i => i.id === product.id);
+  if (existing) {
+    existing.quantity += 1;
+  } else {
+    items.push({
+      id: product.id,
+      name: product.name,
+      price: Number(product.price) || 0,
+      image: product.image || "",
+      quantity: 1,
+      weight: Number(product.weight || 0)
+    });
   }
+  localStorage.setItem("cart", JSON.stringify(items));
+  showNotification("Added to cart!", "success");
+  updateCartCount();
+
+  // Phase 2: background Firestore sync
+  const cartDocRef = userDb.collection("guestCarts").doc(guestId);
+  ensureGuestCart()
+    .then(() => cartDocRef.set(
+      { guestId, items, updatedAt: firebase.firestore.FieldValue.serverTimestamp() },
+      { merge: true }
+    ))
+    .catch(err => console.error("Cart sync error:", err));
 };
 
 // ---------- UPDATE CART COUNT ----------

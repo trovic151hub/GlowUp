@@ -8,6 +8,7 @@
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <script src="/config.js"></script>
 </head>
 
 <body class="bg-gray-100 text-gray-900">
@@ -107,14 +108,7 @@
 
   <script>
   // ===== FIREBASE CONFIG =====
-const firebaseConfig = {
-  apiKey: "AIzaSyDdTPmpaIPWSDWOmR-fXgvAb7hoxZUawcc",
-  authDomain: "e-commerce-39c74.firebaseapp.com",
-  projectId: "e-commerce-39c74",
-  storageBucket: "e-commerce-39c74.firebasestorage.app",
-  messagingSenderId: "863375033754",
-  appId: "1:863375033754:web:7ba248c8dbb1566c83e623"
-};
+const firebaseConfig = window.CONFIG.firebase;
 
 firebase.initializeApp(firebaseConfig);
 
@@ -226,9 +220,9 @@ document.getElementById("heroForm").addEventListener("submit", async (e) => {
     if (file) {
       const formData = new FormData();
       formData.append("file", file);
-      formData.append("upload_preset", "products");
+      formData.append("upload_preset", window.CONFIG.cloudinary.uploadPreset);
 
-      const res = await fetch("https://api.cloudinary.com/v1_1/dut2dpxuc/image/upload", {
+      const res = await fetch(`https://api.cloudinary.com/v1_1/${window.CONFIG.cloudinary.cloudName}/image/upload`, {
         method: "POST",
         body: formData
       });
@@ -239,9 +233,9 @@ document.getElementById("heroForm").addEventListener("submit", async (e) => {
     } else if (imageLinkInput) {
       const formData = new FormData();
       formData.append("file", imageLinkInput);
-      formData.append("upload_preset", "products");
+      formData.append("upload_preset", window.CONFIG.cloudinary.uploadPreset);
 
-      const res = await fetch("https://api.cloudinary.com/v1_1/dut2dpxuc/image/upload", {
+      const res = await fetch(`https://api.cloudinary.com/v1_1/${window.CONFIG.cloudinary.cloudName}/image/upload`, {
         method: "POST",
         body: formData
       });
