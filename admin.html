@@ -123,8 +123,7 @@
 <div id="login-view" class="min-h-screen flex items-center justify-center" style="background:#F5F2F3; overflow:auto;">
   <div class="w-full max-w-sm px-4 py-8">
     <div class="text-center mb-8">
-      <img src="attached_assets/skinova_logo.png" class="w-14 h-14 object-contain mx-auto mb-3" alt="Skinova Logo">
-      <h1 class="text-4xl text-gray-800 serif font-semibold">Skinova</h1>
+      <img src="attached_assets/skinova-logo-transparent.png" class="h-14 w-auto object-contain mx-auto mb-3" alt="Skinova" />
       <p class="text-sm text-gray-400 mt-1 tracking-wide uppercase" style="font-size:0.7rem; letter-spacing:0.12em;">Admin Portal</p>
     </div>
     <div class="bg-white rounded-2xl shadow-sm p-8">
@@ -162,9 +161,8 @@
   <aside id="sidebar">
     <!-- Brand -->
     <div class="sidebar-brand flex items-center gap-3 px-4 py-5 border-b" style="border-color:rgba(255,255,255,0.08);">
-      <img src="attached_assets/skinova_logo.png" class="w-8 h-8 object-contain flex-shrink-0" alt="Skinova Logo">
+      <img src="attached_assets/skinova-logo-transparent.png" class="h-8 w-auto object-contain flex-shrink-0" alt="Skinova" />
       <div class="sidebar-text">
-        <p class="text-white font-semibold text-sm leading-tight serif">Skinova</p>
         <p class="text-xs" style="color:#9B7A87;">Admin Panel</p>
       </div>
     </div>
@@ -1850,7 +1848,7 @@ async function downloadPdf(order) {
 
     // Logo — white rounded card so PNG background blends cleanly
     try {
-      const res = await fetch('https://raw.githubusercontent.com/trovic151hub/GlowUp/master/attached_assets/skinova_logo.png');
+      const res = await fetch('https://raw.githubusercontent.com/trovic151hub/GlowUp/master/attached_assets/skinova-logo-transparent.png');
       const blob = await res.blob();
       const b64 = await new Promise((resolve, reject) => {
         const r = new FileReader(); r.onloadend = () => resolve(r.result); r.onerror = reject; r.readAsDataURL(blob);
@@ -2019,7 +2017,7 @@ async function sendReceiptEmail(order) {
   const orderItemsHtml = items.map(i => `<tr><td>${i.name || '—'}</td><td align="center">${i.quantity || 0}</td><td align="right">₦${Number(i.price || 0).toLocaleString()}</td><td align="right">₦${(Number(i.price || 0) * (i.quantity || 0)).toLocaleString()}</td></tr>`).join('');
   await emailjs.send('service_k1xpqh8', 'template_nlno322', {
     to_email: email, customer_name: fullName, order_id: payment.reference || order.id,
-    logo_url: 'https://raw.githubusercontent.com/trovic151hub/GlowUp/master/attached_assets/skinova_logo.png',
+    logo_url: 'https://raw.githubusercontent.com/trovic151hub/GlowUp/master/attached_assets/skinova-logo-transparent.png',
     order_name: fullName, order_email: email, order_phone: shipping.phone || '—',
     payment_method: payment.method || '—', payment_ref: payment.reference || order.id,
     order_items: orderItemsHtml, order_total: orderTotal.toLocaleString(),
