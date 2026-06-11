@@ -21,6 +21,18 @@
       from { opacity: 0; transform: translateY(-8px); }
       to   { opacity: 1; transform: translateY(0); }
     }
+    /* Hamburger → X spin */
+    #menuToggle i { transition: transform 0.25s ease; }
+    #menuToggle.menu-open i { transform: rotate(90deg); }
+    /* Staggered nav link entrance */
+    .menu-link {
+      opacity: 0;
+      transform: translateX(-10px);
+      transition: opacity 0.22s ease, transform 0.22s ease, background 0.15s, color 0.15s, border-color 0.15s;
+    }
+    #mobileMenu.open .menu-link { opacity: 1; transform: translateX(0); }
+    /* Active page link */
+    .menu-link.active-page { color: #8B4F6B !important; background: #fff; border-left-color: #8B4F6B !important; }
   </style>
 </head>
 
@@ -36,7 +48,7 @@
     <!-- Left: Hamburger + Brand -->
     <div class="flex items-center gap-3">
       <!-- Hamburger Button -->
-      <button id="menuToggle" class="text-white hover:text-[#C9A28F] transition-colors text-xl leading-none">
+      <button id="menuToggle" class="md:hidden text-white hover:text-[#C9A28F] transition-colors text-xl leading-none">
         <i class="fas fa-bars"></i>
       </button>
       <!-- Brand -->
@@ -50,38 +62,77 @@
 
     <!-- Slide-in Menu -->
     <div id="mobileMenu"
-      class="fixed top-0 left-0 w-64 h-full bg-white shadow-2xl p-6 transform -translate-x-full transition-transform duration-300 z-50">
-      <button id="closeMenu" class="text-2xl text-gray-400 hover:text-[#8B4F6B] absolute top-5 right-5 transition-colors">&times;</button>
+      class="fixed top-0 left-0 w-72 h-full shadow-2xl transform -translate-x-full transition-transform duration-300 z-50 flex flex-col" style="background:#FAF8F5;">
 
-      <div class="mt-3 mb-6 block items-center gap-2.5">
-        <img src="attached_assets/skinova-logo-transparent.png" class="h-12 w-auto object-contain" alt="Skinova" />
-        <p class="text-xs text-[#9E8E88] tracking-widest uppercase mt-0.5">Premium Supplements</p>
+      <!-- Drawer header -->
+      <div class="flex items-center justify-between px-5 py-4 bg-white border-b border-[#f0ebe7]">
+        <div>
+          <img src="attached_assets/skinova-logo-transparent.png" class="h-9 w-auto object-contain" alt="Skinova" />
+          <p class="text-[10px] text-[#9E8E88] tracking-[0.12em] uppercase mt-0.5">Premium Supplements</p>
+        </div>
+        <button id="closeMenu" class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-[#F3EEF0] text-[#9E8E88] hover:text-[#8B4F6B] transition-colors">
+          <i class="fas fa-times text-sm"></i>
+        </button>
       </div>
 
-      <span id="welcomeTextMobile" class="text-xs text-[#8B4F6B] font-medium hidden mb-2 block"></span>
+      <!-- Auth area -->
+      <div id="drawerUserArea" class="px-5 py-3.5 bg-white border-b border-[#f0ebe7]">
+        <a href="login.html" class="flex items-center gap-3 text-sm text-[#8B4F6B] font-medium hover:opacity-80 transition-opacity">
+          <div class="w-8 h-8 rounded-full bg-[#F3EEF0] flex items-center justify-center flex-shrink-0">
+            <i class="fas fa-user text-xs text-[#8B4F6B]"></i>
+          </div>
+          <span>Sign In / Register</span>
+          <i class="fas fa-chevron-right text-xs ml-auto text-[#C4B0A8]"></i>
+        </a>
+      </div>
 
-      <div class="flex flex-col space-y-1 mt-2 text-sm">
-        <a href="#" class="flex items-center gap-3 px-3 py-3 text-[#2C2420] hover:bg-[#FAF8F5] hover:text-[#8B4F6B] rounded-md transition-colors">
-          <i class="fas fa-home text-[#8B4F6B] w-4"></i> Home
+      <!-- Nav links -->
+      <nav class="flex-1 overflow-y-auto px-3 pt-4 pb-2">
+        <a href="index.html" class="menu-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-[#2C2420] hover:text-[#8B4F6B] hover:bg-white border-l-2 border-transparent hover:border-[#8B4F6B] mb-0.5" style="transition-delay:0.05s">
+          <i class="fas fa-home w-4 text-center text-[#8B4F6B]"></i> Home
         </a>
-        <a href="products.html" class="flex items-center gap-3 px-3 py-3 text-[#2C2420] hover:bg-[#FAF8F5] hover:text-[#8B4F6B] rounded-md transition-colors">
-          <i class="fa fa-shop text-[#8B4F6B] w-4"></i> Shop
+        <a href="products.html" class="menu-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-[#2C2420] hover:text-[#8B4F6B] hover:bg-white border-l-2 border-transparent hover:border-[#8B4F6B] mb-0.5" style="transition-delay:0.1s">
+          <i class="fa fa-shop w-4 text-center text-[#8B4F6B]"></i> Shop
         </a>
-        <a href="#categories" class="flex items-center gap-3 px-3 py-3 text-[#2C2420] hover:bg-[#FAF8F5] hover:text-[#8B4F6B] rounded-md transition-colors">
-          <i class="fas fa-th-large text-[#8B4F6B] w-4"></i> Categories
+        <a href="#categories" class="menu-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-[#2C2420] hover:text-[#8B4F6B] hover:bg-white border-l-2 border-transparent hover:border-[#8B4F6B] mb-0.5" style="transition-delay:0.15s">
+          <i class="fas fa-th-large w-4 text-center text-[#8B4F6B]"></i> Categories
         </a>
-        <a href="customer-dashboard.html" class="flex items-center gap-3 px-3 py-3 text-[#2C2420] hover:bg-[#FAF8F5] hover:text-[#8B4F6B] rounded-md transition-colors">
-          <i class="fas fa-user-circle text-[#8B4F6B] w-4"></i> Dashboard
+        <a href="customer-dashboard.html" class="menu-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-[#2C2420] hover:text-[#8B4F6B] hover:bg-white border-l-2 border-transparent hover:border-[#8B4F6B] mb-0.5" style="transition-delay:0.2s">
+          <i class="fas fa-user-circle w-4 text-center text-[#8B4F6B]"></i> My Account
         </a>
-        <a href="mailto:ibitoyeifeoluwafunmi@gmail.com" class="flex items-center gap-3 px-3 py-3 text-[#2C2420] hover:bg-[#FAF8F5] hover:text-[#8B4F6B] rounded-md transition-colors">
-          <i class="fas fa-envelope text-[#8B4F6B] w-4"></i> Email Us
+
+        <!-- Divider -->
+        <div class="menu-link flex items-center gap-3 my-3 px-2" style="transition-delay:0.23s">
+          <div class="flex-1 h-px bg-[#ede5e0]"></div>
+          <span class="text-[10px] uppercase tracking-widest text-[#C4B0A8] font-semibold">Connect</span>
+          <div class="flex-1 h-px bg-[#ede5e0]"></div>
+        </div>
+
+        <a href="mailto:ibitoyeifeoluwafunmi@gmail.com" class="menu-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-[#2C2420] hover:text-[#8B4F6B] hover:bg-white border-l-2 border-transparent hover:border-[#8B4F6B] mb-0.5" style="transition-delay:0.27s">
+          <i class="fas fa-envelope w-4 text-center text-[#8B4F6B]"></i> Email Us
         </a>
-        <a href="https://wa.me/2347036594806" target="_blank" class="flex items-center gap-3 px-3 py-3 text-[#2C2420] hover:bg-[#FAF8F5] hover:text-[#8B4F6B] rounded-md transition-colors">
-          <i class="fab fa-whatsapp text-green-500 w-4"></i> WhatsApp
+        <a href="https://wa.me/2347036594806" target="_blank" class="menu-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-[#2C2420] hover:text-[#8B4F6B] hover:bg-white border-l-2 border-transparent hover:border-[#8B4F6B] mb-0.5" style="transition-delay:0.31s">
+          <i class="fab fa-whatsapp w-4 text-center text-green-500"></i> WhatsApp
         </a>
-        <a href="https://instagram.com/yourhandle" target="_blank" class="flex items-center gap-3 px-3 py-3 text-[#2C2420] hover:bg-[#FAF8F5] hover:text-[#8B4F6B] rounded-md transition-colors">
-          <i class="fab fa-instagram text-[#8B4F6B] w-4"></i> Instagram
+        <a href="https://instagram.com/yourhandle" target="_blank" class="menu-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-[#2C2420] hover:text-[#8B4F6B] hover:bg-white border-l-2 border-transparent hover:border-[#8B4F6B] mb-0.5" style="transition-delay:0.35s">
+          <i class="fab fa-instagram w-4 text-center text-[#8B4F6B]"></i> Instagram
         </a>
+      </nav>
+
+      <!-- Bottom social strip -->
+      <div class="px-5 py-4 bg-white border-t border-[#f0ebe7]">
+        <p class="text-[10px] text-[#C4B0A8] uppercase tracking-widest mb-3">© 2025 Skinova</p>
+        <div class="flex items-center gap-3">
+          <a href="https://instagram.com/yourhandle" target="_blank" class="w-8 h-8 rounded-full flex items-center justify-center text-[#8B4F6B] hover:bg-[#F3EEF0] transition-colors">
+            <i class="fab fa-instagram text-sm"></i>
+          </a>
+          <a href="https://wa.me/2347036594806" target="_blank" class="w-8 h-8 rounded-full flex items-center justify-center text-green-500 hover:bg-green-50 transition-colors">
+            <i class="fab fa-whatsapp text-sm"></i>
+          </a>
+          <a href="mailto:ibitoyeifeoluwafunmi@gmail.com" class="w-8 h-8 rounded-full flex items-center justify-center text-[#8B4F6B] hover:bg-[#F3EEF0] transition-colors">
+            <i class="fas fa-envelope text-sm"></i>
+          </a>
+        </div>
       </div>
     </div>
 

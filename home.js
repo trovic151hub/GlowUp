@@ -1381,6 +1381,8 @@ function openMenu() {
     mobileMenu.classList.add("translate-x-0");
     mobileMenu.classList.add("open");
     menuOverlay.classList.remove("hidden");
+    menuToggle.querySelector('i').className = 'fas fa-times';
+    menuToggle.classList.add('menu-open');
 
     // Disable background scroll
     scrollPosition = window.scrollY;
@@ -1396,6 +1398,8 @@ function closeMenuFunc() {
     mobileMenu.classList.add("-translate-x-full");
     mobileMenu.classList.remove("open");
     menuOverlay.classList.add("hidden");
+    menuToggle.querySelector('i').className = 'fas fa-bars';
+    menuToggle.classList.remove('menu-open');
 
     // Enable background scroll
     document.body.style.position = "";
@@ -1403,8 +1407,47 @@ function closeMenuFunc() {
     document.body.style.left = "";
     document.body.style.right = "";
     document.body.style.overflow = "";
-    window.scrollTo(0, scrollPosition); // Restore scroll
+    window.scrollTo(0, scrollPosition);
 }
+
+// Auth-aware drawer user area
+firebase.auth().onAuthStateChanged(user => {
+  const area = document.getElementById('drawerUserArea');
+  if (!area) return;
+  if (user) {
+    const name = user.displayName || user.email?.split('@')[0] || 'User';
+    const initials = name.split(' ').filter(Boolean).map(w => w[0].toUpperCase()).join('').slice(0, 2) || 'U';
+    area.innerHTML = `
+      <div class="flex items-center gap-3">
+        <div class="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white flex-shrink-0" style="background:#8B4F6B;">${initials}</div>
+        <div class="min-w-0">
+          <p class="text-sm font-medium text-[#2C2420] truncate">${name}</p>
+          <p class="text-[10px] text-[#9E8E88]">Signed in</p>
+        </div>
+        <a href="customer-dashboard.html" class="ml-auto text-xs text-[#8B4F6B] font-medium whitespace-nowrap hover:underline">My Account →</a>
+      </div>`;
+  } else {
+    area.innerHTML = `
+      <a href="login.html" class="flex items-center gap-3 text-sm text-[#8B4F6B] font-medium hover:opacity-80 transition-opacity">
+        <div class="w-8 h-8 rounded-full bg-[#F3EEF0] flex items-center justify-center flex-shrink-0">
+          <i class="fas fa-user text-xs text-[#8B4F6B]"></i>
+        </div>
+        <span>Sign In / Register</span>
+        <i class="fas fa-chevron-right text-xs ml-auto text-[#C4B0A8]"></i>
+      </a>`;
+  }
+});
+
+// Active page highlight
+(function() {
+  const page = window.location.pathname.split('/').pop() || 'index.html';
+  document.querySelectorAll('#mobileMenu a.menu-link').forEach(link => {
+    const href = link.getAttribute('href') || '';
+    if (href === page || (href === 'index.html' && (page === '' || page === 'index.html'))) {
+      link.classList.add('active-page');
+    }
+  });
+})();
 
 const filterSection = document.getElementById("filterSection");
 const toggleFilterBtn = document.getElementById("toggleFilterBtn");
