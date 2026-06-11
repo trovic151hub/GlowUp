@@ -1379,6 +1379,7 @@ let scrollPosition = 0;
 function openMenu() {
     mobileMenu.classList.remove("-translate-x-full");
     mobileMenu.classList.add("translate-x-0");
+    mobileMenu.classList.add("open");
     menuOverlay.classList.remove("hidden");
 
     // Disable background scroll
@@ -1393,6 +1394,7 @@ function openMenu() {
 function closeMenuFunc() {
     mobileMenu.classList.remove("translate-x-0");
     mobileMenu.classList.add("-translate-x-full");
+    mobileMenu.classList.remove("open");
     menuOverlay.classList.add("hidden");
 
     // Enable background scroll

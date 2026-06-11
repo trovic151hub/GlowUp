@@ -95,6 +95,10 @@ p, li, input, button, span, label, a {
   to { transform: rotate(360deg); }
 }
 
+/* ================= MOBILE MENU FALLBACK ================= */
+#mobileMenu { transform: translateX(-100%); transition: transform 0.3s ease; }
+#mobileMenu.open { transform: translateX(0); }
+
 /* ================= NAVBAR ================= */
 #mainHeader {
   background: transparent;
