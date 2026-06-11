@@ -82,9 +82,11 @@
       #sidebar { position: fixed; top: 0; left: 0; z-index: 50; transform: translateX(-100%); width: 240px !important; }
       #sidebar.mobile-open { transform: translateX(0); }
       #sidebar.mobile-open + #sidebar-overlay { display: block; }
+      #app-view { padding-top: 64px; }
       #content-area { width: 100%; }
+      #content-area > header { position: fixed; top: 0; left: 0; right: 0; z-index: 35; }
       #content-area > div { padding-bottom: 28px; }
-      .admin-table th { top: 62px; }
+      .admin-table th { top: 0; }
     }
 
     @media (max-width: 640px) {
