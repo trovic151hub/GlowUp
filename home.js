@@ -1381,7 +1381,9 @@ function openMenu() {
     mobileMenu.classList.add("translate-x-0");
     mobileMenu.classList.add("open");
     menuOverlay.classList.remove("hidden");
-    menuToggle.querySelector('i').className = 'fas fa-times';
+    const _togIcon = menuToggle.querySelector('i');
+    _togIcon.style.opacity = '0';
+    setTimeout(() => { _togIcon.className = 'fas fa-times'; _togIcon.style.opacity = '1'; }, 150);
     menuToggle.classList.add('menu-open');
 
     // Disable background scroll
@@ -1398,7 +1400,9 @@ function closeMenuFunc() {
     mobileMenu.classList.add("-translate-x-full");
     mobileMenu.classList.remove("open");
     menuOverlay.classList.add("hidden");
-    menuToggle.querySelector('i').className = 'fas fa-bars';
+    const _togIcon2 = menuToggle.querySelector('i');
+    _togIcon2.style.opacity = '0';
+    setTimeout(() => { _togIcon2.className = 'fas fa-bars'; _togIcon2.style.opacity = '1'; }, 150);
     menuToggle.classList.remove('menu-open');
 
     // Enable background scroll
