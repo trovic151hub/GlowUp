@@ -195,11 +195,14 @@
   <!-- Notification Container -->
 <div id="notification-container" class="fixed top-4 right-4 z-50 flex flex-col gap-2"></div>
 
-  <header class="fixed top-0 w-full bg-gradient-to-r from-[#fbcfe8] to-[#f9a8d4] shadow-md z-40 p-4 shadow-md flex justify-between items-center">
-    <button onclick="history.back()">
-      <h1 class="text-xl font-bold">🧾 Checkout</h1>
-    </button>
-    <a href="index.html" class=" font-bold"><i class="fas fa-shop mt-1"></i> Home</a>
+  <header class="fixed top-0 w-full z-40 p-4 flex justify-between items-center" style="background:#1E1418; box-shadow:0 1px 16px rgba(0,0,0,0.18);">
+    <div class="flex items-center gap-3">
+      <button onclick="history.back()" class="text-[rgba(250,248,245,0.55)] hover:text-[#FAF8F5] transition-colors text-sm">
+        <i class="fas fa-arrow-left"></i>
+      </button>
+      <img src="attached_assets/skinova-logo-transparent.png" class="h-8 w-auto object-contain" alt="Skinova" />
+    </div>
+    <a href="index.html" class="text-sm text-[rgba(250,248,245,0.65)] hover:text-[#FAF8F5] transition-colors flex items-center gap-1.5"><i class="fas fa-home text-xs"></i> Home</a>
   </header>
 
   <main class="p-6 max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8 relative mt-16">
