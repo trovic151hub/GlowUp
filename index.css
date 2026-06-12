@@ -403,25 +403,52 @@ h1.brand-title {
 .category-btn {
   background: #fff;
   border: 1px solid #e8ddd9;
-  border-radius: 8px;
-  padding: 1.1rem;
+  border-radius: 12px;
+  padding: 1.25rem 0.75rem;
   font-family: 'Inter', sans-serif;
-  font-size: 0.85rem;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  transition: all 0.25s ease;
+  box-shadow: 0 1px 4px rgba(44, 36, 32, 0.05);
+}
+.cat-icon-wrap {
+  width: 44px; height: 44px;
+  border-radius: 50%;
+  background: #F3EEF0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1rem;
+  color: #8B4F6B;
+  transition: background 0.25s ease, color 0.25s ease;
+  flex-shrink: 0;
+}
+.cat-label {
+  font-size: 0.78rem;
   font-weight: 500;
   color: #5A3D48;
   letter-spacing: 0.02em;
-  transition: all 0.25s ease;
-  box-shadow: 0 1px 4px rgba(44, 36, 32, 0.05);
-  cursor: pointer;
+  transition: color 0.25s ease;
 }
 .category-btn:hover,
 .category-btn.active-cat,
 .category-btn.active {
   background: #8B4F6B;
   border-color: #8B4F6B;
-  color: #fff;
   transform: translateY(-3px);
   box-shadow: 0 6px 18px rgba(139, 79, 107, 0.25);
+}
+.category-btn:hover .cat-icon-wrap,
+.category-btn.active-cat .cat-icon-wrap,
+.category-btn.active .cat-icon-wrap {
+  background: rgba(255,255,255,0.2);
+  color: #fff;
+}
+.category-btn:hover .cat-label,
+.category-btn.active-cat .cat-label,
+.category-btn.active .cat-label {
+  color: #fff;
 }
 
 /* ================= SKIN TIPS ================= */

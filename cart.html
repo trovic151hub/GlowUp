@@ -134,16 +134,16 @@
     .cart-item-card {
       background: #fff;
       border: 1px solid #f0ebe7;
-      border-radius: 8px;
+      border-radius: 12px;
       padding: 16px;
       display: flex; align-items: center; gap: 16px;
       transition: box-shadow 0.2s;
     }
     .cart-item-card:hover { box-shadow: 0 4px 20px rgba(44,36,32,0.08); }
     .cart-item-card img {
-      width: 88px; height: 88px;
+      width: 72px; height: 96px;
       object-fit: cover;
-      border-radius: 6px;
+      border-radius: 8px;
       border: 1px solid #f0ebe7;
       flex-shrink: 0;
     }
@@ -154,9 +154,9 @@
     }
     .cart-item-price { color: #8B4F6B; font-weight: 600; font-size: 0.95rem; }
     .qty-btn {
-      width: 30px; height: 30px;
+      width: 32px; height: 32px;
       border: 1px solid #e0d3cc;
-      border-radius: 4px;
+      border-radius: 50%;
       background: #FAF8F5;
       color: #2C2420;
       font-size: 1rem; font-weight: 500;
@@ -181,7 +181,7 @@
     .summary-box {
       background: #fff;
       border: 1px solid #f0ebe7;
-      border-radius: 8px;
+      border-radius: 12px;
       padding: 24px;
     }
     .summary-box h3 {
@@ -211,7 +211,7 @@
       letter-spacing: 0.1em;
       text-transform: uppercase;
       border: none;
-      border-radius: 3px;
+      border-radius: 8px;
       cursor: pointer;
       transition: background 0.25s;
     }
@@ -228,7 +228,7 @@
       letter-spacing: 0.06em;
       text-transform: uppercase;
       border: 1px solid #d4cbc6;
-      border-radius: 3px;
+      border-radius: 8px;
       cursor: pointer;
       transition: all 0.25s;
     }
@@ -286,7 +286,7 @@
     .section-card {
       background: #fff;
       border: 1px solid #f0ebe7;
-      border-radius: 8px;
+      border-radius: 12px;
       padding: 24px;
     }
     .section-card-title {
@@ -303,7 +303,7 @@
     #shipping-summary-card {
       border: 1px solid #e8d5d0;
       background: #fff9f7;
-      border-radius: 8px;
+      border-radius: 12px;
       padding: 16px 20px;
       margin-top: 16px;
     }
@@ -318,7 +318,7 @@
     #shipment-summary-card {
       background: #fff;
       border: 1px solid #f0ebe7;
-      border-radius: 8px;
+      border-radius: 12px;
       padding: 16px 20px;
       margin-top: 12px;
     }
@@ -354,7 +354,7 @@
     #order-summary-panel {
       background: #fff;
       border: 1px solid #f0ebe7;
-      border-radius: 8px;
+      border-radius: 12px;
       padding: 20px;
       max-height: 700px;
       overflow: auto;
@@ -394,7 +394,7 @@
       letter-spacing: 0.1em;
       text-transform: uppercase;
       border: none;
-      border-radius: 3px;
+      border-radius: 8px;
       cursor: pointer;
       transition: background 0.25s;
     }
@@ -607,7 +607,7 @@
   </nav>
 
   <!-- Main Cart -->
-  <main class="max-w-5xl mx-auto px-4 py-8 flex md:gap-7 flex-col md:flex-row" id="cartContainer">
+  <main class="max-w-5xl mx-auto px-4 py-8 pb-28 md:pb-8 flex md:gap-7 flex-col md:flex-row" id="cartContainer">
 
     <!-- Left: Items -->
     <div class="flex-1 space-y-4">
@@ -879,6 +879,15 @@
       <p class="footer-bottom">Powered by <span class="text-[#8B4F6B] font-bold text-sm">Vic.Dev</span></p>
     </div>
   </footer>
+
+  <!-- Mobile Sticky Checkout Bar -->
+  <div id="mobile-sticky-bar" class="fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-[#f0ebe7] px-4 py-3 md:hidden" style="box-shadow: 0 -4px 16px rgba(44,36,32,0.08);">
+    <div class="flex justify-between items-center mb-2">
+      <span class="text-sm text-[#6B5B55]">Total</span>
+      <span id="mobile-sticky-total" class="font-semibold text-[#2C2420]" style="font-family:'Cormorant Garamond',serif; font-size:1.25rem;">₦0.00</span>
+    </div>
+    <button id="mobile-checkout-btn" class="btn-primary">Proceed to Checkout</button>
+  </div>
 
   <!-- WhatsApp Float -->
   <a href="https://wa.me/2347036594806" target="_blank" class="fixed bottom-6 right-6 z-50">

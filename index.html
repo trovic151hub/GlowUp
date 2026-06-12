@@ -297,21 +297,26 @@
   <!-- Categories -->
   <section id="categories" class="px-6 pb-12 max-w-screen-xl mx-auto">
     <h3 class="section-heading mb-7">Browse by Category</h3>
-    <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
-      <button onclick="filterProducts('All')" data-category="All" class="category-btn text-center">
-        <i class="fa-solid fa-droplet"></i><br /><span class="mt-1 block">All</span>
+    <div class="grid grid-cols-3 md:grid-cols-5 gap-4">
+      <button onclick="filterProducts('All')" data-category="All" class="category-btn">
+        <span class="cat-icon-wrap"><i class="fa-solid fa-droplet"></i></span>
+        <span class="cat-label">All</span>
       </button>
-      <button onclick="filterProducts('Brightening')" data-category="Brightening" class="category-btn text-center">
-        <i class="fa-solid fa-star"></i><br /><span class="mt-1 block">Brightening</span>
+      <button onclick="filterProducts('Brightening')" data-category="Brightening" class="category-btn">
+        <span class="cat-icon-wrap"><i class="fa-solid fa-star"></i></span>
+        <span class="cat-label">Brightening</span>
       </button>
-      <button onclick="filterProducts('Anti-Aging')" data-category="Anti-Aging" class="category-btn text-center">
-        <i class="fa-solid fa-rotate"></i><br /><span class="mt-1 block">Anti-Aging</span>
+      <button onclick="filterProducts('Anti-Aging')" data-category="Anti-Aging" class="category-btn">
+        <span class="cat-icon-wrap"><i class="fa-solid fa-rotate"></i></span>
+        <span class="cat-label">Anti-Aging</span>
       </button>
-      <button onclick="filterProducts('Hydration')" data-category="Hydration" class="category-btn text-center">
-        <i class="fa-solid fa-glass-water"></i><br /><span class="mt-1 block">Hydration</span>
+      <button onclick="filterProducts('Hydration')" data-category="Hydration" class="category-btn">
+        <span class="cat-icon-wrap"><i class="fa-solid fa-glass-water"></i></span>
+        <span class="cat-label">Hydration</span>
       </button>
-      <button onclick="filterProducts('Supplements')" data-category="Supplements" class="category-btn text-center">
-        <i class="fa-solid fa-pills"></i> <br /><span class="mt-1 block">Supplements</span>
+      <button onclick="filterProducts('Supplements')" data-category="Supplements" class="category-btn">
+        <span class="cat-icon-wrap"><i class="fa-solid fa-pills"></i></span>
+        <span class="cat-label">Supplements</span>
       </button>
     </div>
   </section>

@@ -123,6 +123,8 @@
   const cartSubtotalCheckout = document.getElementById("cart-subtotal-checkout");
 
   const checkoutBtn = document.getElementById("checkout-btn");
+  const mobileCheckoutBtn = document.getElementById("mobile-checkout-btn");
+  const mobileStickyBar = document.getElementById("mobile-sticky-bar");
   const continueBtn = document.getElementById("continue-btn");
   const checkoutStep = document.getElementById("checkout-step");
   const cartContainer = document.getElementById("cartContainer");
@@ -307,6 +309,7 @@ window.addEventListener("DOMContentLoaded", () => {
 
         // Hide cart view and show checkout step
         cartContainer.classList.add("hidden");
+        if (mobileStickyBar) mobileStickyBar.classList.add("hidden");
         checkoutStep.classList.remove("hidden");
         completeStep.classList.add("hidden");
         setActiveBreadcrumb("checkout");
@@ -371,6 +374,8 @@ function calculateDeliveryFee(deliveryInfo, totalWeight) {
     const formatted = `₦${subtotal.toLocaleString()}`;
     if(cartSubtotalMain) cartSubtotalMain.textContent = formatted;
     if(cartSubtotalCheckout) cartSubtotalCheckout.textContent = formatted;
+    const mobileStickyTotal = document.getElementById("mobile-sticky-total");
+    if(mobileStickyTotal) mobileStickyTotal.textContent = formatted;
   }
 
   async function saveGuestCart(items){
@@ -1201,6 +1206,7 @@ Thank you! 🙏
     handler.openIframe();
   }
 
+
 });
 
   // Validate Shipping Form
@@ -1360,6 +1366,7 @@ bcGuestCarts.onclick = () => {
   showLoader();
   setTimeout(() => {
     cartContainer.classList.remove("hidden");
+    if (mobileStickyBar) mobileStickyBar.classList.remove("hidden");
     checkoutStep.classList.add("hidden");
     completeStep.classList.add("hidden");
     setActiveBreadcrumb("cart");
@@ -1378,6 +1385,7 @@ bcCheckout.onclick = () => {
   showLoader();
   setTimeout(() => {
     cartContainer.classList.add("hidden");
+    if (mobileStickyBar) mobileStickyBar.classList.add("hidden");
     checkoutStep.classList.remove("hidden");
     completeStep.classList.add("hidden");
     setActiveBreadcrumb("checkout");
@@ -1401,15 +1409,18 @@ bcCheckout.onclick = () => {
 setActiveBreadcrumb("cart");
 
 // Update breadcrumb when checkout button clicked
-checkoutBtn.onclick = () => {
+const goToCheckout = () => {
   showLoader();
   setTimeout(() => {
     cartContainer.classList.add("hidden");
+    if (mobileStickyBar) mobileStickyBar.classList.add("hidden");
     checkoutStep.classList.remove("hidden");
     setActiveBreadcrumb("checkout");
     hideLoader();
   }, 200);
 };
+checkoutBtn.onclick = goToCheckout;
+if (mobileCheckoutBtn) mobileCheckoutBtn.onclick = goToCheckout;
 
   // ==================== INIT ====================
   startCartListener();
