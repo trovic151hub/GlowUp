@@ -1381,9 +1381,6 @@ function openMenu() {
     mobileMenu.classList.add("translate-x-0");
     mobileMenu.classList.add("open");
     menuOverlay.classList.remove("hidden");
-    const _togIcon = menuToggle.querySelector('i');
-    _togIcon.style.opacity = '0';
-    setTimeout(() => { _togIcon.className = 'fas fa-times'; _togIcon.style.opacity = '1'; }, 150);
     menuToggle.classList.add('menu-open');
 
     // Disable background scroll
@@ -1400,9 +1397,6 @@ function closeMenuFunc() {
     mobileMenu.classList.add("-translate-x-full");
     mobileMenu.classList.remove("open");
     menuOverlay.classList.add("hidden");
-    const _togIcon2 = menuToggle.querySelector('i');
-    _togIcon2.style.opacity = '0';
-    setTimeout(() => { _togIcon2.className = 'fas fa-bars'; _togIcon2.style.opacity = '1'; }, 150);
     menuToggle.classList.remove('menu-open');
 
     // Enable background scroll
@@ -1414,14 +1408,14 @@ function closeMenuFunc() {
     window.scrollTo(0, scrollPosition);
 }
 
-// Auth-aware drawer user area
+// Auth-aware header + drawer user areas
 firebase.auth().onAuthStateChanged(user => {
   const area = document.getElementById('drawerUserArea');
-  if (!area) return;
+  const headerBtn = document.getElementById('headerUserBtn');
   if (user) {
     const name = user.displayName || user.email?.split('@')[0] || 'User';
     const initials = name.split(' ').filter(Boolean).map(w => w[0].toUpperCase()).join('').slice(0, 2) || 'U';
-    area.innerHTML = `
+    if (area) area.innerHTML = `
       <div class="flex items-center gap-3">
         <div class="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white flex-shrink-0" style="background:#8B4F6B;">${initials}</div>
         <div class="min-w-0">
@@ -1430,14 +1424,20 @@ firebase.auth().onAuthStateChanged(user => {
         </div>
         <a href="customer-dashboard.html" class="ml-auto text-xs text-[#8B4F6B] font-medium whitespace-nowrap hover:underline">My Account →</a>
       </div>`;
+    if (headerBtn) headerBtn.innerHTML = `
+      <a href="customer-dashboard.html" title="${name}" class="w-7 h-7 rounded-full flex items-center justify-center text-[11px] font-bold text-white hover:opacity-90 transition-opacity" style="background:#8B4F6B;">${initials}</a>`;
   } else {
-    area.innerHTML = `
+    if (area) area.innerHTML = `
       <a href="login.html" class="flex items-center gap-3 text-sm text-[#8B4F6B] font-medium hover:opacity-80 transition-opacity">
         <div class="w-8 h-8 rounded-full bg-[#F3EEF0] flex items-center justify-center flex-shrink-0">
           <i class="fas fa-user text-xs text-[#8B4F6B]"></i>
         </div>
         <span>Sign In / Register</span>
         <i class="fas fa-chevron-right text-xs ml-auto text-[#C4B0A8]"></i>
+      </a>`;
+    if (headerBtn) headerBtn.innerHTML = `
+      <a href="login.html" class="text-white hover:text-[#C9A28F] transition-colors" title="Sign In">
+        <i class="fas fa-user text-[15px]"></i>
       </a>`;
   }
 });
