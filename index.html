@@ -26,6 +26,11 @@
     #menuToggle.menu-open .hamburger-bar:nth-child(1) { transform: translateY(9px) rotate(45deg); background-color: #2C2420; }
     #menuToggle.menu-open .hamburger-bar:nth-child(2) { opacity: 0; transform: scaleX(0); }
     #menuToggle.menu-open .hamburger-bar:nth-child(3) { transform: translateY(-9px) rotate(-45deg); background-color: #2C2420; }
+    /* Bars go dark when header background turns light on scroll */
+    #mainHeader.text-black .hamburger-bar { background-color: #2C2420; }
+    /* Desktop account dropdown */
+    #headerUserBtn .user-dropdown { visibility: hidden; opacity: 0; transition: opacity 0.15s ease, visibility 0.15s ease; }
+    #headerUserBtn:hover .user-dropdown { visibility: visible; opacity: 1; }
     /* Staggered nav link entrance */
     .menu-link {
       opacity: 0;

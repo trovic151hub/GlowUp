@@ -1373,8 +1373,6 @@ const menuToggle = document.getElementById("menuToggle");
 const mobileMenu = document.getElementById("mobileMenu");
 const menuOverlay = document.getElementById("menuOverlay");
 
-let scrollPosition = 0;
-
 function openMenu() {
     mobileMenu.classList.remove("-translate-x-full");
     mobileMenu.classList.add("translate-x-0");
@@ -1382,12 +1380,6 @@ function openMenu() {
     menuOverlay.classList.remove("hidden");
     menuToggle.classList.add('menu-open');
 
-    // Disable background scroll
-    scrollPosition = window.scrollY;
-    document.body.style.position = "fixed";
-    document.body.style.top = `-${scrollPosition}px`;
-    document.body.style.left = "0";
-    document.body.style.right = "0";
     document.body.style.overflow = "hidden";
 }
 
@@ -1397,14 +1389,7 @@ function closeMenuFunc() {
     mobileMenu.classList.remove("open");
     menuOverlay.classList.add("hidden");
     menuToggle.classList.remove('menu-open');
-
-    // Enable background scroll
-    document.body.style.position = "";
-    document.body.style.top = "";
-    document.body.style.left = "";
-    document.body.style.right = "";
     document.body.style.overflow = "";
-    window.scrollTo(0, scrollPosition);
 }
 
 // Auth-aware header + drawer user areas
@@ -1424,7 +1409,21 @@ firebase.auth().onAuthStateChanged(user => {
         <a href="customer-dashboard.html" class="ml-auto text-xs text-[#8B4F6B] font-medium whitespace-nowrap hover:underline">My Account →</a>
       </div>`;
     if (headerBtn) headerBtn.innerHTML = `
-      <a href="customer-dashboard.html" title="${name}" class="w-7 h-7 rounded-full flex items-center justify-center text-[11px] font-bold text-white hover:opacity-90 transition-opacity" style="background:#8B4F6B;">${initials}</a>`;
+      <div style="position:relative;">
+        <a href="customer-dashboard.html" title="${name}" style="width:28px;height:28px;border-radius:50%;background:#8B4F6B;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;text-decoration:none;">${initials}</a>
+        <div class="user-dropdown" style="position:absolute;right:0;top:calc(100% + 10px);min-width:176px;background:#fff;border-radius:12px;box-shadow:0 8px 24px rgba(44,36,32,0.13);border:1px solid #f0ebe7;padding:4px 0;z-index:200;">
+          <a href="customer-dashboard.html" style="display:flex;align-items:center;gap:10px;padding:10px 16px;font-size:13px;color:#2C2420;text-decoration:none;" onmouseover="this.style.background='#FAF8F5'" onmouseout="this.style.background=''">
+            <i class="fas fa-user" style="color:#9E8E88;width:14px;text-align:center;"></i> My Account
+          </a>
+          <a href="customer-dashboard.html" style="display:flex;align-items:center;gap:10px;padding:10px 16px;font-size:13px;color:#2C2420;text-decoration:none;" onmouseover="this.style.background='#FAF8F5'" onmouseout="this.style.background=''">
+            <i class="fas fa-box" style="color:#9E8E88;width:14px;text-align:center;"></i> My Orders
+          </a>
+          <div style="border-top:1px solid #f0ebe7;margin:3px 0;"></div>
+          <button onclick="firebase.auth().signOut()" style="width:100%;text-align:left;display:flex;align-items:center;gap:10px;padding:10px 16px;font-size:13px;color:#dc2626;background:none;border:none;cursor:pointer;" onmouseover="this.style.background='#FFF5F5'" onmouseout="this.style.background=''">
+            <i class="fas fa-sign-out-alt" style="width:14px;text-align:center;"></i> Sign Out
+          </button>
+        </div>
+      </div>`;
   } else {
     if (area) area.innerHTML = `
       <a href="login.html" class="flex items-center gap-3 text-sm text-[#8B4F6B] font-medium hover:opacity-80 transition-opacity">
