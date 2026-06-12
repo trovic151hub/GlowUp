@@ -1372,7 +1372,6 @@ document.addEventListener("DOMContentLoaded", () => {
 const menuToggle = document.getElementById("menuToggle");
 const mobileMenu = document.getElementById("mobileMenu");
 const menuOverlay = document.getElementById("menuOverlay");
-const closeMenu = document.getElementById("closeMenu");
 
 let scrollPosition = 0;
 
@@ -1467,7 +1466,8 @@ closeFilterBtn?.addEventListener("click", () => {
   filterSection.classList.add("hidden");
 });
 
-menuToggle.addEventListener("click", openMenu);
-closeMenu.addEventListener("click", closeMenuFunc);
+menuToggle.addEventListener("click", () => {
+  mobileMenu.classList.contains('open') ? closeMenuFunc() : openMenu();
+});
 menuOverlay.addEventListener("click", closeMenuFunc);
 })();

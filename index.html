@@ -22,10 +22,10 @@
       to   { opacity: 1; transform: translateY(0); }
     }
     /* Hamburger bars → X morph */
-    .hamburger-bar { transition: transform 0.3s ease, opacity 0.2s ease; }
-    #menuToggle.menu-open .hamburger-bar:nth-child(1) { transform: translateY(9px) rotate(45deg); }
+    .hamburger-bar { transition: transform 0.3s ease, opacity 0.2s ease, background-color 0.25s ease; }
+    #menuToggle.menu-open .hamburger-bar:nth-child(1) { transform: translateY(9px) rotate(45deg); background-color: #2C2420; }
     #menuToggle.menu-open .hamburger-bar:nth-child(2) { opacity: 0; transform: scaleX(0); }
-    #menuToggle.menu-open .hamburger-bar:nth-child(3) { transform: translateY(-9px) rotate(-45deg); }
+    #menuToggle.menu-open .hamburger-bar:nth-child(3) { transform: translateY(-9px) rotate(-45deg); background-color: #2C2420; }
     /* Staggered nav link entrance */
     .menu-link {
       opacity: 0;
@@ -66,17 +66,14 @@
 
     <!-- Slide-in Menu -->
     <div id="mobileMenu"
-      class="fixed left-0 w-72 shadow-2xl transform -translate-x-full transition-transform duration-300 z-50 flex flex-col" style="background:#FAF8F5; top:64px; height:calc(100vh - 64px);">
+      class="fixed top-0 left-0 w-72 h-full shadow-2xl transform -translate-x-full transition-transform duration-300 z-50 flex flex-col" style="background:#FAF8F5;">
 
-      <!-- Drawer header -->
-      <div class="flex items-center justify-between px-5 py-4 bg-white border-b border-[#f0ebe7]">
-        <div>
-          <img src="attached_assets/skinova-logo-transparent.png" class="h-9 w-auto object-contain" alt="Skinova" />
+      <!-- Drawer header: brand name centered, hamburger X (behind it) closes the drawer -->
+      <div class="flex items-center justify-center px-5 py-5 bg-white border-b border-[#f0ebe7]" style="min-height:64px;">
+        <div class="text-center">
+          <img src="attached_assets/skinova-logo-transparent.png" class="h-9 w-auto object-contain mx-auto" alt="Skinova" />
           <p class="text-[10px] text-[#9E8E88] tracking-[0.12em] uppercase mt-0.5">Premium Supplements</p>
         </div>
-        <button id="closeMenu" class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-[#F3EEF0] text-[#9E8E88] hover:text-[#8B4F6B] transition-colors">
-          <i class="fas fa-times text-sm"></i>
-        </button>
       </div>
 
       <!-- Auth area -->
