@@ -1101,6 +1101,7 @@ Thank you! 🙏
     const orderRef = db.collection("orders").doc();
     await orderRef.set({
       guestId,
+      userId: firebase.auth().currentUser?.uid || null,
       items: cartItems,
       shipping: shippingData,
       delivery: deliveryInfo,
@@ -1144,6 +1145,7 @@ Thank you! 🙏
         const orderRef = db.collection("orders").doc();
         await orderRef.set({
           guestId,
+          userId: firebase.auth().currentUser?.uid || null,
           items: cartItems,
           shipping: shippingData,
           delivery: deliveryInfo,

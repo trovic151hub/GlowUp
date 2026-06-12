@@ -557,48 +557,85 @@
     });
 
     // ===== Real-time Orders Listener =====
+    function extractOrder(doc) {
+      const data = doc.data();
+      const status = (data.shipping?.status || data.shipmentStatus || data.status || "Pending").trim();
+      return {
+        id: doc.id,
+        total: data.pricing?.total || 0,
+        items: data.items || [],
+        status,
+        createdAt: data.createdAt || data.timestamp,
+        name: ((data.shipping?.firstName || '') + ' ' + (data.shipping?.lastName || '')).trim(),
+        phone: data.shipping?.phone || "",
+        email: data.shipping?.email || "",
+        delivery: data.delivery || {},
+        paymentMethod: data.payment?.method || "—",
+        paymentRef: data.payment?.reference || "—"
+      };
+    }
+
+    function mergeOrders(listA, listB) {
+      const seen = new Set();
+      return [...listA, ...listB]
+        .filter(o => { if (seen.has(o.id)) return false; seen.add(o.id); return true; })
+        .sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
+    }
+
+    function refreshOpenModal() {
+      if (!orderModal.classList.contains("hidden") && openedOrderId) {
+        const updated = allOrders.find(o => o.id === openedOrderId);
+        if (updated) modalContent.innerHTML = generateModalContent(updated);
+      }
+    }
+
     function startOrdersListener() {
       stopOrdersListener();
       showLoader();
       const ordersRef = db.collection("orders");
-      let query = currentUser
-        ? ordersRef.where("userId", "==", currentUser.uid).orderBy("createdAt", "desc")
-        : ordersRef.where("guestId", "==", guestId).orderBy("createdAt", "desc");
 
-      ordersUnsub = query.onSnapshot(snapshot => {
-        allOrders = [];
-        snapshot.forEach(doc => {
-          const data = doc.data();
-          const status = (data.shipping?.status || data.shipmentStatus || data.status || "Pending").trim();
-          
-          allOrders.push({
-            id: doc.id,
-            total: data.pricing?.total || 0,
-            items: data.items || [],
-            status,
-            createdAt: data.createdAt || data.timestamp,
-            name: data.shipping?.firstName + " " + data.shipping?.lastName || "",
-            phone: data.shipping?.phone || "",
-            email: data.shipping?.email || "",
-            delivery: data.delivery || {},
-            paymentMethod: data.payment?.method || "—",
-            paymentRef: data.payment?.reference || "—"
+      if (currentUser) {
+        // Merge orders placed while logged in (userId) with any guest orders
+        // placed on this device before the account was created (guestId)
+        let byUser = [], byGuest = [];
+
+        const unsubUser = ordersRef
+          .where("userId", "==", currentUser.uid)
+          .onSnapshot(snap => {
+            byUser = snap.docs.map(extractOrder);
+            allOrders = mergeOrders(byUser, byGuest);
+            refreshOpenModal();
+            applyOrderFilter(currentFilter);
+            hideLoader();
+          }, err => { console.error("userId query error:", err); hideLoader(); });
+
+        const unsubGuest = ordersRef
+          .where("guestId", "==", guestId)
+          .orderBy("createdAt", "desc")
+          .onSnapshot(snap => {
+            byGuest = snap.docs.map(extractOrder);
+            allOrders = mergeOrders(byUser, byGuest);
+            refreshOpenModal();
+            applyOrderFilter(currentFilter);
+            hideLoader();
+          }, err => { console.error("guestId query error:", err); hideLoader(); });
+
+        ordersUnsub = () => { unsubUser(); unsubGuest(); };
+      } else {
+        ordersUnsub = ordersRef
+          .where("guestId", "==", guestId)
+          .orderBy("createdAt", "desc")
+          .onSnapshot(snapshot => {
+            allOrders = snapshot.docs.map(extractOrder);
+            refreshOpenModal();
+            applyOrderFilter(currentFilter);
+            hideLoader();
+          }, err => {
+            console.error("Failed to load orders:", err);
+            showNotification("Failed to load orders.", "error");
+            hideLoader();
           });
-        });
-
-        if (!orderModal.classList.contains("hidden") && openedOrderId) {
-          const updatedOrder = allOrders.find(o => o.id === openedOrderId);
-          if (updatedOrder) {
-            modalContent.innerHTML = generateModalContent(updatedOrder);
-          }
-        }
-        applyOrderFilter(currentFilter);
-        hideLoader();
-      }, err => {
-        console.error("Failed to load orders:", err);
-        showNotification("Failed to load orders.", "error");
-        hideLoader();
-      });
+      }
     }
 
     function stopOrdersListener() {

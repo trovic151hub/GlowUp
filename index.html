@@ -317,20 +317,36 @@
   </section>
 
   <!-- Mini Cart -->
-  <div id="mini-cart"
-    class="fixed top-0 right-0 h-full w-full sm:w-[70%] md:w-[45%] lg:w-[32%] bg-white shadow-2xl transform translate-x-full z-50 flex flex-col transition-transform duration-300">
-    <div class="flex justify-between items-center p-5 border-b border-[#f0ebe7]">
-      <h2 class="text-lg">Your Cart</h2>
-      <button id="close-cart" class="text-[#9E8E88] hover:text-[#8B4F6B] text-2xl font-light transition-colors">&times;</button>
-    </div>
-    <div id="mini-cart-items" class="flex-1 overflow-y-auto p-5 space-y-4"></div>
-    <div class="p-5 border-t border-[#f0ebe7]">
-      <div class="flex justify-between items-center mb-4">
-        <span class="text-sm text-[#9E8E88] font-medium uppercase tracking-wide">Subtotal</span>
-        <span id="mini-cart-total" class="text-2xl font-semibold text-[#2C2420]">₦0.00</span>
+  <div id="mini-cart" class="fixed top-0 right-0 h-full w-full sm:w-[380px] shadow-2xl transform translate-x-full z-[70] flex flex-col" style="background:#FAF8F5;">
+    <!-- Header -->
+    <div class="flex items-center justify-between px-5 py-4 border-b border-[#EDE8E4] flex-shrink-0 bg-white">
+      <div class="flex items-center gap-3">
+        <div class="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0" style="background:#F3EEF0;">
+          <svg class="w-4 h-4" style="color:#8B3A52;" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path d="M6 2 3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"></path>
+            <line x1="3" y1="6" x2="21" y2="6"></line>
+            <path d="M16 10a4 4 0 01-8 0"></path>
+          </svg>
+        </div>
+        <div>
+          <h2 class="text-sm font-semibold text-[#2C2420]">Your Cart</h2>
+          <p id="mini-cart-count-label" class="text-xs" style="color:#9B7A87;">0 items</p>
+        </div>
       </div>
-      <button id="view-cart-btn" class="w-full py-3 rounded-full mb-3 text-sm">View Cart</button>
-      <button id="mini-cart-checkout" class="w-full py-3 text-white rounded-full text-sm">Checkout</button>
+      <button id="close-cart" class="w-8 h-8 flex items-center justify-center rounded-full text-[#9E8E88] hover:text-[#8B3A52] transition-colors text-xl leading-none" style="background:#F5F2F0;">&times;</button>
+    </div>
+    <!-- Items -->
+    <div id="mini-cart-items" class="flex-1 overflow-y-auto px-4 py-4 space-y-3"></div>
+    <!-- Footer -->
+    <div class="px-5 py-4 border-t border-[#EDE8E4] flex-shrink-0 bg-white">
+      <div class="flex justify-between items-baseline mb-4">
+        <span class="text-xs font-medium uppercase tracking-widest" style="color:#9B7A87;">Total</span>
+        <span id="mini-cart-total" class="text-xl font-semibold text-[#2C2420]" style="font-family:'Cormorant Garamond',serif;">₦0</span>
+      </div>
+      <div class="flex flex-col gap-2">
+        <button id="mini-cart-checkout" class="w-full py-3 text-white rounded-full text-sm">Checkout</button>
+        <button id="view-cart-btn" class="w-full py-2.5 rounded-full text-sm">View Cart</button>
+      </div>
     </div>
   </div>
 
