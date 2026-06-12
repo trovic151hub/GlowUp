@@ -50,7 +50,7 @@
     <!-- Left: Hamburger + Brand -->
     <div class="flex items-center gap-3">
       <!-- Hamburger Button -->
-      <button id="menuToggle" class="md:hidden flex flex-col justify-between w-5 h-5 cursor-pointer py-[1px]">
+      <button id="menuToggle" class="md:hidden relative z-[60] flex flex-col justify-between w-5 h-5 cursor-pointer py-[1px]">
         <span class="hamburger-bar block w-full h-[2px] bg-white rounded-full"></span>
         <span class="hamburger-bar block w-full h-[2px] bg-white rounded-full"></span>
         <span class="hamburger-bar block w-full h-[2px] bg-white rounded-full"></span>
@@ -66,7 +66,7 @@
 
     <!-- Slide-in Menu -->
     <div id="mobileMenu"
-      class="fixed top-0 left-0 w-72 h-full shadow-2xl transform -translate-x-full transition-transform duration-300 z-50 flex flex-col" style="background:#FAF8F5;">
+      class="fixed left-0 w-72 shadow-2xl transform -translate-x-full transition-transform duration-300 z-50 flex flex-col" style="background:#FAF8F5; top:64px; height:calc(100vh - 64px);">
 
       <!-- Drawer header -->
       <div class="flex items-center justify-between px-5 py-4 bg-white border-b border-[#f0ebe7]">
