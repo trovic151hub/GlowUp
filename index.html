@@ -50,14 +50,10 @@
   <header id="mainHeader"
     class="fixed top-0 left-0 w-full text-white px-5 py-4 flex justify-between items-center z-40">
 
-    <!-- Left: Hamburger + Brand -->
+    <!-- Left: Spacer (holds brand position) + Brand -->
     <div class="flex items-center gap-3">
-      <!-- Hamburger Button — fixed at root z-[65] so it stays above the drawer (z-55) -->
-      <button id="menuToggle" class="md:hidden fixed flex flex-col justify-between w-5 h-5 cursor-pointer py-[1px]" style="top:18px; left:20px; z-index:65;">
-        <span class="hamburger-bar block w-full h-[2px] rounded-full" style="background:#fff;"></span>
-        <span class="hamburger-bar block w-full h-[2px] rounded-full" style="background:#fff;"></span>
-        <span class="hamburger-bar block w-full h-[2px] rounded-full" style="background:#fff;"></span>
-      </button>
+      <!-- Spacer reserves the hamburger's width in the flex row so the brand doesn't shift left -->
+      <div class="md:hidden w-5 h-5 flex-shrink-0"></div>
       <!-- Brand -->
       <div class="flex items-center gap-2">
         <img src="attached_assets/skinova-logo-transparent.png" class="h-8 w-auto object-contain" alt="Skinova" />
@@ -98,6 +94,13 @@
       </button>
     </div>
   </header>
+
+  <!-- Hamburger toggle — body-level (root stacking context) so z:65 is above the drawer z:55 -->
+  <button id="menuToggle" class="md:hidden fixed flex flex-col justify-between w-5 h-5 cursor-pointer py-[1px]" style="top:18px; left:20px; z-index:65;">
+    <span class="hamburger-bar block w-full h-[2px] rounded-full" style="background:#fff;"></span>
+    <span class="hamburger-bar block w-full h-[2px] rounded-full" style="background:#fff;"></span>
+    <span class="hamburger-bar block w-full h-[2px] rounded-full" style="background:#fff;"></span>
+  </button>
 
   <!-- Mobile Overlay — body-level so z-index is root-relative -->
   <div id="menuOverlay" class="fixed inset-0 bg-black bg-opacity-30 backdrop-blur-sm hidden" style="z-index:45;"></div>
