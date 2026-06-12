@@ -3,121 +3,167 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Login</title>
+  <title>Sign In — Skinova</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400;1,600&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
   <style>
-    * {
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
-    }
-    @import url('https://fonts.googleapis.com/css2?family=Lora:wght@700&family=Montserrat:wght@500&display=swap');
+    *, *::before, *::after { box-sizing: border-box; scrollbar-width: none; -ms-overflow-style: none; }
+    ::-webkit-scrollbar { display: none; }
+    body { font-family: 'Inter', sans-serif; }
+    h1, h2, .serif { font-family: 'Cormorant Garamond', serif; }
 
-    /* Modal animations */
-    .modal-fade { animation: fadeIn 0.3s ease forwards; }
-    .modal-slide { animation: slideDown 0.35s ease forwards; transform: translateY(-20px); opacity: 0; }
-    @keyframes fadeIn { from {opacity:0;} to{opacity:1;} }
-    @keyframes slideDown { 0%{opacity:0; transform:translateY(-20px);} 100%{opacity:1; transform:translateY(0);} }
+    /* Input focus */
+    .sk-input { width:100%; border:1px solid #E8D5DC; padding:0.875rem 1rem; border-radius:0.75rem; font-size:0.9rem; background:#fff; color:#2C2420; outline:none; transition:border-color 0.2s, box-shadow 0.2s; font-family:'Inter',sans-serif; }
+    .sk-input:focus { border-color:#8B3A52; box-shadow:0 0 0 3px rgba(139,58,82,0.08); }
+    .sk-input::placeholder { color:#C4B0A8; }
 
-    .modal {
-      position: fixed; top:0; left:0; width:100%; height:100%;
-      background: rgba(0,0,0,0.4); display:flex; justify-content:center; align-items:center;
-      opacity:0; pointer-events:none; transition:opacity 0.3s ease; z-index:1000;
-    }
+    /* Primary button */
+    .sk-btn { width:100%; background:#8B3A52; color:#fff; padding:0.9rem 1rem; border-radius:0.75rem; border:none; font-size:0.9rem; font-weight:600; cursor:pointer; display:flex; justify-content:center; align-items:center; gap:0.5rem; transition:background 0.2s, box-shadow 0.2s; font-family:'Inter',sans-serif; letter-spacing:0.02em; }
+    .sk-btn:hover { background:#7A3347; box-shadow:0 4px 16px rgba(139,58,82,0.25); }
+    .sk-btn:disabled { opacity:0.65; cursor:not-allowed; }
+
+    /* Google button */
+    .sk-google { width:100%; display:flex; align-items:center; justify-content:center; gap:0.75rem; border:1px solid #E8D5DC; padding:0.875rem 1rem; border-radius:0.75rem; background:#fff; font-size:0.875rem; color:#2C2420; cursor:pointer; transition:border-color 0.2s, box-shadow 0.2s; font-weight:500; font-family:'Inter',sans-serif; }
+    .sk-google:hover { border-color:#8B3A52; box-shadow:0 0 0 3px rgba(139,58,82,0.07); }
+
+    /* Divider */
+    .sk-divider { display:flex; align-items:center; gap:1rem; margin:1.5rem 0; }
+    .sk-divider span { font-size:0.72rem; color:#C4B0A8; text-transform:uppercase; letter-spacing:0.08em; white-space:nowrap; }
+    .sk-divider::before, .sk-divider::after { content:''; flex:1; height:1px; background:#EDE5E0; }
+
+    /* Left brand panel */
+    .brand-panel { width:42%; flex-shrink:0; background:#8B3A52; min-height:100vh; position:sticky; top:0; height:100vh; display:flex; flex-direction:column; justify-content:space-between; padding:3rem; overflow:hidden; }
+    .brand-panel::before { content:''; position:absolute; width:360px; height:360px; border-radius:50%; border:80px solid rgba(255,255,255,0.05); top:-80px; right:-80px; }
+    .brand-panel::after { content:''; position:absolute; width:240px; height:240px; border-radius:50%; border:60px solid rgba(255,255,255,0.04); bottom:60px; left:-60px; }
+
+    /* Modal */
+    .sk-modal-overlay { position:fixed; inset:0; background:rgba(30,20,24,0.45); display:flex; align-items:center; justify-content:center; z-index:1000; opacity:0; pointer-events:none; transition:opacity 0.25s ease; }
+    .sk-modal-overlay.show { opacity:1; pointer-events:auto; }
+    .sk-modal-box { background:#fff; border-radius:1.25rem; padding:2rem 2.25rem; text-align:center; max-width:320px; width:90%; transform:translateY(-12px); transition:transform 0.25s ease; box-shadow:0 24px 48px rgba(30,20,24,0.18); }
+    .sk-modal-overlay.show .sk-modal-box { transform:translateY(0); }
+
+    /* Legacy .modal support (used by JS) */
+    .modal { position:fixed; inset:0; background:rgba(30,20,24,0.45); display:flex; align-items:center; justify-content:center; z-index:1000; opacity:0; pointer-events:none; transition:opacity 0.25s ease; }
     .modal.show { opacity:1; pointer-events:auto; }
-    .modal-content {
-      background:#fff; padding:2rem; border-radius:0.5rem; text-align:center;
-      transform: translateY(-30px); transition: transform 0.3s ease;
-      min-width:280px; max-width:90%;
-    }
-    .modal.show .modal-content { transform: translateY(0); }
-
-    .close-btn {
-      margin-top:1rem; background:#f87171; color:#fff; border:none; padding:0.5rem 1rem;
-      border-radius:0.25rem; cursor:pointer; font-weight:bold; transition: background 0.2s ease;
-    }
-    .close-btn:hover { background:#ef4444; }
-
-    /* Success Modal */
-    #successModal div {
-      transform: scale(1);
-      opacity: 1;
-    }
-    #successModal {
-      background: rgba(255, 192, 203, 0.4);
-      transition: opacity 0.3s ease;
-    }
-    #successModal.hidden {
-      opacity: 0;
-      pointer-events: none;
-    }
-    *, *::before, *::after { scrollbar-width: none; -ms-overflow-style: none; }
-    ::-webkit-scrollbar { display: none; width: 0; height: 0; }
+    .modal-content { background:#fff; border-radius:1.25rem; padding:2rem 2.25rem; text-align:center; max-width:320px; width:90%; transform:translateY(-12px); transition:transform 0.25s ease; box-shadow:0 24px 48px rgba(30,20,24,0.18); }
+    .modal.show .modal-content { transform:translateY(0); }
+    .close-btn { margin-top:1rem; background:#8B3A52; color:#fff; border:none; padding:0.5rem 1.5rem; border-radius:0.5rem; cursor:pointer; font-weight:600; font-family:'Inter',sans-serif; transition:background 0.2s; }
+    .close-btn:hover { background:#7A3347; }
   </style>
 </head>
-<body class="min-h-screen flex items-center justify-center p-4
-             bg-gradient-to-br from-pink-200 via-pink-300 to-pink-400">
 
-  <!-- Success Modal -->
-  <div id="successModal" class="fixed inset-0 hidden z-50 flex items-center justify-center">
-    <div class="bg-white/90 backdrop-blur-md p-6 rounded-2xl shadow-2xl text-center transform scale-90 opacity-0 transition-all duration-300">
-      <h3 class="text-2xl font-bold text-pink-600 mb-4">Login Successful 🎉</h3>
-      <p class="text-sm  mb-4">Welcome back! You are logged in.</p>
+<body style="min-height:100vh; display:flex; background:#FAF8F5;">
+
+  <!-- ── Success Modal ── -->
+  <div id="successModal" class="fixed inset-0 hidden z-50 flex items-center justify-center" style="background:rgba(30,20,24,0.45);">
+    <div class="bg-white rounded-2xl shadow-2xl p-8 text-center w-80 transform transition-all duration-300">
+      <div class="w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-4" style="background:#F3EEF0;">
+        <i class="fas fa-check text-xl" style="color:#8B3A52;"></i>
+      </div>
+      <h3 class="serif text-2xl font-semibold mb-2" style="color:#1E1418;">Welcome back!</h3>
+      <p class="text-sm" style="color:#9B7A87;">You're signed in to your Skinova account.</p>
     </div>
   </div>
 
-  <!-- Error Modal -->
+  <!-- ── Error Modal ── -->
   <div id="errorModal" class="modal hidden">
     <div class="modal-content">
-      <h3 id="errorMessage">Something went wrong ❌</h3>
-      <button class="close-btn" onclick="closeErrorModal()">Okay</button>
+      <div class="w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-3" style="background:#FFF0F3;">
+        <i class="fas fa-exclamation-triangle" style="color:#8B3A52;"></i>
+      </div>
+      <h3 id="errorMessage" class="text-sm font-medium mb-4" style="color:#2C2420;">Something went wrong</h3>
+      <button class="close-btn" onclick="closeErrorModal()">Dismiss</button>
     </div>
   </div>
 
-  <!-- Login Form -->
-  <div class="bg-white/80 backdrop-blur-md w-full max-w-md p-6 rounded-2xl shadow-2xl">
-    <div class="flex justify-center my-4 mb-8">
-      <img src="attached_assets/skinova-logo-transparent.png" class="h-14 w-auto object-contain" alt="Skinova" />
+  <!-- ══════════════════════════════════════════ -->
+  <!-- Left brand panel — desktop only           -->
+  <!-- ══════════════════════════════════════════ -->
+  <div class="brand-panel hidden md:flex flex-col justify-between" style="position:relative;">
+    <!-- Logo -->
+    <a href="index.html">
+      <img src="attached_assets/skinova-logo-transparent.png" class="h-10 w-auto object-contain" style="filter:brightness(0) invert(1);" alt="Skinova" />
+    </a>
+
+    <!-- Hero copy -->
+    <div style="position:relative; z-index:1;">
+      <p class="serif" style="font-size:0.8rem; letter-spacing:0.18em; color:rgba(243,238,240,0.6); text-transform:uppercase; margin-bottom:1.25rem;">Premium Supplements</p>
+      <h2 class="serif" style="font-size:2.8rem; font-weight:600; color:#F3EEF0; line-height:1.15; font-style:italic;">Beauty starts<br/>from within.</h2>
+      <p style="color:rgba(232,213,220,0.75); margin-top:1.25rem; font-size:0.875rem; line-height:1.7; max-width:300px;">
+        Skincare supplements crafted to nourish your skin, strengthen your glow, and build your confidence — every day.
+      </p>
+      <div style="display:flex; gap:2rem; margin-top:2rem;">
+        <div>
+          <p style="font-size:1.5rem; font-weight:700; color:#F3EEF0;">10K+</p>
+          <p style="font-size:0.75rem; color:rgba(232,213,220,0.65); margin-top:2px;">Happy customers</p>
+        </div>
+        <div>
+          <p style="font-size:1.5rem; font-weight:700; color:#F3EEF0;">100%</p>
+          <p style="font-size:0.75rem; color:rgba(232,213,220,0.65); margin-top:2px;">Natural formulas</p>
+        </div>
+      </div>
     </div>
 
-    <h1 class="text-3xl font-extrabold mb-3 text-center text-pink-600 drop-shadow-md">Welcome Back!</h1>
-    <p class="text-sm font-medium text-center mb-4 bg-clip-text text-transparent bg-gradient-to-r from-pink-500 via-pink-400 to-pink-300 drop-shadow-sm">Sign in to your Skinova account.</p>
+    <p style="color:rgba(196,144,158,0.6); font-size:0.72rem; position:relative; z-index:1;">© 2025 Skinova. All rights reserved.</p>
+  </div>
 
-    <form id="loginForm" class="space-y-4">
-      <input type="email" id="loginEmail" placeholder="Email" class="w-full border border-pink-300 p-3 rounded-lg focus:ring-2 focus:ring-pink-400 focus:outline-none" required />
-      <div class="relative">
-        <input type="password" id="loginPassword" placeholder="Password" class="border border-pink-300 p-3 rounded-lg w-full focus:ring-2 focus:ring-pink-400 focus:outline-none" required />
-        <i id="toggleLoginPassword" class="fa-solid fa-eye text-gray-400 absolute right-3 top-3 cursor-pointer"></i>
+  <!-- ══════════════════════════════════════════ -->
+  <!-- Right form panel                          -->
+  <!-- ══════════════════════════════════════════ -->
+  <div style="flex:1; min-height:100vh; background:#FAF8F5; display:flex; align-items:center; justify-content:center; padding:2rem;">
+    <div style="width:100%; max-width:400px;">
+
+      <!-- Mobile logo -->
+      <div class="flex justify-center mb-8 md:hidden">
+        <img src="attached_assets/skinova-logo-transparent.png" class="h-12 w-auto object-contain" alt="Skinova" />
       </div>
 
-      <button type="submit" id="loginBtn" class="w-full bg-pink-600 text-white py-3 rounded-xl hover:bg-pink-700 flex justify-center items-center transition-all duration-300 shadow-md hover:shadow-lg">
-        <span id="loginBtnText">Login</span>
-        <div id="loginLoader" class="hidden flex items-center gap-1 ml-2">
-          <div class="w-2 h-2 bg-white rounded-full animate-pulse"></div>
-          <div class="w-2 h-2 bg-white rounded-full animate-pulse delay-150"></div>
-          <div class="w-2 h-2 bg-white rounded-full animate-pulse delay-300"></div>
+      <!-- Heading -->
+      <h1 class="serif" style="font-size:2.25rem; font-weight:600; color:#1E1418; margin-bottom:0.4rem;">Sign in</h1>
+      <p style="font-size:0.875rem; color:#9B7A87; margin-bottom:2rem;">Welcome back to Skinova</p>
+
+      <!-- Form -->
+      <form id="loginForm" style="display:flex; flex-direction:column; gap:1rem;">
+        <input type="email" id="loginEmail" placeholder="Email address" class="sk-input" required />
+
+        <div style="position:relative;">
+          <input type="password" id="loginPassword" placeholder="Password" class="sk-input" style="padding-right:2.75rem;" required />
+          <i id="toggleLoginPassword" class="fa-solid fa-eye" style="position:absolute; right:1rem; top:50%; transform:translateY(-50%); color:#C4B0A8; cursor:pointer; font-size:0.875rem;"></i>
         </div>
-      </button>
-    </form>
 
-    <p class="mt-2 text-center text-sm">
-      <a href="#" id="forgotPassword" class="text-pink-600">Forgot Password?</a>
-    </p>
+        <div style="text-align:right; margin-top:-0.25rem;">
+          <a href="#" id="forgotPassword" style="font-size:0.8rem; color:#8B3A52; text-decoration:none; font-weight:500;">Forgot password?</a>
+        </div>
 
-    <div class="text-center my-4">
-      <p class="text-sm mb-2">OR</p>
-      <button id="googleLogin" class="w-full flex items-center justify-center border p-3 rounded-lg hover:bg-gray-100">
-        <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" class="w-6 h-6 mr-2" />
+        <button type="submit" id="loginBtn" class="sk-btn">
+          <span id="loginBtnText">Sign In</span>
+          <div id="loginLoader" class="hidden flex items-center gap-1">
+            <div class="w-2 h-2 bg-white rounded-full animate-pulse"></div>
+            <div class="w-2 h-2 bg-white rounded-full animate-pulse" style="animation-delay:0.15s;"></div>
+            <div class="w-2 h-2 bg-white rounded-full animate-pulse" style="animation-delay:0.3s;"></div>
+          </div>
+        </button>
+      </form>
+
+      <!-- Divider -->
+      <div class="sk-divider"><span>or</span></div>
+
+      <!-- Google -->
+      <button id="googleLogin" class="sk-google">
+        <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" style="width:18px; height:18px;" />
         Continue with Google
       </button>
+
+      <!-- Footer links -->
+      <p style="text-align:center; font-size:0.875rem; color:#9B7A87; margin-top:1.75rem;">
+        Don't have an account? <a href="register.html" style="color:#8B3A52; font-weight:600; text-decoration:none;">Create one</a>
+      </p>
+      <p style="text-align:center; margin-top:0.75rem;">
+        <a href="index.html" style="font-size:0.8rem; color:#C4B0A8; text-decoration:none;">← Back to Home</a>
+      </p>
+
     </div>
-
-    <p class="mt-4 text-center text-sm">
-      Don't have an account? <a href="register.html" class="text-pink-600">Register</a>
-    </p>
-
-    <p class="text-sm font-[400] text-center mt-4">Back to 
-      <a href="index.html" class="text-pink-600 font-medium">Home</a>
-    </p>
   </div>
 
   <!-- Firebase Scripts -->
@@ -146,11 +192,15 @@
       if(modal && errorMsg){
         errorMsg.textContent = message;
         modal.classList.remove("hidden");
+        setTimeout(() => modal.classList.add('show'), 10);
       } else { alert(message); }
     }
     function closeErrorModal() {
       const modal = document.getElementById("errorModal");
-      if(modal) modal.classList.add("hidden");
+      if(modal) {
+        modal.classList.remove('show');
+        setTimeout(() => modal.classList.add("hidden"), 250);
+      }
     }
 
     /* ===== Login Button Loader ===== */
@@ -160,13 +210,11 @@
       const loader = document.getElementById("loginLoader");
       if(isLoading){
         btn.disabled = true;
-        btn.classList.add("cursor-not-allowed","opacity-70");
-        btnText.textContent = "Logging in…";
+        btnText.textContent = "Signing in…";
         loader.classList.remove("hidden");
       } else {
         btn.disabled = false;
-        btn.classList.remove("cursor-not-allowed","opacity-70");
-        btnText.textContent = "Login";
+        btnText.textContent = "Sign In";
         loader.classList.add("hidden");
       }
     }
