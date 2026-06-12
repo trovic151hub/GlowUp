@@ -1404,7 +1404,7 @@ firebase.auth().onAuthStateChanged(user => {
     if (headerBtn) headerBtn.innerHTML = `
       <div style="position:relative;">
         <a href="customer-dashboard.html" title="${name}" style="width:28px;height:28px;border-radius:50%;background:#8B4F6B;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;text-decoration:none;">${initials}</a>
-        <div class="user-dropdown" style="position:absolute;right:0;top:calc(100% + 10px);min-width:176px;background:#fff;border-radius:12px;box-shadow:0 8px 24px rgba(44,36,32,0.13);border:1px solid #f0ebe7;padding:4px 0;z-index:200;">
+        <div class="user-dropdown" style="position:absolute;right:0;top:calc(100% + 2px);min-width:176px;background:#fff;border-radius:12px;box-shadow:0 8px 24px rgba(44,36,32,0.13);border:1px solid #f0ebe7;padding:4px 0;z-index:200;">
           <a href="customer-dashboard.html" style="display:flex;align-items:center;gap:10px;padding:10px 16px;font-size:13px;color:#2C2420;text-decoration:none;" onmouseover="this.style.background='#FAF8F5'" onmouseout="this.style.background=''">
             <i class="fas fa-user" style="color:#9E8E88;width:14px;text-align:center;"></i> My Account
           </a>
