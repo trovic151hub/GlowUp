@@ -467,28 +467,20 @@ loadHeroSlides();
 
 window.addEventListener("scroll", () => {
   if (!header) return;
+  const bars = document.querySelectorAll('#menuToggle .hamburger-bar');
 
   if (window.scrollY > 50) {
-    // Remove semi-transparent black background
     header.classList.remove("bg-[#0000004D]");
-
-    // Add gradient background
     header.classList.add("bg-gradient-to-r", "from-[#fbcfe8]", "to-[#f9a8d4]");
-
-    // Make text white
     header.classList.add("text-black");
-    // Optional: remove black text if applied by default
     header.classList.remove("text-white");
+    bars.forEach(b => b.style.background = '#2C2420');
   } else {
-    // Remove gradient background
     header.classList.remove("bg-gradient-to-r", "from-[#fbcfe8]", "to-[#f9a8d4]");
-
-    // Add semi-transparent black background
     header.classList.add("bg-[#0000004D]");
-
-    // Reset text color
     header.classList.remove("text-black");
     header.classList.add("text-white");
+    bars.forEach(b => b.style.background = '#fff');
   }
 });
 
@@ -1379,7 +1371,7 @@ function openMenu() {
     mobileMenu.classList.add("open");
     menuOverlay.classList.remove("hidden");
     menuToggle.classList.add('menu-open');
-
+    document.documentElement.style.overflow = "hidden";
     document.body.style.overflow = "hidden";
 }
 
@@ -1389,6 +1381,7 @@ function closeMenuFunc() {
     mobileMenu.classList.remove("open");
     menuOverlay.classList.add("hidden");
     menuToggle.classList.remove('menu-open');
+    document.documentElement.style.overflow = "";
     document.body.style.overflow = "";
 }
 
