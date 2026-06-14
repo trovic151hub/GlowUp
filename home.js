@@ -881,7 +881,6 @@ async function filterProducts(category="All"){
       </div>`;
   }
 
-  showPageLoader();
   try {
     const snapshot = await adminDb.collection("products").where("isFeatured", "==", true).get();
 
@@ -908,15 +907,11 @@ async function filterProducts(category="All"){
       }
     });
 
-    setTimeout(() => { 
-      renderProducts(true); 
-      hidePageLoader(); 
-    }, 300);
+    setTimeout(() => { renderProducts(true); }, 300);
 
   } catch(err) {
     console.error(err);
     showNotification("Failed to load products","error");
-    hidePageLoader();
     if(productList) productList.innerHTML = `<div class="text-center text-gray-500 col-span-full">Failed to load products</div>`;
   }
 }
