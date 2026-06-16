@@ -28,7 +28,7 @@
     pageLoader.style = `
       position: fixed; inset: 0; background: rgba(0,0,0,0.5);
       display: flex; align-items: center; justify-content: center;
-      z-index: 9999; opacity:1; transition: opacity 0.4s ease;
+      z-index: 9999; transition: opacity 0.45s cubic-bezier(0.4, 0, 0.2, 1);
       opacity: 0;
     `;
     pageLoader.innerHTML = `
@@ -45,8 +45,11 @@
 
   function showPageLoader(){
     pageLoader.style.display = "flex";
-    pageLoader.style.opacity = "1";
+    pageLoader.style.opacity = "0";
     document.body.style.overflow = "hidden";
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      pageLoader.style.opacity = "1";
+    }));
   }
 
   function hidePageLoader(){
@@ -170,7 +173,6 @@ const heroImageTrack = document.getElementById("heroImageTrack");
 const heroTitle = document.getElementById("heroTitle");
 const heroText = document.getElementById("heroText");
 const dotsContainer = document.querySelector(".hero-tabs-track");
-const skeleton = document.getElementById("heroSkeleton");
 
 const heroPlay = document.getElementById("heroPlay");
 const heroPause = document.getElementById("heroPause");
@@ -192,8 +194,6 @@ const dragThreshold = 50;
 
 // ===== FIRESTORE =====
 function loadHeroSlides() {
-  skeleton.classList.remove("hidden");
-
   db.collection("heroSliders")
     .where("active", "==", true)
     .orderBy("order", "asc")
@@ -211,8 +211,6 @@ function loadHeroSlides() {
 
       if (isPlaying) startAutoSlide();
       updateHeroControls();
-
-      skeleton.classList.add("hidden");
     });
 }
 
@@ -863,7 +861,7 @@ document.getElementById("closePasswordResetBtn")?.addEventListener("click", clos
 document.getElementById("closePasswordErrorBtn")?.addEventListener("click", closePasswordErrorModal);
 
 // ---------- PRODUCTS ----------
-async function filterProducts(category="All"){
+async function filterProducts(category="All", useFullLoader=false){
   displayedCount = 0;
   const productList = document.getElementById("product-list");
   if(!productList) return;
@@ -881,6 +879,7 @@ async function filterProducts(category="All"){
       </div>`;
   }
 
+  if(useFullLoader) showPageLoader();
   try {
     const snapshot = await adminDb.collection("products").where("isFeatured", "==", true).get();
 
@@ -907,12 +906,16 @@ async function filterProducts(category="All"){
       }
     });
 
-    setTimeout(() => { renderProducts(true); }, 300);
+    setTimeout(() => {
+      renderProducts(true);
+      if(useFullLoader) hidePageLoader();
+    }, 300);
 
   } catch(err) {
     console.error(err);
     showNotification("Failed to load products","error");
     if(productList) productList.innerHTML = `<div class="text-center text-gray-500 col-span-full">Failed to load products</div>`;
+    if(useFullLoader) hidePageLoader();
   }
 }
   window.filterProducts = filterProducts;
@@ -1339,7 +1342,7 @@ updateCartCount();
 
   // ---------- INITIAL LOAD ----------
   // setInterval(()=>slideImages(true),3000);
-  filterProducts("All");
+  filterProducts("All", true);
 
   // ---------- HELPERS ----------
   function escapeHtml(text){ if(text==null) return ''; return String(text).replace(/[&<>"']/g, m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }

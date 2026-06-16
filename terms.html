@@ -9,6 +9,9 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=Inter:wght@300;400;500;600&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+  <script src="/config.js"></script>
   <style>
     *, *::before, *::after { scrollbar-width: none; -ms-overflow-style: none; }
     ::-webkit-scrollbar { display: none; }
@@ -17,6 +20,16 @@
     .section-title { font-family: 'Cormorant Garamond', serif; font-size: 1.25rem; font-weight: 600; color: #2C2420; margin-bottom: 0.5rem; margin-top: 2rem; }
     .footer-brand { font-family: 'Cormorant Garamond', serif; font-size: 1.1rem; font-weight: 600; color: #C9A28F; letter-spacing: 0.05em; }
     .footer-bottom { font-size: 0.75rem; color: #5A4A44; letter-spacing: 0.05em; }
+    /* Fallback styling for admin-edited content (plain tags from the rich-text editor) */
+    #legalBody p { font-size: 0.875rem; line-height: 1.625; color: #4A3A34; margin-bottom: 0.75rem; }
+    #legalBody h2 { font-family: 'Cormorant Garamond', serif; font-size: 1.25rem; font-weight: 600; color: #2C2420; margin-bottom: 0.5rem; margin-top: 2rem; }
+    #legalBody ul, #legalBody ol { font-size: 0.875rem; color: #4A3A34; margin: 0.75rem 0; padding-left: 1.5rem; }
+    #legalBody ul { list-style: disc; }
+    #legalBody ol { list-style: decimal; }
+    #legalBody li { margin-bottom: 0.25rem; }
+    #legalBody a { color: #8B4F6B; text-decoration: none; }
+    #legalBody a:hover { text-decoration: underline; }
+    #legalBody strong { font-weight: 600; }
   </style>
 </head>
 <body class="bg-[#FAF8F5] text-[#2C2420]">
@@ -33,8 +46,10 @@
   <!-- Content -->
   <main class="max-w-3xl mx-auto px-6 py-16">
 
-    <h1 class="text-4xl font-semibold text-[#2C2420] mb-2">Terms of Service</h1>
-    <p class="text-sm text-[#9E8E88] mb-10">Last updated: April 2025</p>
+    <h1 id="legalTitle" class="text-4xl font-semibold text-[#2C2420] mb-2">Terms of Service</h1>
+    <p id="legalUpdated" class="text-sm text-[#9E8E88] mb-10">Last updated: April 2025</p>
+
+    <div id="legalBody">
 
     <p class="text-sm leading-relaxed text-[#4A3A34] mb-6">
       Welcome to Skinova. By accessing or using our website and purchasing our products, you agree to be bound by the following terms and conditions. Please read them carefully before placing an order.
@@ -43,6 +58,9 @@
     <h2 class="section-title">1. Products & Orders</h2>
     <p class="text-sm leading-relaxed text-[#4A3A34]">
       All products listed on Skinova are subject to availability. We reserve the right to discontinue any product at any time. Orders are confirmed only upon successful payment and a confirmation message from us via WhatsApp or email.
+    </p>
+    <p class="text-sm leading-relaxed text-[#4A3A34] mt-3">
+      Skinova does not manufacture its products. We source our skincare supplements from vetted third-party suppliers and manufacturers, and sell them to you under the Skinova brand.
     </p>
 
     <h2 class="section-title">2. Pricing</h2>
@@ -55,17 +73,17 @@
       We accept payments via Paystack (card payments) and WhatsApp order confirmations. All transactions are processed securely. Skinova does not store your card details.
     </p>
 
-    <h2 class="section-title">4. No Return Policy</h2>
+    <h2 class="section-title">4. Refund & Return Policy</h2>
     <p class="text-sm leading-relaxed text-[#4A3A34]">
-      Due to the nature of our skincare supplement products and for hygiene and safety reasons, <strong>all sales are final</strong>. We do not accept returns, exchanges, or offer refunds once an order has been placed and confirmed. Please review your order carefully before completing your purchase.
+      Due to the nature of our skincare supplement products and for hygiene and safety reasons, we do not accept returns or exchanges for change of mind. Refunds are only granted for damaged, incorrect, or defective items reported within 7 days of delivery, with proof of purchase and photographs where applicable. Please review your order carefully before completing your purchase.
     </p>
     <p class="text-sm leading-relaxed text-[#4A3A34] mt-3">
-      In the rare event that you receive a damaged or incorrect item, please contact us within 24 hours of delivery via WhatsApp or email with photo evidence, and we will assess the situation on a case-by-case basis.
+      Full details are in our <a href="refund-policy.html" class="text-[#8B4F6B] hover:underline">Refund Policy</a>.
     </p>
 
     <h2 class="section-title">5. Shipping & Delivery</h2>
     <p class="text-sm leading-relaxed text-[#4A3A34]">
-      We currently deliver within Lagos, Nigeria. Delivery timelines are estimates and may vary based on location and demand. Skinova is not liable for delays caused by third-party logistics providers.
+      We deliver within Lagos and to other states across Nigeria. Delivery timelines are estimates and may vary based on location and demand. Skinova is not liable for delays caused by third-party logistics providers. Full details are in our <a href="shipping-policy.html" class="text-[#8B4F6B] hover:underline">Shipping Policy</a>.
     </p>
 
     <h2 class="section-title">6. Product Use Disclaimer</h2>
@@ -87,6 +105,8 @@
     <p class="text-sm leading-relaxed text-[#4A3A34]">
       For any questions regarding these terms, please reach us at <a href="mailto:ibitoyeifeoluwafunmi@gmail.com" class="text-[#8B4F6B] hover:underline">ibitoyeifeoluwafunmi@gmail.com</a> or via WhatsApp at <a href="https://wa.me/2347036594806" class="text-[#8B4F6B] hover:underline">+2347036594806</a>.
     </p>
+
+    </div>
 
   </main>
 
@@ -118,6 +138,8 @@
         <ul class="space-y-3 text-sm text-[#6B5B55]">
           <li><a href="terms.html" class="hover:text-[#C9A28F] transition-colors">Terms of Service</a></li>
           <li><a href="privacy.html" class="hover:text-[#C9A28F] transition-colors">Privacy Policy</a></li>
+          <li><a href="refund-policy.html" class="hover:text-[#C9A28F] transition-colors">Refund Policy</a></li>
+          <li><a href="shipping-policy.html" class="hover:text-[#C9A28F] transition-colors">Shipping Policy</a></li>
         </ul>
       </div>
     </div>
@@ -126,6 +148,23 @@
       <p class="footer-bottom">Powered by <span class="text-[#8B4F6B] font-bold text-sm">Vic.Dev</span></p>
     </div>
   </footer>
+
+  <script>
+    (function () {
+      if (!firebase.apps.length) firebase.initializeApp(window.CONFIG.firebase);
+      const db = firebase.firestore();
+      db.collection("legalPages").doc("terms").get().then(doc => {
+        if (!doc.exists) return;
+        const data = doc.data();
+        if (data.title) {
+          document.getElementById("legalTitle").textContent = data.title;
+          document.title = data.title + " — Skinova";
+        }
+        if (data.lastUpdated) document.getElementById("legalUpdated").textContent = "Last updated: " + data.lastUpdated;
+        if (data.bodyHtml) document.getElementById("legalBody").innerHTML = data.bodyHtml;
+      }).catch(err => console.error("Failed to load legal content:", err));
+    })();
+  </script>
 
 </body>
 </html>

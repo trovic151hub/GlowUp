@@ -158,18 +158,6 @@ h1.brand-title {
 }
 .hero-slider:active { cursor: grabbing; }
 
-.hero-skeleton {
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(135deg, #e8ddd9 0%, #d4c5be 100%);
-  animation: pulse 1.8s ease-in-out infinite;
-  z-index: 20;
-}
-@keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.55; }
-}
-
 .hero-image-wrapper {
   position: relative;
   width: 100%; height: 100%;

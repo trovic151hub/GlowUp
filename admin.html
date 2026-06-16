@@ -17,6 +17,8 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/emailjs-com@3/dist/email.min.js"></script>
   <script src="https://widget.cloudinary.com/v2.0/global/all.js" type="text/javascript"></script>
+  <link href="https://cdn.quilljs.com/1.3.7/quill.snow.css" rel="stylesheet">
+  <script src="https://cdn.quilljs.com/1.3.7/quill.min.js"></script>
   <style>
     * { box-sizing: border-box; }
     body { font-family: 'Inter', sans-serif; margin: 0; padding: 0; }
@@ -59,6 +61,11 @@
 
     .btn-primary { background: #8B3A52; color: #fff; border: none; cursor: pointer; }
     .btn-primary:hover { background: #6E2E41; }
+
+    .legal-tab-btn { background: #fff; color: #6B5B55; border: 1px solid #e8ddd9; }
+    .legal-tab-btn:hover { border-color: #8B3A52; color: #8B3A52; }
+    .legal-tab-btn.active { background: #8B3A52; color: #fff; border-color: #8B3A52; }
+    #legalEditor .ql-editor { min-height: 280px; font-size: 0.875rem; }
 
     .admin-table { width: 100%; border-collapse: collapse; }
     .admin-table thead { background: #F3EEF0; }
@@ -207,6 +214,10 @@
       <div class="nav-item" data-section="homepage">
         <i class="fas fa-star"></i>
         <span class="nav-label">Featured</span>
+      </div>
+      <div class="nav-item" data-section="legal">
+        <i class="fas fa-file-contract"></i>
+        <span class="nav-label">Legal Pages</span>
       </div>
       <div class="nav-item" data-section="admins">
         <i class="fas fa-user-shield"></i>
@@ -985,6 +996,64 @@
         </div>
       </div>
 
+      <!-- ===== LEGAL PAGES ===== -->
+      <div id="section-legal" class="section">
+
+        <!-- Section header -->
+        <div class="flex items-center gap-3 mb-5">
+          <div class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style="background:#F3EEF0;">
+            <i class="fas fa-file-contract text-sm" style="color:#8B3A52;"></i>
+          </div>
+          <div>
+            <h2 class="text-xl font-semibold text-gray-800 serif leading-snug">Legal Pages</h2>
+            <p class="text-xs text-gray-400 mt-0.5">Edit your Terms, Privacy, Refund, and Shipping policy pages — changes go live on the site instantly</p>
+          </div>
+        </div>
+
+        <!-- Page tabs -->
+        <div class="flex flex-wrap gap-2 mb-5">
+          <button type="button" class="legal-tab-btn px-4 py-2 rounded-xl text-sm font-medium transition-colors" data-page="terms">Terms of Service</button>
+          <button type="button" class="legal-tab-btn px-4 py-2 rounded-xl text-sm font-medium transition-colors" data-page="privacy">Privacy Policy</button>
+          <button type="button" class="legal-tab-btn px-4 py-2 rounded-xl text-sm font-medium transition-colors" data-page="refund">Refund Policy</button>
+          <button type="button" class="legal-tab-btn px-4 py-2 rounded-xl text-sm font-medium transition-colors" data-page="shipping">Shipping Policy</button>
+        </div>
+
+        <div class="card">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-5 mb-5">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1.5">
+                <i class="fas fa-heading text-xs mr-1" style="color:#8B3A52;"></i> Page Title
+              </label>
+              <input type="text" id="legalTitleInput" placeholder="e.g. Refund Policy"
+                class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-800 bg-white placeholder-gray-400 transition-all focus:outline-none focus:border-[#8B3A52] focus:ring-2 focus:ring-[#8B3A52]/10" />
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1.5">
+                <i class="fas fa-calendar text-xs mr-1" style="color:#8B3A52;"></i> Last Updated
+              </label>
+              <input type="text" id="legalUpdatedInput" placeholder="e.g. June 2026"
+                class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-800 bg-white placeholder-gray-400 transition-all focus:outline-none focus:border-[#8B3A52] focus:ring-2 focus:ring-[#8B3A52]/10" />
+            </div>
+          </div>
+
+          <label class="block text-sm font-medium text-gray-700 mb-1.5">
+            <i class="fas fa-align-left text-xs mr-1" style="color:#8B3A52;"></i> Page Content
+          </label>
+          <div id="legalEditor" style="background:#fff; min-height:320px;"></div>
+
+          <div class="flex items-center gap-3 mt-5">
+            <button type="button" id="legalSaveBtn" class="btn-primary px-6 py-2.5 rounded-xl text-sm font-medium flex items-center gap-2">
+              <span id="legalSaveText">Save Changes</span>
+              <span id="legalSaveSpinner" class="hidden"><i class="fa-solid fa-circle-notch fa-spin"></i></span>
+            </button>
+            <a id="legalPreviewLink" href="#" target="_blank" class="text-sm font-medium hover:underline" style="color:#8B3A52;">
+              <i class="fas fa-external-link-alt text-xs mr-1"></i> View live page
+            </a>
+          </div>
+        </div>
+
+      </div>
+
       <!-- ===== ADMINS ===== -->
       <div id="section-admins" class="section">
 
@@ -1126,8 +1195,8 @@ document.getElementById('sidebarToggle').addEventListener('click', () => {
 function closeMobileSidebar() { if (window.innerWidth <= 768) sidebarEl.classList.remove('mobile-open'); }
 
 // ===== SECTION NAV =====
-let analyticsInitialized = false, ordersInitialized = false, homepageInitialized = false, adminsInitialized = false;
-const sectionTitles = { dashboard:'Dashboard', products:'Products', orders:'Orders', analytics:'Analytics', hero:'Hero Slider', homepage:'Featured Products', admins:'Admin Accounts' };
+let analyticsInitialized = false, ordersInitialized = false, homepageInitialized = false, adminsInitialized = false, legalInitialized = false;
+const sectionTitles = { dashboard:'Dashboard', products:'Products', orders:'Orders', analytics:'Analytics', hero:'Hero Slider', homepage:'Featured Products', admins:'Admin Accounts', legal:'Legal Pages' };
 
 function showSection(name) {
   document.getElementById('content-area').scrollTo({ top: 0 });
@@ -1141,6 +1210,7 @@ function showSection(name) {
   if (name === 'orders') clearNewOrders();
   if (name === 'homepage' && !homepageInitialized) { loadFeaturedProducts(); homepageInitialized = true; }
   if (name === 'admins' && !adminsInitialized) { initAdmins(); adminsInitialized = true; }
+  if (name === 'legal' && !legalInitialized) { initLegalPages(); legalInitialized = true; }
   localStorage.setItem('adminActiveSection', name);
   closeMobileSidebar();
 }
@@ -3118,6 +3188,313 @@ function timeAgo(ms) {
   if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
   if (diff < 604800) return `${Math.floor(diff / 86400)}d ago`;
   return new Date(ms).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' });
+}
+
+// LEGAL PAGES
+// ====================================================
+const LEGAL_PAGE_URLS = {
+  terms: 'terms.html',
+  privacy: 'privacy.html',
+  refund: 'refund-policy.html',
+  shipping: 'shipping-policy.html'
+};
+
+const DEFAULT_LEGAL_CONTENT = {
+  terms: {
+    title: 'Terms of Service',
+    lastUpdated: 'April 2025',
+    bodyHtml: `
+    <p class="text-sm leading-relaxed text-[#4A3A34] mb-6">
+      Welcome to Skinova. By accessing or using our website and purchasing our products, you agree to be bound by the following terms and conditions. Please read them carefully before placing an order.
+    </p>
+
+    <h2 class="section-title">1. Products & Orders</h2>
+    <p class="text-sm leading-relaxed text-[#4A3A34]">
+      All products listed on Skinova are subject to availability. We reserve the right to discontinue any product at any time. Orders are confirmed only upon successful payment and a confirmation message from us via WhatsApp or email.
+    </p>
+    <p class="text-sm leading-relaxed text-[#4A3A34] mt-3">
+      Skinova does not manufacture its products. We source our skincare supplements from vetted third-party suppliers and manufacturers, and sell them to you under the Skinova brand.
+    </p>
+
+    <h2 class="section-title">2. Pricing</h2>
+    <p class="text-sm leading-relaxed text-[#4A3A34]">
+      Prices displayed on the site are in Nigerian Naira (₦) and are subject to change without prior notice. Promotional prices are valid only for the stated period.
+    </p>
+
+    <h2 class="section-title">3. Payments</h2>
+    <p class="text-sm leading-relaxed text-[#4A3A34]">
+      We accept payments via Paystack (card payments) and WhatsApp order confirmations. All transactions are processed securely. Skinova does not store your card details.
+    </p>
+
+    <h2 class="section-title">4. Refund & Return Policy</h2>
+    <p class="text-sm leading-relaxed text-[#4A3A34]">
+      Due to the nature of our skincare supplement products and for hygiene and safety reasons, we do not accept returns or exchanges for change of mind. Refunds are only granted for damaged, incorrect, or defective items reported within 7 days of delivery, with proof of purchase and photographs where applicable. Please review your order carefully before completing your purchase.
+    </p>
+    <p class="text-sm leading-relaxed text-[#4A3A34] mt-3">
+      Full details are in our <a href="refund-policy.html" class="text-[#8B4F6B] hover:underline">Refund Policy</a>.
+    </p>
+
+    <h2 class="section-title">5. Shipping & Delivery</h2>
+    <p class="text-sm leading-relaxed text-[#4A3A34]">
+      We deliver within Lagos and to other states across Nigeria. Delivery timelines are estimates and may vary based on location and demand. Skinova is not liable for delays caused by third-party logistics providers. Full details are in our <a href="shipping-policy.html" class="text-[#8B4F6B] hover:underline">Shipping Policy</a>.
+    </p>
+
+    <h2 class="section-title">6. Product Use Disclaimer</h2>
+    <p class="text-sm leading-relaxed text-[#4A3A34]">
+      Our products are supplements and are not intended to diagnose, treat, cure, or prevent any disease. Results may vary between individuals. Please consult a qualified healthcare professional before use if you are pregnant, nursing, or have a medical condition.
+    </p>
+
+    <h2 class="section-title">7. Intellectual Property</h2>
+    <p class="text-sm leading-relaxed text-[#4A3A34]">
+      All content on this website — including text, images, logos, and design — is the property of Skinova and may not be reproduced or distributed without prior written consent.
+    </p>
+
+    <h2 class="section-title">8. Changes to These Terms</h2>
+    <p class="text-sm leading-relaxed text-[#4A3A34]">
+      Skinova reserves the right to update these terms at any time. Continued use of the website after changes are made constitutes acceptance of the revised terms.
+    </p>
+
+    <h2 class="section-title">9. Contact</h2>
+    <p class="text-sm leading-relaxed text-[#4A3A34]">
+      For any questions regarding these terms, please reach us at <a href="mailto:ibitoyeifeoluwafunmi@gmail.com" class="text-[#8B4F6B] hover:underline">ibitoyeifeoluwafunmi@gmail.com</a> or via WhatsApp at <a href="https://wa.me/2347036594806" class="text-[#8B4F6B] hover:underline">+2347036594806</a>.
+    </p>`
+  },
+  privacy: {
+    title: 'Privacy Policy',
+    lastUpdated: 'April 2025',
+    bodyHtml: `
+    <p class="text-sm leading-relaxed text-[#4A3A34] mb-6">
+      At Skinova, your privacy matters to us. This policy explains what information we collect, how we use it, and how we keep it safe when you visit our website or make a purchase.
+    </p>
+
+    <h2 class="section-title">1. Information We Collect</h2>
+    <p class="text-sm leading-relaxed text-[#4A3A34]">
+      When you interact with Skinova, we may collect the following:
+    </p>
+    <ul class="list-disc list-inside text-sm text-[#4A3A34] mt-3 space-y-1 ml-2">
+      <li>Name, phone number, and email address (provided during checkout or contact)</li>
+      <li>Delivery address</li>
+      <li>Order history and purchase details</li>
+      <li>Device and browser information collected automatically via Firebase</li>
+    </ul>
+
+    <h2 class="section-title">2. How We Use Your Information</h2>
+    <p class="text-sm leading-relaxed text-[#4A3A34]">
+      We use the information collected to:
+    </p>
+    <ul class="list-disc list-inside text-sm text-[#4A3A34] mt-3 space-y-1 ml-2">
+      <li>Process and fulfil your orders</li>
+      <li>Communicate with you about your order status via WhatsApp or email</li>
+      <li>Improve our products and website experience</li>
+      <li>Respond to your enquiries and support requests</li>
+    </ul>
+
+    <h2 class="section-title">3. Third-Party Services</h2>
+    <p class="text-sm leading-relaxed text-[#4A3A34]">
+      We use trusted third-party services to operate our platform:
+    </p>
+    <ul class="list-disc list-inside text-sm text-[#4A3A34] mt-3 space-y-1 ml-2">
+      <li><strong>Firebase (Google)</strong> — for database storage and authentication</li>
+      <li><strong>Paystack</strong> — for secure card payment processing</li>
+      <li><strong>Cloudinary</strong> — for product image hosting</li>
+      <li><strong>WhatsApp</strong> — for order communication</li>
+    </ul>
+    <p class="text-sm leading-relaxed text-[#4A3A34] mt-3">
+      Each of these services has its own privacy policy governing the data they handle. We encourage you to review them directly.
+    </p>
+
+    <h2 class="section-title">4. Data Storage & Security</h2>
+    <p class="text-sm leading-relaxed text-[#4A3A34]">
+      Your data is stored securely on Firebase servers. We do not store payment card details — all card transactions are handled entirely by Paystack. We take reasonable measures to protect your information, though no method of online transmission is 100% secure.
+    </p>
+
+    <h2 class="section-title">5. Refund & Return Policy</h2>
+    <p class="text-sm leading-relaxed text-[#4A3A34]">
+      We do not accept returns or refunds for change of mind. Refunds are only granted for damaged, incorrect, or defective items reported within 7 days of delivery. By completing a purchase, you acknowledge and agree to this policy. Please see our <a href="refund-policy.html" class="text-[#8B4F6B] hover:underline">Refund Policy</a> for full details.
+    </p>
+
+    <h2 class="section-title">6. Sharing of Information</h2>
+    <p class="text-sm leading-relaxed text-[#4A3A34]">
+      We do not sell, rent, or trade your personal information to any third party for marketing purposes. Your data is shared only with service providers essential to fulfilling your order (e.g., logistics partners for delivery).
+    </p>
+
+    <h2 class="section-title">7. Your Rights</h2>
+    <p class="text-sm leading-relaxed text-[#4A3A34]">
+      You have the right to request access to the personal data we hold about you, or ask us to delete it. To make such a request, contact us at the details below.
+    </p>
+
+    <h2 class="section-title">8. Changes to This Policy</h2>
+    <p class="text-sm leading-relaxed text-[#4A3A34]">
+      We may update this Privacy Policy from time to time. Any changes will be posted on this page with a revised date. Continued use of our website after updates constitutes acceptance of the new policy.
+    </p>
+
+    <h2 class="section-title">9. Contact</h2>
+    <p class="text-sm leading-relaxed text-[#4A3A34]">
+      If you have any questions about this policy, please contact us at <a href="mailto:ibitoyeifeoluwafunmi@gmail.com" class="text-[#8B4F6B] hover:underline">ibitoyeifeoluwafunmi@gmail.com</a> or via WhatsApp at <a href="https://wa.me/2347036594806" class="text-[#8B4F6B] hover:underline">+2347036594806</a>.
+    </p>`
+  },
+  refund: {
+    title: 'Refund Policy',
+    lastUpdated: 'June 2026',
+    bodyHtml: `
+    <p class="text-sm leading-relaxed text-[#4A3A34] mb-6">
+      At Skinova, customer satisfaction is important to us. If you are not satisfied with your purchase, please review our refund policy below.
+    </p>
+
+    <h2 class="section-title">Eligibility for Refunds</h2>
+    <p class="text-sm leading-relaxed text-[#4A3A34]">
+      Refunds may be granted under the following circumstances:
+    </p>
+    <ul class="list-disc list-inside text-sm text-[#4A3A34] mt-3 space-y-1 ml-2">
+      <li>You received a damaged product.</li>
+      <li>You received the wrong product.</li>
+      <li>The product is defective upon delivery.</li>
+    </ul>
+    <p class="text-sm leading-relaxed text-[#4A3A34] mt-3">
+      To be eligible for a refund, you must contact us within 7 days of receiving your order and provide proof of purchase along with photographs of the product where applicable.
+    </p>
+
+    <h2 class="section-title">Non-Refundable Items</h2>
+    <p class="text-sm leading-relaxed text-[#4A3A34]">
+      Refunds will not be provided for:
+    </p>
+    <ul class="list-disc list-inside text-sm text-[#4A3A34] mt-3 space-y-1 ml-2">
+      <li>Products that have been opened, used, or altered after delivery.</li>
+      <li>Products damaged due to misuse by the customer.</li>
+      <li>Requests made after the refund eligibility period.</li>
+    </ul>
+
+    <h2 class="section-title">Refund Process</h2>
+    <p class="text-sm leading-relaxed text-[#4A3A34]">
+      To request a refund, please contact us via our customer support email with your order details and reason for the request.
+    </p>
+    <p class="text-sm leading-relaxed text-[#4A3A34] mt-3">
+      Once your request is reviewed and approved, the refund will be processed through the original payment method where applicable.
+    </p>
+
+    <h2 class="section-title">Contact</h2>
+    <p class="text-sm leading-relaxed text-[#4A3A34]">
+      For refund inquiries, please contact us through the contact information provided on our website: <a href="mailto:ibitoyeifeoluwafunmi@gmail.com" class="text-[#8B4F6B] hover:underline">ibitoyeifeoluwafunmi@gmail.com</a> or via WhatsApp at <a href="https://wa.me/2347036594806" class="text-[#8B4F6B] hover:underline">+2347036594806</a>.
+    </p>`
+  },
+  shipping: {
+    title: 'Shipping & Delivery Policy',
+    lastUpdated: 'June 2026',
+    bodyHtml: `
+    <p class="text-sm leading-relaxed text-[#4A3A34] mb-6">
+      At Skinova, we strive to deliver your orders as quickly and efficiently as possible.
+    </p>
+
+    <h2 class="section-title">Order Processing</h2>
+    <p class="text-sm leading-relaxed text-[#4A3A34]">
+      Orders are typically processed within 1–3 business days after payment confirmation.
+    </p>
+
+    <h2 class="section-title">Delivery Time</h2>
+    <p class="text-sm leading-relaxed text-[#4A3A34]">
+      Estimated delivery times may vary depending on your location:
+    </p>
+    <ul class="list-disc list-inside text-sm text-[#4A3A34] mt-3 space-y-1 ml-2">
+      <li>Lagos: 1–3 business days</li>
+      <li>Other locations within Nigeria: 3–7 business days</li>
+    </ul>
+    <p class="text-sm leading-relaxed text-[#4A3A34] mt-3">
+      Please note that delivery times are estimates and may be affected by factors beyond our control.
+    </p>
+
+    <h2 class="section-title">Shipping Charges</h2>
+    <p class="text-sm leading-relaxed text-[#4A3A34]">
+      Shipping fees, where applicable, will be displayed during checkout before payment is completed.
+    </p>
+
+    <h2 class="section-title">Delivery Issues</h2>
+    <p class="text-sm leading-relaxed text-[#4A3A34]">
+      If your order has not arrived within the expected delivery period, please contact our support team for assistance.
+    </p>
+
+    <h2 class="section-title">Incorrect Address</h2>
+    <p class="text-sm leading-relaxed text-[#4A3A34]">
+      Customers are responsible for providing accurate delivery information. We are not responsible for delays or failed deliveries resulting from incorrect addresses provided during checkout.
+    </p>
+
+    <h2 class="section-title">Contact</h2>
+    <p class="text-sm leading-relaxed text-[#4A3A34]">
+      For delivery-related inquiries, please contact us using the details available on our website: <a href="mailto:ibitoyeifeoluwafunmi@gmail.com" class="text-[#8B4F6B] hover:underline">ibitoyeifeoluwafunmi@gmail.com</a> or via WhatsApp at <a href="https://wa.me/2347036594806" class="text-[#8B4F6B] hover:underline">+2347036594806</a>.
+    </p>`
+  }
+};
+
+let legalQuill = null;
+let currentLegalPage = 'terms';
+
+function initLegalPages() {
+  legalQuill = new Quill('#legalEditor', {
+    theme: 'snow',
+    modules: {
+      toolbar: [
+        ['bold', 'italic', 'underline'],
+        [{ header: 2 }],
+        [{ list: 'ordered' }, { list: 'bullet' }],
+        ['link'],
+        ['clean']
+      ]
+    }
+  });
+
+  document.querySelectorAll('.legal-tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => loadLegalPage(btn.dataset.page));
+  });
+
+  document.getElementById('legalSaveBtn').addEventListener('click', saveLegalPage);
+
+  loadLegalPage('terms');
+}
+
+async function loadLegalPage(pageId) {
+  currentLegalPage = pageId;
+
+  document.querySelectorAll('.legal-tab-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.page === pageId);
+  });
+  document.getElementById('legalPreviewLink').href = LEGAL_PAGE_URLS[pageId];
+
+  let data = DEFAULT_LEGAL_CONTENT[pageId];
+  try {
+    const doc = await db.collection('legalPages').doc(pageId).get();
+    if (doc.exists) data = doc.data();
+  } catch (err) {
+    console.error('Failed to load legal page:', err);
+  }
+
+  document.getElementById('legalTitleInput').value = data.title || '';
+  document.getElementById('legalUpdatedInput').value = data.lastUpdated || '';
+  legalQuill.root.innerHTML = data.bodyHtml || '';
+}
+
+async function saveLegalPage() {
+  const btn = document.getElementById('legalSaveBtn');
+  const text = document.getElementById('legalSaveText');
+  const spinner = document.getElementById('legalSaveSpinner');
+  btn.disabled = true;
+  text.classList.add('hidden');
+  spinner.classList.remove('hidden');
+
+  try {
+    await db.collection('legalPages').doc(currentLegalPage).set({
+      title: document.getElementById('legalTitleInput').value.trim(),
+      lastUpdated: document.getElementById('legalUpdatedInput').value.trim(),
+      bodyHtml: legalQuill.root.innerHTML,
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    }, { merge: true });
+    await showAlert('Page saved! Changes are now live on the site.', 'Success');
+  } catch (err) {
+    console.error(err);
+    await showAlert('Failed to save changes. Please try again.', 'Error');
+  } finally {
+    btn.disabled = false;
+    text.classList.remove('hidden');
+    spinner.classList.add('hidden');
+  }
 }
 
 // ADMIN ACCOUNTS
