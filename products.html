@@ -3,7 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>All Products | Skinova</title>
+  <title>All Products | Pearl Skin Care</title>
+  <link rel="icon" type="image/png" href="attached_assets/pearl-skin-care-icon.png">
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -33,18 +34,19 @@
   #product-loader {
     position: fixed; inset: 0;
     display: flex; align-items: center; justify-content: center;
-    background: rgba(250,248,245,0.88);
+    background: rgba(0,0,0,0.5);
     backdrop-filter: blur(4px);
     z-index: 9999;
   }
   #product-loader.hidden { display: none; }
-  .loader-spinner {
-    width: 44px; height: 44px; border-radius: 50%;
-    border: 3px solid #e8d5cd;
-    border-top-color: #8B4F6B;
-    animation: spin 0.8s linear infinite;
+  .pearl-loader-icon {
+    height: 56px; width: auto;
+    animation: pearlPulse 1.8s ease-in-out infinite;
   }
-  @keyframes spin { to { transform: rotate(360deg); } }
+  @keyframes pearlPulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.65; transform: scale(1.08); }
+  }
 
   /* ── Header ── */
   header {
@@ -433,7 +435,7 @@
 
 <!-- Loader -->
 <div id="product-loader" class="hidden">
-  <div class="loader-spinner"></div>
+  <img src="attached_assets/pearl-skin-care-icon.png" alt="Loading" class="pearl-loader-icon" />
 </div>
 
 <!-- Notification Container -->
@@ -445,7 +447,7 @@
     <button class="back-btn" onclick="history.back()">
       <i class="fas fa-arrow-left text-xs"></i>
     </button>
-    <img src="attached_assets/skinova-logo-transparent.png" class="h-8 w-auto object-contain" alt="Skinova" />
+    <img src="attached_assets/pearl-skin-care-logo-full.png" class="h-8 w-auto object-contain" alt="Pearl Skin Care" />
   </div>
   <div class="header-right">
     <button id="openFilterSort" class="filter-toggle-btn" title="Search &amp; Filter">
@@ -548,7 +550,7 @@
   <div class="max-w-screen-xl mx-auto px-8 py-14 grid grid-cols-1 md:grid-cols-3 gap-12">
     <div>
       <div class="flex items-center gap-2 mb-3">
-        <img src="attached_assets/skinova-logo-transparent.png" class="h-10 w-auto object-contain" alt="Skinova" />
+        <img src="attached_assets/pearl-skin-care-logo-full.png" class="h-10 w-auto object-contain" alt="Pearl Skin Care" />
       </div>
       <p class="text-sm leading-relaxed text-[#6B5B55]">Premium skincare supplements for radiant, healthy skin. Beauty starts from within.</p>
       <div class="flex gap-4 mt-5">
@@ -577,7 +579,7 @@
     </div>
   </div>
   <div class="border-t border-white/5 max-w-screen-xl mx-auto px-8 py-5 flex flex-col md:flex-row justify-between items-center gap-3">
-    <p class="text-xs text-[#5A4A44] tracking-wide">© 2025 Skinova. All rights reserved.</p>
+    <p class="text-xs text-[#5A4A44] tracking-wide">© 2025 Pearl Skin Care. All rights reserved.</p>
     <p class="text-xs text-[#5A4A44] tracking-wide">Powered by <span class="text-[#8B4F6B] font-bold text-sm">Vic.Dev</span></p>
   </div>
 </footer>
@@ -768,6 +770,7 @@
 
   // ---------- Fetch Products ----------
   async function fetchAllProducts(){
+    showLoader(true);
     showSkeleton();
     try{
       const snap = await db.collection("products").get();
@@ -776,6 +779,8 @@
     }catch(err){
       console.error(err);
       hideSkeleton();
+    }finally{
+      showLoader(false);
     }
   }
 
@@ -927,7 +932,9 @@
       top:           `${from.top  + from.height / 2 - 26}px`,
       left:          `${from.left + from.width  / 2 - 26}px`,
       pointerEvents: "none",
-      boxShadow:     "0 4px 16px rgba(0,0,0,0.18)",
+      boxSizing:     "border-box",
+      border:        "3px solid #fff",
+      boxShadow:     "0 6px 20px rgba(0,0,0,0.35), 0 0 0 1px rgba(0,0,0,0.08)",
       transition:    "none",
     });
     document.body.appendChild(clone);
@@ -980,6 +987,7 @@
   function openMiniCart() {
     const mc = document.getElementById("mini-cart");
     if (!mc) return;
+    renderMiniCart();
     mc.style.transform = "translateX(0)";
     const ov = document.getElementById("mini-cart-overlay");
     if (ov) { ov.classList.remove("hidden"); ov.style.opacity = "1"; }

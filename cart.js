@@ -16,16 +16,11 @@
   if (!document.body.contains(loader)) {
     loader = document.createElement("div");
     loader.id = "cartLoader";
-    loader.className = "fixed inset-0 bg-black backdrop-blur-sm bg-opacity-30 flex items-center justify-center z-50";
-    loader.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" class="fas fa-shopping-cart text-white w-12 h-12 animate-pulse"  viewBox="0 0 16 16"><path fill="currentColor" d="M0 
-    2.5A.5.5 0 0 1 .5 2H2a.5.5 0 0 1 .485.379L2.89 4H14.5a.5.5 0 0 1 .485.621l-1.5 6A.5.5 0 0 1 13 11H4a.5.5 0 0 1-.485-.379L1.61 
-    3H.5a.5.5 0 0 1-.5-.5M3.14 5l.5 2H5V5zM6 5v2h2V5zm3 0v2h2V5zm3 0v2h1.36l.5-2zm1.11 3H12v2h.61zM11 8H9v2h2zM8 8H6v2h2zM5 8H3.89l.5 2H5zm0 
-    5a1 1 0 1 0 0 2a1 1 0 0 0 0-2m-2 1a2 2 0 1 1 4 0a2 2 0 0 1-4 0m9-1a1 1 0 1 0 0 2a1 1 0 0 0 0-2m-2 1a2 2 0 1 1 4 0a2 2 0 0 1-4 0"/></svg>
-</div>`;
+    loader.innerHTML = `<img src="attached_assets/pearl-skin-care-icon.png" alt="Loading" style="height:56px;width:auto;animation:pearlPulse 1.8s ease-in-out infinite;" />`;
     loader.style = `
       position: fixed; inset: 0; background: rgba(0,0,0,0.4);
       display: flex; align-items: center; justify-content: center;
-      z-index: 9999; font-size: 50px; color: white; 
+      z-index: 9999;
       transition: opacity 0.3s ease;
     `;
     document.body.appendChild(loader);

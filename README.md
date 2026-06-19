@@ -1,6 +1,6 @@
-# Skinova — Skincare Supplement Shop
+# Pearl Skin Care — Skincare Supplement Shop
 
-A full-featured e-commerce website for **Skinova**, a premium skincare supplement brand. Built with plain HTML, CSS, and JavaScript, powered by Firebase on the backend.
+A full-featured e-commerce website for **Pearl Skin Care**, a premium skincare supplement brand. Built with plain HTML, CSS, and JavaScript, powered by Firebase on the backend.
 
 **Live Site:** [GitHub Repo](https://github.com/trovic151hub/GlowUp)
 
@@ -47,7 +47,7 @@ A full-featured e-commerce website for **Skinova**, a premium skincare supplemen
 ## Project Structure
 
 ```
-skinova/
+pearl-skin-care/
 ├── index.html              # Home page
 ├── products.html           # Shop / all products page
 ├── cart.html               # Shopping cart
@@ -118,7 +118,7 @@ The site is deployed on **Vercel**. Push to the `master` branch of the GitHub re
 
 ## Brand
 
-- **Brand name:** Skinova
+- **Brand name:** Pearl Skin Care
 - **Tagline:** *Glow Your Skin Naturally*
-- **Logo:** `attached_assets/skinova_logo.png`
+- **Logo:** `attached_assets/pearl-skin-care-logo-full.png` (full lockup), `attached_assets/pearl-skin-care-icon.png` (icon-only / favicon)
 - **Primary colour:** `#8B4F6B` (rose/mauve)

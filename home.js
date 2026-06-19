@@ -29,16 +29,11 @@
       position: fixed; inset: 0; background: rgba(0,0,0,0.5);
       display: flex; align-items: center; justify-content: center;
       z-index: 9999; transition: opacity 0.45s cubic-bezier(0.4, 0, 0.2, 1);
+      backdrop-filter: blur(4px);
       opacity: 0;
     `;
     pageLoader.innerHTML = `
-      <!-- PLACE AT TOP OF BODY -->
-<div id="cartLoader" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-30 backdrop-blur-sm z-50">
-  <svg xmlns="http://www.w3.org/2000/svg" class="fas fa-shopping-cart text-white w-12 h-12 animate-pulse"  viewBox="0 0 16 16"><path fill="currentColor" d="M0 
-    2.5A.5.5 0 0 1 .5 2H2a.5.5 0 0 1 .485.379L2.89 4H14.5a.5.5 0 0 1 .485.621l-1.5 6A.5.5 0 0 1 13 11H4a.5.5 0 0 1-.485-.379L1.61 
-    3H.5a.5.5 0 0 1-.5-.5M3.14 5l.5 2H5V5zM6 5v2h2V5zm3 0v2h2V5zm3 0v2h1.36l.5-2zm1.11 3H12v2h.61zM11 8H9v2h2zM8 8H6v2h2zM5 8H3.89l.5 2H5zm0 
-    5a1 1 0 1 0 0 2a1 1 0 0 0 0-2m-2 1a2 2 0 1 1 4 0a2 2 0 0 1-4 0m9-1a1 1 0 1 0 0 2a1 1 0 0 0 0-2m-2 1a2 2 0 1 1 4 0a2 2 0 0 1-4 0"/></svg>
-</div>
+      <img src="attached_assets/pearl-skin-care-icon.png" alt="Loading" class="pearl-loader-icon" />
     `;
     document.body.appendChild(pageLoader);
   }
@@ -600,6 +595,7 @@ document.getElementById("sendResetLinkBtn")?.addEventListener("click", async () 
   
 // --- Open / Close Mini Cart ---
 function openMiniCart() {
+  renderMiniCart();
   overlay.classList.remove("hidden");
   document.documentElement.style.overflow = "hidden";
   document.body.style.overflow = "hidden";
@@ -1265,7 +1261,9 @@ function flyToCart(sourceEl, imgSrc) {
     top:           `${from.top  + from.height / 2 - 26}px`,
     left:          `${from.left + from.width  / 2 - 26}px`,
     pointerEvents: "none",
-    boxShadow:     "0 4px 16px rgba(0,0,0,0.18)",
+    boxSizing:     "border-box",
+    border:        "3px solid #fff",
+    boxShadow:     "0 6px 20px rgba(0,0,0,0.35), 0 0 0 1px rgba(0,0,0,0.08)",
     transition:    "none",
   });
   document.body.appendChild(clone);

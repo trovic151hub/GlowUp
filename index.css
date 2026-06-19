@@ -71,7 +71,7 @@ p, li, input, button, span, label, a {
   position: fixed;
   top: 0; left: 0;
   width: 100%; height: 100%;
-  background: rgba(250, 248, 245, 0.88);
+  background: rgba(0, 0, 0, 0.5);
   display: none;
   justify-content: center;
   align-items: center;
@@ -83,16 +83,14 @@ p, li, input, button, span, label, a {
   display: flex;
   opacity: 1;
 }
-.spinner {
-  width: 44px;
-  height: 44px;
-  border-radius: 50%;
-  border: 3px solid #e8d5cd;
-  border-top-color: #8B4F6B;
-  animation: spin 0.8s linear infinite;
+.pearl-loader-icon {
+  height: 56px;
+  width: auto;
+  animation: pearlPulse 1.8s ease-in-out infinite;
 }
-@keyframes spin {
-  to { transform: rotate(360deg); }
+@keyframes pearlPulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.65; transform: scale(1.08); }
 }
 
 /* ================= MOBILE MENU FALLBACK ================= */

@@ -1,7 +1,7 @@
 {
   "name": "glowup",
   "version": "1.0.0",
-  "description": "A full-featured e-commerce website for **Skinova**, a premium skincare supplement brand. Built with plain HTML, CSS, and JavaScript, powered by Firebase on the backend.",
+  "description": "A full-featured e-commerce website for **Pearl Skin Care**, a premium skincare supplement brand. Built with plain HTML, CSS, and JavaScript, powered by Firebase on the backend.",
   "main": "cart.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",

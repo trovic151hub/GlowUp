@@ -3,7 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Skinova Admin</title>
+  <title>Pearl Skin Care Admin</title>
+  <link rel="icon" type="image/png" href="attached_assets/pearl-skin-care-icon.png">
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
@@ -132,7 +133,7 @@
 <div id="login-view" class="min-h-screen flex items-center justify-center" style="background:#F5F2F3; overflow:auto;">
   <div class="w-full max-w-sm px-4 py-8">
     <div class="text-center mb-8">
-      <img src="attached_assets/skinova-logo-transparent.png" class="h-14 w-auto object-contain mx-auto mb-3" alt="Skinova" />
+      <img src="attached_assets/pearl-skin-care-logo-full.png" class="h-14 w-auto object-contain mx-auto mb-3" alt="Pearl Skin Care" />
       <p class="text-sm text-gray-400 mt-1 tracking-wide uppercase" style="font-size:0.7rem; letter-spacing:0.12em;">Admin Portal</p>
     </div>
     <div class="bg-white rounded-2xl shadow-sm p-8">
@@ -170,7 +171,7 @@
   <aside id="sidebar">
     <!-- Brand -->
     <div class="sidebar-brand flex items-center gap-3 px-4 py-5 border-b" style="border-color:rgba(255,255,255,0.08);">
-      <img src="attached_assets/skinova-logo-transparent.png" class="h-8 w-auto object-contain flex-shrink-0" alt="Skinova" />
+      <img src="attached_assets/pearl-skin-care-logo-full.png" class="h-8 w-auto object-contain flex-shrink-0" alt="Pearl Skin Care" />
       <div class="sidebar-text">
         <p class="text-xs font-medium" style="color:#9B7A87; letter-spacing:0.06em;">Admin Panel</p>
       </div>
@@ -2444,7 +2445,7 @@ async function downloadPdf(order) {
 
     // Logo — white rounded card so PNG background blends cleanly
     try {
-      const res = await fetch('https://raw.githubusercontent.com/trovic151hub/GlowUp/master/attached_assets/skinova-logo-transparent.png');
+      const res = await fetch('https://raw.githubusercontent.com/trovic151hub/GlowUp/master/attached_assets/pearl-skin-care-logo-full.png');
       const blob = await res.blob();
       const b64 = await new Promise((resolve, reject) => {
         const r = new FileReader(); r.onloadend = () => resolve(r.result); r.onerror = reject; r.readAsDataURL(blob);
@@ -2454,7 +2455,7 @@ async function downloadPdf(order) {
       doc.addImage(b64, 'PNG', margin, 6, 42, 20);
     } catch(e) {
       doc.setFont('helvetica', 'bold'); doc.setFontSize(18); doc.setTextColor('#ffffff');
-      doc.text('SKINOVA', margin, 22);
+      doc.text('PEARL SKIN CARE', margin, 22);
     }
 
     // RECEIPT label (right side)
@@ -2588,17 +2589,17 @@ async function downloadPdf(order) {
     doc.setDrawColor(borderCol); doc.setLineWidth(0.4); doc.line(0, fy - 2, pageWidth, fy - 2);
 
     doc.setFont('helvetica', 'bold'); doc.setFontSize(9); doc.setTextColor(brand);
-    doc.text('Skinova', margin, fy + 5);
+    doc.text('Pearl Skin Care', margin, fy + 5);
     doc.setFont('helvetica', 'normal'); doc.setFontSize(7.5); doc.setTextColor(subtle);
     doc.text('ibitoyeifeoluwafunmi@gmail.com  |  +2347036594806', margin, fy + 11);
 
     doc.setFont('helvetica', 'italic'); doc.setFontSize(8.5); doc.setTextColor(muted);
-    doc.text('Thank you for shopping with Skinova!', pageWidth / 2, fy + 8, { align: 'center' });
+    doc.text('Thank you for shopping with Pearl Skin Care!', pageWidth / 2, fy + 8, { align: 'center' });
 
     doc.setFont('helvetica', 'normal'); doc.setFontSize(7.5); doc.setTextColor(muted);
     doc.text(`Ref: ${paymentRef}`, pageWidth - margin, fy + 11, { align: 'right' });
 
-    doc.save(`Skinova_Receipt_${paymentRef}.pdf`);
+    doc.save(`Pearl Skin Care_Receipt_${paymentRef}.pdf`);
   } catch (err) { showAlert('PDF failed: ' + (err.message || err), 'Error'); }
 }
 
@@ -2613,7 +2614,7 @@ async function sendReceiptEmail(order) {
   const orderItemsHtml = items.map(i => `<tr><td>${i.name || '—'}</td><td align="center">${i.quantity || 0}</td><td align="right">₦${Number(i.price || 0).toLocaleString()}</td><td align="right">₦${(Number(i.price || 0) * (i.quantity || 0)).toLocaleString()}</td></tr>`).join('');
   await emailjs.send('service_k1xpqh8', 'template_nlno322', {
     to_email: email, customer_name: fullName, order_id: payment.reference || order.id,
-    logo_url: 'https://raw.githubusercontent.com/trovic151hub/GlowUp/master/attached_assets/skinova-logo-transparent.png',
+    logo_url: 'https://raw.githubusercontent.com/trovic151hub/GlowUp/master/attached_assets/pearl-skin-care-logo-full.png',
     order_name: fullName, order_email: email, order_phone: shipping.phone || '—',
     payment_method: payment.method || '—', payment_ref: payment.reference || order.id,
     order_items: orderItemsHtml, order_total: orderTotal.toLocaleString(),
@@ -3205,15 +3206,15 @@ const DEFAULT_LEGAL_CONTENT = {
     lastUpdated: 'April 2025',
     bodyHtml: `
     <p class="text-sm leading-relaxed text-[#4A3A34] mb-6">
-      Welcome to Skinova. By accessing or using our website and purchasing our products, you agree to be bound by the following terms and conditions. Please read them carefully before placing an order.
+      Welcome to Pearl Skin Care. By accessing or using our website and purchasing our products, you agree to be bound by the following terms and conditions. Please read them carefully before placing an order.
     </p>
 
     <h2 class="section-title">1. Products & Orders</h2>
     <p class="text-sm leading-relaxed text-[#4A3A34]">
-      All products listed on Skinova are subject to availability. We reserve the right to discontinue any product at any time. Orders are confirmed only upon successful payment and a confirmation message from us via WhatsApp or email.
+      All products listed on Pearl Skin Care are subject to availability. We reserve the right to discontinue any product at any time. Orders are confirmed only upon successful payment and a confirmation message from us via WhatsApp or email.
     </p>
     <p class="text-sm leading-relaxed text-[#4A3A34] mt-3">
-      Skinova does not manufacture its products. We source our skincare supplements from vetted third-party suppliers and manufacturers, and sell them to you under the Skinova brand.
+      Some Pearl Skin Care products are produced directly by us, while others are sourced from vetted third-party suppliers and manufacturers and sold to you under the Pearl Skin Care brand. Either way, every product is reviewed for quality before it's listed on our site.
     </p>
 
     <h2 class="section-title">2. Pricing</h2>
@@ -3223,7 +3224,7 @@ const DEFAULT_LEGAL_CONTENT = {
 
     <h2 class="section-title">3. Payments</h2>
     <p class="text-sm leading-relaxed text-[#4A3A34]">
-      We accept payments via Paystack (card payments) and WhatsApp order confirmations. All transactions are processed securely. Skinova does not store your card details.
+      We accept payments via Paystack (card payments) and WhatsApp order confirmations. All transactions are processed securely. Pearl Skin Care does not store your card details.
     </p>
 
     <h2 class="section-title">4. Refund & Return Policy</h2>
@@ -3236,7 +3237,7 @@ const DEFAULT_LEGAL_CONTENT = {
 
     <h2 class="section-title">5. Shipping & Delivery</h2>
     <p class="text-sm leading-relaxed text-[#4A3A34]">
-      We deliver within Lagos and to other states across Nigeria. Delivery timelines are estimates and may vary based on location and demand. Skinova is not liable for delays caused by third-party logistics providers. Full details are in our <a href="shipping-policy.html" class="text-[#8B4F6B] hover:underline">Shipping Policy</a>.
+      We deliver nationwide across Nigeria and internationally. Delivery timelines are estimates and may vary based on location and demand. International shipping fees are confirmed via WhatsApp before an order is finalized. Pearl Skin Care is not liable for delays caused by third-party logistics providers. Full details are in our <a href="shipping-policy.html" class="text-[#8B4F6B] hover:underline">Shipping Policy</a>.
     </p>
 
     <h2 class="section-title">6. Product Use Disclaimer</h2>
@@ -3246,12 +3247,12 @@ const DEFAULT_LEGAL_CONTENT = {
 
     <h2 class="section-title">7. Intellectual Property</h2>
     <p class="text-sm leading-relaxed text-[#4A3A34]">
-      All content on this website — including text, images, logos, and design — is the property of Skinova and may not be reproduced or distributed without prior written consent.
+      All content on this website — including text, images, logos, and design — is the property of Pearl Skin Care and may not be reproduced or distributed without prior written consent.
     </p>
 
     <h2 class="section-title">8. Changes to These Terms</h2>
     <p class="text-sm leading-relaxed text-[#4A3A34]">
-      Skinova reserves the right to update these terms at any time. Continued use of the website after changes are made constitutes acceptance of the revised terms.
+      Pearl Skin Care reserves the right to update these terms at any time. Continued use of the website after changes are made constitutes acceptance of the revised terms.
     </p>
 
     <h2 class="section-title">9. Contact</h2>
@@ -3264,12 +3265,12 @@ const DEFAULT_LEGAL_CONTENT = {
     lastUpdated: 'April 2025',
     bodyHtml: `
     <p class="text-sm leading-relaxed text-[#4A3A34] mb-6">
-      At Skinova, your privacy matters to us. This policy explains what information we collect, how we use it, and how we keep it safe when you visit our website or make a purchase.
+      At Pearl Skin Care, your privacy matters to us. This policy explains what information we collect, how we use it, and how we keep it safe when you visit our website or make a purchase.
     </p>
 
     <h2 class="section-title">1. Information We Collect</h2>
     <p class="text-sm leading-relaxed text-[#4A3A34]">
-      When you interact with Skinova, we may collect the following:
+      When you interact with Pearl Skin Care, we may collect the following:
     </p>
     <ul class="list-disc list-inside text-sm text-[#4A3A34] mt-3 space-y-1 ml-2">
       <li>Name, phone number, and email address (provided during checkout or contact)</li>
@@ -3338,7 +3339,7 @@ const DEFAULT_LEGAL_CONTENT = {
     lastUpdated: 'June 2026',
     bodyHtml: `
     <p class="text-sm leading-relaxed text-[#4A3A34] mb-6">
-      At Skinova, customer satisfaction is important to us. If you are not satisfied with your purchase, please review our refund policy below.
+      At Pearl Skin Care, customer satisfaction is important to us. If you are not satisfied with your purchase, please review our refund policy below.
     </p>
 
     <h2 class="section-title">Eligibility for Refunds</h2>
@@ -3382,7 +3383,7 @@ const DEFAULT_LEGAL_CONTENT = {
     lastUpdated: 'June 2026',
     bodyHtml: `
     <p class="text-sm leading-relaxed text-[#4A3A34] mb-6">
-      At Skinova, we strive to deliver your orders as quickly and efficiently as possible.
+      At Pearl Skin Care, we deliver nationwide across Nigeria and internationally. We strive to deliver your orders as quickly and efficiently as possible.
     </p>
 
     <h2 class="section-title">Order Processing</h2>
@@ -3396,7 +3397,8 @@ const DEFAULT_LEGAL_CONTENT = {
     </p>
     <ul class="list-disc list-inside text-sm text-[#4A3A34] mt-3 space-y-1 ml-2">
       <li>Lagos: 1–3 business days</li>
-      <li>Other locations within Nigeria: 3–7 business days</li>
+      <li>Other states across Nigeria: 3–7 business days</li>
+      <li>International orders: delivery timelines vary by destination and will be confirmed with you after checkout</li>
     </ul>
     <p class="text-sm leading-relaxed text-[#4A3A34] mt-3">
       Please note that delivery times are estimates and may be affected by factors beyond our control.
@@ -3404,7 +3406,7 @@ const DEFAULT_LEGAL_CONTENT = {
 
     <h2 class="section-title">Shipping Charges</h2>
     <p class="text-sm leading-relaxed text-[#4A3A34]">
-      Shipping fees, where applicable, will be displayed during checkout before payment is completed.
+      Shipping fees for orders within Nigeria are displayed during checkout before payment is completed. For international orders, the shipping fee is confirmed with you via WhatsApp before your order is finalized.
     </p>
 
     <h2 class="section-title">Delivery Issues</h2>

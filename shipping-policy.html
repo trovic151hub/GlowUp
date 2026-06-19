@@ -3,7 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Shipping & Delivery Policy — Skinova</title>
+  <title>Shipping & Delivery Policy — Pearl Skin Care</title>
+  <link rel="icon" type="image/png" href="attached_assets/pearl-skin-care-icon.png">
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -40,7 +41,7 @@
       <i class="fas fa-arrow-left"></i> Back to Home
     </a>
     <span class="text-[#4A3A34]">|</span>
-    <img src="attached_assets/skinova-logo-transparent.png" class="h-8 w-auto object-contain" alt="Skinova" />
+    <img src="attached_assets/pearl-skin-care-logo-full.png" class="h-8 w-auto object-contain" alt="Pearl Skin Care" />
   </header>
 
   <!-- Content -->
@@ -52,7 +53,7 @@
     <div id="legalBody">
 
     <p class="text-sm leading-relaxed text-[#4A3A34] mb-6">
-      At Skinova, we strive to deliver your orders as quickly and efficiently as possible.
+      At Pearl Skin Care, we deliver nationwide across Nigeria and internationally. We strive to deliver your orders as quickly and efficiently as possible.
     </p>
 
     <h2 class="section-title">Order Processing</h2>
@@ -66,7 +67,8 @@
     </p>
     <ul class="list-disc list-inside text-sm text-[#4A3A34] mt-3 space-y-1 ml-2">
       <li>Lagos: 1–3 business days</li>
-      <li>Other locations within Nigeria: 3–7 business days</li>
+      <li>Other states across Nigeria: 3–7 business days</li>
+      <li>International orders: delivery timelines vary by destination and will be confirmed with you after checkout</li>
     </ul>
     <p class="text-sm leading-relaxed text-[#4A3A34] mt-3">
       Please note that delivery times are estimates and may be affected by factors beyond our control.
@@ -74,7 +76,7 @@
 
     <h2 class="section-title">Shipping Charges</h2>
     <p class="text-sm leading-relaxed text-[#4A3A34]">
-      Shipping fees, where applicable, will be displayed during checkout before payment is completed.
+      Shipping fees for orders within Nigeria are displayed during checkout before payment is completed. For international orders, the shipping fee is confirmed with you via WhatsApp before your order is finalized.
     </p>
 
     <h2 class="section-title">Delivery Issues</h2>
@@ -101,7 +103,7 @@
     <div class="max-w-screen-xl mx-auto px-8 py-14 grid grid-cols-1 md:grid-cols-3 gap-12">
       <div>
         <div class="flex items-center gap-2 mb-3">
-          <img src="attached_assets/skinova-logo-transparent.png" class="h-10 w-auto object-contain" alt="Skinova" />
+          <img src="attached_assets/pearl-skin-care-logo-full.png" class="h-10 w-auto object-contain" alt="Pearl Skin Care" />
         </div>
         <p class="text-sm leading-relaxed text-[#6B5B55]">Premium skincare supplements for radiant, healthy skin. Beauty starts from within.</p>
         <div class="flex gap-4 mt-5">
@@ -130,7 +132,7 @@
       </div>
     </div>
     <div class="border-t border-white/5 max-w-screen-xl mx-auto px-8 py-5 flex flex-col md:flex-row justify-between items-center gap-3">
-      <p class="footer-bottom">© 2025 Skinova. All rights reserved.</p>
+      <p class="footer-bottom">© 2025 Pearl Skin Care. All rights reserved.</p>
       <p class="footer-bottom">Powered by <span class="text-[#8B4F6B] font-bold text-sm">Vic.Dev</span></p>
     </div>
   </footer>
@@ -144,7 +146,7 @@
         const data = doc.data();
         if (data.title) {
           document.getElementById("legalTitle").textContent = data.title;
-          document.title = data.title + " — Skinova";
+          document.title = data.title + " — Pearl Skin Care";
         }
         if (data.lastUpdated) document.getElementById("legalUpdated").textContent = "Last updated: " + data.lastUpdated;
         if (data.bodyHtml) document.getElementById("legalBody").innerHTML = data.bodyHtml;
