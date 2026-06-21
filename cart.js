@@ -1127,10 +1127,15 @@ Thank you! 🙏
     renderCart([]);
     clearFormData();
 
+    // Brief delay so the success screen doesn't flash in underneath the
+    // mobile "Open with" app chooser before the user has picked an app
+    await new Promise(resolve => setTimeout(resolve, 1500));
+
     // Show success page
     checkoutStep.classList.add("hidden");
     completeStep.classList.remove("hidden");
     setActiveBreadcrumb("complete");
+    hideLoader();
     confetti();
   }
 
