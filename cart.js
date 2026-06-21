@@ -12,7 +12,7 @@
   // hidden→visible blip before the user picks anything, which would otherwise
   // resolve this immediately. Falls back to a timeout in case the user picks
   // something that never backgrounds the tab (e.g. a browser option).
-  function waitForAppReturn(maxWait = 8000, minHiddenMs = 1200) {
+  function waitForAppReturn(maxWait = 8000, minHiddenMs = 5000) {
     return new Promise(resolve => {
       let hiddenAt = null;
       let done = false;
