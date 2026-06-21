@@ -7,11 +7,14 @@
 
   // Waits until the page is backgrounded (user left for the WhatsApp app) and then
   // foregrounded again (user returned), so the UI doesn't update while a system
-  // "Open with" chooser is still on screen. Falls back to a timeout in case the
-  // user picks something that never backgrounds the tab (e.g. a browser option).
-  function waitForAppReturn(maxWait = 60000) {
+  // "Open with" chooser is still on screen. Requires the hidden state to last at
+  // least minHiddenMs — the chooser sheet itself can cause a near-instant
+  // hidden→visible blip before the user picks anything, which would otherwise
+  // resolve this immediately. Falls back to a timeout in case the user picks
+  // something that never backgrounds the tab (e.g. a browser option).
+  function waitForAppReturn(maxWait = 8000, minHiddenMs = 1200) {
     return new Promise(resolve => {
-      let wentHidden = false;
+      let hiddenAt = null;
       let done = false;
       const finish = () => {
         if (done) return;
@@ -22,9 +25,13 @@
       };
       const onVisibilityChange = () => {
         if (document.hidden) {
-          wentHidden = true;
-        } else if (wentHidden) {
+          hiddenAt = Date.now();
+        } else if (hiddenAt && (Date.now() - hiddenAt) >= minHiddenMs) {
           finish();
+        } else {
+          // Became visible again too quickly to be a real app switch — likely
+          // just the chooser sheet appearing/dismissing. Keep waiting.
+          hiddenAt = null;
         }
       };
       document.addEventListener("visibilitychange", onVisibilityChange);
