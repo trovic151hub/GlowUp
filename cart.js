@@ -1109,7 +1109,7 @@ Thank you! 🙏
       payment: {
         method: "whatsapp",
         reference: whatsappPaymentRef,
-        status: "paid"
+        status: "pending"
       },
       pricing: {
         subtotal,
@@ -1301,11 +1301,10 @@ function updatePaymentVisibility() {
 
   if (isNigeria) {
     paystackOption.classList.remove("hidden");
-    whatsappOption.classList.add("hidden");
   } else {
     paystackOption.classList.add("hidden");
-    whatsappOption.classList.remove("hidden");
   }
+  whatsappOption.classList.remove("hidden");
 }
 
 

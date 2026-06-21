@@ -1,0 +1,154 @@
+<style>
+    body {
+      font-family: Arial, sans-serif;
+      color: #333333;
+      background-color: #FAF8F5;
+      margin: 0;
+      padding: 0;
+    }
+    .container {
+      max-width: 600px;
+      margin: 20px auto;
+      background-color: #ffffff;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    }
+    .header {
+      text-align: center;
+      color: #8B3A52;
+    }
+    .header h1 {
+      margin: 0;
+      font-size: 22px;
+      font-family: Georgia, 'Times New Roman', serif;
+      letter-spacing: 0.04em;
+    }
+    .section {
+      margin-top: 20px;
+    }
+    .section h2 {
+      font-size: 18px;
+      color: #444444;
+      margin-bottom: 10px;
+    }
+    .section p {
+      margin: 4px 0;
+    }
+    .info-box {
+      background-color: #f9f9f9;
+      padding: 12px;
+      border-radius: 8px;
+      margin-bottom: 10px;
+    }
+    .total {
+      font-weight: bold;
+      font-size: 16px;
+      margin-top: 10px;
+      color: #000000;
+      text-align: right;
+    }
+    .footer {
+      margin-top: 30px;
+      font-size: 12px;
+      color: #888888;
+      text-align: center;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+
+    <!-- HEADER -->
+    <div class="header">
+      <img
+        src="{{logo_url}}"
+        alt="Pearl Skin Care"
+        width="200"
+        style="
+          display:block;
+          margin:0 auto 14px;
+          max-width:200px;
+          height:auto;
+        "
+      />
+      <h1>Order Confirmed</h1>
+      <p>Thank you for shopping with us!</p>
+    </div>
+
+    <!-- ORDER META -->
+    <div class="section info-box" style="display:flex; justify-content:space-between;">
+      <p><strong>Order Ref:</strong> {{payment_ref}}</p>
+      <p><strong>Date:</strong> {{order_date}}</p>
+    </div>
+
+    <!-- CUSTOMER DETAILS -->
+    <div class="section info-box">
+      <h2>Customer Details</h2>
+      <p><strong>Name:</strong> {{order_name}}</p>
+      <p><strong>Email:</strong> {{order_email}}</p>
+      <p><strong>Phone:</strong> {{order_phone}}</p>
+    </div>
+
+    <!-- DELIVERY DETAILS -->
+    <div class="section info-box">
+      <h2>Delivery Details</h2>
+      <p><strong>Company:</strong> {{delivery_company}}</p>
+      <p><strong>Type:</strong> {{delivery_type}}</p>
+      <p><strong>Terminal:</strong> {{delivery_terminal}}</p>
+      <p><strong>State:</strong> {{delivery_state}}</p>
+      <p><strong>LGA:</strong> {{delivery_lga}}</p>
+      <p><strong>Address:</strong> {{delivery_address}}</p>
+      <p><strong>Delivery Fee:</strong> ₦{{delivery_fee}}</p>
+      <p><strong>Total Weight:</strong> {{total_weight}} kg</p>
+    </div>
+
+    <!-- ORDER ITEMS TABLE -->
+    <div class="section">
+      <h2>Order Items</h2>
+
+      <table
+        width="100%"
+        cellpadding="8"
+        cellspacing="0"
+        style="
+          border-collapse:collapse;
+          background:#f8f8f8;
+          border-radius:8px;
+          overflow:hidden;
+          font-size:14px;
+        "
+      >
+        <thead>
+          <tr style="background:#8B3A52; color:#ffffff;">
+            <th align="left">Item</th>
+            <th align="center">Qty</th>
+            <th align="right">Price</th>
+            <th align="right">Total</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          {{{order_items}}}
+        </tbody>
+      </table>
+
+      <p class="total">Order Total: ₦{{order_total}}</p>
+    </div>
+
+    <!-- PAYMENT INFO -->
+    <div class="section info-box">
+      <h2>Payment Info</h2>
+      <p><strong>Method:</strong> {{payment_method}}</p>
+      <p><strong>Ref:</strong> {{payment_ref}}</p>
+    </div>
+
+    <!-- FOOTER -->
+    <div class="footer">
+      Warm regards,<br />
+      Pearl Skin Care Team
+    </div>
+
+  </div>
+</body>

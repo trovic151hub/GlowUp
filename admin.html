@@ -2310,63 +2310,73 @@ function renderOrderModal(order) {
     delBtn.onclick = () => ordDeleteOrder(order.id);
     statusControls.appendChild(delBtn);
 
-    if (isInternationalOrder(order)) {
+    const isWhatsAppOrder = (order.payment?.method || '').toLowerCase() === 'whatsapp';
+    const isIntl = isInternationalOrder(order);
+
+    if (isWhatsAppOrder || isIntl) {
       const div = document.createElement('div');
       div.className = 'p-4 border border-gray-100 rounded-xl bg-gray-50 flex flex-col gap-2';
-      div.innerHTML = '<p class="text-xs font-semibold text-gray-500 uppercase tracking-wider">International Controls</p>';
-      const confirmBtn = document.createElement('button');
-      confirmBtn.className = 'w-full bg-green-600 text-white px-3 py-2 rounded-xl text-sm hover:bg-green-700 transition-colors';
-      confirmBtn.innerText = delivery.fulfilled ? 'Payment Confirmed ✓' : 'Confirm Payment';
-      confirmBtn.disabled = !!delivery.fulfilled;
-      confirmBtn.onclick = async () => {
-        try { await db.collection('orders').doc(order.id).update({'delivery.fulfilled': true, 'shipping.status': 'processing'}); confirmBtn.innerText = 'Payment Confirmed ✓'; confirmBtn.disabled = true; showAlert('Payment confirmed!', 'Success'); }
-        catch (err) { showAlert(err.message, 'Error'); }
-      };
-      div.appendChild(confirmBtn);
-      // Fee input with ₦ prefix
-      const feeWrap = document.createElement('div');
-      feeWrap.className = 'flex items-stretch rounded-xl overflow-hidden border border-gray-200 bg-white focus-within:border-[#8B3A52] transition-colors';
-      const feePrefix = document.createElement('span');
-      feePrefix.className = 'flex items-center px-3 text-sm text-gray-400 bg-gray-50 border-r border-gray-200 flex-shrink-0 font-medium';
-      feePrefix.textContent = '₦';
-      const feeInput = document.createElement('input');
-      feeInput.type = 'number'; feeInput.placeholder = '0'; feeInput.value = delivery.deliveryFee || 0;
-      feeInput.className = 'flex-1 px-3 py-2.5 text-sm text-gray-700 bg-transparent outline-none border-none min-w-0';
-      feeWrap.appendChild(feePrefix); feeWrap.appendChild(feeInput);
-      div.appendChild(feeWrap);
+      div.innerHTML = `<p class="text-xs font-semibold text-gray-500 uppercase tracking-wider">${isIntl ? 'International Controls' : 'Payment Confirmation'}</p>`;
 
-      // Delivery type toggle
-      let currentDeliveryType = delivery.type || 'home';
-      const typeOpts = [
-        { val: 'home',     label: 'Home',     icon: 'fa-house' },
-        { val: 'terminal', label: 'Terminal', icon: 'fa-warehouse' },
-      ];
-      const typeToggle = document.createElement('div');
-      typeToggle.className = 'flex rounded-xl overflow-hidden border border-gray-200';
-      typeOpts.forEach((opt, idx) => {
-        const btn = document.createElement('button');
-        btn.dataset.val = opt.val;
-        btn.className = `flex-1 py-2.5 text-xs font-medium transition-colors flex items-center justify-center gap-1.5${idx > 0 ? ' border-l border-gray-200' : ''}`;
-        btn.style.cssText = currentDeliveryType === opt.val ? 'background:#F3EEF0;color:#8B3A52;' : 'background:#fff;color:#9ca3af;';
-        btn.innerHTML = `<i class="fas ${opt.icon} text-[10px]"></i>${opt.label}`;
-        btn.onclick = () => {
-          currentDeliveryType = opt.val;
-          typeToggle.querySelectorAll('button').forEach(b => {
-            b.style.cssText = b.dataset.val === opt.val ? 'background:#F3EEF0;color:#8B3A52;' : 'background:#fff;color:#9ca3af;';
-          });
+      if (isWhatsAppOrder) {
+        const confirmBtn = document.createElement('button');
+        confirmBtn.className = 'w-full bg-green-600 text-white px-3 py-2 rounded-xl text-sm hover:bg-green-700 transition-colors';
+        confirmBtn.innerText = delivery.fulfilled ? 'Payment Confirmed ✓' : 'Confirm Payment';
+        confirmBtn.disabled = !!delivery.fulfilled;
+        confirmBtn.onclick = async () => {
+          try { await db.collection('orders').doc(order.id).update({'delivery.fulfilled': true, 'shipping.status': 'processing', 'payment.status': 'paid'}); confirmBtn.innerText = 'Payment Confirmed ✓'; confirmBtn.disabled = true; showAlert('Payment confirmed!', 'Success'); }
+          catch (err) { showAlert(err.message, 'Error'); }
         };
-        typeToggle.appendChild(btn);
-      });
-      div.appendChild(typeToggle);
+        div.appendChild(confirmBtn);
+      }
 
-      const saveBtn = document.createElement('button');
-      saveBtn.className = 'w-full bg-blue-600 text-white px-3 py-2.5 rounded-xl text-sm font-medium hover:bg-blue-700 transition-colors flex items-center justify-center gap-2';
-      saveBtn.innerHTML = '<i class="fas fa-floppy-disk text-xs"></i>Save Delivery Info';
-      saveBtn.onclick = async () => {
-        try { await db.collection('orders').doc(order.id).update({'delivery.deliveryFee': Number(feeInput.value) || 0, 'delivery.type': currentDeliveryType}); showAlert('Delivery updated!', 'Success'); }
-        catch (err) { showAlert(err.message, 'Error'); }
-      };
-      div.appendChild(saveBtn);
+      if (isIntl) {
+        // Fee input with ₦ prefix
+        const feeWrap = document.createElement('div');
+        feeWrap.className = 'flex items-stretch rounded-xl overflow-hidden border border-gray-200 bg-white focus-within:border-[#8B3A52] transition-colors';
+        const feePrefix = document.createElement('span');
+        feePrefix.className = 'flex items-center px-3 text-sm text-gray-400 bg-gray-50 border-r border-gray-200 flex-shrink-0 font-medium';
+        feePrefix.textContent = '₦';
+        const feeInput = document.createElement('input');
+        feeInput.type = 'number'; feeInput.placeholder = '0'; feeInput.value = delivery.deliveryFee || 0;
+        feeInput.className = 'flex-1 px-3 py-2.5 text-sm text-gray-700 bg-transparent outline-none border-none min-w-0';
+        feeWrap.appendChild(feePrefix); feeWrap.appendChild(feeInput);
+        div.appendChild(feeWrap);
+
+        // Delivery type toggle
+        let currentDeliveryType = delivery.type || 'home';
+        const typeOpts = [
+          { val: 'home',     label: 'Home',     icon: 'fa-house' },
+          { val: 'terminal', label: 'Terminal', icon: 'fa-warehouse' },
+        ];
+        const typeToggle = document.createElement('div');
+        typeToggle.className = 'flex rounded-xl overflow-hidden border border-gray-200';
+        typeOpts.forEach((opt, idx) => {
+          const btn = document.createElement('button');
+          btn.dataset.val = opt.val;
+          btn.className = `flex-1 py-2.5 text-xs font-medium transition-colors flex items-center justify-center gap-1.5${idx > 0 ? ' border-l border-gray-200' : ''}`;
+          btn.style.cssText = currentDeliveryType === opt.val ? 'background:#F3EEF0;color:#8B3A52;' : 'background:#fff;color:#9ca3af;';
+          btn.innerHTML = `<i class="fas ${opt.icon} text-[10px]"></i>${opt.label}`;
+          btn.onclick = () => {
+            currentDeliveryType = opt.val;
+            typeToggle.querySelectorAll('button').forEach(b => {
+              b.style.cssText = b.dataset.val === opt.val ? 'background:#F3EEF0;color:#8B3A52;' : 'background:#fff;color:#9ca3af;';
+            });
+          };
+          typeToggle.appendChild(btn);
+        });
+        div.appendChild(typeToggle);
+
+        const saveBtn = document.createElement('button');
+        saveBtn.className = 'w-full bg-blue-600 text-white px-3 py-2.5 rounded-xl text-sm font-medium hover:bg-blue-700 transition-colors flex items-center justify-center gap-2';
+        saveBtn.innerHTML = '<i class="fas fa-floppy-disk text-xs"></i>Save Delivery Info';
+        saveBtn.onclick = async () => {
+          try { await db.collection('orders').doc(order.id).update({'delivery.deliveryFee': Number(feeInput.value) || 0, 'delivery.type': currentDeliveryType}); showAlert('Delivery updated!', 'Success'); }
+          catch (err) { showAlert(err.message, 'Error'); }
+        };
+        div.appendChild(saveBtn);
+      }
+
       intControls.appendChild(div);
     }
   }
@@ -2611,10 +2621,13 @@ async function sendReceiptEmail(order) {
   const totalWeight = items.reduce((s, i) => s + ((i.weight || 0) * (i.quantity || 0)), 0);
   const subtotal = items.reduce((s, i) => s + ((Number(i.price) || 0) * (i.quantity || 0)), 0);
   const orderTotal = Number(order.total ?? subtotal + deliveryFee);
-  const orderItemsHtml = items.map(i => `<tr><td>${i.name || '—'}</td><td align="center">${i.quantity || 0}</td><td align="right">₦${Number(i.price || 0).toLocaleString()}</td><td align="right">₦${(Number(i.price || 0) * (i.quantity || 0)).toLocaleString()}</td></tr>`).join('');
+  const orderItemsHtml = items.map(i => `<tr><td style="padding:8px 6px;border-bottom:1px solid #f0ebe7;color:#4A3A34;">${i.name || '—'}</td><td align="center" style="padding:8px 6px;border-bottom:1px solid #f0ebe7;color:#4A3A34;">${i.quantity || 0}</td><td align="right" style="padding:8px 6px;border-bottom:1px solid #f0ebe7;color:#4A3A34;">₦${Number(i.price || 0).toLocaleString()}</td><td align="right" style="padding:8px 6px;border-bottom:1px solid #f0ebe7;color:#4A3A34;font-weight:600;">₦${(Number(i.price || 0) * (i.quantity || 0)).toLocaleString()}</td></tr>`).join('');
+  const createdAtDate = order.createdAt?.toDate?.() || (order.createdAt ? new Date(order.createdAt) : new Date());
+  const orderDate = createdAtDate.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
   await emailjs.send('service_k1xpqh8', 'template_nlno322', {
     to_email: email, customer_name: fullName, order_id: payment.reference || order.id,
     logo_url: 'https://raw.githubusercontent.com/trovic151hub/GlowUp/master/attached_assets/pearl-skin-care-logo-full.png',
+    order_date: orderDate,
     order_name: fullName, order_email: email, order_phone: shipping.phone || '—',
     payment_method: payment.method || '—', payment_ref: payment.reference || order.id,
     order_items: orderItemsHtml, order_total: orderTotal.toLocaleString(),
