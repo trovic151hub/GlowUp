@@ -9,7 +9,7 @@
   // foregrounded again (user returned), so the UI doesn't update while a system
   // "Open with" chooser is still on screen. Falls back to a timeout in case the
   // user picks something that never backgrounds the tab (e.g. a browser option).
-  function waitForAppReturn(maxWait = 8000) {
+  function waitForAppReturn(maxWait = 60000) {
     return new Promise(resolve => {
       let wentHidden = false;
       let done = false;
