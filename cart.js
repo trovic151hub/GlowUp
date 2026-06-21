@@ -5,6 +5,33 @@
     return "WA-" + Date.now() + "-" + Math.floor(Math.random() * 1000);
   }
 
+  // Waits until the page is backgrounded (user left for the WhatsApp app) and then
+  // foregrounded again (user returned), so the UI doesn't update while a system
+  // "Open with" chooser is still on screen. Falls back to a timeout in case the
+  // user picks something that never backgrounds the tab (e.g. a browser option).
+  function waitForAppReturn(maxWait = 8000) {
+    return new Promise(resolve => {
+      let wentHidden = false;
+      let done = false;
+      const finish = () => {
+        if (done) return;
+        done = true;
+        document.removeEventListener("visibilitychange", onVisibilityChange);
+        clearTimeout(fallback);
+        resolve();
+      };
+      const onVisibilityChange = () => {
+        if (document.hidden) {
+          wentHidden = true;
+        } else if (wentHidden) {
+          finish();
+        }
+      };
+      document.addEventListener("visibilitychange", onVisibilityChange);
+      const fallback = setTimeout(finish, maxWait);
+    });
+  }
+
   // ==================== LOADER ====================
   let loader = document.getElementById("cartLoader");
   document.body.style.overflow = "hidden";
@@ -1127,9 +1154,10 @@ Thank you! 🙏
     renderCart([]);
     clearFormData();
 
-    // Brief delay so the success screen doesn't flash in underneath the
-    // mobile "Open with" app chooser before the user has picked an app
-    await new Promise(resolve => setTimeout(resolve, 1500));
+    // Wait for the user to leave for WhatsApp and come back (or a fallback
+    // timeout) before revealing the success screen, so it doesn't appear
+    // underneath the still-open mobile "Open with" app chooser.
+    await waitForAppReturn();
 
     // Show success page
     checkoutStep.classList.add("hidden");
