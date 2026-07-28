@@ -1442,9 +1442,9 @@ function updatePaymentVisibility() {
 
   if (isNigeria) {
     paystackOption.classList.remove("hidden");
-    paystackOption.style.opacity = "";
-    paystackOption.style.pointerEvents = "";
-    paystackOption.title = "";
+    paystackOption.style.opacity = "0.4";
+    paystackOption.style.pointerEvents = "none";
+    paystackOption.title = "Paystack activation pending";
     flutterwaveOption.classList.remove("hidden");
     flutterwaveOption.style.opacity = "";
     flutterwaveOption.style.pointerEvents = "";
