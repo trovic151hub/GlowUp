@@ -11,6 +11,7 @@ module.exports = (req, res) => {
       appId: e('FIREBASE_APP_ID')
     },
     paystackKey: e('PAYSTACK_PUBLIC_KEY'),
+    flutterwaveKey: e('FLUTTERWAVE_PUBLIC_KEY'),
     cloudinary: {
       cloudName: e('CLOUDINARY_CLOUD_NAME'),
       uploadPreset: e('CLOUDINARY_UPLOAD_PRESET')
