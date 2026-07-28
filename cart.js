@@ -663,8 +663,8 @@ countryTomSelect.on("change", async (value) => {
 });
 
 function updateLgaVisibility(stateValue) {
-  const country = (countrySelect.value || "").toLowerCase();
-  const state = (stateValue !== undefined ? stateValue : stateSelect.value || "").toLowerCase();
+  const country = (countryTomSelect.getValue() || countrySelect.value || "").toLowerCase();
+  const state = (stateValue !== undefined ? stateValue : (stateTomSelect.getValue() || stateSelect.value || "")).toLowerCase();
   if (country === "nigeria" && state.includes("lagos")) {
     lgaWrapper.classList.remove("hidden");
     try {
@@ -870,6 +870,7 @@ function updateDeliveryVisibility() {
 
   // ==================== PLACE ORDER ====================
   placeOrderBtn.onclick = async () => {
+  try {
   // 1️⃣ Validate shipping form first
   if (!validateShippingForm()) {
     showNotification("Please fill in all required fields.");
@@ -1048,6 +1049,10 @@ card.appendChild(weightEl);
 
   // Clear temporary shipping data from localStorage
   localStorage.removeItem("checkoutState");
+  } catch(err) {
+    console.error("Place order error:", err);
+    showNotification("Something went wrong. Please try again.", "error");
+  }
 };
 
 document.getElementById("shipping-edit-btn").onclick = () => {
@@ -1074,6 +1079,8 @@ summaryPlaceOrderBtn.addEventListener("click", async () => {
   }
 
   showLoader();
+
+  try {
 
   // Collect shipping data
   const shippingData = {
@@ -1247,6 +1254,11 @@ Thank you! 🙏
   }
 
   else if (selectedPayment === "flutterwave") {
+    if (typeof FlutterwaveCheckout !== "function") {
+      hideLoader();
+      showNotification("Payment system not available. Please refresh and try again.", "error");
+      return;
+    }
     const totalAmount = total;
     const txRef = "FLW-" + Date.now();
     let flwSuccessResponse = null;
@@ -1318,6 +1330,11 @@ Thank you! 🙏
     });
   }
 
+  } catch(err) {
+    hideLoader();
+    console.error("Payment handler error:", err);
+    showNotification("Something went wrong. Please try again.", "error");
+  }
 
 });
 
