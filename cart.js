@@ -62,6 +62,7 @@
 
   loader.style.opacity = "1";
   loader.style.display = "flex";
+  loader.style.pointerEvents = "";
   document.body.style.overflow = "hidden";
   document.body.style.pointerEvents = "none";
 }
@@ -69,7 +70,12 @@
   function hideLoader() {
     if (loader) {
       loader.style.opacity = "0";
-      setTimeout(() => loader.remove(), 300);
+      loader.style.pointerEvents = "none"; // prevent invisible overlay from blocking clicks
+      setTimeout(() => {
+        try {
+          if (loader && loader.parentNode) loader.parentNode.removeChild(loader);
+        } catch(e) { if (loader) loader.style.display = "none"; }
+      }, 300);
     }
     document.body.style.overflow = "";
     document.body.style.pointerEvents = "";
