@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Page Not Found — Pearl Skin Care</title>
+  <link rel="icon" type="image/png" href="attached_assets/pearl-skin-care-icon.png">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=Inter:wght@300;400;500;600&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+  <style>
+    *, *::before, *::after { scrollbar-width: none; -ms-overflow-style: none; }
+    ::-webkit-scrollbar { display: none; }
+    body { font-family: 'Inter', sans-serif; }
+    h1, h2 { font-family: 'Cormorant Garamond', serif; }
+    .footer-brand { font-family: 'Cormorant Garamond', serif; }
+    @keyframes floatPearl {
+      0%, 100% { transform: translateY(0px); }
+      50% { transform: translateY(-10px); }
+    }
+    .pearl-float { animation: floatPearl 3s ease-in-out infinite; }
+  </style>
+</head>
+<body class="bg-[#FAF8F5] text-[#2C2420] min-h-screen flex flex-col">
+
+  <!-- Top Bar -->
+  <header class="bg-[#1E1418] text-white px-6 py-4 flex items-center gap-4">
+    <a href="index.html" class="text-[#C9A28F] hover:text-white transition-colors text-sm flex items-center gap-2">
+      <i class="fas fa-arrow-left"></i> Back to Home
+    </a>
+    <span class="text-[#4A3A34]">|</span>
+    <img src="attached_assets/pearl-skin-care-logo-full.png" class="h-8 w-auto object-contain" alt="Pearl Skin Care" />
+  </header>
+
+  <!-- Main Content -->
+  <main class="flex-1 flex flex-col items-center justify-center px-6 py-20 text-center">
+
+    <!-- Pearl icon with float animation -->
+    <div class="pearl-float mb-8">
+      <img src="attached_assets/pearl-skin-care-icon.png" class="w-24 h-24 object-contain opacity-80" alt="Pearl Skin Care" />
+    </div>
+
+    <!-- 404 text -->
+    <p class="text-[#C9A28F] text-sm uppercase tracking-[0.2em] font-medium mb-3">Error 404</p>
+    <h1 class="text-5xl md:text-6xl font-semibold text-[#2C2420] mb-4 leading-tight">
+      Page Not Found
+    </h1>
+    <p class="text-[#7A6A64] text-base max-w-sm mx-auto mb-10 leading-relaxed">
+      The page you're looking for doesn't exist or may have been moved.
+    </p>
+
+    <!-- Action buttons -->
+    <div class="flex flex-col sm:flex-row items-center gap-3">
+      <a href="index.html"
+        class="px-7 py-3 bg-[#8B4F6B] text-white text-sm font-medium rounded-full hover:bg-[#7A3F5B] transition-colors">
+        Go to Homepage
+      </a>
+      <a href="products.html"
+        class="px-7 py-3 border border-[#C9A28F] text-[#8B4F6B] text-sm font-medium rounded-full hover:bg-[#F3EEF0] transition-colors">
+        Browse Products
+      </a>
+    </div>
+
+  </main>
+
+  <!-- Footer -->
+  <footer class="bg-[#1E1418] text-white py-8 px-6 text-center">
+    <p class="footer-brand text-[#C9A28F] text-lg tracking-wide mb-1">Pearl Skin Care</p>
+    <p class="text-[#5A4A44] text-xs tracking-widest uppercase">© 2025 All rights reserved</p>
+  </footer>
+
+</body>
+</html>

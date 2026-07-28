@@ -581,6 +581,8 @@ if(summaryTotal) summaryTotal.textContent = `₦${(subtotal + shippingFee).toLoc
 
     if (option.id === "paystack-option") {
       selectedPayment = "paystack";
+    } else if (option.id === "flutterwave-option") {
+      selectedPayment = "flutterwave";
     } else if (option.id === "WhatsApp") {
       selectedPayment = "whatsapp";
     }
@@ -614,7 +616,10 @@ async function loadStatesForCountry(countryName, savedState = null) {
       data.data.states.forEach(s => stateTomSelect.addOption({ value: s.name, text: s.name }));
     }
     stateTomSelect.refreshOptions(false);
-    if (savedState) stateTomSelect.setValue(savedState, true);
+    if (savedState) {
+      stateTomSelect.setValue(savedState, true);
+      updateLgaVisibility();
+    }
   } catch {
     stateTomSelect.addOption({ value: "", text: "Error loading states" });
     stateTomSelect.refreshOptions(false);
@@ -657,26 +662,35 @@ countryTomSelect.on("change", async (value) => {
   saveFormData();
 });
 
+function updateLgaVisibility(stateValue) {
+  const country = (countrySelect.value || "").toLowerCase();
+  const state = (stateValue !== undefined ? stateValue : stateSelect.value || "").toLowerCase();
+  if (country === "nigeria" && state.includes("lagos")) {
+    lgaWrapper.classList.remove("hidden");
+    try {
+      if (!lgaTomSelect.options || Object.keys(lgaTomSelect.options).length === 0) {
+        Object.keys(lagosLGAs).forEach(lga => lgaTomSelect.addOption({ value: lga, text: lga }));
+        lgaTomSelect.refreshOptions(false);
+      }
+      lgaTomSelect.enable();
+    } catch(e) {}
+  } else {
+    lgaWrapper.classList.add("hidden");
+    try {
+      lgaTomSelect.clear(true);
+      lgaTomSelect.clearOptions();
+      lgaTomSelect.disable();
+    } catch(e) {}
+  }
+}
+
 stateTomSelect.on("change", (value) => {
   if (!value) return;
   localStorage.setItem("checkoutState", value);
   updateDeliveryVisibility();
   updateDeliveryCompanyAvailability();
   populateTerminals();
-  const country = countryTomSelect.getValue();
-  if (country === "Nigeria" && value.toLowerCase().includes("lagos")) {
-    lgaWrapper.classList.remove("hidden");
-    lgaTomSelect.clear(true);
-    lgaTomSelect.clearOptions();
-    Object.keys(lagosLGAs).forEach(lga => lgaTomSelect.addOption({ value: lga, text: lga }));
-    lgaTomSelect.refreshOptions(false);
-    lgaTomSelect.enable();
-  } else {
-    lgaWrapper.classList.add("hidden");
-    lgaTomSelect.clear(true);
-    lgaTomSelect.clearOptions();
-    lgaTomSelect.disable();
-  }
+  updateLgaVisibility(value);
   saveFormData();
 });
 
@@ -795,6 +809,7 @@ stateSelect.addEventListener("change", () => {
     terminalTs.clear(true);
     terminalTs.clearOptions();
   }
+  updateLgaVisibility(stateSelect.value);
 });
 
 deliveryCompanyTs.on("change", populateTerminals);
@@ -1042,6 +1057,7 @@ document.getElementById("shipping-edit-btn").onclick = () => {
   document.getElementById("payment-summary-card").classList.add("hidden");
   document.getElementById("shipping-edit-btn").classList.add("hidden");
   updatePaymentVisibility();
+  updateLgaVisibility();
 };
 
 // Summary Place Order Button
@@ -1177,11 +1193,9 @@ Thank you! 🙏
   else if (selectedPayment === "paystack") {
     const totalAmount = total;
 
-    // Paystack callback function
     function handlePaystackSuccess(response) {
       (async () => {
         showLoader();
-
         const orderRef = db.collection("orders").doc();
         await orderRef.set({
           guestId,
@@ -1193,21 +1207,13 @@ Thank you! 🙏
             method: "paystack",
             reference: response.reference
           },
-          pricing: {
-            subtotal,
-            shippingFee,
-            total: totalAmount
-          },
+          pricing: { subtotal, shippingFee, total: totalAmount },
           status: "pending",
           createdAt: firebase.firestore.FieldValue.serverTimestamp()
         });
-
-        // Clear guest cart
         await guestCartRef.set({ guestId, items: [] });
         renderCart([]);
         clearFormData();
-
-        // Show success page
         checkoutStep.classList.add("hidden");
         completeStep.classList.remove("hidden");
         setActiveBreadcrumb("complete");
@@ -1236,9 +1242,80 @@ Thank you! 🙏
       callback: handlePaystackSuccess,
       onClose: handlePaystackClose
     });
-
     hideLoader();
     handler.openIframe();
+  }
+
+  else if (selectedPayment === "flutterwave") {
+    const totalAmount = total;
+    const txRef = "FLW-" + Date.now();
+    let flwSuccessResponse = null;
+
+    hideLoader();
+    FlutterwaveCheckout({
+      public_key: window.CONFIG.flutterwaveKey,
+      tx_ref: txRef,
+      amount: totalAmount,
+      currency: "NGN",
+      payment_options: "card, banktransfer, ussd",
+      customer: {
+        email: shippingData.email,
+        phone_number: shippingData.phone,
+        name: `${shippingData.firstName} ${shippingData.lastName}`
+      },
+      customizations: {
+        title: "Pearl Skin Care",
+        description: "Order Payment"
+      },
+      callback: function(response) {
+        // Store response — actual order save happens in onclose
+        // so we don't fight Flutterwave's modal lifecycle
+        flwSuccessResponse = response;
+      },
+      onclose: function() {
+        if (!flwSuccessResponse) {
+          // User cancelled
+          hideLoader();
+          showNotification("Payment window closed. You can retry your payment.");
+          return;
+        }
+        const response = flwSuccessResponse;
+        flwSuccessResponse = null;
+        (async () => {
+          try {
+            showLoader();
+            const orderRef = db.collection("orders").doc();
+            await orderRef.set({
+              guestId,
+              userId: firebase.auth().currentUser?.uid || null,
+              items: cartItems,
+              shipping: shippingData,
+              delivery: deliveryInfo,
+              payment: {
+                method: "flutterwave",
+                reference: response.tx_ref,
+                transactionId: String(response.transaction_id)
+              },
+              pricing: { subtotal, shippingFee, total: totalAmount },
+              status: "pending",
+              createdAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+            await guestCartRef.set({ guestId, items: [] });
+            renderCart([]);
+            checkoutStep.classList.add("hidden");
+            completeStep.classList.remove("hidden");
+            setActiveBreadcrumb("complete");
+            hideLoader();
+            confetti();
+            try { clearFormData(); } catch(e) {}
+          } catch (err) {
+            hideLoader();
+            showNotification("Order save failed. Contact support with ref: " + response.tx_ref, "error");
+            console.error("Flutterwave order save error:", err);
+          }
+        })();
+      }
+    });
   }
 
 
@@ -1324,6 +1401,7 @@ function updatePaymentVisibility() {
   const isNigeria = country === "nigeria";
 
   const paystackOption = document.getElementById("paystack-option");
+  const flutterwaveOption = document.getElementById("flutterwave-option");
   const whatsappOption = document.getElementById("WhatsApp");
 
   // Reset selection
@@ -1340,11 +1418,20 @@ function updatePaymentVisibility() {
   });
 
   if (isNigeria) {
+    // Paystack shown but blurred — pending account activation
     paystackOption.classList.remove("hidden");
+    paystackOption.style.opacity = "0.4";
+    paystackOption.style.pointerEvents = "none";
+    paystackOption.title = "Paystack activation pending";
+    flutterwaveOption.classList.remove("hidden");
+    flutterwaveOption.style.opacity = "";
+    flutterwaveOption.style.pointerEvents = "";
+    whatsappOption.classList.add("hidden");
   } else {
     paystackOption.classList.add("hidden");
+    flutterwaveOption.classList.add("hidden");
+    whatsappOption.classList.remove("hidden");
   }
-  whatsappOption.classList.remove("hidden");
 }
 
 

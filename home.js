@@ -1231,9 +1231,9 @@ window.addToCart = function(productId) {
   localStorage.setItem("cart", JSON.stringify(items));
   updateCartCount();
 
-  // Phase 2: background Firestore sync
+  // Phase 2: Firestore sync — return the Promise so callers can await it
   const cartDocRef = userDb.collection("guestCarts").doc(guestId);
-  ensureGuestCart()
+  return ensureGuestCart()
     .then(() => cartDocRef.set(
       { guestId, items, updatedAt: firebase.firestore.FieldValue.serverTimestamp() },
       { merge: true }
