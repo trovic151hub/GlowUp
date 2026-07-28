@@ -1441,11 +1441,10 @@ function updatePaymentVisibility() {
   });
 
   if (isNigeria) {
-    // Paystack shown but blurred — pending account activation
     paystackOption.classList.remove("hidden");
-    paystackOption.style.opacity = "0.4";
-    paystackOption.style.pointerEvents = "none";
-    paystackOption.title = "Paystack activation pending";
+    paystackOption.style.opacity = "";
+    paystackOption.style.pointerEvents = "";
+    paystackOption.title = "";
     flutterwaveOption.classList.remove("hidden");
     flutterwaveOption.style.opacity = "";
     flutterwaveOption.style.pointerEvents = "";
