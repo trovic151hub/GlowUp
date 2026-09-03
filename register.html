@@ -24,6 +24,14 @@
 
     .sk-google { width:100%; display:flex; align-items:center; justify-content:center; gap:0.75rem; border:1px solid #E8D5DC; padding:0.875rem 1rem; border-radius:0.75rem; background:#fff; font-size:0.875rem; color:#2C2420; cursor:pointer; transition:border-color 0.2s, box-shadow 0.2s; font-weight:500; font-family:'Inter',sans-serif; }
     .sk-google:hover { border-color:#8B3A52; box-shadow:0 0 0 3px rgba(139,58,82,0.07); }
+    .sk-google:disabled { opacity:0.65; cursor:not-allowed; box-shadow:none; }
+
+    .legal-consent { display:flex; align-items:flex-start; gap:0.65rem; padding:0.75rem 0.85rem; border:1px solid #E8D5DC; border-radius:0.75rem; background:#fff; }
+    .legal-consent input { width:1rem; height:1rem; margin-top:0.125rem; accent-color:#8B3A52; flex-shrink:0; }
+    .legal-consent label { color:#6B5B55; font-size:0.78rem; line-height:1.55; }
+    .legal-consent a { color:#8B3A52; font-weight:600; text-decoration:none; }
+    .legal-error { display:none; color:#8B3A52; font-size:0.75rem; margin-top:-0.35rem; }
+    .legal-error.show { display:block; }
 
     .sk-divider { display:flex; align-items:center; gap:1rem; margin:1.5rem 0; }
     .sk-divider span { font-size:0.72rem; color:#C4B0A8; text-transform:uppercase; letter-spacing:0.08em; white-space:nowrap; }
@@ -125,7 +133,18 @@
         <input type="tel"  id="regPhone"   placeholder="Phone number (optional)"  class="sk-input" />
         <input type="text" id="regAddress" placeholder="Delivery address (optional)" class="sk-input" />
 
-        <button type="submit" id="registerBtn" class="sk-btn" style="margin-top:0.25rem;">
+        <div class="legal-consent">
+          <input type="checkbox" id="legalConsent" required />
+          <label for="legalConsent">
+            I agree to Pearl Skin Care's <a href="terms.html" target="_blank" rel="noopener">Terms</a>,
+            <a href="privacy.html" target="_blank" rel="noopener">Privacy Policy</a>,
+            <a href="refund-policy.html" target="_blank" rel="noopener">Refund Policy</a>, and
+            <a href="shipping-policy.html" target="_blank" rel="noopener">Shipping Policy</a>.
+          </label>
+        </div>
+        <p id="legalConsentError" class="legal-error">Please accept the terms before creating an account.</p>
+
+        <button type="submit" id="registerBtn" class="sk-btn" style="margin-top:0.25rem;" disabled>
           <span id="registerBtnText">Create Account</span>
           <div id="registerLoader" class="hidden flex items-center gap-1">
             <div class="w-2 h-2 bg-white rounded-full animate-pulse"></div>
@@ -139,7 +158,7 @@
       <div class="sk-divider"><span>or</span></div>
 
       <!-- Google -->
-      <button id="googleLogin" class="sk-google">
+      <button id="googleLogin" class="sk-google" disabled>
         <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" style="width:18px; height:18px;" />
         Continue with Google
       </button>
@@ -202,11 +221,34 @@
         btnText.textContent = "Creating account…";
         loader.classList.remove("hidden");
       } else {
-        btn.disabled = false;
         btnText.textContent = "Create Account";
         loader.classList.add("hidden");
+        updateAuthActionsAvailability();
       }
     }
+
+    const legalConsent = document.getElementById("legalConsent");
+    const legalConsentError = document.getElementById("legalConsentError");
+    const googleLoginBtn = document.getElementById("googleLogin");
+    const legalPolicyVersion = "terms.html|privacy.html|refund-policy.html|shipping-policy.html";
+
+    function updateAuthActionsAvailability() {
+      const hasConsent = !!legalConsent?.checked;
+      const registerBtn = document.getElementById("registerBtn");
+      if (registerBtn) registerBtn.disabled = !hasConsent;
+      if (googleLoginBtn) googleLoginBtn.disabled = !hasConsent;
+      if (hasConsent) legalConsentError?.classList.remove("show");
+    }
+
+    function requireLegalConsent() {
+      if (legalConsent?.checked) return true;
+      legalConsentError?.classList.add("show");
+      legalConsent?.focus();
+      return false;
+    }
+
+    legalConsent?.addEventListener("change", updateAuthActionsAvailability);
+    updateAuthActionsAvailability();
 
     /* ===== Firebase Config ===== */
     const firebaseConfig = window.CONFIG.firebase;
@@ -232,6 +274,8 @@
     const registerForm = document.getElementById("registerForm");
     registerForm?.addEventListener("submit", async e => {
       e.preventDefault();
+      if (!requireLegalConsent()) return;
+
       const name    = document.getElementById("regName").value.trim();
       const email   = document.getElementById("regEmail").value.trim();
       const password= document.getElementById("regPassword").value;
@@ -245,6 +289,11 @@
         await user.updateProfile({ displayName: name });
         await db.collection("users").doc(user.uid).set({
           name, email, phone: phone || "", address: address || "",
+          legalConsent: {
+            accepted: true,
+            policyVersion: legalPolicyVersion,
+            acceptedAt: firebase.firestore.FieldValue.serverTimestamp()
+          },
           createdAt: firebase.firestore.FieldValue.serverTimestamp()
         });
         setRegisterLoading(false);
@@ -262,11 +311,18 @@
 
     /* ===== Google Registration/Login ===== */
     document.getElementById("googleLogin")?.addEventListener("click", async () => {
+      if (!requireLegalConsent()) return;
+
       try {
         const result = await auth.signInWithPopup(provider);
         const user = result.user;
         await db.collection("users").doc(user.uid).set({
           name: user.displayName || "", email: user.email, phone: "", address: "",
+          legalConsent: {
+            accepted: true,
+            policyVersion: legalPolicyVersion,
+            acceptedAt: firebase.firestore.FieldValue.serverTimestamp()
+          },
           createdAt: firebase.firestore.FieldValue.serverTimestamp()
         }, { merge: true });
         showSuccessModal();

@@ -19,7 +19,7 @@
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
   <script src="/config.js"></script>
   <script src="https://js.paystack.co/v1/inline.js"></script>
-  <script src="https://checkout.flutterwave.com/v3.js"></script>
+  <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/emailjs-com@3/dist/email.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.13.0/gsap.min.js"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; scrollbar-width: none; -ms-overflow-style: none; }
@@ -779,25 +779,6 @@
               <div>
                 <div class="text-sm font-medium text-[#2C2420]">Card / Bank Transfer</div>
                 <div class="text-xs text-[#9E8E88] mt-0.5">Visa, Mastercard, Bank Transfer</div>
-              </div>
-            </div>
-            <div class="flex items-center gap-2 shrink-0">
-              <i class="fas fa-credit-card text-[#9E8E88]"></i>
-              <i class="check-icon fas fa-check-circle text-[#8B4F6B] hidden"></i>
-            </div>
-          </div>
-
-          <!-- Flutterwave -->
-          <div id="flutterwave-option" class="payment-option">
-            <div class="flex items-center gap-3 min-w-0">
-              <div class="payment-option-icon">
-                <img style="width:90px; height:20px; object-fit:contain; display:block;"
-                  src="attached_assets/flutterwave.png"
-                  alt="Flutterwave">
-              </div>
-              <div>
-                <div class="text-sm font-medium text-[#2C2420]">Card / Bank Transfer</div>
-                <div class="text-xs text-[#9E8E88] mt-0.5">Visa, Mastercard, USSD, Bank Transfer</div>
               </div>
             </div>
             <div class="flex items-center gap-2 shrink-0">

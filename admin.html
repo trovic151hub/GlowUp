@@ -613,7 +613,6 @@
               <div class="flex flex-wrap gap-1.5">
                 <button class="ord-filter-btn ord-active px-3 py-1.5 rounded-xl text-xs font-medium border transition-all" style="border-color:#8B3A52;background:#F3EEF0;color:#8B3A52;" data-filter="payment" data-val="all">All</button>
                 <button class="ord-filter-btn px-3 py-1.5 rounded-xl text-xs font-medium border border-gray-200 bg-white text-gray-600 hover:border-[#8B3A52] hover:text-[#8B3A52] transition-all" data-filter="payment" data-val="Paystack">Paystack</button>
-                <button class="ord-filter-btn px-3 py-1.5 rounded-xl text-xs font-medium border border-gray-200 bg-white text-gray-600 hover:border-[#8B3A52] hover:text-[#8B3A52] transition-all" data-filter="payment" data-val="Flutterwave">Flutterwave</button>
                 <button class="ord-filter-btn px-3 py-1.5 rounded-xl text-xs font-medium border border-gray-200 bg-white text-gray-600 hover:border-[#8B3A52] hover:text-[#8B3A52] transition-all" data-filter="payment" data-val="WhatsApp">WhatsApp</button>
               </div>
             </div>
@@ -1918,7 +1917,19 @@ function initOrders() {
   document.getElementById('ord-loadMoreBtn').onclick = () => ordLoadMore();
   document.getElementById('orderModalClose').onclick = closeOrderModal;
   document.getElementById('orderDetailModal').addEventListener('click', e => { if (e.target === document.getElementById('orderDetailModal')) closeOrderModal(); });
-  document.getElementById('orderDownloadPdfBtn').onclick = () => { if (currentOpenOrder) downloadPdf(currentOpenOrder); };
+  document.getElementById('orderDownloadPdfBtn').onclick = async () => {
+    if (!currentOpenOrder) return;
+    const btn = document.getElementById('orderDownloadPdfBtn');
+    const originalHtml = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin text-xs"></i>Preparing PDF...';
+    try {
+      await downloadPdf(currentOpenOrder);
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = originalHtml;
+    }
+  };
   document.getElementById('orderEmailReceiptBtn').onclick = async () => {
     if (!currentOpenOrder) return;
     const btn = document.getElementById('orderEmailReceiptBtn');
@@ -2023,7 +2034,7 @@ async function ordLoadMore(isInitial = false) {
 function ordUpdateSummary() {
   const rows = Array.from(document.getElementById('ordersTbody').children).filter(r => r.__order);
   const total = rows.length;
-  const fee = rows.reduce((s, r) => s + Number(r.__order?.delivery?.deliveryFee || 0) + Number(r.__order?.pricing?.shippingFee || 0), 0);
+  const fee = rows.reduce((s, r) => s + getOrderDeliveryFee(r.__order), 0);
   const weight = rows.reduce((s, r) => s + (r.__order.items || []).reduce((ws, i) => ws + (Number(i.weight || 0) * Number(i.quantity || 1)), 0), 0);
   document.getElementById('ordersSummary').innerHTML = `Showing <strong>${total}</strong> orders &mdash; Delivery: <strong>₦${fee.toLocaleString()}</strong> &mdash; Weight: <strong>${weight.toLocaleString()} kg</strong>`;
 }
@@ -2040,7 +2051,7 @@ function ordOrderRow(order) {
   const name = ((order.shipping?.firstName || '') + ' ' + (order.shipping?.lastName || '')).trim() || 'Guest';
   const initials = name.split(' ').filter(Boolean).map(w => w[0].toUpperCase()).join('').slice(0, 2) || 'G';
   const color = ANA_AVATAR_COLORS[(name.charCodeAt(0) || 0) % ANA_AVATAR_COLORS.length];
-  const total = Number(order.pricing?.total || 0);
+  const total = getOrderDisplayTotal(order);
 
   const paymentMethod = order.payment?.method || '';
   const payBadge = (() => {
@@ -2130,6 +2141,18 @@ function getOrderDeliveryFee(order) {
   if (p.shippingFee != null) return Number(p.shippingFee);
   return 0;
 }
+function getOrderSubtotal(order) {
+  const items = order?.items || [];
+  const pricing = order?.pricing || {};
+  return Number(pricing.subtotal ?? items.reduce((s, i) => s + (Number(i.price || 0) * Number(i.quantity || 1)), 0));
+}
+function getOrderDisplayTotal(order) {
+  const pricing = order?.pricing || {};
+  const subtotal = getOrderSubtotal(order);
+  const savedTotal = Number(pricing.total || 0);
+  const deliveryFee = getOrderDeliveryFee(order);
+  return isInternationalOrder(order) ? subtotal + deliveryFee : (savedTotal || subtotal + deliveryFee);
+}
 function shipmentTimelineHtml(status) {
   const steps = ['processing','shipped','delivered'];
   return `<div class="flex items-center gap-3 flex-wrap">${steps.map((s, idx) => {
@@ -2159,9 +2182,10 @@ function renderOrderModal(order) {
     </div>`;
 
   const shipping = order.shipping || {}, delivery = order.delivery || {}, pricing = order.pricing || {}, items = order.items || [];
-  const orderTotal = Number(pricing.total || 0);
+  const subtotal = Number(pricing.subtotal ?? items.reduce((s, i) => s + (Number(i.price || 0) * Number(i.quantity || 1)), 0));
+  const savedTotal = Number(pricing.total || 0);
   const deliveryFee = getOrderDeliveryFee(order);
-  const totalWithFee = isInternationalOrder(order) ? orderTotal + (delivery.deliveryFee || 0) : orderTotal;
+  const finalTotal = isInternationalOrder(order) ? subtotal + deliveryFee : (savedTotal || subtotal + deliveryFee);
   const totalWeight = items.reduce((s, i) => s + (Number(i.weight || 0) * Number(i.quantity || 1)), 0);
   const shipmentStatus = order.shipping?.status || 'processing';
 
@@ -2201,7 +2225,7 @@ function renderOrderModal(order) {
       </div>
       <div class="flex justify-between items-center pt-3 mt-1 border-t border-gray-100">
         <span class="text-gray-400">Subtotal (${items.length} item${items.length !== 1 ? 's' : ''})</span>
-        <span class="font-semibold text-gray-800">₦${orderTotal.toLocaleString()}</span>
+        <span class="font-semibold text-gray-800">₦${subtotal.toLocaleString()}</span>
       </div>
       ${deliveryFee > 0 ? `<div class="flex justify-between items-center pt-1.5">
         <span class="text-gray-400">Delivery fee</span>
@@ -2209,7 +2233,7 @@ function renderOrderModal(order) {
       </div>` : ''}
       <div class="flex justify-between items-center pt-2.5 border-t border-gray-100 mt-1">
         <span class="font-semibold text-gray-700">Total</span>
-        <span class="text-base font-bold" style="color:#8B3A52;">₦${totalWithFee.toLocaleString()}</span>
+        <span class="text-base font-bold" style="color:#8B3A52;">₦${finalTotal.toLocaleString()}</span>
       </div>
     </div>
     ${deliveryHtml ? `<div>
@@ -2243,7 +2267,7 @@ function renderOrderModal(order) {
   if (sidebar) sidebar.innerHTML = `
     <div class="rounded-xl p-4 text-center" style="background:#F3EEF0;">
       <p class="text-xs font-medium uppercase tracking-widest mb-1" style="color:#9B7A87;">Order Total</p>
-      <p class="text-2xl font-bold" style="color:#8B3A52; font-family:'Cormorant Garamond',serif;">₦${totalWithFee.toLocaleString()}</p>
+      <p class="text-2xl font-bold" style="color:#8B3A52; font-family:'Cormorant Garamond',serif;">₦${finalTotal.toLocaleString()}</p>
     </div>
     <div class="space-y-2.5 text-sm">
       <div class="flex items-center justify-between">
@@ -2371,7 +2395,19 @@ function renderOrderModal(order) {
         saveBtn.className = 'w-full bg-blue-600 text-white px-3 py-2.5 rounded-xl text-sm font-medium hover:bg-blue-700 transition-colors flex items-center justify-center gap-2';
         saveBtn.innerHTML = '<i class="fas fa-floppy-disk text-xs"></i>Save Delivery Info';
         saveBtn.onclick = async () => {
-          try { await db.collection('orders').doc(order.id).update({'delivery.deliveryFee': Number(feeInput.value) || 0, 'delivery.type': currentDeliveryType}); showAlert('Delivery updated!', 'Success'); }
+          try {
+            const nextFee = Number(feeInput.value) || 0;
+            await db.collection('orders').doc(order.id).update({'delivery.deliveryFee': nextFee, 'delivery.type': currentDeliveryType});
+            order.delivery = order.delivery || {};
+            order.delivery.deliveryFee = nextFee;
+            order.delivery.type = currentDeliveryType;
+            const tbody = document.getElementById('ordersTbody');
+            const row = Array.from(tbody.children).find(r => r.__order?.id === order.id);
+            if (row) tbody.replaceChild(ordOrderRow(order), row);
+            ordUpdateSummary();
+            renderOrderModal(order);
+            showAlert('Delivery updated!', 'Success');
+          }
           catch (err) { showAlert(err.message, 'Error'); }
         };
         div.appendChild(saveBtn);

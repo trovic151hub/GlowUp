@@ -4,6 +4,7 @@ const path = require('path');
 
 const PORT = 5000;
 const HOST = '0.0.0.0';
+const FIREBASE_AUTH_DOMAIN = process.env.FIREBASE_AUTH_DOMAIN || 'e-commerce-39c74.firebaseapp.com';
 
 
 const mimeTypes = {
@@ -26,12 +27,32 @@ const server = http.createServer((req, res) => {
   let urlPath = req.url.split('?')[0];
   if (urlPath === '/') urlPath = '/index.html';
 
+  if (urlPath.startsWith('/__/auth/')) {
+    const targetUrl = `https://${FIREBASE_AUTH_DOMAIN}${req.url}`;
+    fetch(targetUrl)
+      .then(proxyRes => {
+        res.writeHead(proxyRes.status, {
+          'Content-Type': proxyRes.headers.get('content-type') || 'application/javascript',
+          'Cache-Control': proxyRes.headers.get('cache-control') || 'no-store'
+        });
+        return proxyRes.arrayBuffer();
+      })
+      .then(buffer => res.end(Buffer.from(buffer)))
+      .catch(err => {
+        console.error('Firebase auth proxy failed:', err);
+        res.writeHead(502, { 'Content-Type': 'text/plain' });
+        res.end('Firebase auth proxy failed');
+      });
+    return;
+  }
+
   // Serve config.js from environment variables (never committed to repo)
   if (urlPath === '/config.js') {
+    const requestHost = req.headers.host || '';
     const config = {
       firebase: {
         apiKey: process.env.FIREBASE_API_KEY,
-        authDomain: process.env.FIREBASE_AUTH_DOMAIN,
+        authDomain: requestHost || FIREBASE_AUTH_DOMAIN,
         projectId: process.env.FIREBASE_PROJECT_ID,
         storageBucket: process.env.FIREBASE_STORAGE_BUCKET,
         messagingSenderId: process.env.FIREBASE_MESSAGING_SENDER_ID,

@@ -372,7 +372,7 @@ function calculateDeliveryFee(deliveryInfo, totalWeight) {
   const state = stateRaw.replace(" state", "").trim(); // FIXED
   const company = (deliveryInfo.company || "").toUpperCase();
   const lga = (deliveryInfo.lga || "").trim();
-  const deliveryType = (deliveryInfo.deliveryType || "").toLowerCase();
+  const deliveryType = (deliveryInfo.deliveryType || deliveryInfo.type || "").toLowerCase();
   totalWeight = totalWeight || 1;
 
   if (deliveryInfo.country?.toLowerCase() !== "nigeria") return 0;
@@ -400,6 +400,91 @@ function calculateDeliveryFee(deliveryInfo, totalWeight) {
   }
 
   return fee;
+}
+
+function getCartTotalWeight(items) {
+  const totalWeight = (items || []).reduce((sum, item) => {
+    const quantity = Number(item.quantity || 0);
+    const unitWeight = Number(item.weight ?? item.shippingWeight ?? 1) || 1;
+    return sum + (unitWeight * quantity);
+  }, 0);
+  return totalWeight || 1;
+}
+
+let emailJsReady = false;
+function ensureEmailJsReady() {
+  if (!window.emailjs) return false;
+  if (!emailJsReady) {
+    emailjs.init("cRuLIat7A3PEivQCu");
+    emailJsReady = true;
+  }
+  return true;
+}
+
+async function sendOrderReceiptEmail(order) {
+  if (!ensureEmailJsReady()) throw new Error("Email service is not available.");
+
+  const shipping = order.shipping || {};
+  const payment = order.payment || {};
+  const delivery = order.delivery || {};
+  const items = order.items || [];
+  const pricing = order.pricing || {};
+  const fullName = `${shipping.firstName || ""} ${shipping.lastName || ""}`.trim() || "Customer";
+  const email = shipping.email || "";
+  if (!email) throw new Error("Customer email is missing.");
+
+  const deliveryFee = Number(delivery.deliveryFee ?? pricing.shippingFee ?? 0);
+  const totalWeight = Number(delivery.totalWeight || getCartTotalWeight(items));
+  const subtotal = Number(pricing.subtotal ?? items.reduce((s, i) => s + ((Number(i.price) || 0) * (Number(i.quantity) || 0)), 0));
+  const orderTotal = Number(pricing.total || subtotal + deliveryFee);
+  const orderItemsHtml = items.map(i => `<tr><td style="padding:8px 6px;border-bottom:1px solid #f0ebe7;color:#4A3A34;">${i.name || "—"}</td><td align="center" style="padding:8px 6px;border-bottom:1px solid #f0ebe7;color:#4A3A34;">${i.quantity || 0}</td><td align="right" style="padding:8px 6px;border-bottom:1px solid #f0ebe7;color:#4A3A34;">₦${Number(i.price || 0).toLocaleString()}</td><td align="right" style="padding:8px 6px;border-bottom:1px solid #f0ebe7;color:#4A3A34;font-weight:600;">₦${(Number(i.price || 0) * Number(i.quantity || 0)).toLocaleString()}</td></tr>`).join("");
+  const orderDate = new Date().toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
+
+  await emailjs.send("service_k1xpqh8", "template_nlno322", {
+    to_email: email,
+    customer_name: fullName,
+    order_id: payment.reference || order.id,
+    logo_url: "https://raw.githubusercontent.com/trovic151hub/GlowUp/master/attached_assets/pearl-skin-care-logo-full.png",
+    order_date: orderDate,
+    order_name: fullName,
+    order_email: email,
+    order_phone: shipping.phone || "—",
+    payment_method: payment.method || "—",
+    payment_ref: payment.reference || order.id,
+    order_items: orderItemsHtml,
+    order_total: orderTotal.toLocaleString(),
+    delivery_company: delivery.company || "—",
+    delivery_type: delivery.type || delivery.deliveryType || "—",
+    delivery_terminal: delivery.terminal || "—",
+    delivery_state: delivery.state || "—",
+    delivery_lga: delivery.lga || "—",
+    delivery_address: delivery.address || "—",
+    delivery_fee: deliveryFee.toLocaleString(),
+    total_weight: totalWeight
+  });
+}
+
+async function sendAutomaticReceipt(orderRef, orderData) {
+  let sent = false;
+  try {
+    await sendOrderReceiptEmail({ id: orderRef.id, ...orderData });
+    sent = true;
+  } catch (err) {
+    console.error("Automatic receipt email failed:", err);
+  }
+
+  try {
+    await orderRef.update({
+      receiptEmail: {
+        status: sent ? "sent" : "failed",
+        ...(sent
+          ? { sentAt: firebase.firestore.FieldValue.serverTimestamp() }
+          : { failedAt: firebase.firestore.FieldValue.serverTimestamp() })
+      }
+    });
+  } catch (err) {
+    console.warn("Receipt email status update failed:", err);
+  }
 }
 
   let cartUnsub = null;
@@ -533,13 +618,14 @@ function calculateDeliveryFee(deliveryInfo, totalWeight) {
 
     // Totals
     // Determine total weight
-const totalWeight = cart.reduce((sum, item) => sum + (item.quantity || 0), 0);
+const totalWeight = getCartTotalWeight(cart);
 
 // Collect delivery info from checkout form
 const deliveryInfo = {
   country: countrySelect.value,
   state: stateSelect.value,
-  company: deliveryCompanyTs.getValue()
+  company: deliveryCompanyTs.getValue(),
+  deliveryType: deliveryTypeTs.getValue()
 };
 
 // Calculate shipping fee dynamically
@@ -587,8 +673,6 @@ if(summaryTotal) summaryTotal.textContent = `₦${(subtotal + shippingFee).toLoc
 
     if (option.id === "paystack-option") {
       selectedPayment = "paystack";
-    } else if (option.id === "flutterwave-option") {
-      selectedPayment = "flutterwave";
     } else if (option.id === "WhatsApp") {
       selectedPayment = "whatsapp";
     }
@@ -780,6 +864,7 @@ function updateDeliveryCompanyAvailability() {
     deliveryCompanyTs.updateOption("GUO", { value: "GUO", text: "GUO Transport", disabled: false });
   }
   deliveryCompanyTs.refreshOptions(false);
+  updateDeliveryTypeAvailability();
 }
 
 
@@ -809,6 +894,23 @@ function populateTerminals() {
   terminalTs.enable();
 }
 
+function updateDeliveryTypeAvailability() {
+  const company = deliveryCompanyTs.getValue().trim().toUpperCase();
+  const isGUO = company === "GUO";
+
+  deliveryTypeTs.updateOption("home", {
+    value: "home",
+    text: isGUO ? "Home Delivery (Not available for GUO)" : "Home Delivery",
+    disabled: isGUO
+  });
+
+  if (isGUO && (!deliveryTypeTs.getValue() || deliveryTypeTs.getValue() === "home")) {
+    deliveryTypeTs.setValue("terminal", true);
+  }
+
+  deliveryTypeTs.refreshOptions(false);
+}
+
 stateSelect.addEventListener("change", () => {
   localStorage.setItem("checkoutState", stateSelect.value);
   if (deliveryTypeTs.getValue() === "terminal") {
@@ -818,8 +920,15 @@ stateSelect.addEventListener("change", () => {
   updateLgaVisibility(stateSelect.value);
 });
 
-deliveryCompanyTs.on("change", populateTerminals);
-deliveryTypeTs.on("change", populateTerminals);
+deliveryCompanyTs.on("change", () => {
+  updateDeliveryTypeAvailability();
+  populateTerminals();
+  saveFormData();
+});
+deliveryTypeTs.on("change", () => {
+  populateTerminals();
+  saveFormData();
+});
 
 
 
@@ -845,6 +954,7 @@ function updateDeliveryVisibility() {
   // Clear values
   deliveryCompanyTs.setValue("", true);
   deliveryTypeTs.setValue("", true);
+  updateDeliveryTypeAvailability();
   terminalTs.clear(true);
   terminalTs.clearOptions();
   terminalTs.disable();
@@ -925,7 +1035,7 @@ function updateDeliveryVisibility() {
   const subtotal = cartItems.reduce((sum, item) => sum + (item.price || 0) * item.quantity, 0);
 
   // Total weight
-  const totalWeight = cartItems.reduce((sum, item) => sum + (item.quantity || 0), 0);
+  const totalWeight = getCartTotalWeight(cartItems);
 
   // Delivery info
 const deliveryInfo = {
@@ -939,6 +1049,8 @@ const deliveryInfo = {
 
 // Calculate shipping fee
 const shippingFee = calculateDeliveryFee(deliveryInfo, totalWeight);
+deliveryInfo.deliveryFee = shippingFee;
+deliveryInfo.totalWeight = totalWeight;
 
   // Create card for shipment summary
   const card = document.createElement("div");
@@ -1113,8 +1225,10 @@ summaryPlaceOrderBtn.addEventListener("click", async () => {
 
   // Subtotal & shipping
   const subtotal = cartItems.reduce((sum, item) => sum + (item.price || 0) * item.quantity, 0);
-  const totalWeight = cartItems.reduce((sum, item) => sum + (item.quantity || 0), 0);
+  const totalWeight = getCartTotalWeight(cartItems);
   const shippingFee = calculateDeliveryFee(deliveryInfo, totalWeight);
+  deliveryInfo.deliveryFee = shippingFee;
+  deliveryInfo.totalWeight = totalWeight;
   const total = subtotal + shippingFee;
 
   if (selectedPayment === "whatsapp") {
@@ -1162,7 +1276,7 @@ Thank you! 🙏
 
     // Save order to Firestore
     const orderRef = db.collection("orders").doc();
-    await orderRef.set({
+    const orderData = {
       guestId,
       userId: firebase.auth().currentUser?.uid || null,
       items: cartItems,
@@ -1182,8 +1296,14 @@ Thank you! 🙏
       shipment: {
         status: "pending"
       },
+      receiptEmail: {
+        status: "pending",
+        requestedAt: firebase.firestore.FieldValue.serverTimestamp()
+      },
       createdAt: firebase.firestore.FieldValue.serverTimestamp()
-    });
+    };
+    await orderRef.set(orderData);
+    sendAutomaticReceipt(orderRef, orderData);
 
     // Clear guest cart
     await guestCartRef.set({ guestId, items: [] });
@@ -1210,7 +1330,7 @@ Thank you! 🙏
       (async () => {
         showLoader();
         const orderRef = db.collection("orders").doc();
-        await orderRef.set({
+        const orderData = {
           guestId,
           userId: firebase.auth().currentUser?.uid || null,
           items: cartItems,
@@ -1222,8 +1342,14 @@ Thank you! 🙏
           },
           pricing: { subtotal, shippingFee, total: totalAmount },
           status: "pending",
+          receiptEmail: {
+            status: "pending",
+            requestedAt: firebase.firestore.FieldValue.serverTimestamp()
+          },
           createdAt: firebase.firestore.FieldValue.serverTimestamp()
-        });
+        };
+        await orderRef.set(orderData);
+        sendAutomaticReceipt(orderRef, orderData);
         await guestCartRef.set({ guestId, items: [] });
         renderCart([]);
         clearFormData();
@@ -1258,84 +1384,6 @@ Thank you! 🙏
     hideLoader();
     handler.openIframe();
   }
-
-  else if (selectedPayment === "flutterwave") {
-    if (typeof FlutterwaveCheckout !== "function") {
-      hideLoader();
-      showNotification("Payment system not available. Please refresh and try again.", "error");
-      return;
-    }
-    const totalAmount = total;
-    const txRef = "FLW-" + Date.now();
-    let flwSuccessResponse = null;
-
-    hideLoader();
-    FlutterwaveCheckout({
-      public_key: window.CONFIG.flutterwaveKey,
-      tx_ref: txRef,
-      amount: totalAmount,
-      currency: "NGN",
-      payment_options: "card, banktransfer, ussd",
-      customer: {
-        email: shippingData.email,
-        phone_number: shippingData.phone,
-        name: `${shippingData.firstName} ${shippingData.lastName}`
-      },
-      customizations: {
-        title: "Pearl Skin Care",
-        description: "Order Payment"
-      },
-      callback: function(response) {
-        // Store response — actual order save happens in onclose
-        // so we don't fight Flutterwave's modal lifecycle
-        flwSuccessResponse = response;
-      },
-      onclose: function() {
-        if (!flwSuccessResponse) {
-          // User cancelled
-          hideLoader();
-          showNotification("Payment window closed. You can retry your payment.");
-          return;
-        }
-        const response = flwSuccessResponse;
-        flwSuccessResponse = null;
-        (async () => {
-          try {
-            showLoader();
-            const orderRef = db.collection("orders").doc();
-            await orderRef.set({
-              guestId,
-              userId: firebase.auth().currentUser?.uid || null,
-              items: cartItems,
-              shipping: shippingData,
-              delivery: deliveryInfo,
-              payment: {
-                method: "flutterwave",
-                reference: response.tx_ref,
-                transactionId: String(response.transaction_id)
-              },
-              pricing: { subtotal, shippingFee, total: totalAmount },
-              status: "pending",
-              createdAt: firebase.firestore.FieldValue.serverTimestamp()
-            });
-            await guestCartRef.set({ guestId, items: [] });
-            renderCart([]);
-            checkoutStep.classList.add("hidden");
-            completeStep.classList.remove("hidden");
-            setActiveBreadcrumb("complete");
-            hideLoader();
-            confetti();
-            try { clearFormData(); } catch(e) {}
-          } catch (err) {
-            hideLoader();
-            showNotification("Order save failed. Contact support with ref: " + response.tx_ref, "error");
-            console.error("Flutterwave order save error:", err);
-          }
-        })();
-      }
-    });
-  }
-
   } catch(err) {
     hideLoader();
     console.error("Payment handler error:", err);
@@ -1424,7 +1472,6 @@ function updatePaymentVisibility() {
   const isNigeria = country === "nigeria";
 
   const paystackOption = document.getElementById("paystack-option");
-  const flutterwaveOption = document.getElementById("flutterwave-option");
   const whatsappOption = document.getElementById("WhatsApp");
 
   // Reset selection
@@ -1442,16 +1489,20 @@ function updatePaymentVisibility() {
 
   if (isNigeria) {
     paystackOption.classList.remove("hidden");
-    paystackOption.style.opacity = "0.4";
-    paystackOption.style.pointerEvents = "none";
-    paystackOption.title = "Paystack activation pending";
-    flutterwaveOption.classList.remove("hidden");
-    flutterwaveOption.style.opacity = "";
-    flutterwaveOption.style.pointerEvents = "";
+    paystackOption.style.opacity = "";
+    paystackOption.style.pointerEvents = "";
+    paystackOption.title = "";
     whatsappOption.classList.add("hidden");
+
+    selectedPayment = "paystack";
+    paystackOption.classList.add("border-pink-600", "bg-pink-50");
+    const paystackIcon = paystackOption.querySelector(".check-icon");
+    if (paystackIcon) paystackIcon.classList.remove("hidden");
+    summaryPlaceOrderBtn.disabled = false;
+    summaryPlaceOrderBtn.classList.remove("bg-gray-400");
+    summaryPlaceOrderBtn.classList.add("bg-pink-600", "hover:bg-pink-700");
   } else {
     paystackOption.classList.add("hidden");
-    flutterwaveOption.classList.add("hidden");
     whatsappOption.classList.remove("hidden");
   }
 }
