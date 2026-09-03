@@ -566,19 +566,33 @@ document.getElementById("sendResetLinkBtn")?.addEventListener("click", async () 
 
     // ===== REAL-TIME MINI CART UPDATE =====
 (async function initReactiveMiniCart() {
-  const cartRef = userDb.collection("guestCarts").doc(guestId);
+  try {
+    const cartRef = userDb.collection("guestCarts").doc(guestId);
 
-  // Ensure cart exists
-  await ensureGuestCart();
+    // Ensure cart exists
+    await ensureGuestCart();
 
-  // Listen for changes in real-time
-  cartRef.onSnapshot(snap => {
-    if (!snap.exists) return;
+    // Listen for changes in real-time
+    cartRef.onSnapshot(snap => {
+      if (!snap.exists) return;
 
-    const cart = snap.data().items || [];
+      const cart = snap.data().items || [];
+      updateCartCount(cart);
+      renderMiniCart(cart);
+    }, err => {
+      console.warn("Mini cart realtime sync failed:", err);
+      let cart = [];
+      try { cart = JSON.parse(localStorage.getItem("cart")) || []; } catch {}
+      updateCartCount(cart);
+      renderMiniCart(cart);
+    });
+  } catch (err) {
+    console.warn("Mini cart realtime setup failed:", err);
+    let cart = [];
+    try { cart = JSON.parse(localStorage.getItem("cart")) || []; } catch {}
     updateCartCount(cart);
     renderMiniCart(cart);
-  });
+  }
 })();
 
     // --- Ensure overlay exists ---
@@ -845,10 +859,18 @@ function updateMiniCartButtons(cart) {
 
 // ===== INIT CART ON PAGE LOAD =====
 (async function initMiniCart() {
-  await ensureGuestCart();
-  const cart = await getCart();
-  updateCartCount(cart);
-  renderMiniCart(cart);
+  try {
+    await ensureGuestCart();
+    const cart = await getCart();
+    updateCartCount(cart);
+    renderMiniCart(cart);
+  } catch (err) {
+    console.warn("Mini cart initialization failed:", err);
+    let cart = [];
+    try { cart = JSON.parse(localStorage.getItem("cart")) || []; } catch {}
+    updateCartCount(cart);
+    renderMiniCart(cart);
+  }
 })();
 
 // Modal close buttons

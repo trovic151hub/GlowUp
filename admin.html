@@ -1934,9 +1934,26 @@ function initOrders() {
     if (!currentOpenOrder) return;
     const btn = document.getElementById('orderEmailReceiptBtn');
     btn.disabled = true; btn.textContent = 'Sending...';
-    try { await sendReceiptEmail(currentOpenOrder); showAlert('Receipt sent!', 'Success'); }
+    try {
+      await sendReceiptEmail(currentOpenOrder);
+      const receiptEmail = {
+        status: 'sent',
+        sentAt: firebase.firestore.FieldValue.serverTimestamp(),
+        sentBy: auth.currentUser?.uid || null,
+        source: 'admin'
+      };
+      await db.collection('orders').doc(currentOpenOrder.id).update({ receiptEmail });
+      currentOpenOrder.receiptEmail = { ...receiptEmail, sentAt: new Date() };
+      renderOrderModal(currentOpenOrder);
+      showAlert('Receipt sent!', 'Success');
+    }
     catch (err) { showAlert(err.message || 'Failed', 'Error'); }
-    finally { btn.disabled = false; btn.textContent = 'Email Receipt'; }
+    finally {
+      if (document.body.contains(btn)) {
+        btn.disabled = false;
+        btn.textContent = 'Email Receipt';
+      }
+    }
   };
 
   db.collection('orders').orderBy('createdAt','desc').onSnapshot(snap => {
@@ -2153,6 +2170,22 @@ function getOrderDisplayTotal(order) {
   const deliveryFee = getOrderDeliveryFee(order);
   return isInternationalOrder(order) ? subtotal + deliveryFee : (savedTotal || subtotal + deliveryFee);
 }
+function receiptEmailBadge(order) {
+  const status = (order?.receiptEmail?.status || 'not_sent').toLowerCase();
+  const labels = {
+    sent: 'Sent',
+    pending: 'Pending',
+    failed: 'Failed',
+    not_sent: 'Not sent'
+  };
+  const styles = {
+    sent: 'background:#f0fdf4;color:#16a34a;',
+    pending: 'background:#fff7ed;color:#ea580c;',
+    failed: 'background:#fef2f2;color:#dc2626;',
+    not_sent: 'background:#f3f4f6;color:#6b7280;'
+  };
+  return `<span class="px-2.5 py-0.5 rounded-full text-xs font-semibold" style="${styles[status] || styles.not_sent}">${labels[status] || labels.not_sent}</span>`;
+}
 function shipmentTimelineHtml(status) {
   const steps = ['processing','shipped','delivered'];
   return `<div class="flex items-center gap-3 flex-wrap">${steps.map((s, idx) => {
@@ -2277,6 +2310,10 @@ function renderOrderModal(order) {
       <div class="flex items-center justify-between">
         <span class="text-gray-500">Payment</span>
         <span class="px-2.5 py-0.5 rounded-full text-xs font-semibold" style="${payBadgeStyle}">${escapeHtml(paymentMethod) || '—'}</span>
+      </div>
+      <div class="flex items-center justify-between">
+        <span class="text-gray-500">Receipt Email</span>
+        ${receiptEmailBadge(order)}
       </div>
       <div class="flex items-center justify-between">
         <span class="text-gray-500">Shipment</span>

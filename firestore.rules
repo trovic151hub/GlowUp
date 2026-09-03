@@ -13,9 +13,12 @@ service cloud.firestore {
     }
 
     function isGuestOrderOwner() {
-      return request.auth == null &&
-        resource.data.guestId is string &&
+      return resource.data.guestId is string &&
         request.resource.data.guestId == resource.data.guestId;
+    }
+
+    function canReadGuestOrder() {
+      return resource.data.guestId is string;
     }
 
     function isReceiptEmailOnlyUpdate() {
@@ -40,29 +43,31 @@ service cloud.firestore {
     }
 
     match /guestCarts/{guestId} {
-      allow read, write, delete: if
+      allow read, delete: if
+        guestId.matches('^guest_.*') &&
+        (isAdmin() || resource.data.guestId == guestId);
+
+      allow create, update: if
         guestId.matches('^guest_.*') &&
         (
-          request.auth == null ||
-          isAdmin()
-        ) &&
-        (
-          resource == null ||
-          resource.data.guestId == guestId
+          isAdmin() ||
+          request.resource.data.guestId == guestId
         );
     }
 
     match /orders/{orderId} {
       allow create: if true;
-      allow read: if true;
       allow update, delete: if isAdmin();
       allow update: if isReceiptEmailOnlyUpdate() &&
         (isSignedInOrderOwner() || isGuestOrderOwner());
+      allow read: if isAdmin();
       allow read: if request.auth != null && resource.data.userId == request.auth.uid;
+      allow read: if canReadGuestOrder();
     }
 
     match /users/{uid} {
       allow read, write: if isAdmin();
+      allow read, create, update: if request.auth != null && request.auth.uid == uid;
     }
 
     match /{document=**} {

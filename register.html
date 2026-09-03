@@ -250,6 +250,20 @@
     legalConsent?.addEventListener("change", updateAuthActionsAvailability);
     updateAuthActionsAvailability();
 
+    async function syncUserProfile(user, profileData = {}) {
+      try {
+        await db.collection("users").doc(user.uid).set({
+          name: user.displayName || "",
+          email: user.email,
+          phone: "",
+          address: "",
+          ...profileData
+        }, { merge: true });
+      } catch (err) {
+        console.warn("User profile sync failed:", err);
+      }
+    }
+
     /* ===== Firebase Config ===== */
     const firebaseConfig = window.CONFIG.firebase;
     firebase.initializeApp(firebaseConfig);
@@ -287,7 +301,7 @@
         const userCredential = await auth.createUserWithEmailAndPassword(email, password);
         const user = userCredential.user;
         await user.updateProfile({ displayName: name });
-        await db.collection("users").doc(user.uid).set({
+        await syncUserProfile(user, {
           name, email, phone: phone || "", address: address || "",
           legalConsent: {
             accepted: true,
@@ -316,7 +330,7 @@
       try {
         const result = await auth.signInWithPopup(provider);
         const user = result.user;
-        await db.collection("users").doc(user.uid).set({
+        await syncUserProfile(user, {
           name: user.displayName || "", email: user.email, phone: "", address: "",
           legalConsent: {
             accepted: true,

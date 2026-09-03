@@ -220,6 +220,20 @@
       }
     }
 
+    async function syncUserProfile(user) {
+      try {
+        await db.collection("users").doc(user.uid).set({
+          name: user.displayName || "",
+          email: user.email,
+          phone: "",
+          address: "",
+          lastLogin: firebase.firestore.FieldValue.serverTimestamp()
+        }, { merge: true });
+      } catch (err) {
+        console.warn("User profile sync failed:", err);
+      }
+    }
+
     /* ===== Firebase Setup ===== */
     const firebaseConfig = window.CONFIG.firebase;
     firebase.initializeApp(firebaseConfig);
@@ -252,13 +266,7 @@
       try {
         const userCredential = await auth.signInWithEmailAndPassword(email, password);
         const user = userCredential.user;
-        await db.collection("users").doc(user.uid).set({
-          name: user.displayName || "",
-          email: user.email,
-          phone: "",
-          address: "",
-          lastLogin: firebase.firestore.FieldValue.serverTimestamp()
-        }, { merge: true });
+        await syncUserProfile(user);
 
         setLoginLoading(false);
         showSuccessModal();
@@ -276,13 +284,7 @@
       try {
         const result = await auth.signInWithPopup(provider);
         const user = result.user;
-        await db.collection("users").doc(user.uid).set({
-          name: user.displayName || "",
-          email: user.email,
-          phone: "",
-          address: "",
-          lastLogin: firebase.firestore.FieldValue.serverTimestamp()
-        }, { merge: true });
+        await syncUserProfile(user);
 
         setLoginLoading(false);
         showSuccessModal();
