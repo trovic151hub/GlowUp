@@ -670,14 +670,18 @@ const miniCartTotalEl = document.getElementById("mini-cart-total");
 // --- Ensure guest cart exists in Firestore ---
 async function ensureGuestCart() {
   const cartRef = userDb.collection("guestCarts").doc(guestId);
-  const snap = await cartRef.get();
+  try {
+    const snap = await cartRef.get();
 
-  if (!snap.exists) {
-    await cartRef.set({
-      guestId,
-      items: [],
-      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-    });
+    if (!snap.exists) {
+      await cartRef.set({
+        guestId,
+        items: [],
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+    }
+  } catch (err) {
+    console.warn("Guest cart setup failed; using local cart:", err);
   }
 
   return cartRef;
@@ -686,17 +690,29 @@ async function ensureGuestCart() {
 // --- Fetch guest cart ---
 async function getCart() {
   const cartRef = userDb.collection("guestCarts").doc(guestId);
-  const snap = await cartRef.get();
-  return snap.exists ? snap.data().items : [];
+  try {
+    const snap = await cartRef.get();
+    return snap.exists ? snap.data().items : [];
+  } catch (err) {
+    console.warn("Guest cart fetch failed; using local cart:", err);
+    try { return JSON.parse(localStorage.getItem("cart")) || []; } catch {}
+    return [];
+  }
 }
 
 // --- Save guest cart ---
 async function saveCart(cart) {
   const cartRef = userDb.collection("guestCarts").doc(guestId);
-  await cartRef.set({
-    items: cart,
-    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-  }, { merge: true });
+  localStorage.setItem("cart", JSON.stringify(cart));
+  try {
+    await cartRef.set({
+      guestId,
+      items: cart,
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    }, { merge: true });
+  } catch (err) {
+    console.warn("Guest cart save failed; kept local cart:", err);
+  }
   updateCartCount(cart);
   renderMiniCart(cart);
 }
@@ -1216,14 +1232,18 @@ function renderProducts(reset=false){
   // ---------- ENSURE GUEST CART EXISTS ----------
 async function ensureGuestCart() {
   const cartDocRef = userDb.collection("guestCarts").doc(guestId);
-  const snap = await cartDocRef.get();
+  try {
+    const snap = await cartDocRef.get();
 
-  if (!snap.exists) {
-    await cartDocRef.set({
-      guestId,
-      items: [],
-      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-    });
+    if (!snap.exists) {
+      await cartDocRef.set({
+        guestId,
+        items: [],
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+    }
+  } catch (err) {
+    console.warn("Guest cart setup failed; using local cart:", err);
   }
 
   return cartDocRef; // return ref for further use
@@ -1260,7 +1280,7 @@ window.addToCart = function(productId) {
       { guestId, items, updatedAt: firebase.firestore.FieldValue.serverTimestamp() },
       { merge: true }
     ))
-    .catch(err => console.error("Cart sync error:", err));
+    .catch(err => console.warn("Cart sync failed; kept local cart:", err));
 };
 
 // ---------- FLY-TO-CART ANIMATION ----------
@@ -1348,12 +1368,22 @@ async function updateCartCount() {
       // Sync localStorage with Firestore
       localStorage.setItem("cart", JSON.stringify(items));
     }, err => {
-      console.error("Cart snapshot error:", err);
-      el.textContent = "0";
+      console.warn("Cart snapshot failed; using local cart count:", err);
+      try {
+        const cached = JSON.parse(localStorage.getItem("cart")) || [];
+        el.textContent = cached.reduce((sum, i) => sum + (i.quantity || 0), 0);
+      } catch {
+        el.textContent = "0";
+      }
     });
   } catch (err) {
-    console.error(err);
-    el.textContent = "0";
+    console.warn("Cart count setup failed; using local cart count:", err);
+    try {
+      const cached = JSON.parse(localStorage.getItem("cart")) || [];
+      el.textContent = cached.reduce((sum, i) => sum + (i.quantity || 0), 0);
+    } catch {
+      el.textContent = "0";
+    }
   }
 }
 

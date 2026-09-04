@@ -45,7 +45,7 @@ service cloud.firestore {
     match /guestCarts/{guestId} {
       allow read, delete: if
         guestId.matches('^guest_.*') &&
-        (isAdmin() || resource.data.guestId == guestId);
+        (isAdmin() || !exists(/databases/$(database)/documents/guestCarts/$(guestId)) || resource.data.guestId == guestId);
 
       allow create, update: if
         guestId.matches('^guest_.*') &&

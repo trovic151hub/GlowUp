@@ -499,14 +499,22 @@ async function sendAutomaticReceipt(orderRef, orderData) {
   }
 
   async function saveGuestCart(items){
-    await guestCartRef.set({ guestId, items }, { merge: true });
     localStorage.setItem("cart", JSON.stringify(items));
+    try {
+      await guestCartRef.set({ guestId, items }, { merge: true });
+    } catch (err) {
+      console.warn("Guest cart save failed; kept local cart:", err);
+    }
   }
 
   async function ensureGuestCart(){
-    const docSnap = await guestCartRef.get();
-    if(!docSnap.exists){
-      await guestCartRef.set({ guestId, items: [] });
+    try {
+      const docSnap = await guestCartRef.get();
+      if(!docSnap.exists){
+        await guestCartRef.set({ guestId, items: [] });
+      }
+    } catch (err) {
+      console.warn("Guest cart setup failed; using local cart:", err);
     }
   }
 
@@ -972,9 +980,11 @@ function updateDeliveryVisibility() {
       renderCart(data.items || []);
       hideLoader();
     }, err => {
-      console.error("Cart listener error:", err);
+      console.warn("Cart listener failed; using local cart:", err);
+      let cached = [];
+      try { cached = JSON.parse(localStorage.getItem("cart")) || []; } catch {}
+      renderCart(cached);
       hideLoader();
-      showNotification("Failed to load cart — check Firestore rules!");
     });
   }
 
